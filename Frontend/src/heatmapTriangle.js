@@ -305,20 +305,24 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 gap: '10px',
             }}>
                 <Switch
-                    checkedChildren="Partial"
-                    unCheckedChildren="Full"
+                    checkedChildren="Non Random Interaction"
+                    unCheckedChildren="All HiC"
                     checked={!fullTriangleVisible}
                     onChange={switchChange}
-                />
-		<Tooltip title="Download non-random interaction data"> 
-                <Button
                     style={{
-                        fontSize: 15,
-                        cursor: "pointer",
+                        backgroundColor: fullTriangleVisible ? '#ED9121' : '#74C365',
                     }}
-                    icon={<DownloadOutlined />}
-                    onClick={downloadImage}
-                /></Tooltip>
+                />
+                <Tooltip title="Download non-random interaction data">
+                    <Button
+                        style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                        }}
+                        icon={<DownloadOutlined />}
+                        onClick={downloadImage}
+                    />
+                </Tooltip>
             </div>
             <canvas ref={canvasRef} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
