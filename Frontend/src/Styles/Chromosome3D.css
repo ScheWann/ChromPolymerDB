@@ -1,0 +1,11 @@
+.custom-button {
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+}
+
+.custom-button.disabled {
+    color: #aaa;
+    cursor: not-allowed;
+    opacity: 0.6;
+}

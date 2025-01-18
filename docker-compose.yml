@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:17.0-bookworm
+    container_name: db
+    restart: on-failure
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s      
+      timeout: 5s         
+      retries: 5      
+    ports:
+      - "5432:5432"
+    networks:
+      - example
+
+  backend:
+    container_name: backend
+    restart: on-failure
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./backend:/chromosome/backend
+      - ./Example_Data:/chromosome/Example_Data
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    ports:
+      - "5001:5001"
+    networks:
+      - example
+
+  frontend:
+    container_name: frontend
+    restart: on-failure
+    volumes:
+      - ./frontend:/chromosome/frontend:cached
+      - /chromosome/frontend/node_modules
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - example
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgAdmin
+    restart: on-failure
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "8080:80"
+    networks:
+      - example
+
+networks:
+  example:
+    driver: bridge
+
+volumes:
+  pgadmin_data:
+  pgdata:
+  backend_flag_data:

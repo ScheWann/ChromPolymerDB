@@ -1,0 +1,7 @@
+.DS_Store
+.node_modules
+/Data
+/Example_Data
+/Backend/venv
+/Backend/__pycache__
+.env
