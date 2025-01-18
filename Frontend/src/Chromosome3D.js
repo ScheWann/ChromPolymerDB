@@ -23,6 +23,23 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    const presetColors = [
+        {
+            label: 'Theme Colors',
+            colors: [
+                '#ff4d4f', // Red
+                '#ff7a45', // Orange
+                '#ffc53d', // Yellow
+                '#73d13d', // Green
+                '#36cfc9', // Cyan
+                '#40a9ff', // Blue
+                '#9254de', // Purple
+                '#000000', // Black
+            ],
+            key: 'custom',
+        },
+    ];
+
     useMemo(() => {
         if (geneSize.start > 0 && geneSize.end > 0) {
             const geneStart = Math.floor(geneSize.start / step) * step;
@@ -183,6 +200,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     <ColorPicker
                         value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
                         disabled={selectedIndex === null}
+                        presets={presetColors}
                         onChange={handleColorChange}
                     />
                 </Tooltip>
