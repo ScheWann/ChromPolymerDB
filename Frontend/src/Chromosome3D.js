@@ -170,8 +170,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 gap: '10px',
             }}>
                 <Switch
-                    checkedChildren="All Genes"
-                    unCheckedChildren="First Gene"
+                    checkedChildren="Genes"
+                    unCheckedChildren="Gene Promoter"
                     disabled={geneBeadSeq.length === 0}
                     checked={isFullGeneVisible}
                     style={{
