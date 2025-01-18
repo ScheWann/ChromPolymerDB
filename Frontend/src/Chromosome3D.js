@@ -179,46 +179,51 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     }}
                     onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                 />
-		<Tooltip title="Change the color of selected bead">
-                <ColorPicker
-                    value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
-                    disabled={selectedIndex === null}
-                    onChange={handleColorChange}
-                /></Tooltip>
-		<Tooltip title="Clear the bead selections">
-                <Button
-                    style={{
-                        fontSize: 15,
-                        cursor: "pointer",
-                    }}
-                    icon={<ClearOutlined />}
-                    onClick={resetSelectedBead}
-                /></Tooltip>
-		<Tooltip title="Restore the original view">
-                <Button
-                    style={{
-                        fontSize: 15,
-                        cursor: "pointer",
-                    }}
-                    icon={<RollbackOutlined />}
-                    onClick={resetView}
-                /></Tooltip>
-		<Tooltip title="Download the 3D chromosome data">
-                <Button
-                    style={{
-                        fontSize: 15,
-                        cursor: "pointer",
-                    }}
-                    icon={<DownloadOutlined />}
-                    onClick={download}
-                /></Tooltip>
-		<Tooltip title="Generate pairwise distances for selected beads">
-                <Button
-                    className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
-                    disabled={Object.keys(selectedSphereList).length < 2}
-                    onClick={() => setShowChromosome3DDistance(true)}>
-                    Generate Distance
-                </Button></Tooltip>
+                <Tooltip title="Change the color of selected bead">
+                    <ColorPicker
+                        value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
+                        disabled={selectedIndex === null}
+                        onChange={handleColorChange}
+                    />
+                </Tooltip>
+                <Tooltip title="Clear the bead selections">
+                    <Button
+                        style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                        }}
+                        icon={<ClearOutlined />}
+                        onClick={resetSelectedBead}
+                    />
+                </Tooltip>
+                <Tooltip title="Restore the original view">
+                    <Button
+                        style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                        }}
+                        icon={<RollbackOutlined />}
+                        onClick={resetView}
+                    />
+                </Tooltip>
+                <Tooltip title="Download the 3D chromosome data">
+                    <Button
+                        style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                        }}
+                        icon={<DownloadOutlined />}
+                        onClick={download}
+                    />
+                </Tooltip>
+                <Tooltip title="Generate pairwise distances for selected beads">
+                    <Button
+                        className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
+                        disabled={Object.keys(selectedSphereList).length < 2}
+                        onClick={() => setShowChromosome3DDistance(true)}>
+                        Generate Distance
+                    </Button>
+                </Tooltip>
             </div>
 
             <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
@@ -237,21 +242,19 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         enableRotate={true}
                         enablePan={true}
                     />
-
-                    <ambientLight intensity={0.8} />
+                    <ambientLight intensity={1} />
                     <directionalLight
                         position={[10, 20, 10]}
-                        intensity={1}
+                        intensity={3}
                         castShadow
                     />
                     <spotLight
                         position={[30, 50, 50]}
                         angle={0.3}
                         penumbra={1}
-                        intensity={1}
+                        intensity={3}
                         castShadow
                     />
-
                     {coordinates.map((coord, index) => {
                         const isFirst = index === 0;
                         const isLast = index === coordinates.length - 1;
@@ -283,7 +286,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 ? '#F7E7CE'
                                 : isFirst || isLast
                                     ? originalColor
-                                    : '#669bbc');
+                                    : '#00BFFF');
 
                         const currentColor = shouldRender
                             ? geneBeadColor
@@ -329,10 +332,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     />
                                 </mesh>
                                 {/* Outline Mesh */}
-                                <mesh>
+                                {/* <mesh>
                                     <sphereGeometry args={[3, 32, 32]} />
                                     <meshBasicMaterial color="white" side={THREE.BackSide} />
-                                </mesh>
+                                </mesh> */}
                             </group>
                         );
                     })}
