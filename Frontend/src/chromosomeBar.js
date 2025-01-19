@@ -227,7 +227,8 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 className={`tooltip ${tooltip.visible ? 'visible' : ''}`}
                 style={{
                     left: tooltip.left,
-                    top: tooltip.top
+                    top: tooltip.top,
+                    zIndex: 20
                 }}
             >
                 <div className="chromosomeBarTooltipText">Start: {tooltip.minStart}</div>

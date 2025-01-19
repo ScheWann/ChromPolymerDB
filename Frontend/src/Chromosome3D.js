@@ -202,7 +202,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         }}
                         onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                     />
-                    <Tooltip title="Change the color of selected bead">
+                    <Tooltip
+                        title="Change the color of selected bead"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
                         <ColorPicker
                             value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
                             disabled={selectedIndex === null}
@@ -210,7 +216,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             onChange={handleColorChange}
                         />
                     </Tooltip>
-                    <Tooltip title="Clear the bead selections">
+                    <Tooltip
+                        title="Clear the bead selections"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
                         <Button
                             style={{
                                 fontSize: 15,
@@ -220,7 +232,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             onClick={resetSelectedBead}
                         />
                     </Tooltip>
-                    <Tooltip title="Restore the original view">
+                    <Tooltip
+                        title="Restore the original view"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
                         <Button
                             style={{
                                 fontSize: 15,
@@ -230,7 +248,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             onClick={resetView}
                         />
                     </Tooltip>
-                    <Tooltip title="Download the 3D chromosome data">
+                    <Tooltip
+                        title="Download the 3D chromosome data"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
                         <Button
                             style={{
                                 fontSize: 15,
@@ -240,7 +264,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             onClick={download}
                         />
                     </Tooltip>
-                    <Tooltip title="Generate pairwise distances for selected beads">
+                    <Tooltip
+                        title="Generate pairwise distances for selected beads"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
                         <Button
                             className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
                             disabled={Object.keys(selectedSphereList).length < 2}

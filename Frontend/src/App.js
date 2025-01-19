@@ -52,8 +52,8 @@ function App() {
     {
       title: "Tooltip Icon",
       description: "Hover over this icon for more information about the toggle switch.",
-      target: () => document.querySelector("#info-tooltip"), // Target the tooltip icon
-      placement: "right", // Adjust placement if needed
+      target: () => document.querySelector("#info-tooltip"),
+      placement: "right",
     },
     {
       title: "Cell Line Selector",
@@ -499,12 +499,9 @@ function App() {
             />
             <Tooltip
               title="Toggle to switch between Cell Line and Gene fields."
-              placement="top"
+              color='white'
               overlayInnerStyle={{
-                backgroundColor: 'white',
-                color: 'black',
-                border: '1px solid #ddd',
-                boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                color: 'black'
               }}
             >
               <InfoCircleOutlined
@@ -572,7 +569,12 @@ function App() {
             </>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Tooltip title="View non-random chromosomal interactions as heatmap">
+            <Tooltip
+              title="View non-random chromosomal interactions as heatmap"
+              color='white'
+              overlayInnerStyle={{
+                color: 'black'
+              }}>
               <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
             </Tooltip>
             <div style={{
@@ -583,7 +585,7 @@ function App() {
               fontSize: "9px",
               lineHeight: "1.0",
               borderRadius: "5px",
-              verticalAlign: "top", // Align with the button
+              verticalAlign: "top",
             }}>
               <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
                 <div style={{
@@ -674,7 +676,13 @@ function App() {
                   style={{ width: '100%', height: '100%' }}
                   onChange={originalSampleChange}
                   tabBarExtraContent={
-                    <Tooltip title="Add a second cell line for comparison">
+                    <Tooltip
+                      title="Add a second cell line to compare"
+                      color='white'
+                      overlayInnerStyle={{
+                        color: 'black'
+                      }}
+                    >
                       <Button
                         style={{
                           fontSize: 15,
@@ -684,7 +692,8 @@ function App() {
                         size="small"
                         icon={<PlusOutlined />}
                         onClick={handleAddChromosome3D}
-                      /></Tooltip>
+                      />
+                    </Tooltip>
                   }
                   items={new Array(3).fill(null).map((_, i) => {
                     const id = i;
@@ -725,7 +734,13 @@ function App() {
                           onChange={comparisonCellLineChange}
                           options={comparisonCellLineList}
                         />
-                        <Tooltip title="Collapse the second cell line window">
+                        <Tooltip
+                          title="Collapse the second cell line window"
+                          color='white'
+                          overlayInnerStyle={{
+                            color: 'black'
+                          }}
+                        >
                           <Button
                             style={{
                               fontSize: 15,
@@ -734,7 +749,8 @@ function App() {
                             size="small"
                             icon={<MinusOutlined />}
                             onClick={handleRemoveChromosome3D}
-                          /></Tooltip>
+                          />
+                        </Tooltip>
                       </div>
                     }
                     items={new Array(3).fill(null).map((_, i) => {

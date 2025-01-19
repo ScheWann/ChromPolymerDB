@@ -8,7 +8,7 @@ import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design
 export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
-    const rendererRef = useRef(); 
+    const rendererRef = useRef();
 
     const spheresData = useMemo(() => {
         return Object.values(selectedSphereList).map(({ position, color }) => {
@@ -41,28 +41,28 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const download = () => {
         if (rendererRef.current) {
             const { gl, scene, camera } = rendererRef.current;
-    
+
             const width = window.innerWidth * 2;
             const height = window.innerHeight * 2;
             const renderTarget = new THREE.WebGLRenderTarget(width, height);
-    
+
             // render the scene to the RenderTarget
             const originalTarget = gl.getRenderTarget?.();
             gl.setRenderTarget(renderTarget);
             gl.render(scene, camera);
             gl.setRenderTarget(originalTarget);
-    
+
             // extract the pixel data from the RenderTarget
             const pixelBuffer = new Uint8Array(width * height * 4);
             gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixelBuffer);
-    
+
             // create a canvas and context to draw the image data
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             const imageData = ctx.createImageData(width, height);
-    
+
             // flip the image data vertically
             for (let row = 0; row < height; row++) {
                 const rowOffset = row * width * 4;
@@ -70,13 +70,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                 imageData.data.set(pixelBuffer.slice(rowOffset, rowOffset + width * 4), flippedRowOffset);
             }
             ctx.putImageData(imageData, 0, 0);
-    
+
             // generate download link
             const link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
             link.download = 'chromosome_3d_distance.png';
             link.click();
-    
+
             renderTarget.dispose();
         } else {
             console.error("Renderer not properly initialized for download.");
@@ -131,33 +131,53 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     display: 'flex',
                     gap: '10px',
                 }}>
-		    <Tooltip title="Restore the original view">
-                    <Button
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
+                    <Tooltip
+                        title="Restore the original view"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
                         }}
-                        icon={<RollbackOutlined />}
-                        onClick={resetView}
-                    /></Tooltip>
-		    <Tooltip title="Download the selected beads and their distance">	
-                    <Button
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<RollbackOutlined />}
+                            onClick={resetView}
+                        />
+                    </Tooltip>
+                    <Tooltip
+                        title="Download the selected beads and their distance"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
                         }}
-                        icon={<DownloadOutlined />}
-                        onClick={download}
-                    /></Tooltip>
-		    <Tooltip title="Collapse the distance window">
-                    <Button
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<DownloadOutlined />}
+                            onClick={download}
+                        />
+                    </Tooltip>
+                    <Tooltip
+                        title="Collapse the distance window"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
                         }}
-                        icon={<CaretUpOutlined />}
-                        onClick={() => setShowChromosome3DDistance(false)}
-                    /></Tooltip>
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<CaretUpOutlined />}
+                            onClick={() => setShowChromosome3DDistance(false)}
+                        /></Tooltip>
                 </div>
 
                 <Canvas
