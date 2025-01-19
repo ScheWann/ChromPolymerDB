@@ -56,9 +56,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
     const processedChromosomeData = useMemo(() => {
         return chromosome3DExampleData.map((data, index) => {
-            const marker = newStart + index * step;
-            const isValid = validChromosomeValidIbpData.includes(marker);
-            const isGeneBead = geneBeadSeq.includes(marker);
+            const marker = newStart + index * step; // Start ibp
+            const isValid = validChromosomeValidIbpData.includes(marker); // Whether the current bead exists
+            const isGeneBead = geneBeadSeq.includes(marker); // Whether the bead in the selected gene sequences
 
             return {
                 ...data,
@@ -292,23 +292,23 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     gap: 5
                 }}>
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#00BFFF'}} />
+                        <div className='colorRect' style={{ backgroundColor: '#00BFFF' }} />
                         <span>Default Beads</span>
                     </div>
-                    <div className='colorLegendWrapper'>
+                    {/* <div className='colorLegendWrapper'>
                         <div className='colorRect' style={{ backgroundColor: '#FFFFFF'}} />
                         <span>Invalid Beads</span>
-                    </div>
+                    </div> */}
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#00FF00'}} />
+                        <div className='colorRect' style={{ backgroundColor: '#00FF00' }} />
                         <span>Start Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#0000FF'}} />
+                        <div className='colorRect' style={{ backgroundColor: '#0000FF' }} />
                         <span>End Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#FFD700'}} />
+                        <div className='colorRect' style={{ backgroundColor: '#FFD700' }} />
                         <span>Selected Gene Region</span>
                     </div>
                 </div>
@@ -360,28 +360,28 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     {coordinates.map((coord, index) => {
                         const isFirst = index === 0;
                         const isLast = index === coordinates.length - 1;
-                        const isValid = processedChromosomeData[index].isValid;
+                        // const isValid = processedChromosomeData[index].isValid;
                         const isGeneBead = processedChromosomeData[index].isGeneBead;
                         const isGeneStart = geneBeadSeq[0] === processedChromosomeData[index].marker;
 
                         // Gene beads shows control
-                        const shouldRender =
+                        const geneBeadRender =
                             geneBeadSeq.length > 0 && isFullGeneVisible
                                 ? isGeneBead
                                 : isGeneStart;
 
-                        const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
-
                         // first bead: green, last bead: blue
                         const originalColor = isFirst ? '#00FF00' : isLast ? '#0000FF' : null;
 
-                        const geneBeadColor = isValid
-                            ? '#FFD700' // gold
-                            : isFirst
-                                ? blendIfInvalid('#00FF00') // mix green and white
-                                : isLast
-                                    ? blendIfInvalid('#0000FF') // mix blue and white
-                                    : blendIfInvalid('#FFD700'); // mix gold and white
+                        // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
+
+                        // const geneBeadColor = isValid
+                        //     ? '#FFD700' // gold
+                        //     : isFirst
+                        //         ? blendIfInvalid('#00FF00') // mix green and white
+                        //         : isLast
+                        //             ? blendIfInvalid('#0000FF') // mix blue and white
+                        //             : blendIfInvalid('#FFD700'); // mix gold and white
 
                         const validColor = selectedSphereList[index]?.color ||
                             (hoveredIndex === index || selectedIndex === index
@@ -390,15 +390,17 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     ? originalColor
                                     : '#00BFFF'); // default color
 
-                        const currentColor = shouldRender
-                            ? geneBeadColor
-                            : isValid
-                                ? validColor
-                                : isFirst
-                                    ? blendIfInvalid('#00FF00') // invalid start bead mix green and white
-                                    : isLast
-                                        ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
-                                        : '#FFFFFF';  // default invalid bead color
+                        // const currentColor = geneBeadRender
+                        //     ? geneBeadColor
+                        //     : isValid
+                        //         ? validColor
+                        //         : isFirst
+                        //             ? blendIfInvalid('#00FF00') // invalid start bead mix green and white
+                        //             : isLast
+                        //                 ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
+                        //                 : '#FFFFFF';  // default invalid bead color
+
+                        const currentColor = geneBeadRender ? '#FFD700' : validColor
 
                         return (
                             <group
@@ -406,6 +408,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 position={coord}
                                 onPointerOver={(e) => {
                                     e.stopPropagation();
+                                    console.log(processedChromosomeData[index])
                                     setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
                                     setShowBeadInfo(true);
                                     setHoveredIndex(index);
