@@ -19,6 +19,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [showChromosome3DDistance, setShowChromosome3DDistance] = useState(false);
     const [geneBeadSeq, setGeneBeadSeq] = useState([]);
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
+    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
+    const [showbeadInfo, setShowBeadInfo] = useState(false)
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -176,72 +178,90 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            {/* Container for buttons */}
             <div style={{
                 position: 'absolute',
                 top: 10,
                 right: 10,
                 zIndex: 10,
                 display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
+                flexDirection: 'column'
             }}>
-                <Switch
-                    checkedChildren="Genes"
-                    unCheckedChildren="Gene Promoter"
-                    disabled={geneBeadSeq.length === 0}
-                    checked={isFullGeneVisible}
-                    style={{
-                        backgroundColor: isFullGeneVisible ? '#DAA520' : '#262626'
-                    }}
-                    onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
-                />
-                <Tooltip title="Change the color of selected bead">
-                    <ColorPicker
-                        value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
-                        disabled={selectedIndex === null}
-                        presets={presetColors}
-                        onChange={handleColorChange}
-                    />
-                </Tooltip>
-                <Tooltip title="Clear the bead selections">
-                    <Button
+                {/* Container for buttons */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                }}>
+                    <Switch
+                        checkedChildren="Genes"
+                        unCheckedChildren="Gene Promoter"
+                        disabled={geneBeadSeq.length === 0}
+                        checked={isFullGeneVisible}
                         style={{
-                            fontSize: 15,
-                            cursor: "pointer",
+                            backgroundColor: isFullGeneVisible ? '#DAA520' : '#262626'
                         }}
-                        icon={<ClearOutlined />}
-                        onClick={resetSelectedBead}
+                        onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                     />
-                </Tooltip>
-                <Tooltip title="Restore the original view">
-                    <Button
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
-                        }}
-                        icon={<RollbackOutlined />}
-                        onClick={resetView}
-                    />
-                </Tooltip>
-                <Tooltip title="Download the 3D chromosome data">
-                    <Button
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
-                        }}
-                        icon={<DownloadOutlined />}
-                        onClick={download}
-                    />
-                </Tooltip>
-                <Tooltip title="Generate pairwise distances for selected beads">
-                    <Button
-                        className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
-                        disabled={Object.keys(selectedSphereList).length < 2}
-                        onClick={() => setShowChromosome3DDistance(true)}>
-                        Generate Distance
-                    </Button>
-                </Tooltip>
+                    <Tooltip title="Change the color of selected bead">
+                        <ColorPicker
+                            value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
+                            disabled={selectedIndex === null}
+                            presets={presetColors}
+                            onChange={handleColorChange}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Clear the bead selections">
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<ClearOutlined />}
+                            onClick={resetSelectedBead}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Restore the original view">
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<RollbackOutlined />}
+                            onClick={resetView}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Download the 3D chromosome data">
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<DownloadOutlined />}
+                            onClick={download}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Generate pairwise distances for selected beads">
+                        <Button
+                            className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
+                            disabled={Object.keys(selectedSphereList).length < 2}
+                            onClick={() => setShowChromosome3DDistance(true)}>
+                            Generate Distance
+                        </Button>
+                    </Tooltip>
+                </div>
+                {showbeadInfo && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'end',
+                        zIndex: 10,
+                        marginTop: 15
+                    }}>
+                        <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
+                        <div className='beadInfoText'>Start: {beadInfo.seq_start}</div>
+                        <div className='beadInfoText'>End: {beadInfo.seq_end}</div>
+                    </div>
+                )}
             </div>
 
             <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
@@ -322,10 +342,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 position={coord}
                                 onPointerOver={(e) => {
                                     e.stopPropagation();
+                                    setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                    setShowBeadInfo(true);
                                     setHoveredIndex(index);
                                 }}
                                 onPointerOut={(e) => {
                                     e.stopPropagation();
+                                    setShowBeadInfo(false);
                                     setHoveredIndex(null);
                                 }}
                                 onClick={(e) => {
