@@ -14,3 +14,15 @@
     font-weight: bold;
     color: white;
 }
+
+.colorRect {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #ccc;
+    margin-right: 6px;
+}
+
+.colorLegendWrapper {
+    display: flex;
+    align-items: center
+}

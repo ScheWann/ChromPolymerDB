@@ -279,6 +279,40 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         </Button>
                     </Tooltip>
                 </div>
+                <div style={{
+                    border: "1px solid #ccc",
+                    display: "flex",
+                    marginTop: 15,
+                    backgroundColor: "white",
+                    flexDirection: "column",
+                    marginLeft: "auto",
+                    fontSize: 10,
+                    padding: 5,
+                    borderRadius: 3,
+                    gap: 5
+                }}>
+                    <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#00BFFF'}} />
+                        <span>Default Beads</span>
+                    </div>
+                    <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#FFFFFF'}} />
+                        <span>Invalid Beads</span>
+                    </div>
+                    <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#00FF00'}} />
+                        <span>Start Bead</span>
+                    </div>
+                    <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#0000FF'}} />
+                        <span>End Bead</span>
+                    </div>
+                    <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#FFD700'}} />
+                        <span>Selected Gene Region</span>
+                    </div>
+                </div>
+                {/* Beads hover on information */}
                 {showbeadInfo && (
                     <div style={{
                         display: 'flex',
@@ -351,10 +385,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                         const validColor = selectedSphereList[index]?.color ||
                             (hoveredIndex === index || selectedIndex === index
-                                ? '#F7E7CE'
+                                ? '#E25822'
                                 : isFirst || isLast
                                     ? originalColor
-                                    : '#00BFFF');
+                                    : '#00BFFF'); // default color
 
                         const currentColor = shouldRender
                             ? geneBeadColor
