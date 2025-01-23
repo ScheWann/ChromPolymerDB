@@ -25,6 +25,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    console.log(chromosome3DExampleData, '/////')
     const presetColors = [
         {
             label: 'Theme Colors',
