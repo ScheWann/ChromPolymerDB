@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ##parameters
-chrlensfile="../Example_Data/chromosome_sizes.txt"
+chrlensfile="../Data/chromosome_sizes.txt"
 res=5000
 threads=50
 EXE_PATH="../sBIF/bin/sBIF"
@@ -10,10 +10,10 @@ n_samples_per_run=$2
 is_download=$3
 
 count=1
-total_files=$(find ../Example_Data/Folding_input -name "*.txt" | wc -l | xargs)
+total_files=$(find ../Data/Folding_input -name "*.txt" | wc -l | xargs)
 
 
-for interfile in ../Example_Data/Folding_input/*.txt; do
+for interfile in ../Data/Folding_input/*.txt; do
     filename=$(basename "$interfile")
     
     # Extract cell_line, chromosome, start, and end from the filename

@@ -286,7 +286,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     
     delete_old_samples(conn)
     
-    temp_folding_input_path = "../Example_Data/Folding_input"
+    temp_folding_input_path = "../Data/Folding_input"
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
         hic_spe = hic_data.loc[hic_data["fdr"] < alpha]

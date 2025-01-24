@@ -13,7 +13,6 @@ function App() {
   const [geneNameList, setGeneNameList] = useState([]);
   const [cellLineList, setCellLineList] = useState([]);
   const [geneList, setGeneList] = useState([]);
-  const [epigeneticTrackData, setepigeneticTrackData] = useState({});
   const [chromosList, setChromosList] = useState([]);
   const [cellLineName, setCellLineName] = useState(null);
   const [geneName, setGeneName] = useState(null);

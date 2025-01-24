@@ -29,7 +29,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./backend:/chromosome/backend
-      - ./Example_Data:/chromosome/Example_Data
+      - ./Data:/chromosome/Data
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -81,4 +81,3 @@ networks:
 volumes:
   pgadmin_data:
   pgdata:
-  backend_flag_data:

@@ -13,7 +13,7 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
-ROOT_DIR = "../Example_Data"
+ROOT_DIR = "../Data"
 
 
 def get_db_connection(database=None):
