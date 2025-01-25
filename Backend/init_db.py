@@ -104,15 +104,6 @@ def initialize_tables():
         )
         conn.commit()
         print("non_random_hic table created successfully.")
-
-        print("Creating index idx_hic_optimized...")
-        cur.execute(
-            """
-            CREATE INDEX idx_hic_optimized ON non_random_hic (chrID, cell_line, ibp, jbp);
-            """
-        )
-        conn.commit()
-        print("Index idx_hic_optimized created successfully.")
     else:
         print("non_random_hic table already exists, skipping creation.")
 
@@ -181,7 +172,6 @@ def initialize_tables():
     # Close connection
     cur.close()
     conn.close()
-    return
 
 
 def process_chromosome_data(cur, file_path):
@@ -312,6 +302,17 @@ def process_sequence_data(cur):
             psycopg2.extras.execute_batch(cur, query, data_to_insert)
 
 
+def process_non_random_hic_index(cur):
+    """Create index on non_random_hic table for faster search."""
+    print("Creating index idx_hic_optimized...")
+    cur.execute(
+        """
+        CREATE INDEX idx_hic_optimized ON non_random_hic (chrID, cell_line, ibp, jbp);
+        """
+    )
+    print("Index idx_hic_optimized created successfully.")
+
+
 def insert_data():
     """Insert data(Except for the data of non random HiC) into the database if not already present."""
     conn = get_db_connection(database=DB_NAME)
@@ -340,18 +341,21 @@ def insert_data():
         print("Inserting sequence data...")
         process_sequence_data(cur)
         print("Sequence data inserted successfully.")
+    else:
+        print("Sequence data already exists, skipping insertion.")
 
     # Insert epigenetic track data only if the table is empty
     if not data_exists(cur, "epigenetic_track"):
         print("Inserting epigenetic track data...")
         process_epigenetic_track_data(cur)
         print("epigenetic track data inserted successfully.")
+    else:
+        print("epigenetic track data already exists, skipping insertion.")
 
     # Commit changes and close connection
     conn.commit()
     cur.close()
     conn.close()
-    return
 
 
 def insert_non_random_HiC_data():
@@ -363,8 +367,14 @@ def insert_non_random_HiC_data():
     if not data_exists(cur, "non_random_hic"):
         chromosome_dir = os.path.join(ROOT_DIR, "refined_processed_HiC")
         process_non_random_hic_data(chromosome_dir)
+        conn.commit()
+        process_non_random_hic_index(cur)
+        conn.commit()
     else:
         print("Non-random Hi-C data already exists, skipping insertion.")
+    
+    cur.close()
+    conn.close()
 
 
 initialize_tables()
