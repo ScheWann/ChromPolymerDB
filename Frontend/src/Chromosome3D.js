@@ -7,7 +7,7 @@ import { DownloadOutlined, RollbackOutlined, ClearOutlined } from "@ant-design/i
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import "./Styles/Chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -25,7 +25,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
-    console.log(chromosome3DExampleData, '/////')
     const presetColors = [
         {
             label: 'Theme Colors',
@@ -323,8 +322,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         marginTop: 15
                     }}>
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
-                        <div className='beadInfoText'>Start: {beadInfo.seq_start}</div>
-                        <div className='beadInfoText'>End: {beadInfo.seq_end}</div>
+                        <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
+                        <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
                     </div>
                 )}
             </div>

@@ -249,7 +249,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                             anchorX="center"
                                             anchorY="middle"
                                         >
-                                            {distance.toFixed(2)}
+                                            {distance.toFixed(2)}nm
                                         </Text>
                                     </group>
                                 );

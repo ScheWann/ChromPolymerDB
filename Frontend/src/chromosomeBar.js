@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
-export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, warning }) => {
+export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, warning, formatNumber }) => {
     const svgRef = useRef();
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
@@ -216,7 +216,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 .attr('font-size', '12px')
                 .attr('font-weight', 'bold')
                 .attr('fill', '#333')
-                .text(`${max_end}`);
+                .text(`${formatNumber(max_end)}`);
         }
     }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize]);
 
@@ -231,8 +231,8 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     zIndex: 20
                 }}
             >
-                <div className="chromosomeBarTooltipText">Start: {tooltip.minStart}</div>
-                <div className="chromosomeBarTooltipText">End: {tooltip.maxEnd}</div>
+                <div className="chromosomeBarTooltipText">Start: {formatNumber(tooltip.minStart)}</div>
+                <div className="chromosomeBarTooltipText">End: {formatNumber(tooltip.maxEnd)}</div>
             </div>
         </div>
     );

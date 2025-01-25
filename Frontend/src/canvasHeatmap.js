@@ -5,7 +5,7 @@ import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import * as d3 from 'd3';
 
-export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize }) => {
+export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -280,9 +280,9 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                     position: 'absolute', top: 0, right: 0, zIndex: 10, display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between', padding: "5px 0 5px 0", borderBottom: "1px solid #eaeaea", alignItems: 'center'
                 }}>
                     <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10 }}>
-                        <span style={{ marginRight: 5 }}>{currentChromosomeSequence.start}</span>
+                        <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
                         <span style={{ marginRight: 5 }}>~</span>
-                        <span>{currentChromosomeSequence.end}</span>
+                        <span>{formatNumber(currentChromosomeSequence.end)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '5px' }}>
                         <Tooltip

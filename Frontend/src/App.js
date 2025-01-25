@@ -87,6 +87,17 @@ function App() {
     },
   ];
 
+  // Add "," to the number by every 3 digits
+  const formatNumber = (value) => {
+    if (!value) return '';
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+  
+  // Remove "," from the number
+  const parseNumber = (value) => {
+    return value.replace(/,/g, '');
+  };
+
   useEffect(() => {
     if (!isCellLineMode) {
       fetchGeneNameList();
@@ -401,7 +412,7 @@ function App() {
 
   // Chromosome sequence change
   const chromosomeSequenceChange = (position, value) => {
-    const newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
+    const newValue = value !== "" && !isNaN(value) ? Number(parseNumber(value)) : 0;
 
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
@@ -535,9 +546,9 @@ function App() {
                 options={chromosList}
               />
               <span className="controlGroupText">Sequences:</span>
-              <Input size="small" style={{ width: "8%", marginRight: 10 }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
+              <Input size="small" style={{ width: "8%", marginRight: 10 }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={formatNumber(selectedChromosomeSequence.start)} />
               <span className="controlGroupText">~</span>
-              <Input size="small" style={{ width: "8%", marginRight: 20 }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
+              <Input size="small" style={{ width: "8%", marginRight: 20 }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={formatNumber(selectedChromosomeSequence.end)} />
             </>
           ) : (
             <>
@@ -621,6 +632,7 @@ function App() {
         </div>
         <ChromosomeBar
           warning={warning}
+          formatNumber={formatNumber}
           selectedChromosomeSequence={selectedChromosomeSequence}
           setSelectedChromosomeSequence={setSelectedChromosomeSequence}
           chromosomeSize={chromosomeSize}
@@ -637,6 +649,7 @@ function App() {
           chromosomeData.length > 0 ? (
             <Heatmap
               warning={warning}
+              formatNumber={formatNumber}
               setChromosome3DExampleData={setChromosome3DExampleData}
               geneList={geneList}
               cellLineName={cellLineName}
@@ -701,6 +714,7 @@ function App() {
                       key: id,
                       children: (
                         <Chromosome3D
+                          formatNumber={formatNumber}
                           geneSize={geneSize}
                           chromosome3DExampleData={chromosome3DExampleData}
                           validChromosomeValidIbpData={validChromosomeValidIbpData}
@@ -765,6 +779,7 @@ function App() {
                           />
                         ) : (
                           <Chromosome3D
+                            formatNumber={formatNumber}
                             geneSize={geneSize}
                             chromosome3DExampleData={comparisonCellLine3DData}
                             validChromosomeValidIbpData={validChromosomeValidIbpData}
