@@ -192,7 +192,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
 
             const xAxis = d3.axisBottom(xScale)
                 .ticks(5)
-                .tickFormat((d) => d);
+                .tickFormat((d) => formatNumber(d));
 
             svg.append('g')
                 .attr('class', 'x-axis')
