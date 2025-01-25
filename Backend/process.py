@@ -273,6 +273,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     conn = get_db_connection()
     cur = conn.cursor()
 
+    temp_folding_input_path = "../Data/Folding_input"
+
     def delete_old_samples(conn):
         """Delete old samples from the position table."""
         cur = conn.cursor()
@@ -283,10 +285,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         """)
 
         print("Old samples deleted successfully.")
-    
-    delete_old_samples(conn)
-    
-    temp_folding_input_path = "../Data/Folding_input"
+
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
         hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
@@ -319,6 +318,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             return position_data
         else: 
             return None
+
+    delete_old_samples(conn)
 
     if checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
         return checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)

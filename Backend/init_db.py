@@ -304,13 +304,13 @@ def process_sequence_data(cur):
 
 def process_non_random_hic_index(cur):
     """Create index on non_random_hic table for faster search."""
-    print("Creating index idx_hic_optimized...")
+    print("Creating index idx_hic_search...")
     cur.execute(
         """
-        CREATE INDEX idx_hic_optimized ON non_random_hic (chrID, cell_line, ibp, jbp);
+        CREATE INDEX idx_hic_search ON non_random_hic (chrID, cell_line, ibp, jbp);
         """
     )
-    print("Index idx_hic_optimized created successfully.")
+    print("Index idx_hic_search created successfully.")
 
 
 def insert_data():
