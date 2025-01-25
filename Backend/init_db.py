@@ -69,7 +69,6 @@ def initialize_tables():
         print("chromosome table created successfully.")
     else:
         print("chromosome table already exists, skipping creation.")
-        return
 
     if not table_exists(cur, "gene"):
         print("Creating gene table...")
@@ -88,7 +87,6 @@ def initialize_tables():
         print("gene table created successfully.")
     else:
         print("gene table already exists, skipping creation.")
-        return
 
     if not table_exists(cur, "non_random_hic"):
         print("Creating non_random_hic table...")
@@ -106,9 +104,17 @@ def initialize_tables():
         )
         conn.commit()
         print("non_random_hic table created successfully.")
+
+        print("Creating index idx_hic_optimized...")
+        cur.execute(
+            """
+            CREATE INDEX idx_hic_optimized ON non_random_hic (chrID, cell_line, ibp, jbp);
+            """
+        )
+        conn.commit()
+        print("Index idx_hic_optimized created successfully.")
     else:
         print("non_random_hic table already exists, skipping creation.")
-        return
 
     if not table_exists(cur, "epigenetic_track"):
         print("Creating epigenetic_track table...")
@@ -133,7 +139,6 @@ def initialize_tables():
         print("epigenetic_track table created successfully.")
     else:
         print("epigenetic_track table already exists, skipping creation.")
-        return
 
     if not table_exists(cur, "sequence"):
         print("Creating sequence table...")
@@ -151,7 +156,6 @@ def initialize_tables():
         print("sequence table created successfully.")
     else:
         print("sequence table already exists, skipping creation.")
-        return
 
     if not table_exists(cur, "position"):
         print("Creating position table...")

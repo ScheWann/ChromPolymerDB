@@ -408,7 +408,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 position={coord}
                                 onPointerOver={(e) => {
                                     e.stopPropagation();
-                                    console.log(processedChromosomeData[index])
                                     setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
                                     setShowBeadInfo(true);
                                     setHoveredIndex(index);
