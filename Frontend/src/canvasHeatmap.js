@@ -368,6 +368,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                 <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
+                <div style={{ position: 'absolute', top: 75, left: -10, transform: 'rotate(-90deg)', zIndex: 10, fontSize: 12, fontWeight: 'bold', border: '1px solid #999', padding: "3px 5px 3px 5px", borderRadius: 5 }}>NON-RANDOM</div>
+                <div style={{ position: 'absolute', bottom: 35, right: -15, transform: 'rotate(90deg)', zIndex: 10, fontSize: 12, fontWeight: 'bold', border: '1px solid #999', padding: "3px 5px 3px 5px", borderRadius: 5 }}>EXPERIMENT</div>
             </div>
             {minDimension > 0 && (
                 <GeneList
