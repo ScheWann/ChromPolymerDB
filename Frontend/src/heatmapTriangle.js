@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { Button, Tooltip, Switch } from 'antd';
 import { DownloadOutlined } from "@ant-design/icons";
-import { TriangleGeneList } from './triangleGeneList.js';
+import { IgvViewer } from './igvViewer.js';
+// import { TriangleGeneList } from './triangleGeneList.js';
 
 export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData }) => {
     const containerRef = useRef(null);
@@ -327,7 +328,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             <canvas ref={canvasRef} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
             <svg ref={axisSvgRef} style={{ height: '50px', flexShrink: 0 }} />
-            {minCanvasDimension > 0 && (
+            {/* {minCanvasDimension > 0 && (
                 <TriangleGeneList
                     brushedTriangleRange={brushedTriangleRange}
                     cellLineName={cellLineName}
@@ -336,6 +337,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     currentChromosomeSequence={currentChromosomeSequence}
                     minCanvasDimension={minCanvasDimension}
                     geneName={geneName}
+                />
+            )} */}
+            {minCanvasDimension > 0 && (
+                <IgvViewer 
+                    cellLineName={cellLineName}
+                    chromosomeName={chromosomeName}
+                    currentChromosomeSequence={currentChromosomeSequence}
                 />
             )}
         </div>
