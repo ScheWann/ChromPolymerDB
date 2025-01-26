@@ -92,11 +92,6 @@ function App() {
     if (!value) return '';
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
-  
-  // Remove "," from the number
-  const parseNumber = (value) => {
-    return value.replace(/,/g, '');
-  };
 
   useEffect(() => {
     if (!isCellLineMode) {
@@ -412,7 +407,7 @@ function App() {
 
   // Chromosome sequence change
   const chromosomeSequenceChange = (position, value) => {
-    const newValue = value !== "" && !isNaN(value) ? Number(parseNumber(value)) : 0;
+    const newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
 
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
@@ -546,9 +541,9 @@ function App() {
                 options={chromosList}
               />
               <span className="controlGroupText">Sequences:</span>
-              <Input size="small" style={{ width: "8%", marginRight: 10 }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={formatNumber(selectedChromosomeSequence.start)} />
+              <Input size="small" style={{ width: "8%", marginRight: 10 }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
               <span className="controlGroupText">~</span>
-              <Input size="small" style={{ width: "8%", marginRight: 20 }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={formatNumber(selectedChromosomeSequence.end)} />
+              <Input size="small" style={{ width: "8%", marginRight: 20 }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
             </>
           ) : (
             <>
