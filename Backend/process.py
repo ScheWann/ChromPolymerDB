@@ -58,7 +58,6 @@ def gene_names_list_search(search):
         SELECT DISTINCT symbol
         FROM gene
         WHERE symbol ILIKE %s
-        AND (chromosome = '12' OR chromosome = '17')
     """,
         (f"%{search}%",),
     )
