@@ -5,7 +5,7 @@ import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch } from 'antd';
 import { DownloadOutlined, RollbackOutlined, ClearOutlined } from "@ant-design/icons";
 import { Chromosome3DDistance } from './Chromosome3DDistance';
-import "./Styles/Chromosome3D.css";
+import "./Styles/chromosome3D.css";
 
 export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber }) => {
     const scaleFactor = 0.15;

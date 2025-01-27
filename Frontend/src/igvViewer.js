@@ -5,7 +5,6 @@ import igv from '../node_modules/igv/dist/igv.esm.js';
 export const IgvViewer = ({ cellLineName, chromosomeName, currentChromosomeSequence }) => {
     const igvDivRef = useRef(null);
 
-    console.log(cellLineName, currentChromosomeSequence, chromosomeName);   
     // Default tracks for the IGV browser
     const defaultTracks = {
         'GM' : [
@@ -16,17 +15,18 @@ export const IgvViewer = ({ cellLineName, chromosomeName, currentChromosomeSeque
             },
             {
                 name: "H3K4me3",
-                url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF975ARJ/@@download/ENCFF975ARJ.bigWig",
                 format: "bigwig",
             },
             {
                 name: "H3K27ac",
-                url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF087YCU/@@download/ENCFF087YCU.bigWig",
                 format: "bigwig",
             },
             {
                 name: "H3K27me3",
-                url: "https://www.encodeproject.org/files/ENCFF211VQW/@@download/ENCFF211VQW.bigWig"
+                url: "https://www.encodeproject.org/files/ENCFF211VQW/@@download/ENCFF211VQW.bigWig",
+                format: "bigwig",
             }
         ],
         'K': [
@@ -64,12 +64,12 @@ export const IgvViewer = ({ cellLineName, chromosomeName, currentChromosomeSeque
             },
             {
                 name: "H3K27ac",
-                url: "https://www.encodeproject.org/files/ENCFF811ZFE/@@download/ENCFF811ZFE.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF803HKN/@@download/ENCFF803HKN.bigWig",
                 format: "bigwig",
             },
             {
                 name: "H3K27me3",
-                url: "https://www.encodeproject.org/files/ENCFF811ZFE/@@download/ENCFF811ZFE.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF525KFC/@@download/ENCFF525KFC.bigWig",
                 format: "bigwig",
             }
         ]

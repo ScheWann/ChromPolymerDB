@@ -3,6 +3,7 @@ import { Button, Input, Modal, Tooltip } from "antd";
 import { DownloadOutlined, RollbackOutlined, FullscreenOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
+import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
 export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber }) => {
@@ -14,6 +15,16 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
+
+    const modalStyles = {
+        body: {
+            overflowY: 'auto', 
+            maxHeight: '80vh'
+        },
+        content: {
+            padding: "30px 10px 20px 10px"
+        }
+    };
 
     const download = () => {
         if (chromosomeData) {
@@ -354,7 +365,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={{ body: { overflowY: 'auto', maxHeight: '80vh' } }} >
+                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
                     <HeatmapTriangle
                         geneList={geneList}
                         cellLineName={cellLineName}

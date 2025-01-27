@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { Button, Tooltip, Switch } from 'antd';
+import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin } from 'antd';
 import { DownloadOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 // import { TriangleGeneList } from './triangleGeneList.js';
@@ -15,6 +15,191 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [brushedTriangleRange, setBrushedTriangleRange] = useState({ start: 0, end: 0 });
     const [fullTriangleVisible, setFullTriangleVisible] = useState(false);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+    const [trackTableModalVisible, setTrackTableModalVisible] = useState(false);
+    const [trackDataSource, setTrackDataSource] = useState([]);
+    const [selectedTrackData, setSelectedTrackData] = useState([]);
+
+    // Tracks dropdown menu items
+    const trackItems = [
+        {
+            key: '1',
+            label: 'ENCODE Signals - ChIP'
+        },
+        {
+            key: '2',
+            label: 'ENCODE Signals - Other'
+        },
+        {
+            key: '3',
+            label: 'ENCODE Other'
+        },
+        {
+            key: '4',
+            label: '4DN tracks'
+        }
+    ];
+
+    const trackTableColumns = [
+        {
+            title: "AssayType",
+            dataIndex: "AssayType",
+            key: "AssayType",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                    backgroundColor: "#f8f8f8",
+                },
+            }),
+        },
+        {
+            title: "Target",
+            dataIndex: "Target",
+            key: "Target",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "BioRep",
+            dataIndex: "BioRep",
+            key: "BioRep",
+            width: 80,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "TechRep",
+            dataIndex: "TechRep",
+            key: "TechRep",
+            width: 80,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "OutputType",
+            dataIndex: "OutputType",
+            key: "OutputType",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Format",
+            dataIndex: "Format",
+            key: "Format",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Lab",
+            dataIndex: "Lab",
+            key: "Lab",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Accession",
+            dataIndex: "Accession",
+            key: "Accession",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Experiment",
+            dataIndex: "Experiment",
+            key: "Experiment",
+            width: 150,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+    ];
+
+    const modalStyles = {
+        body: {
+            height: '90%',
+            display: 'flex',
+            alignItems: 'center',
+        },
+        content: {
+            padding: "40px 10px 0px 10px"
+        }
+        // footer: {
+        //     borderTop: '1px solid #333',
+        // },
+    };
 
     const downloadImage = () => {
         const canvas = canvasRef.current;
@@ -55,6 +240,60 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const switchChange = () => {
         setFullTriangleVisible(!fullTriangleVisible);
         setBrushedTriangleRange({ start: 0, end: 0 });
+    };
+
+    const trackTableProcessing = (data) => {
+        const rows = data.split('\n');
+        const headers = rows[0].split('\t');
+        const targetColumns = [
+            'AssayType', 'Target', 'BioRep', 'TechRep', 'OutputType', 'Format', 'Lab', 'Accession', 'Experiment', 'HREF'
+        ];
+
+        return rows.slice(1).map((row, index) => {
+            const columns = row.split('\t');
+
+            const dataObj = targetColumns.reduce((acc, col, i) => {
+                const colIndex = headers.indexOf(col);
+                if (colIndex !== -1) {
+                    acc[col] = columns[colIndex];
+                }
+                return acc;
+            }, {});
+
+            return {
+                key: index + 1,
+                ...dataObj
+            };
+        });
+    };
+
+    const onClick = ({ key }) => {
+        setTrackTableModalVisible(true);
+        if (key === '1') {
+            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.chip.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(trackTableProcessing(data));
+                    setTrackDataSource(trackTableProcessing(data));
+                    setTrackTableModalVisible(true);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    };
+
+    const rowSelection = {
+        onChange: (selectedRowKeys, selectedRows) => {
+            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+            setSelectedTrackData(selectedRows);
+        },
+        fixed: 'left',
     };
 
     useEffect(() => {
@@ -314,6 +553,52 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         backgroundColor: fullTriangleVisible ? '#ED9121' : '#74C365',
                     }}
                 />
+                <Dropdown
+                    menu={{
+                        items: trackItems,
+                        onClick,
+                    }}
+                    placement="bottom"
+                >
+                    <Button>Tracks</Button>
+                </Dropdown>
+                <Modal
+                    width={"50vw"}
+                    open={trackTableModalVisible}
+                    onOk={() => setTrackTableModalVisible(false)}
+                    onCancel={() => setTrackTableModalVisible(false)}
+                    styles={modalStyles}
+                    footer={[
+                        <Button key="back" onClick={() => setTrackTableModalVisible(false)}>
+                            Cancel
+                        </Button>,
+                        <Button color="primary" variant="outlined" key="submit" type="primary" onClick={() => setTrackTableModalVisible(false)}>
+                            OK
+                        </Button>
+                    ]}
+                >
+                    {trackDataSource.length === 0 ? (
+                        <Spin spinning={true} size="large" style={{ width: '100%', height: '100%', margin: 0 }} />
+                    ) : (
+                        <Table
+                            bordered={true}
+                            dataSource={trackDataSource}
+                            columns={trackTableColumns}
+                            rowSelection={{
+                                ...rowSelection,
+                            }}
+                            pagination={{
+                                style: {
+                                    marginTop: '12px',
+                                    marginBottom: '12px',
+                                },
+                            }}
+                            scroll={{
+                                x: "max-content",
+                                y: "50vh",
+                            }} />
+                    )}
+                </Modal>
                 <Tooltip title="Download non-random interaction data">
                     <Button
                         style={{
@@ -340,7 +625,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 />
             )} */}
             {minCanvasDimension > 0 && (
-                <IgvViewer 
+                <IgvViewer
                     cellLineName={cellLineName}
                     chromosomeName={chromosomeName}
                     currentChromosomeSequence={currentChromosomeSequence}
