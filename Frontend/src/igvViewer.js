@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import igv from "../node_modules/igv/dist/igv.esm.js";
 
-export const IgvViewer = ({ selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence }) => {
+export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence }) => {
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
 
@@ -101,18 +101,34 @@ export const IgvViewer = ({ selectedTrackData, cellLineName, chromosomeName, cur
     }, []);
 
     useEffect(() => {
-        if (browserRef.current && selectedTrackData) {
-            selectedTrackData.forEach((track) => {
-                const newTrack = {
-                    url: `https://www.encodeproject.org${track.HREF}`,
-                    name: track.AssayType,
-                    format: track.Format,
-                };
+        if (browserRef.current && selectedTrackData && trackKey) {
+            if (trackKey === '4') {
+                selectedTrackData.forEach((track) => {
+                    console.log(trackKey, track.url, '?????')
+                    const newTrack = {
+                        url: track.url,
+                        name: track.name,
+                        format: 'bed',
+                        type: track.Type,
+                        color: track.color,
+                        altColor: track.altColor,
+                    };
+    
+                    browserRef.current.loadTrack(newTrack);
+                });
+            } else {
+                selectedTrackData.forEach((track) => {
+                    const newTrack = {
+                        url: `https://www.encodeproject.org${track.HREF}`,
+                        name: track.AssayType,
+                        format: track.Format,
+                    };
 
-                browserRef.current.loadTrack(newTrack);
-            });
+                    browserRef.current.loadTrack(newTrack);
+                });
+            }
         }
-    }, [selectedTrackData]);
+    }, [selectedTrackData, trackKey]);
 
     return (
         <div style={{ width: "100%" }}>

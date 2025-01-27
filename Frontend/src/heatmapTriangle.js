@@ -18,6 +18,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [trackTableModalVisible, setTrackTableModalVisible] = useState(false);
     const [trackDataSource, setTrackDataSource] = useState([]);
     const [selectedTrackData, setSelectedTrackData] = useState([]);
+    const [trackKey, setTrackKey] = useState(null);
 
     // Tracks dropdown menu items
     const trackItems = [
@@ -40,6 +41,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     ];
 
     const trackTableColumns = [
+        {
+            title: "Biosample",
+            dataIndex: "Biosample",
+            key: "Biosample",
+            width: 150,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                    backgroundColor: "#f8f8f8",
+                },
+            }),
+        },
         {
             title: "AssayType",
             dataIndex: "AssayType",
@@ -187,6 +205,170 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         },
     ];
 
+    const trackTableColumns4DN = [
+        {
+            title: "Project",
+            dataIndex: "Project",
+            key: "Project",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                    backgroundColor: "#f8f8f8",
+                },
+            }),
+        },
+        {
+            title: "Type",
+            dataIndex: "Type",
+            key: "Type",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Biosource",
+            dataIndex: "Biosource",
+            key: "Biosource",
+            width: 80,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Assay",
+            dataIndex: "Assay",
+            key: "Assay",
+            width: 80,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Replicate",
+            dataIndex: "Replicate",
+            key: "Replicate",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Dataset",
+            dataIndex: "Dataset",
+            key: "Dataset",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Description",
+            dataIndex: "name",
+            key: "Description",
+            width: 100,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Lab",
+            dataIndex: "Lab",
+            key: "Lab",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Publication",
+            dataIndex: "Publication",
+            key: "Publication",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        },
+        {
+            title: "Accession",
+            dataIndex: "Accession",
+            key: "Accession",
+            width: 120,
+            onHeaderCell: () => ({
+                style: {
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    height: "50px",
+                    lineHeight: "50px",
+                    padding: 0,
+                },
+            }),
+        }
+    ]
+
     const modalStyles = {
         body: {
             height: '90%',
@@ -239,12 +421,20 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         setBrushedTriangleRange({ start: 0, end: 0 });
     };
 
-    const trackTableProcessing = (data) => {
-        const rows = data.split('\n');
+    const trackTableProcessing = (key, data) => {
+        const rows = data.split('\n').filter(row => row.trim() !== '');
         const headers = rows[0].split('\t');
-        const targetColumns = [
-            'AssayType', 'Target', 'BioRep', 'TechRep', 'OutputType', 'Format', 'Lab', 'Accession', 'Experiment', 'HREF'
-        ];
+        let targetColumns;
+
+        if (key !== '4') {
+            targetColumns = [
+                'Biosample', 'AssayType', 'Target', 'BioRep', 'TechRep', 'OutputType', 'Format', 'Lab', 'Accession', 'Experiment', 'HREF'
+            ];
+        } else {
+            targetColumns = [
+                'Project', 'Assembly', 'Type', 'Biosource', 'Assay', 'Replicate', 'Dataset', 'name', 'Lab', 'Publication', 'Accession', 'url', 'Experiment', 'color', 'altColor'
+            ];
+        }
 
         return rows.slice(1).map((row, index) => {
             const columns = row.split('\t');
@@ -261,7 +451,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 key: index + 1,
                 ...dataObj
             };
-        });
+        }).filter(obj => Object.keys(obj).length > 1);
     };
 
     const rowSelection = {
@@ -274,8 +464,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const onClick = ({ key }) => {
         setTrackTableModalVisible(true);
+        setTrackKey(key);
         setTrackDataSource([]);
-        
+
         // ENCODE Signals - ChIP
         if (key === '1') {
             fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.chip.txt')
@@ -286,7 +477,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     return response.text();
                 })
                 .then(data => {
-                    setTrackDataSource(trackTableProcessing(data));
+                    console.log(trackTableProcessing(key, data), '///')
+                    setTrackDataSource(trackTableProcessing(key, data));
                     setTrackTableModalVisible(true);
                 })
                 .catch(error => {
@@ -297,55 +489,56 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         // ENCODE Signals - Other
         if (key === '2') {
             fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.other.txt')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                setTrackDataSource(trackTableProcessing(data));
-                setTrackTableModalVisible(true);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    setTrackDataSource(trackTableProcessing(key, data));
+                    setTrackTableModalVisible(true);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
         }
 
         // ENCODE Other
         if (key === '3') {
             fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.other.txt')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                setTrackDataSource(trackTableProcessing(data));
-                setTrackTableModalVisible(true);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    setTrackDataSource(trackTableProcessing(key, data));
+                    setTrackTableModalVisible(true);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
         }
 
         // 4DN
         if (key === '4') {
             fetch('https://s3.amazonaws.com/igv.org.app/4dn/hic/4dn_GRCh38_tracks.txt')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                setTrackDataSource(trackTableProcessing(data));
-                setTrackTableModalVisible(true);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(trackTableProcessing(key, data));
+                    setTrackDataSource(trackTableProcessing(key, data));
+                    setTrackTableModalVisible(true);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
         }
     };
 
@@ -640,11 +833,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         <Table
                             bordered={true}
                             dataSource={trackDataSource}
-                            columns={trackTableColumns}
+                            columns={trackKey === '4' ? trackTableColumns4DN : trackTableColumns}
                             rowSelection={{
                                 ...rowSelection,
                             }}
                             pagination={{
+                                total: trackDataSource.length,
                                 style: {
                                     marginTop: '12px',
                                     marginBottom: '12px',
@@ -683,6 +877,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             )} */}
             {minCanvasDimension > 0 && (
                 <IgvViewer
+                    trackKey={trackKey}
                     selectedTrackData={selectedTrackData}
                     cellLineName={cellLineName}
                     chromosomeName={chromosomeName}
