@@ -96,6 +96,7 @@ def initialize_tables():
             "chrID VARCHAR(50) NOT NULL,"
             "cell_line VARCHAR(50) NOT NULL,"
             "fq FLOAT NOT NULL DEFAULT 0.0,"
+            "rawc FLOAT NOT NULL DEFAULT 0.0,"
             "fdr FLOAT NOT NULL DEFAULT 0.0,"
             "ibp BIGINT NOT NULL DEFAULT 0,"
             "jbp BIGINT NOT NULL DEFAULT 0,"
@@ -206,8 +207,8 @@ def process_gene_data(cur, file_path):
 def process_non_random_hic_data(chromosome_dir):
     """Process and insert Hi-C data from CSV files in the specified directory."""
     query = """
-    INSERT INTO non_random_hic (chrID, cell_line, ibp, jbp, fq, fdr)
-    VALUES (%s, %s, %s, %s, %s, %s);
+    INSERT INTO non_random_hic (chrID, cell_line, ibp, jbp, fq, fdr, rawc)
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
 
     # Loop through all files in the directory
@@ -219,16 +220,16 @@ def process_non_random_hic_data(chromosome_dir):
 
             # Read the CSV file in chunks
             for chunk in pd.read_csv(
-                file_path, usecols=["chr", "cell_line", "ibp", "jbp", "fq", "fdr"], chunksize=10000
+                file_path, usecols=["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"], chunksize=10000
             ):
                 # Convert the chunk to a list of tuples
                 non_random_hic_records = chunk[
-                    ["chr", "cell_line", "ibp", "jbp", "fq", "fdr"]
+                    ["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"]
                 ].values.tolist()
 
                 # Prepare data for batch insertion
                 data_to_insert = [
-                    (record[0], record[1], record[2], record[3], record[4], record[5])
+                    (record[0], record[1], record[2], record[3], record[4], record[5], record[6])
                     for record in non_random_hic_records
                 ]
 
