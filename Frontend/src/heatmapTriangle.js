@@ -46,6 +46,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Biosample",
             key: "Biosample",
             width: 150,
+            sorter: (a, b) => a.Biosample.localeCompare(b.Biosample),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -63,6 +65,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "AssayType",
             key: "AssayType",
             width: 100,
+            sorter: (a, b) => a.AssayType.localeCompare(b.AssayType),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -80,6 +84,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Target",
             key: "Target",
             width: 120,
+            sorter: (a, b) => a.Target.localeCompare(b.Target),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -96,6 +102,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "BioRep",
             key: "BioRep",
             width: 80,
+            sorter: (a, b) => a.BioRep.localeCompare(b.BioRep),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -112,6 +120,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "TechRep",
             key: "TechRep",
             width: 80,
+            sorter: (a, b) => a.TechRep.localeCompare(b.TechRep),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -128,6 +138,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "OutputType",
             key: "OutputType",
             width: 120,
+            sorter: (a, b) => a.OutputType.localeCompare(b.OutputType),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -144,6 +156,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Format",
             key: "Format",
             width: 100,
+            sorter: (a, b) => a.Format.localeCompare(b.Format),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -160,6 +174,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Lab",
             key: "Lab",
             width: 100,
+            sorter: (a, b) => a.Lab.localeCompare(b.Lab),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -176,6 +192,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Accession",
             key: "Accession",
             width: 120,
+            sorter: (a, b) => a.Accession.localeCompare(b.Accession),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -192,6 +210,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Experiment",
             key: "Experiment",
             width: 150,
+            sorter: (a, b) => a.Experiment.localeCompare(b.Experiment),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -211,6 +231,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Project",
             key: "Project",
             width: 100,
+            sorter: (a, b) => a.Project.localeCompare(b.Project),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -228,6 +250,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Type",
             key: "Type",
             width: 120,
+            sorter: (a, b) => a.Type.localeCompare(b.Type),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -244,6 +268,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Biosource",
             key: "Biosource",
             width: 80,
+            sorter: (a, b) => a.Biosource.localeCompare(b.Biosource),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -260,6 +286,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Assay",
             key: "Assay",
             width: 80,
+            sorter: (a, b) => a.Assay.localeCompare(b.Assay),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -276,6 +304,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Replicate",
             key: "Replicate",
             width: 120,
+            sorter: (a, b) => a.Replicate.localeCompare(b.Replicate),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -292,6 +322,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Dataset",
             key: "Dataset",
             width: 100,
+            sorter: (a, b) => a.Dataset.localeCompare(b.Dataset),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -308,6 +340,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "name",
             key: "Description",
             width: 100,
+            sorter: (a, b) => a.name.localeCompare(b.name),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -324,6 +358,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Lab",
             key: "Lab",
             width: 120,
+            sorter: (a, b) => a.Lab.localeCompare(b.Lab),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -340,6 +376,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Publication",
             key: "Publication",
             width: 120,
+            sorter: (a, b) => a.Publication.localeCompare(b.Publication),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -356,6 +394,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             dataIndex: "Accession",
             key: "Accession",
             width: 120,
+            sorter: (a, b) => a.Accession.localeCompare(b.Accession),
+            sortDirections: ["ascend", "descend"],
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -367,7 +407,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 },
             }),
         }
-    ]
+    ];
+    
 
     const modalStyles = {
         body: {
