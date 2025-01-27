@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import igv from "../node_modules/igv/dist/igv.esm.js";
+import * as d3 from "d3";
 
-export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence }) => {
+
+export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension }) => {
+    const containerRef = useRef(null);
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
-
+    const svgRef = useRef(null);
+    
+    const [igvHeight, setIgvHeight] = useState(0);
+    
     const defaultTracks = {
         'GM': [
             {
@@ -74,6 +80,21 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         ]
     }
 
+    const { start, end } = currentChromosomeSequence;
+    const step = 5000;
+    const adjustedStart = Math.floor(start / step) * step;
+    const adjustedEnd = Math.ceil(end / step) * step;
+
+    const axisValues = Array.from(
+        { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
+        (_, i) => adjustedStart + i * step
+    );
+
+    const xAxisScale = d3.scaleBand()
+        .domain(axisValues)
+        .range([0, minCanvasDimension])
+        .padding(0.1);
+
     useEffect(() => {
         const igvOptions = {
             genome: "hg38",
@@ -96,7 +117,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         if (browserRef.current && selectedTrackData && trackKey) {
             if (trackKey === '4') {
                 selectedTrackData.forEach((track) => {
-                    console.log(trackKey, track.url, '?????')
                     const newTrack = {
                         url: track.url,
                         name: track.name,
@@ -105,7 +125,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                         color: track.color,
                         altColor: track.altColor,
                     };
-    
                     browserRef.current.loadTrack(newTrack);
                 });
             } else {
@@ -122,13 +141,67 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         }
     }, [selectedTrackData, trackKey]);
 
+    useEffect(() => {
+        const svg = d3.select(svgRef.current);
+
+        let parentWidth = containerRef.current.offsetWidth;
+        svg.selectAll("*").remove();
+
+        svg.attr('class', 'brushed-triangle-range-overlay')
+            .style('z-index', 100)
+            .style('position', 'absolute')
+            .style('height', 0)
+
+        if (brushedTriangleRange.start && brushedTriangleRange.end) {
+            const { start, end } = brushedTriangleRange;
+            const startX = xAxisScale(start);
+            const endX = xAxisScale(end);
+
+            const svgHeight = d3.select(igvDivRef.current).node().getBoundingClientRect().height;
+            const svgWidth = minCanvasDimension + 100;
+            setIgvHeight(svgHeight);
+
+            svg.style('width', svgWidth)
+                .style('height', svgHeight)
+                .style('bottom', -svgHeight / 2)
+                .style('pointer-events', 'none');
+
+            svg.append("line")
+                .attr("class", "brushed-triangle-range")
+                .attr('transform', `translate(50, 0)`)
+                .attr("x1", startX)
+                .attr("y1", 0)
+                .attr("x2", startX)
+                .attr("y2", svgHeight)
+                .attr("stroke", "#C0C0C0")
+                .attr("stroke-width", 3);
+
+            svg.append("line")
+                .attr("class", "brushed-triangle-range")
+                .attr('transform', `translate(50, 0)`)
+                .attr("x1", endX)
+                .attr("y1", 0)
+                .attr("x2", endX)
+                .attr("y2", svgHeight)
+                .attr("stroke", "#C0C0C0")
+                .attr("stroke-width", 3);
+        }
+    }, [brushedTriangleRange]);
+
     return (
-        <div style={{ width: "100%" }}>
+        <div ref={containerRef}
+            style={{
+                width: "100%",
+                height: 325,
+                display: "flex",
+                justifyContent: "center",
+            }}>
             <div
                 id="igv-div"
                 ref={igvDivRef}
-                style={{ width: "100%", height: "100%" }}
+                style={{ width: minCanvasDimension + 100, height: "100%", overflowY: "auto", }}
             ></div>
+            <svg ref={svgRef} />
         </div>
     );
 };

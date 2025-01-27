@@ -41,10 +41,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             key: '3',
             label: 'ENCODE Other'
         },
-        {
-            key: '4',
-            label: '4DN tracks'
-        }
+        // {
+        //     key: '4',
+        //     label: '4DN tracks'
+        // }
     ];
 
     const getColumnSearchProps = (dataIndex) => ({
@@ -616,7 +616,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
             setSelectedTrackData(selectedRows);
         },
         fixed: 'left',
@@ -637,7 +636,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     return response.text();
                 })
                 .then(data => {
-                    console.log(trackTableProcessing(key, data), '///')
                     setTrackDataSource(trackTableProcessing(key, data));
                     setTrackTableModalVisible(true);
                 })
@@ -1037,8 +1035,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 <IgvViewer
                     trackKey={trackKey}
                     selectedTrackData={selectedTrackData}
+                    minCanvasDimension={minCanvasDimension}
                     cellLineName={cellLineName}
                     chromosomeName={chromosomeName}
+                    brushedTriangleRange={brushedTriangleRange}
                     currentChromosomeSequence={currentChromosomeSequence}
                 />
             )}
