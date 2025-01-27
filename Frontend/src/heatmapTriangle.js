@@ -196,9 +196,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         content: {
             padding: "40px 10px 0px 10px"
         }
-        // footer: {
-        //     borderTop: '1px solid #333',
-        // },
     };
 
     const downloadImage = () => {
@@ -267,8 +264,19 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         });
     };
 
+    const rowSelection = {
+        onChange: (selectedRowKeys, selectedRows) => {
+            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+            setSelectedTrackData(selectedRows);
+        },
+        fixed: 'left',
+    };
+
     const onClick = ({ key }) => {
         setTrackTableModalVisible(true);
+        setTrackDataSource([]);
+        
+        // ENCODE Signals - ChIP
         if (key === '1') {
             fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.chip.txt')
                 .then(response => {
@@ -278,7 +286,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     return response.text();
                 })
                 .then(data => {
-                    console.log(trackTableProcessing(data));
                     setTrackDataSource(trackTableProcessing(data));
                     setTrackTableModalVisible(true);
                 })
@@ -286,14 +293,64 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     console.error('Error fetching data:', error);
                 });
         }
+
+        // ENCODE Signals - Other
+        if (key === '2') {
+            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.other.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setTrackDataSource(trackTableProcessing(data));
+                setTrackTableModalVisible(true);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        }
+
+        // ENCODE Other
+        if (key === '3') {
+            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.other.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setTrackDataSource(trackTableProcessing(data));
+                setTrackTableModalVisible(true);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        }
+
+        // 4DN
+        if (key === '4') {
+            fetch('https://s3.amazonaws.com/igv.org.app/4dn/hic/4dn_GRCh38_tracks.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setTrackDataSource(trackTableProcessing(data));
+                setTrackTableModalVisible(true);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        }
     };
 
-    const rowSelection = {
-        onChange: (selectedRowKeys, selectedRows) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-            setSelectedTrackData(selectedRows);
-        },
-        fixed: 'left',
+    const confirmTrackSelection = () => {
+        setTrackTableModalVisible(false);
     };
 
     useEffect(() => {
@@ -572,7 +629,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         <Button key="back" onClick={() => setTrackTableModalVisible(false)}>
                             Cancel
                         </Button>,
-                        <Button color="primary" variant="outlined" key="submit" type="primary" onClick={() => setTrackTableModalVisible(false)}>
+                        <Button color="primary" variant="outlined" key="submit" type="primary" onClick={confirmTrackSelection}>
                             OK
                         </Button>
                     ]}
@@ -626,6 +683,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             )} */}
             {minCanvasDimension > 0 && (
                 <IgvViewer
+                    selectedTrackData={selectedTrackData}
                     cellLineName={cellLineName}
                     chromosomeName={chromosomeName}
                     currentChromosomeSequence={currentChromosomeSequence}

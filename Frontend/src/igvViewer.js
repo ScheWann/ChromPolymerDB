@@ -1,13 +1,12 @@
-import React, { useEffect, useRef } from "react";
-import igv from '../node_modules/igv/dist/igv.esm.js';
+import React, { useEffect, useState, useRef } from "react";
+import igv from "../node_modules/igv/dist/igv.esm.js";
 
-
-export const IgvViewer = ({ cellLineName, chromosomeName, currentChromosomeSequence }) => {
+export const IgvViewer = ({ selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence }) => {
     const igvDivRef = useRef(null);
+    const browserRef = useRef(null);
 
-    // Default tracks for the IGV browser
     const defaultTracks = {
-        'GM' : [
+        'GM': [
             {
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
@@ -83,25 +82,37 @@ export const IgvViewer = ({ cellLineName, chromosomeName, currentChromosomeSeque
             showAllChromosomes: false,
             showNavigation: false,
             showIdeogram: false,
-            panEnabled: false, 
+            panEnabled: false,
             showRuler: false,
             tracks: defaultTracks[cellLineName],
         };
 
-        let browser;
-
-        // Create the IGV browser
         igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
-            browser = igvBrowser;
+            browserRef.current = igvBrowser;
         });
 
         // Cleanup on unmount
         return () => {
-            if (browser) {
-                browser.destroy();
+            if (browserRef.current) {
+                browserRef.current.destroy();
+                browserRef.current = null;
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (browserRef.current && selectedTrackData) {
+            selectedTrackData.forEach((track) => {
+                const newTrack = {
+                    url: `https://www.encodeproject.org${track.HREF}`,
+                    name: track.AssayType,
+                    format: track.Format,
+                };
+
+                browserRef.current.loadTrack(newTrack);
+            });
+        }
+    }, [selectedTrackData]);
 
     return (
         <div style={{ width: "100%" }}>
