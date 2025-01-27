@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin } from 'antd';
-import { DownloadOutlined } from "@ant-design/icons";
+import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, Input, Space, } from 'antd';
+import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
+import Highlighter from 'react-highlight-words';
+import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
 export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData }) => {
@@ -19,6 +21,11 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [trackDataSource, setTrackDataSource] = useState([]);
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
+
+    // Track table search
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const searchInput = useRef(null);
 
     // Tracks dropdown menu items
     const trackItems = [
@@ -40,6 +47,92 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         }
     ];
 
+    const getColumnSearchProps = (dataIndex) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+            <div
+                style={{
+                    padding: 8,
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{
+                        marginBottom: 8,
+                        display: 'block',
+                    }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        variant="outlined"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{
+                            width: 90,
+                        }}
+                    >
+                        Search
+                    </Button>
+                    <Button
+                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        size="small"
+                        style={{
+                            width: 90,
+                        }}
+                    >
+                        Reset
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            close();
+                        }}
+                    >
+                        close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined
+                style={{
+                    margin: 0,
+                    color: filtered ? '#1677ff' : undefined,
+                }}
+            />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+        filterDropdownProps: {
+            onOpenChange(open) {
+                if (open) {
+                    setTimeout(() => searchInput.current?.select(), 100);
+                }
+            },
+        },
+        render: (text) =>
+            searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{
+                        backgroundColor: '#ffc069',
+                        padding: 0,
+                    }}
+                    searchWords={[searchText]}
+                    autoEscape
+                    textToHighlight={text ? text.toString() : ''}
+                />
+            ) : (
+                text
+            ),
+    });
+
     const trackTableColumns = [
         {
             title: "Biosample",
@@ -48,6 +141,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             width: 150,
             sorter: (a, b) => a.Biosample.localeCompare(b.Biosample),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Biosample'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -64,9 +158,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             title: "AssayType",
             dataIndex: "AssayType",
             key: "AssayType",
-            width: 100,
+            width: 120,
             sorter: (a, b) => a.AssayType.localeCompare(b.AssayType),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('AssayType'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -86,6 +181,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             width: 120,
             sorter: (a, b) => a.Target.localeCompare(b.Target),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Target'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -101,9 +197,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             title: "BioRep",
             dataIndex: "BioRep",
             key: "BioRep",
-            width: 80,
+            width: 120,
             sorter: (a, b) => a.BioRep.localeCompare(b.BioRep),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('BioRep'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -119,9 +216,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             title: "TechRep",
             dataIndex: "TechRep",
             key: "TechRep",
-            width: 80,
+            width: 120,
             sorter: (a, b) => a.TechRep.localeCompare(b.TechRep),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('TechRep'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -140,6 +238,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             width: 120,
             sorter: (a, b) => a.OutputType.localeCompare(b.OutputType),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('OutputType'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -155,9 +254,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             title: "Format",
             dataIndex: "Format",
             key: "Format",
-            width: 100,
+            width: 120,
             sorter: (a, b) => a.Format.localeCompare(b.Format),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Format'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -173,9 +273,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             title: "Lab",
             dataIndex: "Lab",
             key: "Lab",
-            width: 100,
+            width: 120,
             sorter: (a, b) => a.Lab.localeCompare(b.Lab),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Lab'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -194,6 +295,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             width: 120,
             sorter: (a, b) => a.Accession.localeCompare(b.Accession),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Accession'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -212,6 +314,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             width: 150,
             sorter: (a, b) => a.Experiment.localeCompare(b.Experiment),
             sortDirections: ["ascend", "descend"],
+            ...getColumnSearchProps('Experiment'),
             onHeaderCell: () => ({
                 style: {
                     fontSize: "12px",
@@ -408,7 +511,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             }),
         }
     ];
-    
 
     const modalStyles = {
         body: {
@@ -419,6 +521,17 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         content: {
             padding: "40px 10px 0px 10px"
         }
+    };
+
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        setSearchText(selectedKeys[0]);
+        setSearchedColumn(dataIndex);
+    };
+
+    const handleReset = (clearFilters) => {
+        clearFilters();
+        setSearchText('');
     };
 
     const downloadImage = () => {
@@ -460,6 +573,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const switchChange = () => {
         setFullTriangleVisible(!fullTriangleVisible);
         setBrushedTriangleRange({ start: 0, end: 0 });
+    };
+
+    const closeTrackTableModal = () => {
+        setTrackTableModalVisible(false);
+        setSearchedColumn(''); 
+        setSearchText('');
     };
 
     const trackTableProcessing = (key, data) => {
@@ -856,11 +975,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 <Modal
                     width={"50vw"}
                     open={trackTableModalVisible}
-                    onOk={() => setTrackTableModalVisible(false)}
-                    onCancel={() => setTrackTableModalVisible(false)}
+                    onCancel={closeTrackTableModal}
                     styles={modalStyles}
                     footer={[
-                        <Button key="back" onClick={() => setTrackTableModalVisible(false)}>
+                        <Button key="back" onClick={closeTrackTableModal}>
                             Cancel
                         </Button>,
                         <Button color="primary" variant="outlined" key="submit" type="primary" onClick={confirmTrackSelection}>
@@ -879,7 +997,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                                 ...rowSelection,
                             }}
                             pagination={{
-                                total: trackDataSource.length,
                                 style: {
                                     marginTop: '12px',
                                     marginBottom: '12px',
