@@ -90,14 +90,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
             browserRef.current = igvBrowser;
         });
-
-        // Cleanup on unmount
-        return () => {
-            if (browserRef.current) {
-                browserRef.current.destroy();
-                browserRef.current = null;
-            }
-        };
     }, []);
 
     useEffect(() => {
