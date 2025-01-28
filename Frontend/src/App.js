@@ -7,6 +7,9 @@ import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
+// Random number generator from 0 to 5000
+const getRandomKey = () => Math.floor(Math.random() * 5001);
+const randomKeys = new Array(3).fill(null).map(() => getRandomKey());
 
 function App() {
   const [isCellLineMode, setIsCellLineMode] = useState(true);
@@ -702,22 +705,19 @@ function App() {
                       />
                     </Tooltip>
                   }
-                  items={new Array(3).fill(null).map((_, i) => {
-                    const id = i;
-                    return {
-                      label: `Sample ${id + 1}`,
-                      key: id,
-                      children: (
-                        <Chromosome3D
-                          formatNumber={formatNumber}
-                          geneSize={geneSize}
-                          chromosome3DExampleData={chromosome3DExampleData}
-                          validChromosomeValidIbpData={validChromosomeValidIbpData}
-                          selectedChromosomeSequence={selectedChromosomeSequence}
-                        />
-                      ),
-                    };
-                  })}
+                  items={randomKeys.map((key, i) => ({
+                    label: `Sample ${i + 1}`,
+                    key: key,
+                    children: (
+                      <Chromosome3D
+                        formatNumber={formatNumber}
+                        geneSize={geneSize}
+                        chromosome3DExampleData={chromosome3DExampleData}
+                        validChromosomeValidIbpData={validChromosomeValidIbpData}
+                        selectedChromosomeSequence={selectedChromosomeSequence}
+                      />
+                    )
+                  }))}
                 />
               </div>
 

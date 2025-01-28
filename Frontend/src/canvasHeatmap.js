@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Input, Modal, Tooltip } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import "./Styles/canvasHeatmap.css";
@@ -379,8 +379,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                 <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
-                <div style={{ position: 'absolute', top: 80, left: -25, transform: 'rotate(-90deg)', zIndex: 10, fontSize: 12, fontWeight: 'bold', border: '1px solid #999', padding: "3px 5px 3px 5px", borderRadius: 5 }}>NON-RANDOM</div>
-                <div style={{ position: 'absolute', bottom: 40, right: -20, transform: 'rotate(90deg)', zIndex: 10, fontSize: 12, fontWeight: 'bold', border: '1px solid #999', padding: "3px 5px 3px 5px", borderRadius: 5 }}>EXPERIMENT</div>
+                <ExperimentOutlined style={{ position: 'absolute', top: 45, left: 20, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                <LaptopOutlined style={{ position: 'absolute', bottom: 15, right: 10, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
             </div>
             {minDimension > 0 && (
                 <GeneList
