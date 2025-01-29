@@ -199,7 +199,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             <div
                 id="igv-div"
                 ref={igvDivRef}
-                style={{ width: minCanvasDimension + 100, height: "100%", overflowY: "auto", }}
+                style={{ width: minCanvasDimension + 100, height: "100%", overflowY: "auto" }}
             ></div>
             <svg ref={svgRef} />
         </div>

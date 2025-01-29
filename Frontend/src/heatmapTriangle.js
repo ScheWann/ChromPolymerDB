@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, Input, Space, } from 'antd';
-import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input } from 'antd';
+import { DownloadOutlined, SearchOutlined, DownOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, colorScaleRange }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -577,7 +577,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const closeTrackTableModal = () => {
         setTrackTableModalVisible(false);
-        setSearchedColumn(''); 
+        setSearchedColumn('');
         setSearchText('');
     };
 
@@ -951,7 +951,16 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                width: '100%',
             }}>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                    <span style={{ marginRight: 5 }}>Scale: </span>
+                    <InputNumber min={colorScaleRange[0]} max={colorScaleRange[1]} size='small' width={ 50 }/>
+                    <Slider range defaultValue={colorScaleRange} style={{ margin: 5, width: 250 }} />
+                    <InputNumber min={colorScaleRange[0]} max={colorScaleRange[1]} size='small' />
+                </div>
                 <Switch
                     checkedChildren="Non Random Interaction"
                     unCheckedChildren="All HiC"
@@ -968,7 +977,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     }}
                     placement="bottom"
                 >
-                    <Button>Tracks</Button>
+                    <Button size='small'>Tracks</Button>
                 </Dropdown>
                 <Modal
                     width={"50vw"}
@@ -1008,6 +1017,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 </Modal>
                 <Tooltip title="Download non-random interaction data">
                     <Button
+                        size='small'
                         style={{
                             fontSize: 15,
                             cursor: "pointer",
@@ -1017,7 +1027,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     />
                 </Tooltip>
             </div>
-            <canvas ref={canvasRef} />
+            <canvas ref={canvasRef} style={{ marginTop: 65 }} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
             <svg ref={axisSvgRef} style={{ height: '50px', flexShrink: 0 }} />
             {/* {minCanvasDimension > 0 && (
