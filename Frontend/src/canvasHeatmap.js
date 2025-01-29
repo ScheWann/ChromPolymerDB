@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Input, Modal, Tooltip } from "antd";
+import { Button, Input, Modal, Tooltip, Slider } from "antd";
 import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
@@ -36,10 +36,10 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
             }
 
             const csvData = filteredData.map(row =>
-                `${row.cell_line},${row.chrid},${row.ibp},${row.jbp},${row.fq},${row.fdr}`
+                `${row.cell_line},${row.chrid},${row.ibp},${row.jbp},${row.fq},${row.fdr},${row.rawc}`
             ).join('\n');
 
-            const header = 'cell_line,chrid,ibp,jbp,fq,fdr\n';
+            const header = 'cell_line,chrid,ibp,jbp,fq,fdr,rawc\n';
             const csvContent = header + csvData;
 
             const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -135,13 +135,13 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
-        ).domain([0, d3.max(zoomedChromosomeData, d => d.fq)]);
+        ).domain([0, d3.max(zoomedChromosomeData, d => d.rawc)]);
 
         const fqMap = new Map();
 
         zoomedChromosomeData.forEach(d => {
-            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr });
-            fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr });
+            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
+            fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
         });
 
         const hasData = (ibp, jbp) => {
@@ -156,14 +156,14 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
         // Draw heatmap using Canvas
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
-                const { fq, fdr } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1 };
+                const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
 
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
                 const width = xScale.bandwidth();
                 const height = yScale.bandwidth();
 
-                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && fq === -1))) ? 'white' : colorScale(fq);
+                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(rawc);
                 context.fillRect(x, y, width, height);
             });
         });
@@ -294,6 +294,11 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
                         <span style={{ marginRight: 5 }}>~</span>
                         <span>{formatNumber(currentChromosomeSequence.end)}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
+                        <Input size='small' />
+                        <Slider range defaultValue={[0, 50]} />
+                        <Input size='small' />
                     </div>
                     <div style={{ display: 'flex', gap: '5px' }}>
                         <Tooltip

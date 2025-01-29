@@ -772,7 +772,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
-        ).domain([0, d3.max(currentChromosomeData, d => d.fq)]);
+        ).domain([0, d3.max(currentChromosomeData, d => d.rawc)]);
 
         const invertBand = (scale, value) => {
             const range = scale.range();
@@ -791,7 +791,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const fqMap = new Map();
         currentChromosomeData.forEach(d => {
-            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr });
+            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
         });
 
         const hasData = (ibp, jbp) => {
@@ -805,7 +805,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
-                const { fq, fdr } = fqMap.get(`X:${ibp}, Y:${jbp}`) || { fq: -1, fdr: -1 };
+                const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || { fq: -1, fdr: -1, rawc: -1 };
 
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
@@ -813,9 +813,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 const height = yScale.bandwidth();
 
                 if (!fullTriangleVisible) {
-                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1)) ? 'white' : colorScale(fq);
+                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
                 } else {
-                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(fq);
+                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(rawc);
                 }
                 context.fillRect(x, y, width, height);
             });

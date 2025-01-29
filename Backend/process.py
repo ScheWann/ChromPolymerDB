@@ -208,7 +208,7 @@ def chromosome_data(cell_line, chromosome_name, sequences):
 
     cur.execute(
         """
-        SELECT cell_line, chrid, fdr, ibp, jbp, fq
+        SELECT cell_line, chrid, fdr, ibp, jbp, fq, rawc
         FROM non_random_hic
         WHERE chrID = %s
         AND cell_line = %s
