@@ -5,6 +5,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
     const svgRef = useRef();
     const containerRef = useRef();
     const [scrollEnabled, setScrollEnabled] = useState(false);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const tooltipRef = useRef();
     const initialHeightRef = useRef(null);
 
@@ -49,6 +50,25 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
 
 
     useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setContainerSize({ width, height });
+            }
+        });
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!containerSize.width && !containerSize.height) return;
+        
         async function fetchDataAndRender() {
             const epigeneticTrackData = await fetchepigeneticTrackData();
 
@@ -59,9 +79,8 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
 
             const margin = { top: 20, right: 10, bottom: 0, left: 60 };
 
-            let width = containerRef.current.offsetWidth;
-            // let width = minDimension;
-            let height = containerRef.current.offsetHeight;
+            let width = containerSize.width;
+            let height = containerSize.height;
 
             const svg = d3.select(svgRef.current);
             svg.selectAll("*").remove();
@@ -302,7 +321,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
         }
 
         fetchDataAndRender();
-    }, [geneList, currentChromosomeSequence, geneName]);
+    }, [geneList, currentChromosomeSequence, geneName, containerSize]);
 
     return (
         <div

@@ -6,7 +6,7 @@ body {
 }
 
 .App {
-  min-width: 1000px;
+  min-width: 1200px;
   display: flex;
   flex-direction: column;
   text-align: center;
