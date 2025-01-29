@@ -13,6 +13,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const axisSvgRef = useRef(null);
     const colorScaleRef = useRef(null);
     const [minDimension, setMinDimension] = useState(0);
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
@@ -103,8 +104,29 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     };
 
     useEffect(() => {
-        const parentWidth = containerRef.current.offsetWidth;
-        const parentHeight = containerRef.current.offsetHeight;
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setContainerSize({ width, height });
+            }
+        });
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!containerSize.width && !containerSize.height) return;
+
+        // const parentWidth = containerRef.current.offsetWidth;
+        // const parentHeight = containerRef.current.offsetHeight;
+        const parentWidth = containerSize.width;
+        const parentHeight = containerSize.height;
         const margin = { top: 45, right: 10, bottom: 45, left: 60 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
@@ -339,7 +361,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 .attr('stroke', '#999')
                 .attr('stroke-width', 2);
         }
-    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange]);
+    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', width: '38%', height: '100%' }}>

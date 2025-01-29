@@ -25,7 +25,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  margin-bottom: 5px;
 }
 
 .controlGroupText {
@@ -48,7 +48,6 @@ body {
   font-size: 9px;
   line-height: 1.0;
   border-radius: 5px;
-  vertical-align: top,
 }
 
 .chromosomeBarColorRect {
@@ -60,7 +59,7 @@ body {
 
 .content {
   display: flex;
-  margin-top: 8px;
+  margin-top: 10px;
   height:calc(100% - 110px);
   border: 1px solid #eaeaea;
   border-radius: 8px;
