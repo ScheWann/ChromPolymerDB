@@ -642,7 +642,7 @@ function App() {
       <div className='content'>
         {/* Heatmap */}
         {heatmapLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '35%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: '38%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
         ) : (
           chromosomeData.length > 0 ? (
             <Heatmap
@@ -667,7 +667,7 @@ function App() {
             />
           ) : (
             <Empty
-              style={{ width: '35%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }}
+              style={{ width: '38%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }}
               description="No Heatmap Data"
             />
           )
@@ -675,10 +675,10 @@ function App() {
 
         {/* Original 3D chromosome */}
         {chromosome3DLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '65%', height: '100%', margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: '62%', height: '100%', margin: 0 }} />
         ) : (
           chromosome3DExampleData.length > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '65%', height: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '60%', height: '100%' }}>
               <div style={{ width: chromosome3DComparisonShowing ? '49.9%' : '100%', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                 <Tabs
                   size="small"
@@ -789,7 +789,7 @@ function App() {
             </div>
           ) : (
             <Empty
-              style={{ width: '65%', height: '100%', margin: 0 }}
+              style={{ width: '62%', height: '100%', margin: 0 }}
               description="No 3D Data"
             />
           )

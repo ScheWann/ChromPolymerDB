@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Input, Modal, Tooltip, Slider } from "antd";
+import { Button, InputNumber, Modal, Tooltip, Slider } from "antd";
 import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
@@ -16,7 +16,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 0]);
+    const [colorValueRange, setColorValueRange] = useState([]);
+    const [colorScaleRange, setColorScaleRange] = useState([0, 100]);
 
     const modalStyles = {
         body: {
@@ -90,6 +91,10 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
         setHalfHeatMapModalVisible(true);
     }
 
+    const changeColorScale = (value) => {
+        setColorScaleRange(value);
+    }
+
     useEffect(() => {
         const parentWidth = containerRef.current.offsetWidth;
         const parentHeight = containerRef.current.offsetHeight;
@@ -122,7 +127,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
         const colorScaleMinValue = Math.floor(d3.min(zoomedChromosomeData, d => d.rawc));
         const colorScalemaxValue = Math.ceil(d3.max(zoomedChromosomeData, d => d.rawc));
-        setColorScaleRange([colorScaleMinValue, colorScalemaxValue]);
+        setColorValueRange([colorScaleMinValue, colorScalemaxValue]);
 
         const axisValues = Array.from(
             { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
@@ -141,7 +146,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
-        ).domain([colorScaleMinValue, colorScalemaxValue]);
+        ).domain(colorScaleRange);
 
         const fqMap = new Map();
 
@@ -250,32 +255,32 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
             const t = i / numStops;
             gradient.append('stop')
                 .attr('offset', `${t * 100}%`)
-                .attr('stop-color', colorScale(colorScaleMinValue + t * (colorScalemaxValue - colorScaleMinValue)));
+                .attr('stop-color', colorScale(colorScaleRange[0] + t * (colorScaleRange[1] - colorScaleRange[0])));
         }
 
         colorScaleSvg.append('rect')
             .attr('x', 0)
             .attr('y', 0)
-            .attr('width', height / 2)
+            .attr('width', height / 1.2)
             .attr('height', 20)
             .style('fill', 'url(#colorGradient)')
-            .attr('transform', `translate(20, ${(parentHeight - height / 2) / 2 + height / 2}) rotate(-90, 0, 0)`);
+            .attr('transform', `translate(30, ${(parentHeight - height / 1.2) / 2 + height / 1.2}) rotate(-90, 0, 0)`);
 
         colorScaleSvg.append('text')
-            .attr('x', 30)
-            .attr('y', height / 2 + (parentHeight - height / 2) / 2 + 15)
+            .attr('x', 40)
+            .attr('y', height / 1.2 + (parentHeight - height / 1.2) / 2 + 15)
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(colorScaleMinValue);
+            .text(colorScaleRange[0]);
 
         colorScaleSvg.append('text')
-            .attr('x', 30)
-            .attr('y', (parentHeight - height / 2) / 2 - 5)
+            .attr('x', 40)
+            .attr('y', (parentHeight - height / 1.2) / 2 - 5)
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(colorScalemaxValue);
+            .text(colorScaleRange[1]);
 
         // Brush for selecting range
         const brushSvg = d3.select(brushSvgRef.current)
@@ -331,10 +336,10 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 .attr('stroke', '#999')
                 .attr('stroke-width', 2);
         }
-    }, [minDimension, currentChromosomeSequence, geneSize]);
+    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange]);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '35%', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '38%', height: '100%' }}>
             <div ref={containerRef} style={{
                 width: '100%', height: '72%', borderRight: "1px solid #eaeaea", position: 'relative', display: 'flex',
                 justifyContent: 'center',
@@ -348,11 +353,6 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         <span style={{ marginRight: 5 }}>~</span>
                         <span>{formatNumber(currentChromosomeSequence.end)}</span>
                     </div>
-                    {/* <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
-                        <Input size='small' />
-                        <Slider range defaultValue={[0, 50]} />
-                        <Input size='small' />
-                    </div> */}
                     <div style={{ display: 'flex', gap: '5px' }}>
                         <Tooltip
                             title="Restore the original heatmap"
@@ -438,7 +438,12 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                 <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
-                <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 3, pointerEvents: 'none' }} />
+                <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
+                <div style={{ display: 'flex', flexDirection: 'column' , gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} step={100}/>
+                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} step={100} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange}/>
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} step={100}/>
+                </div>
                 <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                 <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
             </div>
