@@ -164,7 +164,8 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             svg.style('width', svgWidth)
                 .style('height', svgHeight)
                 .style('bottom', -svgHeight / 2)
-                .style('pointer-events', 'none');
+                .style('pointer-events', 'none')
+                .attr('transform', `translate(0, 65)`);
 
             svg.append("line")
                 .attr("class", "brushed-triangle-range")
