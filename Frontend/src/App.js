@@ -491,6 +491,7 @@ function App() {
       <div className="controlHeader">
         <div className="controlGroup">
           <div
+            className="switchWrapper"
             style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px' }}
           >
             <Switch
