@@ -111,7 +111,13 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
             browserRef.current = igvBrowser;
         });
-    }, []);
+
+        return () => {
+            if (browserRef.current) {
+                igv.removeAllBrowsers();
+            }
+        }
+    }, [chromosomeName, currentChromosomeSequence]);
 
     useEffect(() => {
         if (browserRef.current && selectedTrackData && trackKey) {
