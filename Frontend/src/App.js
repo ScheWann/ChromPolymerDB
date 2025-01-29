@@ -374,6 +374,7 @@ function App() {
     setChromosomeName(null);
     setChromosomeSize({ start: 0, end: 0 });
     setSelectedChromosomeSequence({ start: 0, end: 0 });
+    setGeneName(null);
     setChromosomeData([]);
     setChromosome3DExampleData([]);
     setComparisonCellLine3DData([]);
