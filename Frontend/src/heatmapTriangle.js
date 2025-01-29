@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input } from 'antd';
-import { DownloadOutlined, SearchOutlined, DownOutlined } from "@ant-design/icons";
+import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, colorScaleRange }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, colorValueRange, changeColorByInput, colorScaleRange, changeColorScale }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -772,7 +772,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
-        ).domain([0, d3.max(currentChromosomeData, d => d.rawc)]);
+        ).domain(colorScaleRange);
 
         const invertBand = (scale, value) => {
             const range = scale.range();
@@ -939,7 +939,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .attr("transform", "rotate(45)")
             .attr("dx", "1em")
             .attr("dy", "0em");
-    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize]);
+    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
 
     return (
         <div ref={containerRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: '100%', height: '100%' }}>
@@ -955,11 +955,11 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 justifyContent: 'flex-end',
                 width: '100%',
             }}>
-                <div style={{ display: 'flex', gap: '5px' }}>
+                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
-                    <InputNumber min={colorScaleRange[0]} max={colorScaleRange[1]} size='small' width={ 50 }/>
-                    <Slider range defaultValue={colorScaleRange} style={{ margin: 5, width: 250 }} />
-                    <InputNumber min={colorScaleRange[0]} max={colorScaleRange[1]} size='small' />
+                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("min")} />
+                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange} />
+                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch
                     checkedChildren="Non Random Interaction"

@@ -431,7 +431,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
+                <Modal open={halfHeatMapModalVisible && colorValueRange.length > 0} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
                     <HeatmapTriangle
                         geneList={geneList}
                         cellLineName={cellLineName}
@@ -441,6 +441,9 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         currentChromosomeSequence={currentChromosomeSequence}
                         geneName={geneName}
                         colorScaleRange={colorScaleRange}
+                        changeColorByInput={changeColorByInput}
+                        colorValueRange={colorValueRange}
+                        changeColorScale={changeColorScale}
                     />
                 </Modal>
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
