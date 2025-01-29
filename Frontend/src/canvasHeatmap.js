@@ -17,7 +17,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
     const [colorValueRange, setColorValueRange] = useState([]);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 100]);
+    const [colorScaleRange, setColorScaleRange] = useState([0, 30]);
 
     const modalStyles = {
         body: {
@@ -94,6 +94,14 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const changeColorScale = (value) => {
         setColorScaleRange(value);
     }
+
+    const changeColorByInput = (type) => (value) => {
+        if (type === "min") {
+            setColorScaleRange([Math.min(value, colorScaleRange[1]), colorScaleRange[1]]);
+        } else {
+            setColorScaleRange([colorScaleRange[0], Math.max(value, colorScaleRange[0])]);
+        }
+    };
 
     useEffect(() => {
         const parentWidth = containerRef.current.offsetWidth;
@@ -440,9 +448,9 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                 <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', flexDirection: 'column' , gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} step={100}/>
-                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} step={100} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange}/>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} step={100}/>
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("max")} />
+                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange}/>
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("min")} />
                 </div>
                 <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                 <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />

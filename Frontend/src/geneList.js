@@ -292,10 +292,11 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             });
 
             svg.append("text")
-                .attr("x", width - minDimension - margin.right - 20)
+                .attr("x", (width - minDimension) / 2 + 5)
                 .attr("y", geneListHeight / 2)
                 .attr("text-anchor", "middle")
                 .style("font-size", "12px")
+                .style("font-weight", "bold")
                 .text("Gene List")
                 .style("fill", "black");
         }
