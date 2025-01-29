@@ -16,7 +16,6 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
-    const [colorValueRange, setColorValueRange] = useState([]);
     const [colorScaleRange, setColorScaleRange] = useState([0, 30]);
 
     const modalStyles = {
@@ -132,10 +131,6 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
         const step = 5000;
         const adjustedStart = Math.floor(start / step) * step;
         const adjustedEnd = Math.ceil(end / step) * step;
-
-        const colorScaleMinValue = Math.floor(d3.min(zoomedChromosomeData, d => d.rawc));
-        const colorScalemaxValue = Math.ceil(d3.max(zoomedChromosomeData, d => d.rawc));
-        setColorValueRange([colorScaleMinValue, colorScalemaxValue]);
 
         const axisValues = Array.from(
             { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
@@ -431,7 +426,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible && colorValueRange.length > 0} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
+                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
                     <HeatmapTriangle
                         geneList={geneList}
                         cellLineName={cellLineName}
@@ -442,7 +437,6 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         geneName={geneName}
                         colorScaleRange={colorScaleRange}
                         changeColorByInput={changeColorByInput}
-                        colorValueRange={colorValueRange}
                         changeColorScale={changeColorScale}
                     />
                 </Modal>
@@ -451,9 +445,9 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                 <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', flexDirection: 'column' , gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("max")} />
-                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange}/>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("min")} />
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
+                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange}/>
+                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
                 </div>
                 <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                 <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />

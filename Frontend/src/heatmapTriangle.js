@@ -7,7 +7,7 @@ import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, colorValueRange, changeColorByInput, colorScaleRange, changeColorScale }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, colorScaleRange, changeColorScale }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -957,9 +957,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             }}>
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
-                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("min")} />
-                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorScale} value={colorScaleRange} />
-                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={colorValueRange[0]} max={colorValueRange[1]} onChange={changeColorByInput("max")} />
+                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
+                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange} />
+                    <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch
                     checkedChildren="Non Random Interaction"
