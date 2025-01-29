@@ -379,8 +379,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                 <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
-                <ExperimentOutlined style={{ position: 'absolute', top: 45, left: 20, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
-                <LaptopOutlined style={{ position: 'absolute', bottom: 15, right: 10, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
             </div>
             {minDimension > 0 && (
                 <GeneList
