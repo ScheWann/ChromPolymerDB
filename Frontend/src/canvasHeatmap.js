@@ -122,9 +122,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
     useEffect(() => {
         if (!containerSize.width && !containerSize.height) return;
-
-        // const parentWidth = containerRef.current.offsetWidth;
-        // const parentHeight = containerRef.current.offsetHeight;
+    
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
         const margin = { top: 45, right: 10, bottom: 45, left: 60 };

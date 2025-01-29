@@ -6,17 +6,37 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
     const svgRef = useRef();
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
+    const [parentSize, setParentSize] = useState({ width: 0, height: 0 });
 
     useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setParentSize({ width, height });
+            }
+        });
+
+        if (parentRef.current) {
+            observer.observe(parentRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!parentSize.width && !parentSize.height) return;
+
         if (selectedChromosomeSequence.start !== undefined && selectedChromosomeSequence.end !== undefined) {
             const min_start = chromosomeSize.start;
             const max_end = chromosomeSize.end;
-            
+
             const seqs = totalChromosomeSequences;
 
-            const height = 30;
             const margin = { top: 10, bottom: 20, left: 10, right: 10 };
-            const width = parentRef.current ? parentRef.current.clientWidth - margin.left - margin.right : 0;
+            const width = parentSize.width - margin.left - margin.right;
+            const height = 30;
 
             const xScale = d3.scaleLinear()
                 .domain([min_start, max_end])
@@ -218,7 +238,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 .attr('fill', '#333')
                 .text(`${formatNumber(max_end)}`);
         }
-    }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize]);
+    }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize, parentSize]);
 
     return (
         <div id="chromosome-bar" ref={parentRef} style={{ width: '100%', position: 'relative' }}>
