@@ -476,7 +476,6 @@ function App() {
     }
   };
 
-
   return (
     <div className="App">
       {contextHolder}
@@ -492,8 +491,7 @@ function App() {
       <div className="controlHeader">
         <div className="controlGroup">
           <div
-            className="switchWrapper"
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '20px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px' }}
           >
             <Switch
               checkedChildren="Cell Line"
@@ -520,14 +518,13 @@ function App() {
           </div>
 
           {isCellLineMode ? (
-            <>
+            <div className='inputGroup'>
               <span className="controlGroupText">Cell Line:</span>
               <Select
                 value={cellLineName}
                 size="small"
                 style={{
-                  width: "18%",
-                  marginRight: 20,
+                  width: "18%"
                 }}
                 onChange={cellLineChange}
                 options={cellLineList}
@@ -537,19 +534,26 @@ function App() {
                 value={chromosomeName}
                 size="small"
                 style={{
-                  width: "10%",
-                  marginRight: 20,
+                  width: "10%"
                 }}
                 onChange={chromosomeChange}
                 options={chromosList}
               />
               <span className="controlGroupText">Sequences:</span>
-              <Input size="small" style={{ width: "8%", marginRight: 10 }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
+              <Input size="small" style={{ width: "8%" }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
               <span className="controlGroupText">~</span>
-              <Input size="small" style={{ width: "8%", marginRight: 20 }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
-            </>
+              <Input size="small" style={{ width: "8%" }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
+              <Tooltip
+                title="View non-random chromosomal interactions as heatmap"
+                color='white'
+                overlayInnerStyle={{
+                  color: 'black'
+                }}>
+                <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
+              </Tooltip>
+            </div>
           ) : (
-            <>
+            <div className='inputGroup'>
               <span className="controlGroupText">Cell Line:</span>
               <Select
                 value={cellLineName}
@@ -574,57 +578,29 @@ function App() {
                 onSearch={geneNameSearch}
                 options={geneNameList}
               />
-            </>
+              <Tooltip
+                title="View non-random chromosomal interactions as heatmap"
+                color='white'
+                overlayInnerStyle={{
+                  color: 'black'
+                }}>
+                <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
+              </Tooltip>
+            </div>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Tooltip
-              title="View non-random chromosomal interactions as heatmap"
-              color='white'
-              overlayInnerStyle={{
-                color: 'black'
-              }}>
-              <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
-            </Tooltip>
-            <div style={{
-              border: "1px solid #ccc",
-              padding: "3px 8px",
-              marginLeft: "20px",
-              display: "inline-block",
-              fontSize: "9px",
-              lineHeight: "1.0",
-              borderRadius: "5px",
-              verticalAlign: "top",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-                <div style={{
-                  width: "7px",
-                  height: "7px",
-                  backgroundColor: "#74C365",
-                  marginRight: "6px",
-                  border: "1px solid #000"
-                }}></div>
-                <span>Available regions</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-                <div style={{
-                  width: "7px",
-                  height: "7px",
-                  backgroundColor: "#FFD700",
-                  marginRight: "6px",
-                  border: "1px solid #000"
-                }}></div>
-                <span>Selected region</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <div style={{
-                  width: "7px",
-                  height: "7px",
-                  backgroundColor: "#FFFFFF",
-                  marginRight: "6px",
-                  border: "1px solid #000"
-                }}></div>
-                <span>Unavailable regions</span>
-              </div>
+
+          <div className='chromosomeBarColorLegend'>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+              <div className='chromosomeBarColorRect' style={{ backgroundColor: "#74C365" }}></div>
+              <span>Available regions</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFD700" }}></div>
+              <span>Selected region</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFFFFF" }}></div>
+              <span>Unavailable regions</span>
             </div>
           </div>
         </div>
