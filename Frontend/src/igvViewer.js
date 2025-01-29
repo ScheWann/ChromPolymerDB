@@ -104,7 +104,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             showNavigation: false,
             showIdeogram: false,
             panEnabled: false,
-            showRuler: false,
+            // showRuler: false,
             tracks: defaultTracks[cellLineName],
         };
 
@@ -192,7 +192,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     return (
         <div ref={containerRef}
             style={{
-                width: "100%",
+                width: minCanvasDimension + 100,
                 height: 325,
                 display: "flex",
                 justifyContent: "center",

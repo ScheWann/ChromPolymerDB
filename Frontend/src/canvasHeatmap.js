@@ -426,7 +426,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} >
+                <Modal open={halfHeatMapModalVisible} onOk={() => setHalfHeatMapModalVisible(false)} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
                     <HeatmapTriangle
                         geneList={geneList}
                         cellLineName={cellLineName}

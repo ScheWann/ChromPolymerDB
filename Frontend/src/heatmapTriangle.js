@@ -728,6 +728,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const context = canvas.getContext('2d');
 
         const margin = { top: 5, right: 5, bottom: 5, left: 5 };
+
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
 
@@ -946,7 +947,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             <div style={{
                 position: 'absolute',
                 top: 20,
-                right: 20,
                 zIndex: 10,
                 display: 'flex',
                 alignItems: 'center',
@@ -1021,6 +1021,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         style={{
                             fontSize: 15,
                             cursor: "pointer",
+                            marginRight: 20
                         }}
                         icon={<DownloadOutlined />}
                         onClick={downloadImage}
