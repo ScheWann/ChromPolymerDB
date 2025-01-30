@@ -116,19 +116,23 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
             observer = new MutationObserver(() => {
                 const shadowHost = document.querySelector("#igv-div");
+
                 if (shadowHost?.shadowRoot) {
                     console.log("shadowRoot could be visited", shadowHost.shadowRoot);
-                    const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
-                    const igvViewPorts = shadowHost.shadowRoot.querySelectorAll(".igv-viewport");
 
-                    if (igvColumn && igvViewPorts.length > 0) {
-                        igvColumn.style.width = "100%";
+                    const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
+
+                    if (igvColumn) {
+                        const igvViewPorts = igvColumn.querySelectorAll(".igv-viewport");
+
                         if (igvViewPorts.length > 0) {
+                            igvColumn.style.width = minCanvasDimension + "px";
                             igvViewPorts.forEach(viewport => {
-                                viewport.style.width = minCanvasDimension + "px";
-                            })
-                        };
-                        observer.disconnect();
+                                viewport.style.width = "100%";
+                            });
+
+                            observer.disconnect();
+                        }
                     }
                 }
             });
