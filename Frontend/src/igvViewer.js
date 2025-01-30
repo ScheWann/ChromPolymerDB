@@ -119,9 +119,11 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 if (shadowHost?.shadowRoot) {
                     console.log("shadowRoot could be visited", shadowHost.shadowRoot);
                     const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
+                    const igvViewPort = shadowHost.shadowRoot.querySelector(".igv-viewport");
 
-                    if (igvColumn) {
+                    if (igvColumn && igvViewPort) {
                         igvColumn.style.width = "100%";
+                        igvViewPort.style.width = minCanvasDimension;
                         observer.disconnect();
                     }
                 }
