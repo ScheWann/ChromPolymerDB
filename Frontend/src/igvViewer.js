@@ -125,7 +125,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                         igvColumn.style.width = "100%";
                         if (igvViewPorts.length > 0) {
                             igvViewPorts.forEach(viewport => {
-                                viewport.style.width = "100%";
+                                viewport.style.width = minCanvasDimension + "px";
                             })
                         };
                         observer.disconnect();
