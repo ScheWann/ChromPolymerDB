@@ -8,9 +8,9 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
     const svgRef = useRef(null);
-    
+
     const [igvHeight, setIgvHeight] = useState(0);
-    
+
     const defaultTracks = {
         'GM': [
             {
@@ -112,6 +112,18 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             browserRef.current = igvBrowser;
         });
 
+        const observer = new MutationObserver(() => {
+            const shadowHost = document.querySelector("#igv-div");
+            if (shadowHost && shadowHost.shadowRoot) {
+                console.log("shadowRoot 现在可访问", shadowHost.shadowRoot);
+                const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
+                igvColumn.style.width = "100%";
+                observer.disconnect();
+            }
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+
         return () => {
             if (browserRef.current) {
                 igv.removeAllBrowsers();
@@ -198,7 +210,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     return (
         <div ref={containerRef}
             style={{
-                width: minCanvasDimension + 100,
+                width: minCanvasDimension + 104,
                 height: 325,
                 display: "flex",
                 justifyContent: "center",
@@ -206,7 +218,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             <div
                 id="igv-div"
                 ref={igvDivRef}
-                style={{ width: minCanvasDimension + 100, height: "100%", overflowY: "auto" }}
+                style={{ width: minCanvasDimension + 104, height: "100%", overflowY: "auto" }}
             ></div>
             <svg ref={svgRef} />
         </div>
