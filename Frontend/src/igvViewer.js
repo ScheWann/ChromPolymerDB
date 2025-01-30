@@ -3,7 +3,7 @@ import igv from "../node_modules/igv/dist/igv.esm.js";
 import * as d3 from "d3";
 
 
-export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension }) => {
+export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension, igvMountStatus }) => {
     const containerRef = useRef(null);
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
@@ -96,40 +96,54 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         .padding(0.1);
 
     useEffect(() => {
-        const igvOptions = {
-            genome: "hg38",
-            locus: `${chromosomeName}:${currentChromosomeSequence.start}-${currentChromosomeSequence.end}`,
-            showChromosomeWidget: false,
-            showAllChromosomes: false,
-            showNavigation: false,
-            showIdeogram: false,
-            panEnabled: false,
-            // showRuler: false,
-            tracks: defaultTracks[cellLineName],
-        };
+        let observer = null;
 
-        igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
-            browserRef.current = igvBrowser;
-        });
+        if (igvMountStatus) {
+            const igvOptions = {
+                genome: "hg38",
+                locus: `${chromosomeName}:${currentChromosomeSequence.start}-${currentChromosomeSequence.end}`,
+                showChromosomeWidget: false,
+                showAllChromosomes: false,
+                showNavigation: false,
+                showIdeogram: false,
+                panEnabled: false,
+                tracks: defaultTracks[cellLineName],
+            };
 
-        const observer = new MutationObserver(() => {
-            const shadowHost = document.querySelector("#igv-div");
-            if (shadowHost && shadowHost.shadowRoot) {
-                console.log("shadowRoot 现在可访问", shadowHost.shadowRoot);
-                const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
-                igvColumn.style.width = "100%";
-                observer.disconnect();
-            }
-        });
-        
-        observer.observe(document.body, { childList: true, subtree: true });
+            igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
+                browserRef.current = igvBrowser;
+            });
 
-        return () => {
+            observer = new MutationObserver(() => {
+                const shadowHost = document.querySelector("#igv-div");
+                if (shadowHost?.shadowRoot) {
+                    console.log("shadowRoot could be visited", shadowHost.shadowRoot);
+                    const igvColumn = shadowHost.shadowRoot.querySelector(".igv-column");
+
+                    if (igvColumn) {
+                        igvColumn.style.width = "100%";
+                        observer.disconnect();
+                    }
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+        } else {
             if (browserRef.current) {
                 igv.removeAllBrowsers();
+                browserRef.current = null;
+            }
+            if (observer) {
+                observer.disconnect();
             }
         }
-    }, [chromosomeName, currentChromosomeSequence]);
+
+        return () => {
+            if (observer) {
+                observer.disconnect();
+            }
+        };
+    }, [chromosomeName, currentChromosomeSequence, igvMountStatus]);
 
     useEffect(() => {
         if (browserRef.current && selectedTrackData && trackKey) {
@@ -162,7 +176,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     useEffect(() => {
         const svg = d3.select(svgRef.current);
 
-        let parentWidth = containerRef.current.offsetWidth;
         svg.selectAll("*").remove();
 
         svg.attr('class', 'brushed-triangle-range-overlay')

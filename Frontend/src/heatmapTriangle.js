@@ -7,7 +7,7 @@ import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, colorScaleRange, changeColorScale }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, colorScaleRange, changeColorScale, igvMountStatus }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -927,12 +927,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .call(d3.axisBottom(transformedXScale)
                 .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
                 .tickFormat(d => {
-                    if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(3)}M`;
-                    }
-                    if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(3)}W`;
-                    }
+                    // if (d >= 1000000) {
+                    //     return `${(d / 1000000).toFixed(3)}M`;
+                    // }
+                    // if (d > 10000 && d < 1000000) {
+                    //     return `${(d / 10000).toFixed(3)}W`;
+                    // }
                     return d;
                 }))
             .selectAll("text")
@@ -1051,6 +1051,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     chromosomeName={chromosomeName}
                     brushedTriangleRange={brushedTriangleRange}
                     currentChromosomeSequence={currentChromosomeSequence}
+                    igvMountStatus={igvMountStatus}
                 />
             )}
         </div>

@@ -18,6 +18,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
     const [colorScaleRange, setColorScaleRange] = useState([0, 30]);
+    const [igvMountStatus, setIgvMountStatus] = useState(false);
 
     const modalStyles = {
         body: {
@@ -89,6 +90,12 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
     const openHalfHeatMapModal = () => {
         setHalfHeatMapModalVisible(true);
+        setIgvMountStatus(true);
+    }
+
+    const closeHalfHeatMapModal = () => {
+        setHalfHeatMapModalVisible(false);
+        setIgvMountStatus(false);
     }
 
     const changeColorScale = (value) => {
@@ -446,7 +453,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible} onCancel={() => setHalfHeatMapModalVisible(false)} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
+                <Modal open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
                     <HeatmapTriangle
                         geneList={geneList}
                         cellLineName={cellLineName}
@@ -456,6 +463,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         currentChromosomeSequence={currentChromosomeSequence}
                         geneName={geneName}
                         colorScaleRange={colorScaleRange}
+                        igvMountStatus={igvMountStatus}
                         changeColorByInput={changeColorByInput}
                         changeColorScale={changeColorScale}
                     />
