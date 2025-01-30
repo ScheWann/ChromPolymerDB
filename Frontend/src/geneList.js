@@ -331,7 +331,6 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
                 height: "28%",
                 borderRight: "1px solid #eaeaea",
                 borderTop: "1px solid #eaeaea",
-                boxSizing: "border-box",
                 overflowY: scrollEnabled ? "auto" : "hidden",
                 overflowX: "hidden",
             }}

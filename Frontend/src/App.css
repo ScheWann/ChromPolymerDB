@@ -102,6 +102,9 @@ body {
   margin-left: 15px !important;
   font-size: 12px !important;
 }
+.ant-tabs-nav {
+  height: 35px
+}
 
 .ant-tabs-extra-content {
   width: 50%;

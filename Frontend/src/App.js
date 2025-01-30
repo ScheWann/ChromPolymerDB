@@ -656,7 +656,7 @@ function App() {
           <Spin spinning={true} size="large" style={{ width: '62%', height: '100%', margin: 0 }} />
         ) : (
           chromosome3DExampleData.length > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '60%', height: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '62%', height: '100%' }}>
               <div style={{ width: chromosome3DComparisonShowing ? '49.9%' : '100%', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                 <Tabs
                   size="small"
