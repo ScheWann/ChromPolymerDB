@@ -59,9 +59,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
             const marker = newStart + index * step; // Start ibp
             const isValid = validChromosomeValidIbpData.includes(marker); // Whether the current bead exists
             const isGeneBead = geneBeadSeq.includes(marker); // Whether the bead in the selected gene sequences
+            const orientation = data.orientation;
 
             return {
                 ...data,
+                orientation,
                 marker,
                 isValid,
                 isGeneBead
@@ -362,7 +364,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         const isLast = index === coordinates.length - 1;
                         // const isValid = processedChromosomeData[index].isValid;
                         const isGeneBead = processedChromosomeData[index].isGeneBead;
-                        const isGeneStart = geneBeadSeq[0] === processedChromosomeData[index].marker;
+                        const orientation = processedChromosomeData[index].orientation;
+
+                        const isGeneStart = orientation === "plus"
+                            ? geneBeadSeq[0] === processedChromosomeData[index].marker
+                            : geneBeadSeq[geneBeadSeq.length - 1] === processedChromosomeData[index].marker;
 
                         // Gene beads shows control
                         const geneBeadRender =
