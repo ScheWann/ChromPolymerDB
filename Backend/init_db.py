@@ -77,7 +77,7 @@ def initialize_tables():
             "gID serial PRIMARY KEY,"
             "gene_id BIGINT NOT NULL,"
             "chromosome VARCHAR(50) NOT NULL,"
-            "orientation VARCHAR(10) NOT NULL DEFAULT plus,"
+            "orientation VARCHAR(10) NOT NULL DEFAULT 'plus',"
             "start_location BIGINT NOT NULL DEFAULT 0,"
             "end_location BIGINT NOT NULL DEFAULT 0,"
             "gene_name VARCHAR(255) NOT NULL,"
