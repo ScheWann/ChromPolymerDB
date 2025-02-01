@@ -927,12 +927,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .call(d3.axisBottom(transformedXScale)
                 .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
                 .tickFormat(d => {
-                    // if (d >= 1000000) {
-                    //     return `${(d / 1000000).toFixed(3)}M`;
-                    // }
-                    // if (d > 10000 && d < 1000000) {
-                    //     return `${(d / 10000).toFixed(3)}W`;
-                    // }
+                    if (d >= 1000000) {
+                        return `${(d / 1000000).toFixed(3)}M`;
+                    }
+                    if (d > 10000 && d < 1000000) {
+                        return `${(d / 10000).toFixed(3)}W`;
+                    }
                     return d;
                 }))
             .selectAll("text")
