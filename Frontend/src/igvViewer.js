@@ -138,17 +138,13 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             });
 
             observer.observe(document.body, { childList: true, subtree: true });
-        } else {
+        }
+
+        return () => {
             if (browserRef.current) {
                 igv.removeAllBrowsers();
                 browserRef.current = null;
             }
-            if (observer) {
-                observer.disconnect();
-            }
-        }
-
-        return () => {
             if (observer) {
                 observer.disconnect();
             }
