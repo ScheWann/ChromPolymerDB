@@ -20,7 +20,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [geneBeadSeq, setGeneBeadSeq] = useState([]);
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
     const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
-    const [showbeadInfo, setShowBeadInfo] = useState(false)
+    const [showBeadInfo, setShowBeadInfo] = useState(false)
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -315,14 +315,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     </div>
                 </div>
                 {/* Beads hover on information */}
-                {showbeadInfo && (
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'end',
-                        zIndex: 10,
-                        marginTop: 15
-                    }}>
+                {showBeadInfo && (
+                    <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`}>
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
                         <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
                         <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>

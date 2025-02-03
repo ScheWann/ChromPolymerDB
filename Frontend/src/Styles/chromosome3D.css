@@ -26,3 +26,24 @@
     display: flex;
     align-items: center
 }
+
+.beadInfoContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    z-index: 10;
+    margin-top: 15px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+.beadInfoContainer.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.beadInfoContainer.hide {
+    opacity: 0;
+    visibility: hidden;
+}

@@ -795,7 +795,7 @@ function App() {
                           value={comparisonCellLine}
                           style={{
                             minWidth: 150,
-                            maxWidth: 200,
+                            maxWidth: 400,
                             marginRight: 10,
                           }}
                           size="small"
