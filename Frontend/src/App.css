@@ -64,6 +64,7 @@ body {
   height:calc(100% - 110px);
   border: 1px solid #eaeaea;
   border-radius: 8px;
+  overflow-x: auto;
 }
 
 .ant-spin-dot-holder {

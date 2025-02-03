@@ -22,8 +22,9 @@ function App() {
   const [chromosomeName, setChromosomeName] = useState(null);
   const [chromosomeSize, setChromosomeSize] = useState({ start: 0, end: 0 });
   const [geneSize, setGeneSize] = useState({ start: 0, end: 0 });
-  const [totalChromosomeSequences, setTotalChromosomeSequences] = useState([]);
-  const [selectedChromosomeSequence, setSelectedChromosomeSequence] = useState({ start: 0, end: 0 });
+  const [totalChromosomeSequences, setTotalChromosomeSequences] = useState([]); // First selected cell line ---> chromsome's all sequences
+  const [selectedChromosomeSequence, setSelectedChromosomeSequence] = useState({ start: 0, end: 0 }); // Selected sequence range
+  const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence); // Current selected sequence range(used for control heatmap's zoom in/out)
   const [chromosomeData, setChromosomeData] = useState([]);
   const [validChromosomeValidIbpData, setValidChromosomeValidIbpData] = useState([]);
   const [chromosome3DExampleID, setChromosome3DExampleID] = useState(0);
@@ -31,6 +32,10 @@ function App() {
   const [messageApi, contextHolder] = message.useMessage();
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
+
+  // Heatmap Comparison settings
+  const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
+  const [comparisonHeatmapIndex, setComparisonHeatmapIndex] = useState(1); // Index of comparison heatmap
 
   // 3D Chromosome Comparison settings
   const [chromosome3DComparisonShowing, setChromosome3DComparisonShowing] = useState(false);
@@ -71,6 +76,11 @@ function App() {
       title: "Sequences Input",
       description: "Specify the sequence range using the start and end inputs.",
       target: () => document.querySelector(".controlGroupText:nth-of-type(3) + .ant-input"),
+    },
+    {
+      title: "New Heatmap Comparison Button",
+      description: "Click this button to add a new heatmap for comparison.",
+      target: () => document.querySelector("#add-new-heatmap-button"),
     },
     {
       title: "Check Button",
@@ -425,6 +435,16 @@ function App() {
     }));
   };
 
+  // Heatmap Add button click
+  const addNewComparisonHeatmap = () => {
+    setComparisonHeatmapList((prev) => [...prev, comparisonHeatmapIndex]);
+    setComparisonHeatmapIndex((prev) => prev + 1);
+  }
+
+  const removeComparisonHeatmap = (index) => {
+    setComparisonHeatmapList((prev) => prev.filter((i) => i !== index));
+  };
+
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
     setChromosome3DExampleID(key);
@@ -464,6 +484,7 @@ function App() {
       warning('noData');
     } else {
       setHeatmapLoading(true);
+      setCurrentChromosomeSequence(selectedChromosomeSequence);
 
       setChromosome3DComparisonShowing(false);
       setComparisonCellLine3DSampleID(0);
@@ -546,6 +567,14 @@ function App() {
               <span className="controlGroupText">~</span>
               <Input size="small" style={{ width: "8%" }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
               <Tooltip
+                title="Add a new heatmap"
+                color='white'
+                overlayInnerStyle={{
+                  color: 'black'
+                }}>
+                <Button id="add-new-heatmap-button" size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+              </Tooltip>
+              <Tooltip
                 title="View non-random chromosomal interactions as heatmap"
                 color='white'
                 overlayInnerStyle={{
@@ -580,6 +609,14 @@ function App() {
                 onSearch={geneNameSearch}
                 options={geneNameList}
               />
+              <Tooltip
+                title="Add a new heatmap"
+                color='white'
+                overlayInnerStyle={{
+                  color: 'black'
+                }}>
+                <Button id="add-new-heatmap-button" size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+              </Tooltip>
               <Tooltip
                 title="View non-random chromosomal interactions as heatmap"
                 color='white'
@@ -618,19 +655,23 @@ function App() {
 
       {/* main content part */}
       <div className='content'>
-        {/* Heatmap */}
+        {/* Original Heatmap */}
         {heatmapLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '38%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
         ) : (
-          chromosomeData.length > 0 ? (
+          chromosomeData.length > 0 && (
             <Heatmap
+              comparisonHeatmapId={null}
               warning={warning}
               formatNumber={formatNumber}
               setChromosome3DExampleData={setChromosome3DExampleData}
+              cellLineList={cellLineList}
               geneList={geneList}
               cellLineName={cellLineName}
               chromosomeName={chromosomeName}
               chromosomeData={chromosomeData}
+              currentChromosomeSequence={currentChromosomeSequence}
+              setCurrentChromosomeSequence={setCurrentChromosomeSequence}
               geneSize={geneSize}
               totalChromosomeSequences={totalChromosomeSequences}
               selectedChromosomeSequence={selectedChromosomeSequence}
@@ -642,22 +683,51 @@ function App() {
               setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
               setGeneName={setGeneName}
               setGeneSize={setGeneSize}
-            />
-          ) : (
-            <Empty
-              style={{ width: '38%', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }}
-              description="No Heatmap Data"
+              comparisonHeatmapList={comparisonHeatmapList}
+              removeComparisonHeatmap={removeComparisonHeatmap}
             />
           )
         )}
 
+        {/* Comparison Heatmaps */}
+        {comparisonHeatmapList.map((index) => (
+          <Heatmap
+            key={index}
+            comparisonHeatmapId={index}
+            warning={warning}
+            formatNumber={formatNumber}
+            setChromosome3DExampleData={setChromosome3DExampleData}
+            cellLineList={cellLineList}
+            geneList={geneList}
+            cellLineName={cellLineName}
+            chromosomeName={chromosomeName}
+            chromosomeData={[]}
+            currentChromosomeSequence={currentChromosomeSequence}
+            setCurrentChromosomeSequence={setCurrentChromosomeSequence}
+            setChromosomeData={setChromosomeData}
+            geneSize={geneSize}
+            totalChromosomeSequences={totalChromosomeSequences}
+            selectedChromosomeSequence={selectedChromosomeSequence}
+            chromosome3DExampleID={chromosome3DExampleID}
+            geneName={geneName}
+            setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+            setChromosome3DLoading={setChromosome3DLoading}
+            setComparisonCellLine3DData={setComparisonCellLine3DData}
+            setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
+            setGeneName={setGeneName}
+            setGeneSize={setGeneSize}
+            comparisonHeatmapList={comparisonHeatmapList}
+            removeComparisonHeatmap={removeComparisonHeatmap}
+          />
+        ))}
+
         {/* Original 3D chromosome */}
         {chromosome3DLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '62%', height: '100%', margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: '1000px', height: '100%', margin: 0 }} />
         ) : (
-          chromosome3DExampleData.length > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '62%', height: '100%' }}>
-              <div style={{ width: chromosome3DComparisonShowing ? '49.9%' : '100%', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
+          chromosome3DExampleData.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%' }}>
+              <div style={{ width: '800px', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                 <Tabs
                   size="small"
                   defaultActiveKey={chromosome3DExampleID}
@@ -701,7 +771,7 @@ function App() {
 
               {/* Comparison 3D chromosome */}
               {chromosome3DComparisonShowing && (
-                <div style={{ width: '49.9%' }}>
+                <div style={{ width: '800px' }}>
                   <Tabs
                     size="small"
                     defaultActiveKey={chromosome3DExampleID}
@@ -765,11 +835,6 @@ function App() {
                 </div>
               )}
             </div>
-          ) : (
-            <Empty
-              style={{ width: '62%', height: '100%', margin: 0 }}
-              description="No 3D Data"
-            />
           )
         )}
       </div>

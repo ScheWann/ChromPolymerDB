@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, InputNumber, Modal, Tooltip, Slider } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined } from "@ant-design/icons";
+import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty } from "antd";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber }) => {
+export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber, cellLineList, comparisonHeatmapList, removeComparisonHeatmap }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -14,11 +14,13 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const colorScaleRef = useRef(null);
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-    const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence);
-    const [currentChromosomeData, setCurrentChromosomeData] = useState(chromosomeData);
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
     const [colorScaleRange, setColorScaleRange] = useState([0, 30]);
     const [igvMountStatus, setIgvMountStatus] = useState(false);
+    const [independentHeatmapCellLine, setIndependentHeatmapCellLine] = useState(cellLineName)
+    const [independentHeatmapData, setIndependentHeatmapData] = useState(chromosomeData);
+    const [currentChromosomeData, setCurrentChromosomeData] = useState(independentHeatmapData);
+    const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
 
     const modalStyles = {
         body: {
@@ -31,8 +33,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     };
 
     const download = () => {
-        if (chromosomeData) {
-            const filteredData = chromosomeData.filter(row => row.fdr < 0.05);
+        if (independentHeatmapData) {
+            const filteredData = independentHeatmapData.filter(row => row.fdr < 0.05);
 
             if (filteredData.length === 0) {
                 alert("no suitable data (fdr < 0.05)");
@@ -51,11 +53,32 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
 
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${cellLineName}.${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
+            link.download = `${independentHeatmapData}.${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
             link.click();
 
             URL.revokeObjectURL(url);
         }
+    };
+
+    const comparisonCellLineChange = (value) => {
+        setIndependentHeatmapCellLine(value);
+        fetchComparisonChromosomeData(value);
+    }
+
+    const fetchComparisonChromosomeData = (compared_cell_line) => {
+        setIndependentHeatmapLoading(true);
+        fetch("/getChromosData", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cell_line: compared_cell_line, chromosome_name: chromosomeName, sequences: selectedChromosomeSequence })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setIndependentHeatmapData(data);
+                setIndependentHeatmapLoading(false);
+            });
     };
 
     const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
@@ -85,7 +108,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     const generate3DChromosome = () => {
         setSelectedChromosomeSequence(currentChromosomeSequence);
         setChromosome3DLoading(true);
-        fetchExampleChromos3DData(cellLineName, chromosome3DExampleID, "submit", false);
+        fetchExampleChromos3DData(independentHeatmapCellLine, chromosome3DExampleID, "submit", false);
     };
 
     const openHalfHeatMapModal = () => {
@@ -128,8 +151,8 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
     }, []);
 
     useEffect(() => {
-        if (!containerSize.width && !containerSize.height) return;
-    
+        if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;
+
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
         const margin = { top: 45, right: 10, bottom: 45, left: 60 };
@@ -138,7 +161,7 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
         const height = Math.min(parentWidth, parentHeight) - margin.top - margin.bottom;
 
-        const zoomedChromosomeData = chromosomeData.filter(item => {
+        const zoomedChromosomeData = independentHeatmapData.filter(item => {
             const { ibp, jbp } = item;
             return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
                 jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
@@ -366,10 +389,10 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                 .attr('stroke', '#999')
                 .attr('stroke-width', 2);
         }
-    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize]);
+    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData]);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '38%', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '720px', width: '720px', height: '100%' }}>
             <div ref={containerRef} style={{
                 width: '100%', height: '72%', borderRight: "1px solid #eaeaea", position: 'relative', display: 'flex',
                 justifyContent: 'center',
@@ -433,7 +456,48 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                                 }}
                                 icon={<DownloadOutlined />}
                                 onClick={download}
-                            /></Tooltip>
+                            />
+                        </Tooltip>
+                        {comparisonHeatmapId && (
+                            <>
+                                <Tooltip
+                                    title="Generate a new heatmap based on the comparison cell line"
+                                    color='white'
+                                    overlayInnerStyle={{
+                                        color: 'black'
+                                    }}
+                                >
+                                    <Select
+                                        value={independentHeatmapCellLine}
+                                        style={{
+                                            minWidth: 150,
+                                            maxWidth: 200,
+                                            marginRight: 10,
+                                        }}
+                                        size="small"
+                                        onChange={comparisonCellLineChange}
+                                        options={cellLineList}
+                                    />
+                                </Tooltip>
+                                <Tooltip
+                                    title="Close the comparison heatmap"
+                                    color='white'
+                                    overlayInnerStyle={{
+                                        color: 'black'
+                                    }}
+                                >
+                                    <Button
+                                        size='small'
+                                        style={{
+                                            fontSize: 12,
+                                            cursor: "pointer",
+                                        }}
+                                        icon={<MinusOutlined />}
+                                        onClick={() => removeComparisonHeatmap(comparisonHeatmapId)}
+                                    />
+                                </Tooltip>
+                            </>
+                        )}
                         <Tooltip
                             title={
                                 <span>
@@ -453,37 +517,50 @@ export const Heatmap = ({ cellLineName, chromosomeName, chromosomeData, selected
                         </Tooltip>
                     </div>
                 </div>
-                <Modal open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
-                    <HeatmapTriangle
-                        geneList={geneList}
-                        cellLineName={cellLineName}
-                        chromosomeName={chromosomeName}
-                        totalChromosomeSequences={totalChromosomeSequences}
-                        currentChromosomeData={currentChromosomeData}
-                        currentChromosomeSequence={currentChromosomeSequence}
-                        geneName={geneName}
-                        colorScaleRange={colorScaleRange}
-                        igvMountStatus={igvMountStatus}
-                        changeColorByInput={changeColorByInput}
-                        changeColorScale={changeColorScale}
-                    />
-                </Modal>
-                <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
-                <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
-                <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
-                <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
-                <div style={{ display: 'flex', flexDirection: 'column' , gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
-                    <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange}/>
-                    <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
-                </div>
-                <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
-                <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                {independentHeatmapLoading ? (
+                    <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+                ) : (
+                    independentHeatmapData.length > 0 ? (
+                        <>
+                            <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
+                            <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
+                            <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
+                            <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
+                                <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
+                                <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange} />
+                                <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
+                            </div>
+                            <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                            <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                            <Modal open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
+                                <HeatmapTriangle
+                                    geneList={geneList}
+                                    cellLineName={independentHeatmapData}
+                                    chromosomeName={chromosomeName}
+                                    totalChromosomeSequences={totalChromosomeSequences}
+                                    currentChromosomeData={currentChromosomeData}
+                                    currentChromosomeSequence={currentChromosomeSequence}
+                                    geneName={geneName}
+                                    colorScaleRange={colorScaleRange}
+                                    igvMountStatus={igvMountStatus}
+                                    changeColorByInput={changeColorByInput}
+                                    changeColorScale={changeColorScale}
+                                />
+                            </Modal>
+                        </>
+                    ) : (
+                        <Empty
+                            style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }}
+                            description="No Heatmap Data"
+                        />
+                    )
+                )}
             </div>
-            {minDimension > 0 && (
+            {minDimension > 0 && independentHeatmapData.length > 0 && (
                 <GeneList
                     geneList={geneList}
-                    cellLineName={cellLineName}
+                    cellLineName={independentHeatmapCellLine}
                     chromosomeName={chromosomeName}
                     currentChromosomeSequence={currentChromosomeSequence}
                     minDimension={minDimension}
