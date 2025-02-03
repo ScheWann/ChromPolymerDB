@@ -723,11 +723,11 @@ function App() {
 
         {/* Original 3D chromosome */}
         {chromosome3DLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '1000px', height: '100%', margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length} * 720px))`, height: '100%', margin: 0 }} />
         ) : (
           chromosome3DExampleData.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%' }}>
-              <div style={{ width: '800px', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length} * 720px))` }}>
+              <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                 <Tabs
                   size="small"
                   defaultActiveKey={chromosome3DExampleID}
@@ -771,7 +771,7 @@ function App() {
 
               {/* Comparison 3D chromosome */}
               {chromosome3DComparisonShowing && (
-                <div style={{ width: '800px' }}>
+                <div style={{ width: "49.9%", minWidth: "800px" }}>
                   <Tabs
                     size="small"
                     defaultActiveKey={chromosome3DExampleID}
