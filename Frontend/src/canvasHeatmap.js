@@ -408,6 +408,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <span>{formatNumber(currentChromosomeSequence.end)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '5px' }}>
+                        {!comparisonHeatmapId && (
+                            <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <span style={{ marginRight: 5 }}>Cell Line:</span>
+                                <span>{cellLineName}</span>
+                            </div>
+                        )}
                         <Tooltip
                             title="Restore the original heatmap"
                             color='white'
