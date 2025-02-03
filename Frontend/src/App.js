@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Input, Button, message, Empty, Spin, Tabs, Switch, Tooltip, Tour } from 'antd';
 import './App.css';
-// import { Heatmap } from './heatmap.js';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
@@ -572,7 +571,7 @@ function App() {
                 overlayInnerStyle={{
                   color: 'black'
                 }}>
-                <Button id="add-new-heatmap-button" size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+                <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
               </Tooltip>
               <Tooltip
                 title="View non-random chromosomal interactions as heatmap"
@@ -615,7 +614,7 @@ function App() {
                 overlayInnerStyle={{
                   color: 'black'
                 }}>
-                <Button id="add-new-heatmap-button" size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+                <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
               </Tooltip>
               <Tooltip
                 title="View non-random chromosomal interactions as heatmap"
