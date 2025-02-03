@@ -472,7 +472,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         style={{
                                             minWidth: 150,
                                             maxWidth: 200,
-                                            marginRight: 10,
                                         }}
                                         size="small"
                                         onChange={comparisonCellLineChange}
@@ -536,7 +535,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             <Modal open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
                                 <HeatmapTriangle
                                     geneList={geneList}
-                                    cellLineName={independentHeatmapData}
+                                    cellLineName={independentHeatmapCellLine}
                                     chromosomeName={chromosomeName}
                                     totalChromosomeSequences={totalChromosomeSequences}
                                     currentChromosomeData={currentChromosomeData}
