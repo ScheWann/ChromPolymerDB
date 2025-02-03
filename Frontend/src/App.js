@@ -32,6 +32,7 @@ function App() {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
+  const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878"});
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -665,6 +666,7 @@ function App() {
         ) : (
           chromosomeData.length > 0 && (
             <Heatmap
+              cellLineDict={cellLineDict}
               comparisonHeatmapId={null}
               warning={warning}
               formatNumber={formatNumber}
@@ -699,6 +701,7 @@ function App() {
           <Heatmap
             key={index}
             comparisonHeatmapId={index}
+            cellLineDict={cellLineDict}
             warning={warning}
             formatNumber={formatNumber}
             setChromosome3DExampleData={setChromosome3DExampleData}
@@ -729,10 +732,10 @@ function App() {
 
         {/* Original 3D chromosome */}
         {chromosome3DLoading ? (
-          <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length} * 720px))`, height: '100%', margin: 0 }} />
+          <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))`, height: '100%', margin: 0 }} />
         ) : (
           chromosome3DExampleData.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length} * 720px))` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))` }}>
               <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                 <Tabs
                   size="small"
@@ -743,7 +746,7 @@ function App() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
                       <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10 }}>
                         <span style={{ marginRight: 5 }}>Cell Line:</span>
-                        <span>{chromosome3DCellLineName}</span>
+                        <span>{cellLineDict[chromosome3DCellLineName]}</span>
                       </div>
                       <Tooltip
                         title="Add a second cell line to compare"

@@ -6,7 +6,7 @@ import { HeatmapTriangle } from './heatmapTriangle.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap }) => {
+export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -411,7 +411,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         {!comparisonHeatmapId && (
                             <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 <span style={{ marginRight: 5 }}>Cell Line:</span>
-                                <span>{cellLineName}</span>
+                                <span>{cellLineDict[cellLineName]}</span>
                             </div>
                         )}
                         <Tooltip
