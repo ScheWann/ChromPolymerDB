@@ -31,6 +31,7 @@ function App() {
   const [messageApi, contextHolder] = message.useMessage();
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
+  const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -38,7 +39,7 @@ function App() {
 
   // 3D Chromosome Comparison settings
   const [chromosome3DComparisonShowing, setChromosome3DComparisonShowing] = useState(false);
-  const [comparisonCellLineList, setComparisonCellLineList] = useState([]);
+  // const [comparisonCellLineList, setComparisonCellLineList] = useState([]);
   const [comparisonCellLine, setComparisonCellLine] = useState(null);
   const [comparisonCellLine3DData, setComparisonCellLine3DData] = useState([]);
   const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
@@ -250,6 +251,9 @@ function App() {
       })
         .then(res => res.json())
         .then(data => {
+          if (data.length === 0) {
+            warning('noComparison3DData');
+          }
           if (isComparison) {
             setComparisonCellLine3DData(data);
             setComparisonCellLine3DLoading(false);
@@ -294,27 +298,27 @@ function App() {
       });
   }
 
-  const fetchComparisonCellLineList = () => {
-    if (chromosomeName && selectedChromosomeSequence) {
-      fetch("/getComparisonCellLineList", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ cell_line: cellLineName })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.length > 0) {
-            setComparisonCellLineList(data);
-            setChromosome3DComparisonShowing(true);
-          } else {
-            warning('noComparison3DData');
-            setChromosome3DComparisonShowing(false);
-          }
-        });
-    }
-  };
+  // const fetchComparisonCellLineList = () => {
+  //   if (chromosomeName && selectedChromosomeSequence) {
+  //     fetch("/getComparisonCellLineList", {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ cell_line: cellLineName })
+  //     })
+  //       .then(res => res.json())
+  //       .then(data => {
+  //         if (data.length > 0) {
+  //           setComparisonCellLineList(data);
+  //           setChromosome3DComparisonShowing(true);
+  //         } else {
+  //           warning('noComparison3DData');
+  //           setChromosome3DComparisonShowing(false);
+  //         }
+  //       });
+  //   }
+  // };
 
   // Warning message
   const warning = (type) => {
@@ -411,7 +415,7 @@ function App() {
     setChromosomeData([]);
     setChromosome3DExampleData([]);
     setComparisonCellLine3DData([]);
-    setComparisonCellLineList([]);
+    // setComparisonCellLineList([]);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     fetchChromosomeSize(value);
@@ -425,7 +429,7 @@ function App() {
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
-    setComparisonCellLineList([]);
+    // setComparisonCellLineList([]);
     setComparisonCellLine3DData([]);
 
     setSelectedChromosomeSequence((prevState) => ({
@@ -458,7 +462,8 @@ function App() {
 
   // Add 3D Chromosome Comparison
   const handleAddChromosome3D = () => {
-    fetchComparisonCellLineList();
+    setChromosome3DComparisonShowing(true);
+    // fetchComparisonCellLineList();
   };
 
   // Remove 3D Chromosome Comparison
@@ -487,7 +492,7 @@ function App() {
 
       setChromosome3DComparisonShowing(false);
       setComparisonCellLine3DSampleID(0);
-      setComparisonCellLineList([]);
+      // setComparisonCellLineList([]);
       setComparisonCellLine3DData([]);
       setChromosome3DExampleID(0);
       setChromosome3DExampleData([]);
@@ -684,6 +689,7 @@ function App() {
               setGeneSize={setGeneSize}
               comparisonHeatmapList={comparisonHeatmapList}
               removeComparisonHeatmap={removeComparisonHeatmap}
+              setChromosome3DCellLineName={setChromosome3DCellLineName}
             />
           )
         )}
@@ -717,6 +723,7 @@ function App() {
             setGeneSize={setGeneSize}
             comparisonHeatmapList={comparisonHeatmapList}
             removeComparisonHeatmap={removeComparisonHeatmap}
+            setChromosome3DCellLineName={setChromosome3DCellLineName}
           />
         ))}
 
@@ -733,24 +740,30 @@ function App() {
                   style={{ width: '100%', height: '100%' }}
                   onChange={originalSampleChange}
                   tabBarExtraContent={
-                    <Tooltip
-                      title="Add a second cell line to compare"
-                      color='white'
-                      overlayInnerStyle={{
-                        color: 'black'
-                      }}
-                    >
-                      <Button
-                        style={{
-                          fontSize: 15,
-                          cursor: "pointer",
-                          marginRight: 5,
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10 }}>
+                        <span style={{ marginRight: 5 }}>Cell Line:</span>
+                        <span>{chromosome3DCellLineName}</span>
+                      </div>
+                      <Tooltip
+                        title="Add a second cell line to compare"
+                        color='white'
+                        overlayInnerStyle={{
+                          color: 'black'
                         }}
-                        size="small"
-                        icon={<PlusOutlined />}
-                        onClick={handleAddChromosome3D}
-                      />
-                    </Tooltip>
+                      >
+                        <Button
+                          style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                            marginRight: 5,
+                          }}
+                          size="small"
+                          icon={<PlusOutlined />}
+                          onClick={handleAddChromosome3D}
+                        />
+                      </Tooltip>
+                    </div>
                   }
                   items={randomKeys.map((key, i) => ({
                     label: `Sample ${i + 1}`,
@@ -787,7 +800,7 @@ function App() {
                           }}
                           size="small"
                           onChange={comparisonCellLineChange}
-                          options={comparisonCellLineList}
+                          options={cellLineList}
                         />
                         <Tooltip
                           title="Collapse the second cell line window"
