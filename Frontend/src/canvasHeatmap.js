@@ -403,17 +403,19 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                     position: 'absolute', top: 0, right: 0, zIndex: 10, display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between', padding: "5px 0 5px 0", borderBottom: "1px solid #eaeaea", alignItems: 'center'
                 }}>
                     <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10 }}>
+                        {!comparisonHeatmapId && (
+                            <>
+                                <span style={{ marginRight: 3 }}>{cellLineDict[cellLineName]}</span>
+                                <span style={{ marginRight: 3 }}>-</span>
+                            </>
+                        )}
+                        <span style={{ marginRight: 3 }}>{chromosomeName}</span>
+                        <span style={{ marginRight: 3 }}>:</span>
                         <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
                         <span style={{ marginRight: 5 }}>~</span>
                         <span>{formatNumber(currentChromosomeSequence.end)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '5px' }}>
-                        {!comparisonHeatmapId && (
-                            <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <span style={{ marginRight: 5 }}>Cell Line:</span>
-                                <span>{cellLineDict[cellLineName]}</span>
-                            </div>
-                        )}
                         <Tooltip
                             title="Restore the original heatmap"
                             color='white'
