@@ -224,7 +224,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3);
         }
-    }, [brushedTriangleRange]);
+    }, [brushedTriangleRange, currentChromosomeSequence]);
 
     return (
         <div ref={containerRef}
