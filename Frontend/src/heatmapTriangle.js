@@ -723,6 +723,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     useEffect(() => {
         if (!containerSize.width && !containerSize.height) return;
+        
+        setBrushedTriangleRange({ start: 0, end: 0 });
 
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -940,7 +942,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .attr("transform", "rotate(45)")
             .attr("dx", "1em")
             .attr("dy", "0em");
-    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
+    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange, halfHeatMapModalVisible]);
 
     return (
         <div ref={containerRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: '100%', height: '100%' }}>
