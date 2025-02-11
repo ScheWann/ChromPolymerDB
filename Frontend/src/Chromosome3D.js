@@ -404,6 +404,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                         return (
                             <group
+                                style={ {pointerEvents: 'none' }}
                                 key={index}
                                 position={coord}
                                 onPointerOver={(e) => {
