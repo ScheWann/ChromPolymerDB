@@ -723,7 +723,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     useEffect(() => {
         if (!containerSize.width && !containerSize.height) return;
-        
+
         setBrushedTriangleRange({ start: 0, end: 0 });
 
         const canvas = canvasRef.current;
@@ -738,8 +738,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const height = (Math.min(parentWidth, parentHeight) - margin.top - margin.bottom);
 
         canvas.width = width * Math.sqrt(2);
-        canvas.height = height / 1.4;
+        // canvas.height = height / 1.4;
+        canvas.height = height / Math.sqrt(2);
 
+        console.log(canvas.width, minCanvasDimension)
         setMinCanvasDimension(canvas.width);
         context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -757,21 +759,25 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
             (_, i) => adjustedStart + i * step
         );
+        console.log(axisValues)
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
             .range([0, width])
-            .padding(0.1);
+        // .padding(0.1);
 
         const yScale = d3.scaleBand()
             .domain(axisValues)
             .range([height, 0])
-            .padding(0.1);
+        // .padding(0.1);
 
-        const transformedXScale = d3.scaleBand()
-            .domain(axisValues)
-            .range([0, canvas.width])
-            .padding(0.1);
+        // const transformedXScale = d3.scaleBand()
+        //     .domain(axisValues)
+        //     .range([0, canvas.width])
+        //     .padding(0.1);
+        const transformedXScale = d3.scaleLinear()
+            .domain([d3.min(axisValues), d3.max(axisValues)])
+            .range([0, canvas.width]);
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
@@ -912,36 +918,38 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
 
         // Dynamically determine the tick count based on the range
-        let tickCount;
-        if (range < 1000000) {
-            tickCount = Math.max(Math.floor(range / 20000), 5);
-        } else if (range >= 1000000 && range <= 10000000) {
-            tickCount = Math.max(Math.floor(range / 50000), 5);
-        } else {
-            tickCount = 30;
-        }
+        // let tickCount;
+        // if (range < 1000000) {
+        //     tickCount = Math.max(Math.floor(range / 20000), 5);
+        // } else if (range >= 1000000 && range <= 10000000) {
+        //     tickCount = Math.max(Math.floor(range / 50000), 5);
+        // } else {
+        //     tickCount = 30;
+        // }
 
-        tickCount = Math.min(tickCount, 30);
+        // tickCount = Math.min(tickCount, 30);
 
         // X-axis
         axisSvg.append('g')
             .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
-            .call(d3.axisBottom(transformedXScale)
-                .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
-                .tickFormat(d => {
-                    if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(3)}M`;
-                    }
-                    if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(3)}W`;
-                    }
-                    return d;
-                }))
+            .call(d3.axisBottom(transformedXScale))
+            // .ticks(10))
+            // .tickFormat(d => `${d/1e6}M`))
+            // .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
+            // .tickFormat(d => {
+            //     if (d >= 1000000) {
+            //         return `${(d / 1000000).toFixed(3)}M`;
+            //     }
+            //     if (d > 10000 && d < 1000000) {
+            //         return `${(d / 10000).toFixed(3)}W`;
+            //     }
+            //     return d;
+            // }))
             .selectAll("text")
-            .style("text-anchor", "start")
-            .attr("transform", "rotate(45)")
-            .attr("dx", "1em")
-            .attr("dy", "0em");
+            .style("text-anchor", "middle")
+            // .attr("transform", "rotate(45)")
+            .attr("dx", "0em")
+            .attr("dy", "2em");
     }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
 
     return (

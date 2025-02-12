@@ -534,7 +534,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                             <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "1.2%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: "0.5%", top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
                                 <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                                 <Slider range={{ draggableTrack: true }} vertical style={{ height: 300 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange} />
                                 <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
