@@ -33,7 +33,7 @@ function App() {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
-  const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878"});
+  const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -635,197 +635,208 @@ function App() {
 
       {/* main content part */}
       <div className='content'>
-        {/* Original Heatmap */}
-        {heatmapLoading ? (
-          <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
-        ) : (
-          chromosomeData.length > 0 && (
-            <Heatmap
-              cellLineDict={cellLineDict}
-              comparisonHeatmapId={null}
-              warning={warning}
-              formatNumber={formatNumber}
-              setChromosome3DExampleData={setChromosome3DExampleData}
-              cellLineList={cellLineList}
-              geneList={geneList}
-              cellLineName={cellLineName}
-              chromosomeName={chromosomeName}
-              chromosomeData={chromosomeData}
-              currentChromosomeSequence={currentChromosomeSequence}
-              setCurrentChromosomeSequence={setCurrentChromosomeSequence}
-              geneSize={geneSize}
-              totalChromosomeSequences={totalChromosomeSequences}
-              selectedChromosomeSequence={selectedChromosomeSequence}
-              chromosome3DExampleID={chromosome3DExampleID}
-              geneName={geneName}
-              setSelectedChromosomeSequence={setSelectedChromosomeSequence}
-              setChromosome3DLoading={setChromosome3DLoading}
-              setComparisonCellLine3DData={setComparisonCellLine3DData}
-              setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
-              setGeneName={setGeneName}
-              setGeneSize={setGeneSize}
-              comparisonHeatmapList={comparisonHeatmapList}
-              removeComparisonHeatmap={removeComparisonHeatmap}
-              setChromosome3DCellLineName={setChromosome3DCellLineName}
-            />
-          )
-        )}
+        {/* project introduction */}
+        {!heatmapLoading &&
+          chromosomeData.length === 0 &&
+          chromosome3DExampleData.length === 0 && (
+            <ProjectIntroduction />
+          )}
 
-        {/* Comparison Heatmaps */}
-        {comparisonHeatmapList.map((index) => (
-          <Heatmap
-            key={index}
-            comparisonHeatmapId={index}
-            cellLineDict={cellLineDict}
-            warning={warning}
-            formatNumber={formatNumber}
-            setChromosome3DExampleData={setChromosome3DExampleData}
-            cellLineList={cellLineList}
-            geneList={geneList}
-            cellLineName={cellLineName}
-            chromosomeName={chromosomeName}
-            chromosomeData={[]}
-            currentChromosomeSequence={currentChromosomeSequence}
-            setCurrentChromosomeSequence={setCurrentChromosomeSequence}
-            setChromosomeData={setChromosomeData}
-            geneSize={geneSize}
-            totalChromosomeSequences={totalChromosomeSequences}
-            selectedChromosomeSequence={selectedChromosomeSequence}
-            chromosome3DExampleID={chromosome3DExampleID}
-            geneName={geneName}
-            setSelectedChromosomeSequence={setSelectedChromosomeSequence}
-            setChromosome3DLoading={setChromosome3DLoading}
-            setComparisonCellLine3DData={setComparisonCellLine3DData}
-            setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
-            setGeneName={setGeneName}
-            setGeneSize={setGeneSize}
-            comparisonHeatmapList={comparisonHeatmapList}
-            removeComparisonHeatmap={removeComparisonHeatmap}
-            setChromosome3DCellLineName={setChromosome3DCellLineName}
-          />
-        ))}
-
-        {/* Original 3D chromosome */}
-        {chromosome3DLoading ? (
-          <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))`, height: '100%', margin: 0 }} />
-        ) : (
-          chromosome3DExampleData.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))` }}>
-              <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
-                <Tabs
-                  size="small"
-                  defaultActiveKey={chromosome3DExampleID}
-                  style={{ width: '100%', height: '100%' }}
-                  onChange={originalSampleChange}
-                  tabBarExtraContent={
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10 }}>
-                        <span style={{ marginRight: 5 }}>Cell Line:</span>
-                        <span>{cellLineDict[chromosome3DCellLineName]}</span>
-                      </div>
-                      <Tooltip
-                        title="Add a second cell line to compare"
-                        color='white'
-                        overlayInnerStyle={{
-                          color: 'black'
-                        }}
-                      >
-                        <Button
-                          style={{
-                            fontSize: 15,
-                            cursor: "pointer",
-                            marginRight: 5,
-                          }}
-                          size="small"
-                          icon={<PlusOutlined />}
-                          onClick={handleAddChromosome3D}
-                        />
-                      </Tooltip>
-                    </div>
-                  }
-                  items={randomKeys.map((key, i) => ({
-                    label: `Sample ${i + 1}`,
-                    key: key,
-                    children: (
-                      <Chromosome3D
-                        formatNumber={formatNumber}
-                        geneSize={geneSize}
-                        chromosome3DExampleData={chromosome3DExampleData}
-                        validChromosomeValidIbpData={validChromosomeValidIbpData}
-                        selectedChromosomeSequence={selectedChromosomeSequence}
-                      />
-                    )
-                  }))}
+        {!(chromosomeData.length === 0 && chromosome3DExampleData.length === 0) && (
+          <>
+            {/* Original Heatmap */}
+            {heatmapLoading ? (
+              <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+            ) : (
+              chromosomeData.length > 0 && (
+                <Heatmap
+                  cellLineDict={cellLineDict}
+                  comparisonHeatmapId={null}
+                  warning={warning}
+                  formatNumber={formatNumber}
+                  setChromosome3DExampleData={setChromosome3DExampleData}
+                  cellLineList={cellLineList}
+                  geneList={geneList}
+                  cellLineName={cellLineName}
+                  chromosomeName={chromosomeName}
+                  chromosomeData={chromosomeData}
+                  currentChromosomeSequence={currentChromosomeSequence}
+                  setCurrentChromosomeSequence={setCurrentChromosomeSequence}
+                  geneSize={geneSize}
+                  totalChromosomeSequences={totalChromosomeSequences}
+                  selectedChromosomeSequence={selectedChromosomeSequence}
+                  chromosome3DExampleID={chromosome3DExampleID}
+                  geneName={geneName}
+                  setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+                  setChromosome3DLoading={setChromosome3DLoading}
+                  setComparisonCellLine3DData={setComparisonCellLine3DData}
+                  setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
+                  setGeneName={setGeneName}
+                  setGeneSize={setGeneSize}
+                  comparisonHeatmapList={comparisonHeatmapList}
+                  removeComparisonHeatmap={removeComparisonHeatmap}
+                  setChromosome3DCellLineName={setChromosome3DCellLineName}
                 />
-              </div>
+              )
+            )}
 
-              {/* Comparison 3D chromosome */}
-              {chromosome3DComparisonShowing && (
-                <div style={{ width: "49.9%", minWidth: "800px" }}>
-                  <Tabs
-                    size="small"
-                    defaultActiveKey={chromosome3DExampleID}
-                    style={{ width: '100%', height: '100%' }}
-                    onChange={comparisonSampleChange}
-                    tabBarExtraContent={
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                        <Select
-                          value={comparisonCellLine}
-                          style={{
-                            minWidth: 150,
-                            maxWidth: 400,
-                            marginRight: 10,
-                          }}
-                          size="small"
-                          onChange={comparisonCellLineChange}
-                          options={cellLineList}
-                        />
-                        <Tooltip
-                          title="Collapse the second cell line window"
-                          color='white'
-                          overlayInnerStyle={{
-                            color: 'black'
-                          }}
-                        >
-                          <Button
-                            style={{
-                              fontSize: 15,
-                              cursor: 'pointer',
+            {/* Comparison Heatmaps */}
+            {comparisonHeatmapList.map((index) => (
+              <Heatmap
+                key={index}
+                comparisonHeatmapId={index}
+                cellLineDict={cellLineDict}
+                warning={warning}
+                formatNumber={formatNumber}
+                setChromosome3DExampleData={setChromosome3DExampleData}
+                cellLineList={cellLineList}
+                geneList={geneList}
+                cellLineName={cellLineName}
+                chromosomeName={chromosomeName}
+                chromosomeData={[]}
+                currentChromosomeSequence={currentChromosomeSequence}
+                setCurrentChromosomeSequence={setCurrentChromosomeSequence}
+                setChromosomeData={setChromosomeData}
+                geneSize={geneSize}
+                totalChromosomeSequences={totalChromosomeSequences}
+                selectedChromosomeSequence={selectedChromosomeSequence}
+                chromosome3DExampleID={chromosome3DExampleID}
+                geneName={geneName}
+                setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+                setChromosome3DLoading={setChromosome3DLoading}
+                setComparisonCellLine3DData={setComparisonCellLine3DData}
+                setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
+                setGeneName={setGeneName}
+                setGeneSize={setGeneSize}
+                comparisonHeatmapList={comparisonHeatmapList}
+                removeComparisonHeatmap={removeComparisonHeatmap}
+                setChromosome3DCellLineName={setChromosome3DCellLineName}
+              />
+            ))}
+
+            {/* Original 3D chromosome */}
+            {chromosome3DLoading ? (
+              <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))`, height: '100%', margin: 0 }} />
+            ) : (
+              chromosome3DExampleData.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))` }}>
+                  <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
+                    <Tabs
+                      size="small"
+                      defaultActiveKey={chromosome3DExampleID}
+                      style={{ width: '100%', height: '100%' }}
+                      onChange={originalSampleChange}
+                      tabBarExtraContent={
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10 }}>
+                            <span style={{ marginRight: 5 }}>Cell Line:</span>
+                            <span>{cellLineDict[chromosome3DCellLineName]}</span>
+                          </div>
+                          <Tooltip
+                            title="Add a second cell line to compare"
+                            color='white'
+                            overlayInnerStyle={{
+                              color: 'black'
                             }}
-                            size="small"
-                            icon={<MinusOutlined />}
-                            onClick={handleRemoveChromosome3D}
-                          />
-                        </Tooltip>
-                      </div>
-                    }
-                    items={new Array(3).fill(null).map((_, i) => {
-                      const id = i;
-                      const isLoading = comparisonCellLine3DLoading;
-                      return {
-                        label: `Sample ${id + 1}`,
-                        key: id,
-                        children: isLoading ? (
-                          <Spin
-                            size="large"
-                            style={{ display: 'block', margin: '20px auto' }}
-                          />
-                        ) : (
+                          >
+                            <Button
+                              style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                                marginRight: 5,
+                              }}
+                              size="small"
+                              icon={<PlusOutlined />}
+                              onClick={handleAddChromosome3D}
+                            />
+                          </Tooltip>
+                        </div>
+                      }
+                      items={randomKeys.map((key, i) => ({
+                        label: `Sample ${i + 1}`,
+                        key: key,
+                        children: (
                           <Chromosome3D
                             formatNumber={formatNumber}
                             geneSize={geneSize}
-                            chromosome3DExampleData={comparisonCellLine3DData}
+                            chromosome3DExampleData={chromosome3DExampleData}
                             validChromosomeValidIbpData={validChromosomeValidIbpData}
                             selectedChromosomeSequence={selectedChromosomeSequence}
                           />
-                        ),
-                      };
-                    })}
-                  />
+                        )
+                      }))}
+                    />
+                  </div>
+
+                  {/* Comparison 3D chromosome */}
+                  {chromosome3DComparisonShowing && (
+                    <div style={{ width: "49.9%", minWidth: "800px" }}>
+                      <Tabs
+                        size="small"
+                        defaultActiveKey={chromosome3DExampleID}
+                        style={{ width: '100%', height: '100%' }}
+                        onChange={comparisonSampleChange}
+                        tabBarExtraContent={
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
+                            <Select
+                              value={comparisonCellLine}
+                              style={{
+                                minWidth: 150,
+                                maxWidth: 400,
+                                marginRight: 10,
+                              }}
+                              size="small"
+                              onChange={comparisonCellLineChange}
+                              options={cellLineList}
+                            />
+                            <Tooltip
+                              title="Collapse the second cell line window"
+                              color='white'
+                              overlayInnerStyle={{
+                                color: 'black'
+                              }}
+                            >
+                              <Button
+                                style={{
+                                  fontSize: 15,
+                                  cursor: 'pointer',
+                                }}
+                                size="small"
+                                icon={<MinusOutlined />}
+                                onClick={handleRemoveChromosome3D}
+                              />
+                            </Tooltip>
+                          </div>
+                        }
+                        items={new Array(3).fill(null).map((_, i) => {
+                          const id = i;
+                          const isLoading = comparisonCellLine3DLoading;
+                          return {
+                            label: `Sample ${id + 1}`,
+                            key: id,
+                            children: isLoading ? (
+                              <Spin
+                                size="large"
+                                style={{ display: 'block', margin: '20px auto' }}
+                              />
+                            ) : (
+                              <Chromosome3D
+                                formatNumber={formatNumber}
+                                geneSize={geneSize}
+                                chromosome3DExampleData={comparisonCellLine3DData}
+                                validChromosomeValidIbpData={validChromosomeValidIbpData}
+                                selectedChromosomeSequence={selectedChromosomeSequence}
+                              />
+                            ),
+                          };
+                        })}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )
+              )
+            )}
+          </>
         )}
       </div>
     </div>
