@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Input, Button, message, Empty, Spin, Tabs, Switch, Tooltip, Tour } from 'antd';
+import { Select, Input, Button, message, Empty, Spin, Tabs, Switch, Tooltip, Tour, Typography } from 'antd';
 import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
-import { PlusOutlined, MinusOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined } from "@ant-design/icons";
 
 // Random number generator from 0 to 5000
 const getRandomKey = () => Math.floor(Math.random() * 5001);
@@ -49,6 +49,8 @@ function App() {
 
   // Tour visibility state
   const [isTourOpen, setIsTourOpen] = useState(true);
+
+  const { Title } = Typography;
 
   // Define Tour steps
   const steps = [
@@ -496,6 +498,12 @@ function App() {
             className="switchWrapper"
             style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px' }}
           >
+            <Title
+              level={5}
+              style={{ color: '#1890ff', textAlign: 'center', margin: "0px 10px 0px 0px" }}
+            >
+              <ExperimentOutlined /> ChromPolymerDB
+            </Title>
             <Switch
               checkedChildren="Cell Line"
               unCheckedChildren="Gene"

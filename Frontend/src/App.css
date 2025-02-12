@@ -116,12 +116,3 @@ body {
 .ant-modal-content {
   height: 80vh !important;
 }
-
-/* .ant-typography {
-  margin: 10px 0 10px 0 !important;
-} */
-
-.ant-collapse-header {
-  display: flex !important;
-  align-items: center !important;
-}

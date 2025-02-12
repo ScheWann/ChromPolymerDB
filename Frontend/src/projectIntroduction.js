@@ -1,26 +1,92 @@
-import React, { useState } from 'react';
-import {
-    Collapse,
-    Typography,
-    Tabs,
-    Card,
-    Tag,
-} from 'antd';
-import {
-    GithubOutlined,
-    ExperimentOutlined,
+import React, { useEffect, useRef } from 'react';
+import * as d3 from 'd3';
+import { Typography, Card, Tag } from 'antd';
+import { GithubOutlined, ExperimentOutlined } from '@ant-design/icons';
 
-} from '@ant-design/icons';
+const data = [
+    { name: 'The 4D Nucleome (4DN) Data Portal', value: 20 },
+    { name: 'The ENCODE Portal', value: 17 },
+    { name: 'Gene Expression Omnibus (GEO)', value: 13 }
+];
 
-const { Title, Text, Paragraph } = Typography;
+const colors = d3.scaleOrdinal(d3.schemeCategory10);
+const { Title, Text } = Typography;
 
 export const ProjectIntroduction = () => {
+    const chartRef = useRef(null);
+
+    useEffect(() => {
+        if (!chartRef.current) return;
+
+        const container = d3.select(chartRef.current);
+        container.selectAll('*').remove();
+
+        const wrapper = container.append('div')
+            .style('display', 'flex')
+            .style('align-items', 'center');
+
+        const width = 300;
+        const height = 200;
+        const radius = Math.min(width, height) / 2 - 10;
+        
+        const svg = wrapper.append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', `translate(${width / 2},${height / 2})`);
+
+        const pie = d3.pie()
+            .value(d => d.value)
+            .sort(null);
+
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        const arcs = svg.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g');
+
+        arcs.append('path')
+            .attr('d', arc)
+            .attr('fill', (d, i) => colors(i))
+            .transition()
+            .duration(1000)
+            .attrTween('d', function (d) {
+                const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+                return t => arc(interpolate(t));
+            });
+
+        const legend = wrapper.append('div')
+            .style('margin-left', '20px');
+
+        data.forEach((d, i) => {
+            const legendItem = legend.append('div')
+                .style('display', 'flex')
+                .style('align-items', 'center')
+                .style('margin', '5px 0');
+
+            legendItem.append('div')
+                .style('width', '12px')
+                .style('height', '12px')
+                .style('background-color', colors(i))
+                .style('margin-right', '8px');
+
+            legendItem.append('div')
+                .html(`${d.name}: ${d.value} samples`);
+        });
+
+        return () => {
+            container.selectAll('*').remove();
+        };
+    }, []);
 
     return (
         <div style={{ width: 1200, margin: '0 auto', padding: '24px' }}>
             <Title
                 level={2}
-                style={{ color: '#1890ff', textAlign: 'center', marginBottom: '50px' }}
+                style={{ color: '#1890ff', textAlign: 'center', marginBottom: '32px' }}
             >
                 <ExperimentOutlined /> ChromPolymerDB
             </Title>
@@ -72,14 +138,26 @@ export const ProjectIntroduction = () => {
                     style={{ background: '#f0f5ff', width: '100%' }}
                     body={{ padding: 12 }}
                 >
-                    <Tag color='pink'>High-resolution visualization</Tag>
-                    <Tag color='purple'>Single-cell 3D chromatin conformations analysis</Tag>
-                    <Tag color='blue'>Interactive visualization of chromatin interactions and structural heterogeneity</Tag>
-                    <Tag color='green'>Distance measurement</Tag>
-                    <Tag color='cyan'>Cross-cell type comparions</Tag>
-                    <Tag color='red'>Distance Measurement</Tag>
-                    <Tag color='orange'>Data Export</Tag>
+                    <Tag color='pink' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>High-resolution visualization</Tag>
+                    <Tag color='purple' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Single-cell 3D chromatin conformations analysis</Tag>
+                    <Tag color='blue' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Interactive visualization of chromatin interactions and structural heterogeneity</Tag>
+                    <Tag color='green' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Distance measurement</Tag>
+                    <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Cross-cell type comparions</Tag>
+                    <Tag color='red' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Distance Measurement</Tag>
+                    <Tag color='orange' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Data Export</Tag>
                 </Card>
+
+                <Title level={5}>Data Coverage</Title>
+
+                <div
+                    ref={chartRef}
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginTop: 30
+                    }}
+                />
             </Card>
         </div>
     );
