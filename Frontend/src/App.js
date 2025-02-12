@@ -4,6 +4,7 @@ import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
+import { ProjectIntroduction } from './projectIntroduction.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined } from "@ant-design/icons";
 
 // Random number generator from 0 to 5000
@@ -40,7 +41,6 @@ function App() {
 
   // 3D Chromosome Comparison settings
   const [chromosome3DComparisonShowing, setChromosome3DComparisonShowing] = useState(false);
-  // const [comparisonCellLineList, setComparisonCellLineList] = useState([]);
   const [comparisonCellLine, setComparisonCellLine] = useState(null);
   const [comparisonCellLine3DData, setComparisonCellLine3DData] = useState([]);
   const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
@@ -299,28 +299,6 @@ function App() {
       });
   }
 
-  // const fetchComparisonCellLineList = () => {
-  //   if (chromosomeName && selectedChromosomeSequence) {
-  //     fetch("/getComparisonCellLineList", {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ cell_line: cellLineName })
-  //     })
-  //       .then(res => res.json())
-  //       .then(data => {
-  //         if (data.length > 0) {
-  //           setComparisonCellLineList(data);
-  //           setChromosome3DComparisonShowing(true);
-  //         } else {
-  //           warning('noComparison3DData');
-  //           setChromosome3DComparisonShowing(false);
-  //         }
-  //       });
-  //   }
-  // };
-
   // Warning message
   const warning = (type) => {
     if (type === 'overrange') {
@@ -416,7 +394,6 @@ function App() {
     setChromosomeData([]);
     setChromosome3DExampleData([]);
     setComparisonCellLine3DData([]);
-    // setComparisonCellLineList([]);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     fetchChromosomeSize(value);
@@ -430,7 +407,6 @@ function App() {
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
-    // setComparisonCellLineList([]);
     setComparisonCellLine3DData([]);
 
     setSelectedChromosomeSequence((prevState) => ({
@@ -493,7 +469,6 @@ function App() {
 
       setChromosome3DComparisonShowing(false);
       setComparisonCellLine3DSampleID(0);
-      // setComparisonCellLineList([]);
       setComparisonCellLine3DData([]);
       setChromosome3DExampleID(0);
       setChromosome3DExampleData([]);
