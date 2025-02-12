@@ -4,12 +4,10 @@ import {
     Typography,
     Tabs,
     Card,
-    Grid,
     Row,
     Col,
     Tag,
-    Space,
-    Button
+    Space
 } from 'antd';
 import {
     CodeOutlined,
@@ -25,160 +23,58 @@ const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 export const ProjectIntroduction = () => {
-    const [activeTechTab, setActiveTechTab] = useState('frontend');
-
-    const techTabsHandler = (key) => {
-        setActiveTechTab(key);
-    };
 
     return (
         <div style={{ width: 1200, margin: '0 auto', padding: '24px' }}>
-            <Title level={2} style={{ color: '#1890ff', marginBottom: '32px' }}>
+            <Title
+                level={2}
+                style={{ color: '#1890ff', textAlign: 'center', marginBottom: '50px' }}
+            >
                 <ExperimentOutlined /> ChromPolymerDB
             </Title>
 
             {/* Project Overview */}
-            <Collapse defaultActiveKey={['overview']} ghost>
+            <Collapse
+                expandIconPosition="end"
+                defaultActiveKey={['overview']}
+                style={{ width: '100%' }}
+            >
                 <Panel
-                    header={
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Title level={4} style={{ margin: 0 }}>Overview</Title>
-                        </div>
-                    }
                     key="overview"
-                    extra={<LinkOutlined />}
-                >
-                    <Paragraph strong>
-                        ChromPolymerDB bridges 2D Hi-C data and <Text mark>3D chromatin visualization</Text> through:
-                    </Paragraph>
-
-                    <Row gutter={[16, 16]}>
-                        <Col xs={24} md={12}>
-                            <Card bordered={false} style={{ background: '#f0f5ff' }}>
-                                <Tag color='pink'>Single-cell 3D conformation modeling</Tag>
-                                <Tag color='purple'>Interactive spatial analysis</Tag>
-                                <Tag color='blue'>Cross-cell type comparisons</Tag>
-                            </Card>
-                        </Col>
-                        <Col xs={24} md={12}>
-                            <Card bordered={false} style={{ background: '#f0f5ff' }}>
-                                <Text italic>
-                                    "This platform integrates polymer physics with genomics to
-                                    revolutionize chromatin structure analysis."
-                                </Text>
-                            </Card>
-                        </Col>
-                    </Row>
-                </Panel>
-            </Collapse>
-
-            {/* Technical Architecture */}
-            <Collapse style={{ marginTop: '24px' }}>
-                <Panel
                     header={
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Title level={4} style={{ margin: 0 }}>Technical Architecture</Title>
+                        <div style={{ width: '100%', textAlign: 'center', position: 'relative' }}>
+                            <Title level={4} style={{ margin: 0 }}>
+                                Introduction
+                            </Title>
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)'
+                                }}
+                            >
+                                <LinkOutlined style={{ fontSize: '16px' }} />
+                            </div>
                         </div>
                     }
-                    key="architecture"
                 >
-                    <Tabs activeKey={activeTechTab} onChange={techTabsHandler}>
-                        <TabPane
-                            key="frontend"
-                            tab={
-                                <span>
-                                    <EyeOutlined /> Frontend
-                                </span>
-                            }
-                        >
-                            <Title level={5} style={{ marginTop: '16px' }}>Visualization Stack</Title>
-                            <Space direction="vertical">
-                                <Tag color="blue">React + Three.js</Tag>
-                                <Tag color="cyan">Interactive 3D Manipulation</Tag>
-                                <Tag color="green">Oncogene Highlighting</Tag>
-                            </Space>
-                        </TabPane>
+                    <div style={{ width: "100%", textAlign: 'left', marginBottom: '10px' }}>
+                        <Text italic>
+                            The spatial organization of the genome plays a fundamental role in gene regulation, replication, and other biological processes. High-throughput chromosome conformation capture (Hi-C) techniques have advanced our understanding of genome architecture, but they primarily produce 2D, population-averaged data, limiting insights into individual cell chromatin structures. To bridge this gap, this project introduces a computational method and web-based platform designed for <Text mark>high-resolution visualization and analysis of single-cell 3D chromatin conformations.</Text>
+                        </Text>
+                    </div>
 
-                        <TabPane
-                            key="backend"
-                            tab={
-                                <span>
-                                    <CodeOutlined /> Backend
-                                </span>
-                            }
-                        >
-                            <Title level={5} style={{ marginTop: '16px' }}>Processing Pipeline</Title>
-                            <Space direction="vertical">
-                                <Tag color='purple'>Polymer physics simulation</Tag>
-                                <Tag color='pink'>Flask API endpoints</Tag>
-                            </Space>
-                        </TabPane>
-
-                        <TabPane
-                            key="data"
-                            tab={
-                                <span>
-                                    <DatabaseOutlined /> Data
-                                </span>
-                            }
-                        >
-                            <Title level={5} style={{ marginTop: '16px' }}>Data Management</Title>
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Card size="small">
-                                        <Text strong>Storage</Text>
-                                        <p>PostgreSQL</p>
-                                    </Card>
-                                </Col>
-                                <Col span={12}>
-                                    <Card size="small">
-                                        <Text strong>Export</Text>
-                                        <p><FileExcelOutlined /> CSV/JSON</p>
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </TabPane>
-                    </Tabs>
-                </Panel>
-            </Collapse>
-
-            {/* Key Features */}
-            <Collapse style={{ marginTop: '24px' }}>
-                <Panel
-                    header={
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Title level={4} style={{ margin: 0 }}>Key Features</Title>
-                        </div>
-                    }
-                    key="features"
-                >
-                    <Row gutter={[16, 16]}>
-                        <Col xs={24} md={12}>
-                            <Card
-                                title="🧬 Structural Analysis"
-                                headStyle={{ background: '#f6ffed' }}
-                            >
-                                <ul>
-                                    <li>Single-cell modeling</li>
-                                    <li>Population averaging</li>
-                                    <li>Dynamic sampling</li>
-                                </ul>
-                            </Card>
-                        </Col>
-
-                        <Col xs={24} md={12}>
-                            <Card
-                                title="🔬 Comparative Tools"
-                                headStyle={{ background: '#fffbe6' }}
-                            >
-                                <ul>
-                                    <li>Healthy vs. Cancer</li>
-                                    <li>3D heatmaps</li>
-                                    <li>Gene co-localization</li>
-                                </ul>
-                            </Card>
-                        </Col>
-                    </Row>
+                    <Title level={5}>Key Features</Title>
+                    <Card bordered={false} style={{ background: '#f0f5ff', width: '100%' }}>
+                                <Tag color='pink'>High-resolution visualization</Tag>
+                                <Tag color='purple'>Single-cell 3D chromatin conformations analysis</Tag>
+                                <Tag color='blue'>Interactive visualization of chromatin interactions and structural heterogeneity</Tag>
+                                <Tag color='green'>Distance measurement</Tag>
+                                <Tag color='cyan'>Cross-cell type comparions</Tag>
+                                <Tag color='red'>Distance Measurement</Tag>
+                                <Tag color='orange'>Data Export</Tag>
+                    </Card>
                 </Panel>
             </Collapse>
         </div>

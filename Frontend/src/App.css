@@ -117,9 +117,9 @@ body {
   height: 80vh !important;
 }
 
-.ant-typography {
+/* .ant-typography {
   margin: 10px 0 10px 0 !important;
-}
+} */
 
 .ant-collapse-header {
   display: flex !important;
