@@ -761,13 +761,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         );
         console.log(axisValues)
 
-        const xScale = d3.scaleBand()
-            .domain(axisValues)
+        const xScale = d3.scaleLinear()
+            .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([0, width])
         // .padding(0.1);
 
-        const yScale = d3.scaleBand()
-            .domain(axisValues)
+        const yScale = d3.scaleLinear()
+            .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([height, 0])
         // .padding(0.1);
 
@@ -816,17 +816,25 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             axisValues.forEach(jbp => {
                 const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || { fq: -1, fdr: -1, rawc: -1 };
 
-                const x = margin.left + xScale(jbp);
-                const y = margin.top + yScale(ibp);
-                const width = xScale.bandwidth();
-                const height = yScale.bandwidth();
+                // const x = margin.left + xScale(jbp);
+                // const y = margin.top + yScale(ibp);
+                // const width = xScale.bandwidth();
+                // const height = yScale.bandwidth();
+
+                const step = axisValues[1] - axisValues[0];
+        
+                const rectWidth = xScale(ibp + step) - xScale(ibp);
+                const rectHeight = yScale(jbp) - yScale(jbp + step);
+        
+                const x = margin.left + xScale(ibp);
+                const y = margin.top + yScale(jbp);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
                 } else {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(rawc);
                 }
-                context.fillRect(x, y, width, height);
+                context.fillRect(x, y, rectWidth, rectHeight);
             });
         });
 
@@ -915,7 +923,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         axisSvg.selectAll('*').remove();
 
         // Calculate the range of the current chromosome sequence
-        const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
+        // const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
 
         // Dynamically determine the tick count based on the range
         // let tickCount;
