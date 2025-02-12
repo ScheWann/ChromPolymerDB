@@ -9,7 +9,17 @@ const data = [
     { name: 'Gene Expression Omnibus (GEO)', value: 13 }
 ];
 
-const colors = d3.scaleOrdinal(d3.schemeCategory10);
+const antColors = [
+    '#1890ff', // blue
+    '#52c41a', // green
+    '#faad14', // orange
+    '#f5222d', // red
+    '#13c2c2', // cyan
+    '#722ed1', // purple
+    '#eb2f96'  // pink
+];
+
+const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
 export const ProjectIntroduction = () => {
@@ -28,7 +38,7 @@ export const ProjectIntroduction = () => {
         const width = 300;
         const height = 200;
         const radius = Math.min(width, height) / 2 - 10;
-        
+
         const svg = wrapper.append('svg')
             .attr('width', width)
             .attr('height', height)
@@ -74,7 +84,7 @@ export const ProjectIntroduction = () => {
                 .style('margin-right', '8px');
 
             legendItem.append('div')
-                .html(`${d.name}: ${d.value} samples`);
+                .html(`${d.name}: <strong style="font-weight:600">${d.value} samples</strong>`);
         });
 
         return () => {
