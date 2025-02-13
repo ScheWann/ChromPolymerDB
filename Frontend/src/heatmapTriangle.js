@@ -970,9 +970,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         // X-axis
         axisSvg.append('g')
             // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
-            .call(d3.axisBottom(transformedXScale))
+            .call(d3.axisBottom(transformedXScale)
             // .ticks(10)
-            // .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
+            .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
             // .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
             // .tickFormat(d => {
             //     if (d >= 1000000) {
@@ -985,9 +985,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             // }))
             .selectAll("text")
             .style("text-anchor", "middle")
-            .attr("transform", "rotate(90)")
-            .attr("dx", "3em")
-            .attr("dy", "0em");
+            // .attr("transform", "rotate(90)")
+            .attr("dx", "0em")
+            .attr("dy", "1em");
     }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
 
     return (
