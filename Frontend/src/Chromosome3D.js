@@ -324,6 +324,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <span>End Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
+                        <div className='colorRect' style={{ backgroundColor: '#E25822' }} />
+                        <span>Selected Region</span>
+                    </div>
+                    <div className='colorLegendWrapper'>
                         <div className='colorRect' style={{ backgroundColor: '#FFD700' }} />
                         <span>Selected Gene Region</span>
                     </div>
