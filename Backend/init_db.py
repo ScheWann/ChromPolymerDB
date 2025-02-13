@@ -75,12 +75,12 @@ def initialize_tables():
         cur.execute(
             "CREATE TABLE IF NOT EXISTS gene ("
             "gID serial PRIMARY KEY,"
-            "gene_id BIGINT NOT NULL,"
+            # "gene_id BIGINT NOT NULL,"
             "chromosome VARCHAR(50) NOT NULL,"
             "orientation VARCHAR(10) NOT NULL DEFAULT 'plus',"
             "start_location BIGINT NOT NULL DEFAULT 0,"
             "end_location BIGINT NOT NULL DEFAULT 0,"
-            "gene_name VARCHAR(255) NOT NULL,"
+            # "gene_name VARCHAR(255) NOT NULL,"
             "symbol VARCHAR(30) NOT NULL"
             ");"
         )
@@ -192,14 +192,14 @@ def process_chromosome_data(cur, file_path):
 def process_gene_data(cur, file_path):
     """Process and insert gene data from the specified file."""
     gene_df = pd.read_csv(file_path, sep="\t")
-    gene_df = gene_df[["Gene ID", "Name", "Symbol", "Chromosome", "Orientation", "Begin", "End"]]
+    gene_df = gene_df[["Chromosome", "Begin", "End", "Orientation", "Symbol"]]
 
     query = """
-    INSERT INTO gene (gene_id, chromosome, orientation, start_location, end_location, gene_name, symbol)
-    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    INSERT INTO gene (chromosome, start_location, end_location, orientation, symbol)
+    VALUES (%s, %s, %s, %s, %s);
     """
     data_to_insert = gene_df[
-        ["Gene ID", "Chromosome", "Orientation", "Begin", "End", "Name", "Symbol"]
+        ["Chromosome", "Begin", "End", "Orientation", "Symbol"]
     ].values.tolist()
 
     psycopg2.extras.execute_batch(cur, query, data_to_insert)
@@ -331,7 +331,7 @@ def insert_data():
 
     # Insert gene data only if the table is empty
     if not data_exists(cur, "gene"):
-        file_path = os.path.join(ROOT_DIR, "ncbi_dataset.tsv")
+        file_path = os.path.join(ROOT_DIR, "gene_list.tsv")
         print("Inserting gene data...")
         process_gene_data(cur, file_path)
         print("Gene data inserted successfully.")
