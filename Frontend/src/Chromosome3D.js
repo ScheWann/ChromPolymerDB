@@ -2,7 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
-import { Button, Tooltip, ColorPicker, Switch } from 'antd';
+import { Button, Tooltip, ColorPicker, Switch, InputNumber } from 'antd';
 import { DownloadOutlined, RollbackOutlined, ClearOutlined } from "@ant-design/icons";
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import "./Styles/chromosome3D.css";
@@ -21,11 +21,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
     const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
     const [showBeadInfo, setShowBeadInfo] = useState(false)
+    const [inputPositions, setInputPositions] = useState({ start: null, end: null });
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
-    console.log(geneSize, '???????')
     const presetColors = [
         {
             label: 'Theme Colors',
@@ -140,6 +140,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         }
     };
 
+    const handleInputLocation = (value, field) => {
+        setInputPositions(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const resetView = () => {
         if (controlsRef.current) {
             controlsRef.current.reset();
@@ -197,6 +204,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     alignItems: 'center',
                     gap: '10px',
                 }}>
+                    <span style={{ color: 'white' }}>Locations: </span>
+                    <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.start} controls={false} placeholder='start' onChange={value => handleInputLocation(value, 'start')} />
+                    <span style={{ color: 'white' }}>~</span>
+                    <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.end} controls={false} placeholder='end' onChange={value => handleInputLocation(value, 'end')} />
                     <Switch
                         checkedChildren="Genes"
                         unCheckedChildren="Gene Promoter"
@@ -386,13 +397,21 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         //             ? blendIfInvalid('#0000FF') // mix blue and white
                         //             : blendIfInvalid('#FFD700'); // mix gold and white
 
-                        const validColor = selectedSphereList[index]?.color ||
+                        const baseColor = selectedSphereList[index]?.color ||
                             (hoveredIndex === index || selectedIndex === index
                                 ? '#E25822'
                                 : isFirst || isLast
                                     ? originalColor
-                                    : '#00BFFF'); // default color
+                                    : '#00BFFF');
 
+                        const validColor = geneBeadRender ? '#FFD700' : baseColor;
+
+                        const beadMarker = processedChromosomeData[index].marker;
+                        const isInInputRange =
+                            inputPositions.start !== null &&
+                            inputPositions.end !== null &&
+                            beadMarker >= inputPositions.start &&
+                            beadMarker <= inputPositions.end;
                         // const currentColor = geneBeadRender
                         //     ? geneBeadColor
                         //     : isValid
@@ -403,11 +422,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         //                 ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
                         //                 : '#FFFFFF';  // default invalid bead color
 
-                        const currentColor = geneBeadRender ? '#FFD700' : validColor
+                        const currentColor = isInInputRange ? '#E25822' : validColor;
 
                         return (
                             <group
-                                style={ {pointerEvents: 'none' }}
+                                style={{ pointerEvents: 'none' }}
                                 key={index}
                                 position={coord}
                                 onPointerOver={(e) => {
