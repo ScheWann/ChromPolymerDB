@@ -90,10 +90,14 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         (_, i) => adjustedStart + i * step
     );
 
-    const xAxisScale = d3.scaleBand()
-        .domain(axisValues)
-        .range([0, minCanvasDimension])
-        .padding(0.1);
+    // const xAxisScale = d3.scaleBand()
+    //     .domain(axisValues)
+    //     .range([0, minCanvasDimension])
+    //     .padding(0.1);
+
+    const xAxisScale = d3.scaleLinear()
+        .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+        .range([0, minCanvasDimension]);
 
     useEffect(() => {
         let observer = null;
@@ -113,7 +117,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
                 browserRef.current = igvBrowser;
             });
-
+            console.log("IGV Locus:", igvDivRef.current.locus);
             observer = new MutationObserver(() => {
                 const shadowHost = document.querySelector("#igv-div");
 

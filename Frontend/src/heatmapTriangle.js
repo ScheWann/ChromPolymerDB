@@ -761,15 +761,21 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         );
         console.log(axisValues)
 
+        // const xScale = d3.scaleBand()
+        //     .domain(axisValues)
+        //     .range([0, width])
+        //     .padding(0.1);
         const xScale = d3.scaleLinear()
-            .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([0, width])
-        // .padding(0.1);
+            .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            .range([0, width]);
 
+        // const yScale = d3.scaleBand()
+        //     .domain(axisValues)
+        //     .range([height, 0])
+        //     .padding(0.1);
         const yScale = d3.scaleLinear()
-            .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([height, 0])
-        // .padding(0.1);
+            .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            .range([height, 0]);
 
         // const transformedXScale = d3.scaleBand()
         //     .domain(axisValues)
@@ -777,25 +783,31 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         //     .padding(0.1);
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([0, canvas.width]);
+            .range([0, canvas.width - 2.5]);
 
+
+        console.log(transformedXScale, 'transformedXScale')
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
         ).domain(colorScaleRange);
 
-        const invertBand = (scale, value) => {
-            const range = scale.range();
-            const step = scale.step();
-            const domain = scale.domain();
+        // const invertBand = (scale, value) => {
+        //     const range = scale.range();
+        //     const step = scale.step();
+        //     const domain = scale.domain();
 
-            const correctedValue = value - step / 2;
-            const index = Math.ceil((correctedValue - range[0]) / step);
+        //     const correctedValue = value - step / 2;
+        //     const index = Math.ceil((correctedValue - range[0]) / step);
 
-            if (index < 0 || index >= domain.length) {
-                return undefined;
-            }
+        //     if (index < 0 || index >= domain.length) {
+        //         return undefined;
+        //     }
 
-            return domain[index];
+        //     return domain[index];
+        // };
+
+        const invertPosition = (scale, value) => {
+            return scale.invert(value);
         };
 
         const fqMap = new Map();
@@ -821,13 +833,18 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 // const width = xScale.bandwidth();
                 // const height = yScale.bandwidth();
 
-                const step = axisValues[1] - axisValues[0];
-        
+                const x = margin.left + xScale(jbp);
+                const y = margin.top + yScale(ibp);
                 const rectWidth = xScale(ibp + step) - xScale(ibp);
                 const rectHeight = yScale(jbp) - yScale(jbp + step);
-        
-                const x = margin.left + xScale(ibp);
-                const y = margin.top + yScale(jbp);
+
+                // const step = axisValues[1] - axisValues[0];
+
+                // const rectWidth = xScale(ibp + step) - xScale(ibp);
+                // const rectHeight = yScale(jbp) - yScale(jbp + step);
+
+                // const x = margin.left + xScale(ibp);
+                // const y = margin.top + yScale(jbp);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
@@ -900,8 +917,22 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     pointBottomRight,
                 ];
 
-                const brushedTriangleRangeStart = invertBand(transformedXScale, mouseX - length);
-                const brushedTriangleRangeEnd = invertBand(transformedXScale, mouseX + length);
+                const brushedTriangleRangeStart = invertPosition(transformedXScale, mouseX - length);
+                const brushedTriangleRangeEnd = invertPosition(transformedXScale, mouseX + length);
+                // const startGenomePos = invertPosition(transformedXScale, mouseX - length);
+                // const endGenomePos = invertPosition(transformedXScale, mouseX + length);
+
+                // const startX = transformedXScale(startGenomePos);
+                // const endX = transformedXScale(endGenomePos);
+
+                // const pointBottomLeft = [startX, canvas.height - margin.bottom];
+                // const pointBottomRight = [endX, canvas.height - margin.bottom];
+
+                // const trianglePoints = [
+                //     [mouseX, mouseY],
+                //     pointBottomLeft,
+                //     pointBottomRight,
+                // ];
 
                 brushSvg.append('polygon')
                     .attr('class', 'triangle')
@@ -955,9 +986,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             // }))
             .selectAll("text")
             .style("text-anchor", "middle")
-            // .attr("transform", "rotate(45)")
-            .attr("dx", "0em")
-            .attr("dy", "2em");
+            .attr("transform", "rotate(90)")
+            .attr("dx", "3em")
+            .attr("dy", "0em");
     }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
 
     return (
