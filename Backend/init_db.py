@@ -331,7 +331,7 @@ def insert_data():
 
     # Insert gene data only if the table is empty
     if not data_exists(cur, "gene"):
-        file_path = os.path.join(ROOT_DIR, "gene_list.tsv")
+        file_path = os.path.join(ROOT_DIR, "gene_list.csv")
         print("Inserting gene data...")
         process_gene_data(cur, file_path)
         print("Gene data inserted successfully.")
