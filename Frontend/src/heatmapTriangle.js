@@ -41,6 +41,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             key: '3',
             label: 'ENCODE Other'
         },
+        {
+            key: '4',
+            label: 'Local Tracks'
+        }
         // {
         //     key: '4',
         //     label: '4DN tracks'
@@ -514,12 +518,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const modalStyles = {
         body: {
-            height: '90%',
+            height: trackKey === '4' ? '75%' : '90%',
             display: 'flex',
             alignItems: 'center',
         },
         content: {
-            padding: "40px 10px 0px 10px"
+            height: trackKey === '4' ? '30vh' : '80vh',
+            padding: trackKey === '4' ? "50px 10px 10px 10px" : "40px 10px 0px 10px"
         }
     };
 
@@ -681,22 +686,22 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         }
 
         // 4DN
-        if (key === '4') {
-            fetch('https://s3.amazonaws.com/igv.org.app/4dn/hic/4dn_GRCh38_tracks.txt')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    setTrackDataSource(trackTableProcessing(key, data));
-                    setTrackTableModalVisible(true);
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                });
-        }
+        // if (key === '4') {
+        //     fetch('https://s3.amazonaws.com/igv.org.app/4dn/hic/4dn_GRCh38_tracks.txt')
+        //         .then(response => {
+        //             if (!response.ok) {
+        //                 throw new Error('Network response was not ok');
+        //             }
+        //             return response.text();
+        //         })
+        //         .then(data => {
+        //             setTrackDataSource(trackTableProcessing(key, data));
+        //             setTrackTableModalVisible(true);
+        //         })
+        //         .catch(error => {
+        //             console.error('Error fetching data:', error);
+        //         });
+        // }
     };
 
     const confirmTrackSelection = () => {
@@ -1025,6 +1030,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 </Dropdown>
                 <Modal
                     width={"50vw"}
+                    height={trackKey === '4' ? "20vh" : "20vh"}
                     open={trackTableModalVisible}
                     onCancel={closeTrackTableModal}
                     styles={modalStyles}
@@ -1037,16 +1043,33 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         </Button>
                     ]}
                 >
-                    {trackDataSource.length === 0 ? (
-                        <Spin spinning={true} size="large" style={{ width: '100%', height: '100%', margin: 0 }} />
+                    {trackKey === '4' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', margin: '0px 20px 0px 20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
+                                    Track URL:
+                                </span>
+                                <Input />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
+                                    Index URL:
+                                </span>
+                                <Input />
+                            </div>
+                        </div>
+                    ) : trackDataSource.length === 0 ? (
+                        <Spin
+                            spinning={true}
+                            size="large"
+                            style={{ width: '100%', height: '100%', margin: 0 }}
+                        />
                     ) : (
                         <Table
                             bordered={true}
                             dataSource={trackDataSource}
-                            columns={trackKey === '4' ? trackTableColumns4DN : trackTableColumns}
-                            rowSelection={{
-                                ...rowSelection,
-                            }}
+                            columns={trackTableColumns}
+                            rowSelection={{ ...rowSelection }}
                             pagination={{
                                 style: {
                                     marginTop: '12px',
@@ -1056,7 +1079,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                             scroll={{
                                 x: "max-content",
                                 y: "50vh",
-                            }} />
+                            }}
+                        />
                     )}
                 </Modal>
                 <Tooltip title="Download non-random interaction data">

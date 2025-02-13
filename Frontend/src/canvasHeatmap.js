@@ -28,6 +28,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
             maxHeight: '80vh'
         },
         content: {
+            height: '80vh',
             padding: "30px 10px 20px 10px"
         }
     };

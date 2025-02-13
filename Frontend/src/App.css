@@ -112,7 +112,3 @@ body {
   display: flex;
   justify-content: flex-end;
 }
-
-.ant-modal-content {
-  height: 80vh !important;
-}
