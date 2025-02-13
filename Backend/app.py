@@ -35,9 +35,7 @@ def get_ChromosSize():
 @app.route('/getChromosSizeByGeneName', methods=['POST'])
 def get_ChromosSizeByGeneName():
     gene_name = request.json['gene_name']
-    start = request.json['start']
-    end = request.json['end']
-    return jsonify(chromosome_size_by_gene_name(gene_name, start, end))
+    return jsonify(chromosome_size_by_gene_name(gene_name))
 
 
 @app.route('/getChromosSequence', methods=['POST'])

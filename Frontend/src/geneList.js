@@ -15,7 +15,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ gene_name: value, start: currentChromosomeSequence.start, end: currentChromosomeSequence.end})
+            body: JSON.stringify({ gene_name: value })
         })
             .then(res => res.json())
             .then(data => {
