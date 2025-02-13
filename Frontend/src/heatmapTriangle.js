@@ -908,8 +908,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             if (d3.polygonContains(clickableArea, [mouseX, mouseY])) {
                 const length = canvas.height - margin.top - mouseY;
 
-                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height - margin.bottom];
-                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height - margin.bottom];
+                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height - margin.bottom - margin.top];
+                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height - margin.bottom - margin.top];
 
                 const trianglePoints = [
                     [mouseX, mouseY],

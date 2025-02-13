@@ -97,7 +97,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
     const xAxisScale = d3.scaleLinear()
         .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
-        .range([0, minCanvasDimension]);
+        .range([0, minCanvasDimension - 2.5]);
 
     useEffect(() => {
         let observer = null;
@@ -206,7 +206,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .style('height', svgHeight)
                 .style('bottom', -svgHeight / 2)
                 .style('pointer-events', 'none')
-                .attr('transform', `translate(0, 65)`);
+                .attr('transform', `translate(0, 55)`);
 
             svg.append("line")
                 .attr("class", "brushed-triangle-range")
