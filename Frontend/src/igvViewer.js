@@ -8,6 +8,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
     const svgRef = useRef(null);
+    const loadedTracks = useRef(new Set());
 
     const [igvHeight, setIgvHeight] = useState(0);
 
@@ -158,30 +159,22 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
     useEffect(() => {
         if (browserRef.current && selectedTrackData && trackKey) {
-            // if (trackKey === '4') {
-            //     selectedTrackData.forEach((track) => {
-            //         const newTrack = {
-            //             url: track.url,
-            //             name: track.name,
-            //             format: 'bed',
-            //             type: track.Type,
-            //             color: track.color,
-            //             altColor: track.altColor,
-            //         };
-            //         browserRef.current.loadTrack(newTrack);
-            //     });
-            // } else {
             selectedTrackData.forEach((track) => {
-                const newTrack = {
-                    url: `https://www.encodeproject.org${track.HREF}`,
-                    name: track.AssayType,
-                    format: track.Format,
-                };
+                if (!loadedTracks.current.has(track.HREF)) {
+                    loadedTracks.current.add(track.HREF);
+                    const newTrack = {
+                        url: `https://www.encodeproject.org${track.HREF}`,
+                        name: track.AssayType,
+                        format: track.Format,
+                    };
 
-                browserRef.current.loadTrack(newTrack);
+                    browserRef.current.loadTrack(newTrack);
+                }
             });
-            // }
         }
+    }, [selectedTrackData, trackKey]);
+
+    useEffect(() => {
         if (browserRef.current && trackKey === '4' && uploadTrackData.name && uploadTrackData.trackUrl) {
             const format = uploadTrackData.trackUrl.split('.').pop().split('?')[0].toLowerCase();
             const newTrack = {
@@ -191,7 +184,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             };
             browserRef.current.loadTrack(newTrack);
         }
-    }, [selectedTrackData, trackKey, uploadTrackData]);
+    }, [uploadTrackData, trackKey]);
 
     useEffect(() => {
         const svg = d3.select(svgRef.current);
