@@ -783,8 +783,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         //     .padding(0.1);
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([0, canvas.width - 2.5]);
-
+            .range([0, canvas.width - margin.right]);
 
         console.log(transformedXScale, 'transformedXScale')
         const colorScale = d3.scaleSequential(
@@ -863,7 +862,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
+                // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
                 .attr("x1", startX)
                 .attr("y1", 0)
                 .attr("x2", startX)
@@ -873,7 +872,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
+                // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
                 .attr("x1", endX)
                 .attr("y1", 0)
                 .attr("x2", endX)
@@ -949,7 +948,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         });
 
         const axisSvg = d3.select(axisSvgRef.current)
-            .attr('width', parentWidth)
+            .attr('width', canvas.width)
 
         axisSvg.selectAll('*').remove();
 
@@ -970,10 +969,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         // X-axis
         axisSvg.append('g')
-            .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
+            // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
             .call(d3.axisBottom(transformedXScale))
-            // .ticks(10))
-            // .tickFormat(d => `${d/1e6}M`))
+            // .ticks(10)
+            // .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
             // .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
             // .tickFormat(d => {
             //     if (d >= 1000000) {

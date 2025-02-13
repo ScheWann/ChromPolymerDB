@@ -97,7 +97,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
     const xAxisScale = d3.scaleLinear()
         .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
-        .range([0, minCanvasDimension - 2.5]);
+        .range([0, minCanvasDimension - 5]);
 
     useEffect(() => {
         let observer = null;
