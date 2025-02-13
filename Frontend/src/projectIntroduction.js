@@ -84,7 +84,7 @@ export const ProjectIntroduction = () => {
                 .style('margin-right', '8px');
 
             legendItem.append('div')
-                .html(`${d.name}: <strong style="font-weight:600">${d.value} samples</strong>`);
+                .html(`${d.name}: <strong style="font-weight:600">${d.value} datasets</strong>`);
         });
 
         return () => {
