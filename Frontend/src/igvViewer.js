@@ -3,7 +3,7 @@ import igv from "../node_modules/igv/dist/igv.esm.js";
 import * as d3 from "d3";
 
 
-export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension, igvMountStatus }) => {
+export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension, igvMountStatus, uploadTrackData }) => {
     const containerRef = useRef(null);
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
@@ -102,6 +102,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     useEffect(() => {
         let observer = null;
 
+        console.log(currentChromosomeSequence, '//////')
         if (igvMountStatus) {
             const igvOptions = {
                 genome: "hg38",
@@ -157,31 +158,40 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
     useEffect(() => {
         if (browserRef.current && selectedTrackData && trackKey) {
-            if (trackKey === '4') {
-                selectedTrackData.forEach((track) => {
-                    const newTrack = {
-                        url: track.url,
-                        name: track.name,
-                        format: 'bed',
-                        type: track.Type,
-                        color: track.color,
-                        altColor: track.altColor,
-                    };
-                    browserRef.current.loadTrack(newTrack);
-                });
-            } else {
-                selectedTrackData.forEach((track) => {
-                    const newTrack = {
-                        url: `https://www.encodeproject.org${track.HREF}`,
-                        name: track.AssayType,
-                        format: track.Format,
-                    };
+            // if (trackKey === '4') {
+            //     selectedTrackData.forEach((track) => {
+            //         const newTrack = {
+            //             url: track.url,
+            //             name: track.name,
+            //             format: 'bed',
+            //             type: track.Type,
+            //             color: track.color,
+            //             altColor: track.altColor,
+            //         };
+            //         browserRef.current.loadTrack(newTrack);
+            //     });
+            // } else {
+            selectedTrackData.forEach((track) => {
+                const newTrack = {
+                    url: `https://www.encodeproject.org${track.HREF}`,
+                    name: track.AssayType,
+                    format: track.Format,
+                };
 
-                    browserRef.current.loadTrack(newTrack);
-                });
-            }
+                browserRef.current.loadTrack(newTrack);
+            });
+            // }
         }
-    }, [selectedTrackData, trackKey]);
+        if (browserRef.current && trackKey === '4' && uploadTrackData.name && uploadTrackData.trackUrl) {
+            const format = uploadTrackData.trackUrl.split('.').pop().split('?')[0].toLowerCase();
+            const newTrack = {
+                url: uploadTrackData.trackUrl,
+                name: uploadTrackData.name,
+                format: `${format}`,
+            };
+            browserRef.current.loadTrack(newTrack);
+        }
+    }, [selectedTrackData, trackKey, uploadTrackData]);
 
     useEffect(() => {
         const svg = d3.select(svgRef.current);

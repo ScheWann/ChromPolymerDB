@@ -21,7 +21,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [trackDataSource, setTrackDataSource] = useState([]);
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
-
+    const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "" });
+    
     // Track table search
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
@@ -523,7 +524,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             alignItems: 'center',
         },
         content: {
-            height: trackKey === '4' ? '30vh' : '80vh',
+            height: trackKey === '4' ? '25vh' : '80vh',
             padding: trackKey === '4' ? "50px 10px 10px 10px" : "40px 10px 0px 10px"
         }
     };
@@ -537,6 +538,14 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const handleReset = (clearFilters) => {
         clearFilters();
         setSearchText('');
+    };
+
+    const uploadTrackChange = (e) => {
+        const { name, value } = e.target;
+        setUploadTrackData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
     const downloadImage = () => {
@@ -582,6 +591,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const closeTrackTableModal = () => {
         setTrackTableModalVisible(false);
+        setUploadTrackData({ name: "", trackUrl: "" });
         setSearchedColumn('');
         setSearchText('');
     };
@@ -706,6 +716,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const confirmTrackSelection = () => {
         setTrackTableModalVisible(false);
+        setUploadTrackData({ name: "", trackUrl: "" });
     };
 
     useEffect(() => {
@@ -1047,15 +1058,15 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', margin: '0px 20px 0px 20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                                 <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
-                                    Track URL:
+                                    Name
                                 </span>
-                                <Input />
+                                <Input name="name" value={uploadTrackData.name} onChange={uploadTrackChange} />
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                                 <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
-                                    Index URL:
+                                    Track URL:
                                 </span>
-                                <Input />
+                                <Input name="trackUrl" value={uploadTrackData.trackUrl} onChange={uploadTrackChange} />
                             </div>
                         </div>
                     ) : trackDataSource.length === 0 ? (
@@ -1112,6 +1123,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             )} */}
             {minCanvasDimension > 0 && (
                 <IgvViewer
+                    uploadTrackData={uploadTrackData}
                     trackKey={trackKey}
                     selectedTrackData={selectedTrackData}
                     minCanvasDimension={minCanvasDimension}
