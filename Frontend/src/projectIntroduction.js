@@ -148,13 +148,11 @@ export const ProjectIntroduction = () => {
                     style={{ background: '#f0f5ff', width: '100%' }}
                     body={{ padding: 12 }}
                 >
-                    <Tag color='pink' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>High-resolution visualization</Tag>
-                    <Tag color='purple' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Single-cell 3D chromatin conformations analysis</Tag>
-                    <Tag color='blue' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Interactive visualization of chromatin interactions and structural heterogeneity</Tag>
-                    <Tag color='green' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Distance measurement</Tag>
-                    <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Cross-cell type comparions</Tag>
-                    <Tag color='red' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Distance Measurement</Tag>
-                    <Tag color='orange' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Data Export</Tag>
+                    <Tag color='pink' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Analyze non-random chromatin interactions with epigenetic track annotation</Tag>
+                    <Tag color='purple' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Visualize constructed 3D chromatin structures</Tag>
+                    <Tag color='blue' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Compare 3D structures across cell types</Tag>
+                    <Tag color='green' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Highlight and annotate selected genomic regions</Tag>
+                    <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>Calculate distances between regions of interest</Tag>
                 </Card>
 
                 <Title level={5}>Data Coverage</Title>
