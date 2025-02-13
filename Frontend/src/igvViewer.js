@@ -88,7 +88,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     useEffect(() => {
         let observer = null;
 
-        console.log(currentChromosomeSequence, '//////')
         if (igvMountStatus) {
             const igvOptions = {
                 genome: "hg38",
