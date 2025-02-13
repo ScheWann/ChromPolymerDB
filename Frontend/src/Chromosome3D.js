@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
@@ -25,6 +25,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    console.log(geneSize, '???????')
     const presetColors = [
         {
             label: 'Theme Colors',
@@ -51,6 +52,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 result.push(i);
             }
             setGeneBeadSeq(result);
+        } else {
+            setGeneBeadSeq([]);
         }
     }, [geneSize]);
 
