@@ -370,11 +370,12 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         }
 
         // Draw gene range lines if geneSize exists
-        if (geneSize && xScale(adjustedGeneStart) !== undefined && xScale(adjustedGeneEnd) !== undefined) {
+        if (geneSize && geneSize.start !== null && geneSize.end !== null && xScale(adjustedGeneStart) !== undefined && xScale(adjustedGeneEnd) !== undefined) {
             const geneStartPos = margin.left + xScale(adjustedGeneStart);
             const geneEndPos = margin.left + xScale(adjustedGeneEnd);
 
             axisSvg.append('line')
+                .attr('class', 'gene-line')
                 .attr('x1', geneStartPos)
                 .attr('x2', geneStartPos)
                 .attr('y1', margin.top)
@@ -383,12 +384,15 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                 .attr('stroke-width', 2);
 
             axisSvg.append('line')
+                .attr('class', 'gene-line')
                 .attr('x1', geneEndPos)
                 .attr('x2', geneEndPos)
                 .attr('y1', margin.top)
                 .attr('y2', margin.top + height)
                 .attr('stroke', '#999')
                 .attr('stroke-width', 2);
+        } else {
+            axisSvg.selectAll('.gene-line').remove();
         }
     }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData]);
 

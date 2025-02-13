@@ -690,7 +690,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     return response.text();
                 })
                 .then(data => {
-                    console.log(trackTableProcessing(key, data));
                     setTrackDataSource(trackTableProcessing(key, data));
                     setTrackTableModalVisible(true);
                 })
@@ -741,7 +740,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         // canvas.height = height / 1.4;
         canvas.height = height / Math.sqrt(2);
 
-        console.log(canvas.width, minCanvasDimension)
         setMinCanvasDimension(canvas.width);
         context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -759,7 +757,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
             (_, i) => adjustedStart + i * step
         );
-        console.log(axisValues)
 
         // const xScale = d3.scaleBand()
         //     .domain(axisValues)
@@ -785,7 +782,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([0, canvas.width - margin.right]);
 
-        console.log(transformedXScale, 'transformedXScale')
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
         ).domain(colorScaleRange);

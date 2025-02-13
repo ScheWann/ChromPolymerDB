@@ -15,7 +15,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ gene_name: value })
+            body: JSON.stringify({ gene_name: value, start: currentChromosomeSequence.start, end: currentChromosomeSequence.end})
         })
             .then(res => res.json())
             .then(data => {
@@ -68,7 +68,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
 
     useEffect(() => {
         if (!containerSize.width && !containerSize.height) return;
-        
+
         async function fetchDataAndRender() {
             const epigeneticTrackData = await fetchepigeneticTrackData();
 
@@ -184,6 +184,8 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
 
             svg.selectAll('.domain').attr('stroke', '#DCDCDC');
 
+            let clickTimeout = null;
+
             // Gene sequences
             layers.forEach((layer, layerIndex) => {
                 svg
@@ -201,8 +203,22 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
                     .attr("stroke-width", 0.2)
                     .style("transition", "all 0.3s ease")
                     .on("click", (event, d) => {
-                        setGeneName(d.symbol);
-                        fetchChromosomeSizeByGeneName(d.symbol);
+                        if (clickTimeout) clearTimeout(clickTimeout);
+
+                        clickTimeout = setTimeout(() => {
+                            setGeneName(d.symbol);
+                            fetchChromosomeSizeByGeneName(d.symbol);
+                            clickTimeout = null;
+                        }, 100);
+                    })
+                    .on("dblclick", (event, d) => {
+                        if (clickTimeout) {
+                            clearTimeout(clickTimeout);
+                            clickTimeout = null;
+                        }
+                        event.stopPropagation();
+                        setGeneName(null);
+                        setGeneSize({ start: null, end: null });
                     })
                     .on("mouseover", (event, d) => {
                         d3.select(event.target).style("stroke-width", 1);

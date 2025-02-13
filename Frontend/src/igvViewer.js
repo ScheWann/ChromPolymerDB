@@ -117,7 +117,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
                 browserRef.current = igvBrowser;
             });
-            console.log("IGV Locus:", igvDivRef.current.locus);
+
             observer = new MutationObserver(() => {
                 const shadowHost = document.querySelector("#igv-div");
 
