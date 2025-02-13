@@ -22,7 +22,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
     const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "" });
-    
+
     // Track table search
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
@@ -694,24 +694,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     console.error('Error fetching data:', error);
                 });
         }
-
-        // 4DN
-        // if (key === '4') {
-        //     fetch('https://s3.amazonaws.com/igv.org.app/4dn/hic/4dn_GRCh38_tracks.txt')
-        //         .then(response => {
-        //             if (!response.ok) {
-        //                 throw new Error('Network response was not ok');
-        //             }
-        //             return response.text();
-        //         })
-        //         .then(data => {
-        //             setTrackDataSource(trackTableProcessing(key, data));
-        //             setTrackTableModalVisible(true);
-        //         })
-        //         .catch(error => {
-        //             console.error('Error fetching data:', error);
-        //         });
-        // }
     };
 
     const confirmTrackSelection = () => {
@@ -753,7 +735,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const height = (Math.min(parentWidth, parentHeight) - margin.top - margin.bottom);
 
         canvas.width = width * Math.sqrt(2);
-        // canvas.height = height / 1.4;
         canvas.height = height / Math.sqrt(2);
 
         setMinCanvasDimension(canvas.width);
@@ -774,26 +755,14 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             (_, i) => adjustedStart + i * step
         );
 
-        // const xScale = d3.scaleBand()
-        //     .domain(axisValues)
-        //     .range([0, width])
-        //     .padding(0.1);
         const xScale = d3.scaleLinear()
             .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
             .range([0, width]);
 
-        // const yScale = d3.scaleBand()
-        //     .domain(axisValues)
-        //     .range([height, 0])
-        //     .padding(0.1);
         const yScale = d3.scaleLinear()
             .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
             .range([height, 0]);
 
-        // const transformedXScale = d3.scaleBand()
-        //     .domain(axisValues)
-        //     .range([0, canvas.width])
-        //     .padding(0.1);
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([0, canvas.width - margin.right]);
@@ -801,21 +770,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
         ).domain(colorScaleRange);
-
-        // const invertBand = (scale, value) => {
-        //     const range = scale.range();
-        //     const step = scale.step();
-        //     const domain = scale.domain();
-
-        //     const correctedValue = value - step / 2;
-        //     const index = Math.ceil((correctedValue - range[0]) / step);
-
-        //     if (index < 0 || index >= domain.length) {
-        //         return undefined;
-        //     }
-
-        //     return domain[index];
-        // };
 
         const invertPosition = (scale, value) => {
             return scale.invert(value);
@@ -839,23 +793,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             axisValues.forEach(jbp => {
                 const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || { fq: -1, fdr: -1, rawc: -1 };
 
-                // const x = margin.left + xScale(jbp);
-                // const y = margin.top + yScale(ibp);
-                // const width = xScale.bandwidth();
-                // const height = yScale.bandwidth();
-
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
                 const rectWidth = xScale(ibp + step) - xScale(ibp);
                 const rectHeight = yScale(jbp) - yScale(jbp + step);
-
-                // const step = axisValues[1] - axisValues[0];
-
-                // const rectWidth = xScale(ibp + step) - xScale(ibp);
-                // const rectHeight = yScale(jbp) - yScale(jbp + step);
-
-                // const x = margin.left + xScale(ibp);
-                // const y = margin.top + yScale(jbp);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
@@ -874,7 +815,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
                 .attr("x1", startX)
                 .attr("y1", 0)
                 .attr("x2", startX)
@@ -884,7 +824,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
                 .attr("x1", endX)
                 .attr("y1", 0)
                 .attr("x2", endX)
@@ -930,20 +869,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
                 const brushedTriangleRangeStart = invertPosition(transformedXScale, mouseX - length);
                 const brushedTriangleRangeEnd = invertPosition(transformedXScale, mouseX + length);
-                // const startGenomePos = invertPosition(transformedXScale, mouseX - length);
-                // const endGenomePos = invertPosition(transformedXScale, mouseX + length);
-
-                // const startX = transformedXScale(startGenomePos);
-                // const endX = transformedXScale(endGenomePos);
-
-                // const pointBottomLeft = [startX, canvas.height - margin.bottom];
-                // const pointBottomRight = [endX, canvas.height - margin.bottom];
-
-                // const trianglePoints = [
-                //     [mouseX, mouseY],
-                //     pointBottomLeft,
-                //     pointBottomRight,
-                // ];
 
                 brushSvg.append('polygon')
                     .attr('class', 'triangle')
@@ -964,40 +889,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         axisSvg.selectAll('*').remove();
 
-        // Calculate the range of the current chromosome sequence
-        // const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
-
-        // Dynamically determine the tick count based on the range
-        // let tickCount;
-        // if (range < 1000000) {
-        //     tickCount = Math.max(Math.floor(range / 20000), 5);
-        // } else if (range >= 1000000 && range <= 10000000) {
-        //     tickCount = Math.max(Math.floor(range / 50000), 5);
-        // } else {
-        //     tickCount = 30;
-        // }
-
-        // tickCount = Math.min(tickCount, 30);
-
         // X-axis
         axisSvg.append('g')
-            // .attr('transform', `translate(${(parentWidth - canvas.width) / 2}, ${margin.top})`)
             .call(d3.axisBottom(transformedXScale)
-            // .ticks(10)
-            .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
-            // .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
-            // .tickFormat(d => {
-            //     if (d >= 1000000) {
-            //         return `${(d / 1000000).toFixed(3)}M`;
-            //     }
-            //     if (d > 10000 && d < 1000000) {
-            //         return `${(d / 10000).toFixed(3)}W`;
-            //     }
-            //     return d;
-            // }))
+                .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
             .selectAll("text")
             .style("text-anchor", "middle")
-            // .attr("transform", "rotate(90)")
             .attr("dx", "0em")
             .attr("dy", "1em");
     }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);

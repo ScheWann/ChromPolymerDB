@@ -81,21 +81,6 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         ]
     }
 
-    const { start, end } = currentChromosomeSequence;
-    const step = 5000;
-    const adjustedStart = Math.floor(start / step) * step;
-    const adjustedEnd = Math.ceil(end / step) * step;
-
-    const axisValues = Array.from(
-        { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
-        (_, i) => adjustedStart + i * step
-    );
-
-    // const xAxisScale = d3.scaleBand()
-    //     .domain(axisValues)
-    //     .range([0, minCanvasDimension])
-    //     .padding(0.1);
-
     const xAxisScale = d3.scaleLinear()
         .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
         .range([0, minCanvasDimension - 5]);
