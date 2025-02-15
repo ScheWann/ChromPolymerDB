@@ -98,47 +98,78 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const download = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
+            const scale = 4;
+            const width = window.innerWidth * scale;
+            const height = window.innerHeight * scale;
 
-            const width = window.innerWidth * 2;
-            const height = window.innerHeight * 2;
+            const exportCamera = camera.clone();
+            exportCamera.aspect = width / height;
+            exportCamera.updateProjectionMatrix();
 
             const renderTarget = new THREE.WebGLRenderTarget(width, height, {
                 minFilter: THREE.LinearFilter,
                 magFilter: THREE.LinearFilter,
                 format: THREE.RGBAFormat,
+                samples: 8,
+                stencilBuffer: false
             });
+            renderTarget.texture.colorSpace = THREE.SRGBColorSpace;
 
-            // render the scene to the RenderTarget
-            const originalTarget = gl.getRenderTarget();
+            const originalRenderTarget = gl.getRenderTarget();
+            const originalSize = gl.getSize(new THREE.Vector2());
+            const originalPixelRatio = gl.getPixelRatio();
+
             gl.setRenderTarget(renderTarget);
-            gl.render(scene, camera);
-            gl.setRenderTarget(originalTarget);
+            gl.setSize(width, height);
+            gl.setPixelRatio(1);
+            gl.clear();
 
-            // extract the pixel data from the RenderTarget
-            const pixelBuffer = new Uint8Array(width * height * 4);
-            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixelBuffer);
+            gl.render(scene, exportCamera);
 
-            // create a canvas and context to draw the image data
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.createImageData(width, height);
+            const buffer = new Uint8ClampedArray(width * height * 4);
+            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, buffer);
 
-            // copy the pixel data to the ImageData
-            for (let i = 0; i < pixelBuffer.length; i++) {
-                imageData.data[i] = pixelBuffer[i];
-            }
+            // flip element vertically
+            flipY(buffer, width, height);
+
+            // create a canvas element to convert the pixel data to an image
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = width;
+            exportCanvas.height = height;
+            const ctx = exportCanvas.getContext('2d');
+            const imageData = new ImageData(buffer, width, height);
             ctx.putImageData(imageData, 0, 0);
 
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'chromosome_3d.png';
-            link.click();
+            gl.setRenderTarget(originalRenderTarget);
+            gl.setSize(originalSize.x, originalSize.y);
+            gl.setPixelRatio(originalPixelRatio);
+
+            // create a blob from the canvas and trigger a download
+            exportCanvas.toBlob((blob) => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `chromosome_3d_${Date.now()}.png`;
+                link.click();
+            });
 
             renderTarget.dispose();
         }
     };
+
+    // fli[ the image vertically
+    const flipY = (buffer, width, height) => {
+        const bytesPerRow = width * 4;
+        const halfHeight = Math.floor(height / 2);
+        const temp = new Uint8ClampedArray(bytesPerRow);
+        for (let y = 0; y < halfHeight; y++) {
+            const topOffset = y * bytesPerRow;
+            const bottomOffset = (height - y - 1) * bytesPerRow;
+
+            temp.set(buffer.slice(topOffset, topOffset + bytesPerRow));
+            buffer.copyWithin(topOffset, bottomOffset, bottomOffset + bytesPerRow);
+            buffer.set(temp, bottomOffset);
+        }
+    }
 
     const handleInputLocation = (value, field) => {
         setInputPositions(prev => ({
@@ -346,10 +377,16 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <Canvas
                     shadows
                     ref={canvasRef}
-                    camera={{ position: [0, 0, 230], fov: 75 }}
+                    camera={{ position: [0, 0, 230], fov: 75, onUpdate: self => self.updateProjectionMatrix() }}
                     style={{ width: '100%', height: '100%', backgroundColor: '#333' }}
                     onCreated={({ gl, scene, camera }) => {
                         rendererRef.current = { gl, scene, camera };
+                    }}
+                    gl={{
+                        antialias: true,
+                        powerPreference: "high-performance",
+                        toneMapping: THREE.ACESFilmicToneMapping, // 移除非法的outputEncoding
+                        colorSpace: THREE.SRGBColorSpace // 使用新颜色空间API
                     }}
                 >
                     <OrbitControls
