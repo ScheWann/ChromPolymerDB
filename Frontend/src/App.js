@@ -428,8 +428,12 @@ function App() {
   };
 
   // Chromosome sequence change
-  const chromosomeSequenceChange = (position, value) => {
-    const newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
+  const chromosomeSequenceChange = (position, value, isBlur = false) => {
+    let newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
+  
+    if (isBlur) {
+      newValue = Math.round(newValue / 5000) * 5000;
+    }
 
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
@@ -464,9 +468,9 @@ function App() {
   // 3D Comparison Chromosome sample change
   const comparisonSampleChange = (key) => {
     setComparisonCellLine3DSampleID(key);
-    
+
     const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-    
+
     setComparisonCellLine3DData(prev => {
       const newData = { ...prev };
       delete newData[cacheKey];
@@ -587,9 +591,9 @@ function App() {
                 options={chromosList}
               />
               <span className="controlGroupText">Sequences:</span>
-              <Input size="small" style={{ width: "8%" }} placeholder="Start" onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
+              <Input size="small" style={{ width: "8%" }} placeholder="Start" onBlur={(e) => chromosomeSequenceChange('start', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
               <span className="controlGroupText">~</span>
-              <Input size="small" style={{ width: "8%" }} placeholder="End" onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
+              <Input size="small" style={{ width: "8%" }} placeholder="End" onBlur={(e) => chromosomeSequenceChange('end', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
               <Tooltip
                 title="Add a new heatmap"
                 color='white'

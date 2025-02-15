@@ -150,9 +150,13 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         })
                         .on('drag', (event) => {
                             const mouseX = d3.pointer(event)[0];
-                            newStart = Math.round(Math.min(Math.max(xScale.invert(mouseX), min_start), selectedChromosomeSequence.end));
+                            const rawValue = xScale.invert(mouseX);
+                            const steppedValue = Math.round(rawValue / 5000) * 5000;
+                            newStart = Math.min(
+                                Math.max(steppedValue, min_start),
+                                selectedChromosomeSequence.end
+                            );
 
-                            // Update the start position continuously while dragging
                             setSelectedChromosomeSequence((prev) => ({ ...prev, start: newStart }));
                         })
                         .on('end', () => {
@@ -189,7 +193,13 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         })
                         .on('drag', (event) => {
                             const mouseX = d3.pointer(event)[0];
-                            newEnd = Math.round(Math.max(Math.min(xScale.invert(mouseX), max_end), selectedChromosomeSequence.start));
+                            const rawValue = xScale.invert(mouseX);
+                            const steppedValue = Math.round(rawValue / 5000) * 5000;
+                            newEnd = Math.max(
+                                Math.min(steppedValue, max_end),
+                                selectedChromosomeSequence.start
+                            );
+
                             setSelectedChromosomeSequence((prev) => ({ ...prev, end: newEnd }));
                         })
                         .on('end', () => {
