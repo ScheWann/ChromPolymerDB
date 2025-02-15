@@ -727,7 +727,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const context = canvas.getContext('2d');
 
         const margin = { top: 5, right: 5, bottom: 5, left: 5 };
-
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
 
@@ -743,7 +742,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         // Apply rotation transformation
         context.scale(1, -1)
         context.translate(canvas.width / 2, -canvas.height * 2);
-        context.rotate((Math.PI / 180) * 45);
+        context.rotate(Math.PI / 4);
 
         const { start, end } = currentChromosomeSequence;
         const step = 5000;
@@ -757,11 +756,11 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const xScale = d3.scaleLinear()
             .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
-            .range([0, width]);
+            .range([0, width - margin.left - margin.right]);
 
         const yScale = d3.scaleLinear()
             .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
-            .range([height, 0]);
+            .range([height - margin.top - margin.bottom, 0]);
 
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
@@ -856,10 +855,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             brushSvg.selectAll('.triangle').remove();
 
             if (d3.polygonContains(clickableArea, [mouseX, mouseY])) {
-                const length = canvas.height - margin.top - mouseY;
+                const length = canvas.height - mouseY;
 
-                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height - margin.bottom - margin.top];
-                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height - margin.bottom - margin.top];
+                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height];
+                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height];
 
                 const trianglePoints = [
                     [mouseX, mouseY],
