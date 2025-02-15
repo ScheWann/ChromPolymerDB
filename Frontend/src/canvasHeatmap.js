@@ -84,20 +84,33 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
     const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
+            const cacheKey = `${cell_line}-${chromosomeName}-${currentChromosomeSequence.start}-${currentChromosomeSequence.end}-${sample_id}`;
+            
             fetch("/getExampleChromos3DData", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ cell_line: cell_line, chromosome_name: chromosomeName, sequences: currentChromosomeSequence, sample_id: sample_id })
+                body: JSON.stringify({
+                    cell_line: cell_line,
+                    chromosome_name: chromosomeName,
+                    sequences: currentChromosomeSequence,
+                    sample_id: sample_id
+                })
             })
                 .then(res => res.json())
                 .then(data => {
                     if (isComparison) {
-                        setComparisonCellLine3DData(data);
+                        setComparisonCellLine3DData(prev => ({
+                            ...prev,
+                            [cacheKey]: data,
+                        }));
                         setComparisonCellLine3DLoading(false);
                     } else {
-                        setChromosome3DExampleData(data);
+                        setChromosome3DExampleData(prev => ({
+                            ...prev,
+                            [cacheKey]: data,
+                        }));
                         if (sampleChange === "submit") {
                             setChromosome3DLoading(false);
                         }
