@@ -104,6 +104,7 @@ function App() {
     },
   ];
 
+  console.log(chromosomeData, chromosome3DExampleData, '///')
   // Add "," to the number by every 3 digits
   const formatNumber = (value) => {
     if (!value) return '';
@@ -600,7 +601,7 @@ function App() {
                 overlayInnerStyle={{
                   color: 'black'
                 }}>
-                <Button id="add-new-heatmap-button" disabled={!Object.keys(chromosome3DExampleData).length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+                <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
               </Tooltip>
               <Tooltip
                 title="View non-random chromosomal interactions as heatmap"
