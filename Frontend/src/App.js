@@ -104,7 +104,7 @@ function App() {
     },
   ];
 
-  console.log(chromosomeData, chromosome3DExampleData, '///')
+
   // Add "," to the number by every 3 digits
   const formatNumber = (value) => {
     if (!value) return '';

@@ -85,7 +85,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             const cacheKey = `${cell_line}-${chromosomeName}-${currentChromosomeSequence.start}-${currentChromosomeSequence.end}-${sample_id}`;
-            
+
             fetch("/getExampleChromos3DData", {
                 method: 'POST',
                 headers: {
@@ -170,7 +170,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 10, bottom: 45, left: 60 };
+        const margin = { top: 45, right: 0, bottom: 45, left: 60 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
@@ -305,8 +305,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
         // Color Scale
         const colorScaleSvg = d3.select(colorScaleRef.current)
-            .attr('width', parentWidth)
-            .attr('height', parentHeight);
+            .attr('width', (parentWidth - minDimension)/2)
+            .attr('height', parentHeight); 
 
         colorScaleSvg.selectAll('*').remove();
 
@@ -551,11 +551,60 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                             <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
-                            <svg ref={colorScaleRef} style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', marginTop: 8 }}>
-                                <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
-                                <Slider range={{ draggableTrack: true }} vertical style={{ height: 200 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange} />
-                                <InputNumber size='small' style={{ width: 60 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
+                            <svg
+                                ref={colorScaleRef}
+                                style={{
+                                    position: 'absolute',
+                                    left: `calc((100% - ${minDimension}px) / 4)`,
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    zIndex: 0,
+                                    pointerEvents: 'none'
+                                }}
+                            />
+
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '5px',
+                                    width: `calc((100% - ${minDimension}px) / 2)`,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    position: 'absolute',
+                                    right: `calc((100% - ${minDimension}px) / 4)`,
+                                    top: '50%',
+                                    transform: 'translate(50%, -50%)',
+                                    marginTop: 8
+                                }}
+                            >
+                                <InputNumber
+                                    size='small'
+                                    style={{ width: 60 }}
+                                    controls={false}
+                                    value={colorScaleRange[1]}
+                                    min={0}
+                                    max={200}
+                                    onChange={changeColorByInput("max")}
+                                />
+                                <Slider
+                                    range={{ draggableTrack: true }}
+                                    vertical
+                                    style={{ height: 200 }}
+                                    min={0}
+                                    max={200}
+                                    onChange={changeColorScale}
+                                    value={colorScaleRange}
+                                />
+                                <InputNumber
+                                    size='small'
+                                    style={{ width: 60 }}
+                                    controls={false}
+                                    value={colorScaleRange[0]}
+                                    min={0}
+                                    max={200}
+                                    onChange={changeColorByInput("min")}
+                                />
                             </div>
                             <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                             <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />

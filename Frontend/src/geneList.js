@@ -77,7 +77,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
                 return;
             }
 
-            const margin = { top: 20, right: 10, bottom: 0, left: 60 };
+            const margin = { top: 20, right: 0, bottom: 0, left: 60 };
 
             let width = containerSize.width;
             let height = containerSize.height;
