@@ -75,12 +75,10 @@ def initialize_tables():
         cur.execute(
             "CREATE TABLE IF NOT EXISTS gene ("
             "gID serial PRIMARY KEY,"
-            # "gene_id BIGINT NOT NULL,"
             "chromosome VARCHAR(50) NOT NULL,"
             "orientation VARCHAR(10) NOT NULL DEFAULT 'plus',"
             "start_location BIGINT NOT NULL DEFAULT 0,"
             "end_location BIGINT NOT NULL DEFAULT 0,"
-            # "gene_name VARCHAR(255) NOT NULL,"
             "symbol VARCHAR(30) NOT NULL"
             ");"
         )
@@ -170,6 +168,27 @@ def initialize_tables():
         print("position table created successfully.")
     else:
         print("position table already exists, skipping creation.")
+
+    if not table_exists(cur, "distance"):
+        print("Creating distance table...")
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS distance ("
+            "cell_line VARCHAR(50) NOT NULL,"
+            "chrID VARCHAR(50) NOT NULL,"
+            "sampleID INT NOT NULL DEFAULT 0,"
+            "bead_i BIGINT NOT NULL DEFAULT 0,"
+            "bead_j BIGINT NOT NULL DEFAULT 0,"
+            "distance DOUBLE PRECISION NOT NULL DEFAULT 0.0,"
+            "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+            "PRIMARY KEY (cell_line, chrID, sampleID, bead_i, bead_j),"
+            "CHECK (bead_i < bead_j),"
+            "CHECK (distance >= 0)"
+            ") WITH (FILLFACTOR = 90);"
+        )
+        conn.commit()
+        print("distance table created successfully.")
+    else:
+        print("distance table already exists, skipping creation.")
 
     # Close connection
     cur.close()
@@ -315,6 +334,23 @@ def process_non_random_hic_index(cur):
     print("Index idx_hic_search created successfully.")
 
 
+def process_distance_index():
+    """Create indexes on distance table for faster search."""
+    print("Creating index idx_distance_search...")
+    conn = get_db_connection(database=DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute(
+        "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID);"
+    )
+    print("Index idx_distance_search created successfully.")
+    
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+
 def insert_data():
     """Insert data(Except for the data of non random HiC) into the database if not already present."""
     conn = get_db_connection(database=DB_NAME)
@@ -380,5 +416,6 @@ def insert_non_random_HiC_data():
 
 
 initialize_tables()
+process_distance_index()
 insert_data()
 insert_non_random_HiC_data()
