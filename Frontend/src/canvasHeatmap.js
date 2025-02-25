@@ -575,7 +575,6 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     right: `calc((100% - ${minDimension}px) / 4)`,
                                     top: '50%',
                                     transform: 'translate(50%, -50%)',
-                                    marginTop: 8
                                 }}
                             >
                                 <InputNumber
