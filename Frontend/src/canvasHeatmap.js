@@ -332,10 +332,10 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
             .attr('width', height / 1.2)
             .attr('height', 20)
             .style('fill', 'url(#colorGradient)')
-            .attr('transform', `translate(30, ${(parentHeight - height / 1.2) / 2 + height / 1.2}) rotate(-90, 0, 0)`);
+            .attr('transform', `translate(0, ${(parentHeight - height / 1.2) / 2 + height / 1.2}) rotate(-90, 0, 0)`);
 
         colorScaleSvg.append('text')
-            .attr('x', 40)
+            .attr('x', 10)
             .attr('y', height / 1.2 + (parentHeight - height / 1.2) / 2 + 15)
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
@@ -343,7 +343,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
             .text(colorScaleRange[0]);
 
         colorScaleSvg.append('text')
-            .attr('x', 40)
+            .attr('x', 10)
             .attr('y', (parentHeight - height / 1.2) / 2 - 5)
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
@@ -557,7 +557,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     position: 'absolute',
                                     left: `calc((100% - ${minDimension}px) / 4)`,
                                     top: '50%',
-                                    transform: 'translate(-50%, -50%)',
+                                    transform: 'translate(0%, -50%)',
                                     zIndex: 0,
                                     pointerEvents: 'none'
                                 }}
