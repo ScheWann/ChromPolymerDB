@@ -335,18 +335,26 @@ def process_non_random_hic_index(cur):
 
 
 def process_distance_index():
-    """Create indexes on distance table for faster search."""
-    print("Creating index idx_distance_search...")
+    """Create indexes on distance table for faster search (if they don't exist)."""
     conn = get_db_connection(database=DB_NAME)
     cur = conn.cursor()
 
-    cur.execute(
-        "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID);"
-    )
-    print("Index idx_distance_search created successfully.")
+    cur.execute("""
+        SELECT 1 
+        FROM pg_indexes 
+        WHERE indexname = 'idx_distance_search' 
+        AND tablename = 'distance';
+    """)
+    if cur.fetchone():
+        print("Index idx_distance_search already exists. Skipping creation.")
+    else:
+        print("Creating index idx_distance_search...")
+        cur.execute(
+            "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID);"
+        )
+        print("Index idx_distance_search created successfully.")
     
     conn.commit()
-
     cur.close()
     conn.close()
 
