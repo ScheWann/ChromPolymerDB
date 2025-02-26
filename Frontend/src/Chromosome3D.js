@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber } from 'antd';
-import { DownloadOutlined, RollbackOutlined, ClearOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, ClearOutlined, FileImageOutlined } from "@ant-design/icons";
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import "./Styles/chromosome3D.css";
 
@@ -95,7 +95,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         return blendedColor;
     }
 
-    const download = () => {
+    const downloadImage = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
             const scale = 4;
@@ -154,6 +154,20 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
             renderTarget.dispose();
         }
+    };
+
+    const downloadDistance = () => {
+        fetch("downloadFullChromosome3dDistanceData", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ cell_line: chromosome3DExampleData[0].cell_line, chromosome_name: chromosome3DExampleData[0].chrid }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);
+            })
     };
 
     // fli[ the image vertically
@@ -296,7 +310,23 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         />
                     </Tooltip>
                     <Tooltip
-                        title="Download the 3D chromosome data"
+                        title="Download the 3D chromosome image"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<FileImageOutlined />}
+                            onClick={downloadImage}
+                        />
+                    </Tooltip>
+                    <Tooltip
+                        title="Download the 3D chromosome distance data"
                         color='white'
                         overlayInnerStyle={{
                             color: 'black'
@@ -308,7 +338,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 cursor: "pointer",
                             }}
                             icon={<DownloadOutlined />}
-                            onClick={download}
+                            onClick={downloadDistance}
                         />
                     </Tooltip>
                     <Tooltip

@@ -6,6 +6,9 @@ import tempfile
 import subprocess
 import shutil
 from psycopg2.extras import RealDictCursor
+import csv
+import zipfile
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,6 +32,7 @@ def get_db_connection():
     )
     return conn
 
+
 """
 Return the list of genes
 """
@@ -46,6 +50,7 @@ def gene_names_list():
     options = [{"value": row["symbol"], "label": row["symbol"]} for row in rows]
     conn.close()
     return options
+
 
 """
 Return the gene name list in searching specific letters
@@ -65,6 +70,7 @@ def gene_names_list_search(search):
     options = [{"value": row["symbol"], "label": row["symbol"]} for row in rows]
     conn.close()
     return options
+
 
 """
 Returns the list of cell line
@@ -231,15 +237,16 @@ def chromosome_data(cell_line, chromosome_name, sequences):
 
     return chromosome_sequence
 
+
 """
 Returns the existing chromosome data in the given cell line, chromosome name, start, end
 """
 def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
-        conn = get_db_connection()
-        cur = conn.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        cur.execute(
-            """
+    cur.execute(
+        """
             SELECT DISTINCT ibp
             FROM non_random_hic
             WHERE chrID = %s
@@ -249,21 +256,22 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
             AND jbp >= %s
             AND jbp <= %s
         """,
-            (
-                chromosome_name,
-                cell_line,
-                sequences["start"],
-                sequences["end"],
-                sequences["start"],
-                sequences["end"],
-            ),
-        )
-        chromosome_valid_ibps = cur.fetchall()
-        conn.close()
+        (
+            chromosome_name,
+            cell_line,
+            sequences["start"],
+            sequences["end"],
+            sequences["start"],
+            sequences["end"],
+        ),
+    )
+    chromosome_valid_ibps = cur.fetchall()
+    conn.close()
 
-        ibp_values = [ibp["ibp"] for ibp in chromosome_valid_ibps]
+    ibp_values = [ibp["ibp"] for ibp in chromosome_valid_ibps]
 
-        return ibp_values
+    return ibp_values
+
 
 """
 Returns the example(3) 3D chromosome data in the given cell line, chromosome name, start, end
@@ -278,10 +286,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         """Delete old samples from the position table."""
         cur = conn.cursor()
 
-        cur.execute("""
+        cur.execute(
+            """
             DELETE FROM position
             WHERE insert_time < CURRENT_TIMESTAMP - INTERVAL '10 minutes';
-        """)
+        """
+        )
 
         print("Old samples deleted successfully.")
 
@@ -309,19 +319,27 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND end_value = %s
             AND sampleID = %s
         """,
-            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
+            (
+                chromosome_name,
+                cell_line,
+                sequences["start"],
+                sequences["end"],
+                sample_id,
+            ),
         )
         position_data = cur.fetchall()
-        
+
         if position_data:
             return position_data
-        else: 
+        else:
             return None
 
     delete_old_samples(conn)
 
     if checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
-        return checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
+        return checking_existing_data(
+            conn, chromosome_name, cell_line, sequences, sample_id
+        )
     else:
         cur.execute(
             """
@@ -334,35 +352,54 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND jbp >= %s
             AND jbp <= %s
         """,
-            (chromosome_name, cell_line, sequences["start"], sequences["end"], sequences["start"], sequences["end"]),
+            (
+                chromosome_name,
+                cell_line,
+                sequences["start"],
+                sequences["end"],
+                sequences["start"],
+                sequences["end"],
+            ),
         )
         original_data = cur.fetchall()
 
         if original_data:
-            original_df = pd.DataFrame(original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"])
+            original_df = pd.DataFrame(
+                original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"]
+            )
 
             filtered_df = get_spe_inter(original_df)
             fold_inputs = get_fold_inputs(filtered_df)
 
             txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
-            custom_name = f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}"
+            custom_name = (
+                f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}"
+            )
 
             # Ensure the custom path exists, create it if it doesn't
             os.makedirs(temp_folding_input_path, exist_ok=True)
 
             # Define the full path where the file will be stored
-            custom_file_path = os.path.join(temp_folding_input_path, custom_name + ".txt")
+            custom_file_path = os.path.join(
+                temp_folding_input_path, custom_name + ".txt"
+            )
 
             # Write the file to the custom path
-            with open(custom_file_path, 'w') as temp_file:
+            with open(custom_file_path, "w") as temp_file:
                 temp_file.write(txt_data)
 
             script = "./sBIF.sh"
-            n_samples = 5000
-            n_samples_per_run = 100
+            n_samples = 3
+            n_samples_per_run = 1
             is_download = "false"
             subprocess.run(
-                ["bash", script, str(n_samples), str(n_samples_per_run), str(is_download)],
+                [
+                    "bash",
+                    script,
+                    str(n_samples),
+                    str(n_samples_per_run),
+                    str(is_download),
+                ],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -370,77 +407,137 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
-            return checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
+            return checking_existing_data(
+                conn, chromosome_name, cell_line, sequences, sample_id
+            )
         else:
             return []
 
 
 """
-Download the full 3D chromosome data(including distances, 50000) in the given cell line, chromosome name, start, end
+Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_data(cell_line, chromosome_name, sequences):
-    conn = get_db_connection()
-    cur = conn.cursor()
+def download_full_chromosome_3d_distance_data(cell_line, chromosome_name):
+    conn = None
+    cur = None
 
-    def get_spe_inter(hic_data, alpha=0.05):
-        """Filter Hi-C data for significant interactions based on the alpha threshold."""
-        hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
-        return hic_spe
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    def get_fold_inputs(spe_df):
-        """Prepare folding input file from the filtered significant interactions."""
-        spe_out_df = spe_df[["ibp", "jbp", "fq", "chr", "fdr"]]
-        spe_out_df["w"] = 1
-        result = spe_out_df[["cell_line", "chr", "ibp", "jbp", "fq", "w"]]
-        return result
+        need_run_script = False
 
-    cur.execute(
-        """
-        SELECT *
-        FROM non_random_hic
-        WHERE chrID = %s
-        AND cell_line = %s
-        AND ibp >= %s
-        AND ibp <= %s
-        ORDER BY start_value
-    """,
-        (chromosome_name, cell_line, sequences["start"], sequences["end"]),
-    )
-    original_data = cur.fetchall()
-    conn.close()
+        # Check if data exists
+        cur.execute(
+            """
+            SELECT EXISTS(
+                SELECT 1
+                FROM distance
+                WHERE cell_line = %s AND chrid = %s
+            ) AS exists_val
+            """,
+            (cell_line, chromosome_name),
+        )
+        data_exists = cur.fetchone() 
 
-    column_names = [desc[0] for desc in cur.description]
-    original_df = pd.DataFrame(original_data, columns=column_names)
+        if data_exists and data_exists.get('exists_val'):
 
-    filtered_df = get_spe_inter(original_df)
-    fold_inputs = get_fold_inputs(filtered_df)
+            cur.execute(
+                """
+                SELECT EXISTS(
+                    SELECT 1
+                    FROM distance
+                    WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
+                ) AS expired
+                """,
+                (cell_line, chromosome_name),
+            )
+            has_expired = cur.fetchone()
 
-    txt_data = fold_inputs.to_csv(index=False, sep="\t")
-    custom_name = (
-        f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
-    )
-    with tempfile.NamedTemporaryFile(
-        delete=False, mode="w", suffix=".txt"
-    ) as temp_file:
-        temp_file.write(txt_data)
-        temp_file_path = temp_file.name
-        os.rename(temp_file_path, custom_name)
-        temp_file_path = custom_name
+            if has_expired and has_expired.get('expired'):
+                print("Cleaning expired data...")
+                cur.execute(
+                    """
+                    DELETE FROM distance
+                    WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
+                    """,
+                    (cell_line, chromosome_name),
+                )
+                conn.commit()
 
-    script = "./sBIF.sh"
-    n_samples = 50000
-    n_runs = 100
-    is_download = True
-    subprocess.run(
-        ["bash", script, n_samples, n_runs, is_download],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS count_val
+                    FROM distance
+                    WHERE cell_line = %s AND chrid = %s
+                    """,
+                    (cell_line, chromosome_name),
+                )
+                remaining = cur.fetchone()
+                if not (remaining and remaining.get('count_val', 0) > 0):
+                    need_run_script = True
+        else:
+            need_run_script = True
 
-    os.remove(custom_name)
+        if need_run_script:
+            print("Generating data...")
+            subprocess.run(
+                ["bash", "./sBIF.sh", "3", "1", "True"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
 
-    return "Success send download full chromosome 3D data request"
+        # Fetching data from the database
+        base_name = f"{cell_line}_{chromosome_name}"
+        csv_file = f"{base_name}.csv"
+        zip_file = f"{base_name}.zip"
+
+        cur.execute(
+            """
+            SELECT *
+            FROM distance
+            WHERE cell_line = %s AND chrid = %s
+            """,
+            (cell_line, chromosome_name),
+        )
+
+        columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
+
+        with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, delimiter='\t')
+
+            writer.writerow(columns)
+
+            while True:
+                rows = cur.fetchmany(5000)
+                if not rows:
+                    break
+                for row in rows:
+                    writer.writerow([row[col] for col in columns])
+
+        # Zip the CSV file
+        with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(csv_file, os.path.basename(csv_file))
+
+        os.remove(csv_file)
+
+        return f"Succeed: {zip_file}"
+
+    except subprocess.CalledProcessError as e:
+        print(f"Shell running failed: {e.stderr}")
+        raise RuntimeError("Generating data failed") from e
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Operation failed: {str(e)}")
+        raise
+    
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 """
@@ -496,13 +593,22 @@ def gene_list(chromosome_name, sequences):
             OR (start_location <= %s AND end_location >= %s)
         )
     """,
-        (chromosome_name, sequences["start"], sequences["end"], sequences["start"], sequences["end"], sequences["start"], sequences["end"]),
+        (
+            chromosome_name,
+            sequences["start"],
+            sequences["end"],
+            sequences["start"],
+            sequences["end"],
+            sequences["start"],
+            sequences["end"],
+        ),
     )
 
     gene_list = cur.fetchall()
     conn.close()
 
     return gene_list
+
 
 """
 Return the epigenetic track data in the given cell_line, chromosome_name and sequence
@@ -535,10 +641,10 @@ def epigenetic_track_data(cell_line, chromosome_name, sequences):
     # Loop through the fetched rows and aggregate by epigenetic key
     for row in epigenetic_track_data:
         # Assuming 'epigenetic' is one of the columns in the row
-        epigenetic_key = row['epigenetic']  # Replace with the actual column name
+        epigenetic_key = row["epigenetic"]  # Replace with the actual column name
         if epigenetic_key not in aggregated_data:
             aggregated_data[epigenetic_key] = []
-        
+
         # Append the current row or necessary data to the list under the epigenetic key
         aggregated_data[epigenetic_key].append(row)
 
