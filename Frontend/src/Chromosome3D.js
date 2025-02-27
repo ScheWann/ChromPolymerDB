@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber } from 'antd';
-import { DownloadOutlined, RollbackOutlined, ClearOutlined, FileImageOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, ClearOutlined, FileImageOutlined, SyncOutlined } from "@ant-design/icons";
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import "./Styles/chromosome3D.css";
 
@@ -22,6 +22,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
     const [showBeadInfo, setShowBeadInfo] = useState(false)
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
+    const [downloadSpinner, setDownloadSpinner] = useState(false);
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -157,6 +158,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     };
 
     const downloadDistance = () => {
+        setDownloadSpinner(true);
         fetch("downloadFullChromosome3dDistanceData", {
             method: "POST",
             headers: {
@@ -166,6 +168,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         })
             .then(res => res.json())
             .then(data => {
+                setDownloadSpinner(false);
                 console.log(data);
             })
     };
@@ -337,7 +340,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 fontSize: 15,
                                 cursor: "pointer",
                             }}
-                            icon={<DownloadOutlined />}
+                            icon={ downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                             onClick={downloadDistance}
                         />
                     </Tooltip>
