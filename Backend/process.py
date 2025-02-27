@@ -484,7 +484,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         if existing_data:
             columns = [col for col in existing_columns if col != 'insert_time']
             
-            base_name = f"{cell_line}_{chromosome_name}_{unique_id}"
+            base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
             csv_file = f"{base_name}.csv"
             zip_file = f"{base_name}.zip"
             
@@ -559,7 +559,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     print(f"Removing temporary file: {custom_file_path}")
                     os.remove(custom_file_path)
 
-            base_name = f"{cell_line}_{chromosome_name}_{unique_id}"
+            base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
             csv_file = f"{base_name}.csv"
             zip_file = f"{base_name}.zip"
 
