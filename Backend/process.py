@@ -392,7 +392,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             script = "./sBIF.sh"
             n_samples = 5000
-            n_samples_per_run = os.cpu_count() - 2
+            n_samples_per_run = 100
             is_download = "false"
             subprocess.run(
                 [
@@ -541,7 +541,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             try:
                 script = "./sBIF.sh"
                 n_samples = 5000
-                n_samples_per_run = os.cpu_count() - 2
+                n_samples_per_run = 100
                 is_download = "True"
                 
                 subprocess.run(
