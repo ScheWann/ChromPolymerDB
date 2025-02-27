@@ -162,7 +162,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ cell_line: chromosome3DExampleData[0].cell_line, chromosome_name: chromosome3DExampleData[0].chrid }),
+            body: JSON.stringify({ cell_line: chromosome3DExampleData[0].cell_line, chromosome_name: chromosome3DExampleData[0].chrid, sequences: selectedChromosomeSequence}),
         })
             .then(res => res.json())
             .then(data => {

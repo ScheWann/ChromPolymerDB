@@ -97,7 +97,8 @@ def geneListSearch():
 def downloadFullChromosome3dDistanceData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
-    return jsonify(download_full_chromosome_3d_distance_data(cell_line, chromosome_name))
+    sequences = request.json['sequences']
+    return jsonify(download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5001, debug=True)

@@ -1,3 +1,4 @@
+from io import BytesIO
 import pandas as pd
 import psycopg2
 import os
@@ -7,6 +8,7 @@ import subprocess
 import shutil
 from psycopg2.extras import RealDictCursor
 import csv
+import uuid
 import zipfile
 from datetime import datetime
 from dotenv import load_dotenv
@@ -390,7 +392,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             script = "./sBIF.sh"
             n_samples = 3
-            n_samples_per_run = 1
+            n_samples_per_run = 3
             is_download = "false"
             subprocess.run(
                 [
@@ -417,127 +419,311 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 """
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_distance_data(cell_line, chromosome_name):
+def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
     conn = None
     cur = None
+    temp_folding_input_path = "../Data/Folding_input"
+    unique_id = uuid.uuid4().hex
 
-    try:
-        conn = get_db_connection()
+    def delete_old_samples(conn):
+        try:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM distance WHERE insert_time < NOW() - INTERVAL '10 minutes'")
+            conn.commit()
+        except:
+            conn.rollback()
+            raise
+    
+    def checking_existing_data(conn, chromosome_name, cell_line):
         cur = conn.cursor()
-
-        need_run_script = False
-
-        # Check if data exists
-        cur.execute(
-            """
-            SELECT EXISTS(
-                SELECT 1
-                FROM distance
-                WHERE cell_line = %s AND chrid = %s
-            ) AS exists_val
-            """,
-            (cell_line, chromosome_name),
-        )
-        data_exists = cur.fetchone() 
-
-        if data_exists and data_exists.get('exists_val'):
-
-            cur.execute(
-                """
-                SELECT EXISTS(
-                    SELECT 1
-                    FROM distance
-                    WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
-                ) AS expired
-                """,
-                (cell_line, chromosome_name),
-            )
-            has_expired = cur.fetchone()
-
-            if has_expired and has_expired.get('expired'):
-                print("Cleaning expired data...")
-                cur.execute(
-                    """
-                    DELETE FROM distance
-                    WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
-                    """,
-                    (cell_line, chromosome_name),
-                )
-                conn.commit()
-
-                cur.execute(
-                    """
-                    SELECT COUNT(*) AS count_val
-                    FROM distance
-                    WHERE cell_line = %s AND chrid = %s
-                    """,
-                    (cell_line, chromosome_name),
-                )
-                remaining = cur.fetchone()
-                if not (remaining and remaining.get('count_val', 0) > 0):
-                    need_run_script = True
-        else:
-            need_run_script = True
-
-        if need_run_script:
-            print("Generating data...")
-            subprocess.run(
-                ["bash", "./sBIF.sh", "3", "1", "True"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-
-        # Fetching data from the database
-        base_name = f"{cell_line}_{chromosome_name}"
-        csv_file = f"{base_name}.csv"
-        zip_file = f"{base_name}.zip"
-
         cur.execute(
             """
             SELECT *
             FROM distance
-            WHERE cell_line = %s AND chrid = %s
-            """,
-            (cell_line, chromosome_name),
+            WHERE chrID = %s
+            AND cell_line = %s
+        """,
+            (
+                chromosome_name,
+                cell_line,
+            ),
         )
+        distance_data = cur.fetchall()
+        columns = [desc[0] for desc in cur.description] if cur.description else []
+        cur.close()
 
-        columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
-
-        with open(csv_file, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f, delimiter='\t')
-
-            writer.writerow(columns)
-
-            while True:
-                rows = cur.fetchmany(5000)
-                if not rows:
-                    break
-                for row in rows:
-                    writer.writerow([row[col] for col in columns])
-
-        # Zip the CSV file
-        with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.write(csv_file, os.path.basename(csv_file))
-
-        os.remove(csv_file)
-
-        return f"Succeed: {zip_file}"
-
-    except subprocess.CalledProcessError as e:
-        print(f"Shell running failed: {e.stderr}")
-        raise RuntimeError("Generating data failed") from e
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print(f"Operation failed: {str(e)}")
-        raise
+        if distance_data:
+            return distance_data, columns
+        else:
+            return None, None
     
+    def get_spe_inter(hic_data, alpha=0.05):
+        """Filter Hi-C data for significant interactions based on the alpha threshold."""
+        hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
+        return hic_spe
+
+    def get_fold_inputs(spe_df):
+        """Prepare folding input file from the filtered significant interactions."""
+        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]]
+        spe_out_df["w"] = 1
+        result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
+        return result
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        delete_old_samples(conn)
+
+        existing_data, existing_columns = checking_existing_data(conn, chromosome_name, cell_line)
+        
+        if existing_data:
+            columns = [col for col in existing_columns if col != 'insert_time']
+            col_indices = [i for i, col in enumerate(existing_columns) if col != 'insert_time']
+            
+            base_name = f"{cell_line}_{chromosome_name}_{unique_id}"
+            csv_file = f"{base_name}.csv"
+            zip_file = f"{base_name}.zip"
+            
+            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerow(columns)
+                for row in existing_data:
+                    filtered_row = [row[i] for i in col_indices]
+                    writer.writerow(filtered_row)
+            
+            with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.write(csv_file, os.path.basename(csv_file))
+            os.remove(csv_file)
+            
+            return f"Succeed: {zip_file}"
+        else:
+            cur.execute(
+                """
+                SELECT chrid, fdr, ibp, jbp, fq
+                FROM non_random_hic
+                WHERE chrID = %s
+                AND cell_line = %s
+                AND ibp >= %s
+                AND ibp <= %s
+                AND jbp >= %s
+                AND jbp <= %s
+                """,
+                (chromosome_name, cell_line, sequences["start"], sequences["end"], sequences["start"], sequences["end"]),
+            )
+            original_data = cur.fetchall()
+
+            if not original_data:
+                return "Failed: No data found"
+
+            original_df = pd.DataFrame(original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"])
+            filtered_df = get_spe_inter(original_df)
+            fold_inputs = get_fold_inputs(filtered_df)
+
+            txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
+
+            os.makedirs(temp_folding_input_path, exist_ok=True)
+            custom_name = f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}.{unique_id}"
+
+            with tempfile.NamedTemporaryFile(
+                mode='w',
+                dir=temp_folding_input_path,
+                prefix=custom_name,
+                suffix=".txt",
+                delete=False
+            ) as temp_file:
+                temp_file.write(txt_data)
+                custom_file_path = temp_file.name
+            
+            try:
+                script = "./sBIF.sh"
+                n_samples = 5000
+                n_samples_per_run = os.cpu_count() - 2
+                is_download = "True"
+                
+                subprocess.run(
+                    ["bash", script, str(n_samples), str(n_samples_per_run), str(is_download)],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+            except subprocess.CalledProcessError as e:
+                print(f"Subprocess failed with error: {e.stderr}")
+                raise RuntimeError("sBIF.sh execution failed") from e
+            
+            finally:
+                if os.path.exists(custom_file_path):
+                    print(f"Removing temporary file: {custom_file_path}")
+                    os.remove(custom_file_path)
+
+            base_name = f"{cell_line}_{chromosome_name}_{unique_id}"
+            csv_file = f"{base_name}.csv"
+            zip_file = f"{base_name}.zip"
+
+            cur.execute(
+                """
+                SELECT *
+                FROM distance
+                WHERE cell_line = %s AND chrid = %s
+                """,
+                (cell_line, chromosome_name),
+            )
+
+            # Writing the data to a CSV file
+            columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
+            
+            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerow(columns)
+                while True:
+                    rows = cur.fetchmany(5000)
+                    if not rows:
+                        break
+                    for row in rows:
+                        writer.writerow([row[col] for col in columns])
+
+            # Zip file
+            with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.write(csv_file, os.path.basename(csv_file))
+            os.remove(csv_file)
+
+            return f"Succeed: {zip_file}"
+    
+    except Exception as e:
+        if 'csv_file' in locals() and os.path.exists(csv_file):
+            os.remove(csv_file)
+        if 'zip_file' in locals() and os.path.exists(zip_file):
+            os.remove(zip_file)
+        raise
+
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
+
+# def download_full_chromosome_3d_distance_data(cell_line, chromosome_name):
+#     conn = None
+#     cur = None
+
+#     try:
+#         conn = get_db_connection()
+#         cur = conn.cursor()
+
+#         need_run_script = False
+
+#         # Check if data exists
+#         cur.execute(
+#             """
+#             SELECT EXISTS(
+#                 SELECT 1
+#                 FROM distance
+#                 WHERE cell_line = %s AND chrid = %s
+#             ) AS exists_val
+#             """,
+#             (cell_line, chromosome_name),
+#         )
+#         data_exists = cur.fetchone()
+
+#         if data_exists and data_exists.get('exists_val'):
+
+#             cur.execute(
+#                 """
+#                 SELECT EXISTS(
+#                     SELECT 1
+#                     FROM distance
+#                     WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
+#                 ) AS expired
+#                 """,
+#                 (cell_line, chromosome_name),
+#             )
+#             has_expired = cur.fetchone()
+
+#             if has_expired and has_expired.get('expired'):
+#                 print("Cleaning expired data...")
+#                 cur.execute(
+#                     """
+#                     DELETE FROM distance
+#                     WHERE cell_line = %s AND chrid = %s AND insert_time < NOW() - INTERVAL '10 minutes'
+#                     """,
+#                     (cell_line, chromosome_name),
+#                 )
+#                 conn.commit()
+
+#                 cur.execute(
+#                     """
+#                     SELECT COUNT(*) AS count_val
+#                     FROM distance
+#                     WHERE cell_line = %s AND chrid = %s
+#                     """,
+#                     (cell_line, chromosome_name),
+#                 )
+#                 remaining = cur.fetchone()
+#                 if not (remaining and remaining.get('count_val', 0) > 0):
+#                     need_run_script = True
+#         else:
+#             need_run_script = True
+
+#         if need_run_script:
+#             print("Generating data...")
+#             subprocess.run(
+#                 ["bash", "./sBIF.sh", "3", "1", "True"],
+#                 capture_output=True,
+#                 text=True,
+#                 check=True,
+#             )
+
+#         # Fetching data from the database
+#         base_name = f"{cell_line}_{chromosome_name}"
+#         csv_file = f"{base_name}.csv"
+#         zip_file = f"{base_name}.zip"
+
+#         cur.execute(
+#             """
+#             SELECT *
+#             FROM distance
+#             WHERE cell_line = %s AND chrid = %s
+#             """,
+#             (cell_line, chromosome_name),
+#         )
+
+#         columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
+
+#         with open(csv_file, "w", newline="", encoding="utf-8") as f:
+#             writer = csv.writer(f, delimiter='\t')
+
+#             writer.writerow(columns)
+
+#             while True:
+#                 rows = cur.fetchmany(5000)
+#                 if not rows:
+#                     break
+#                 for row in rows:
+#                     writer.writerow([row[col] for col in columns])
+
+#         # Zip the CSV file
+#         with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
+#             zf.write(csv_file, os.path.basename(csv_file))
+
+#         os.remove(csv_file)
+
+#         return f"Succeed: {zip_file}"
+
+#     except subprocess.CalledProcessError as e:
+#         print(f"Shell running failed: {e.stderr}")
+#         raise RuntimeError("Generating data failed") from e
+#     except Exception as e:
+#         if conn:
+#             conn.rollback()
+#         print(f"Operation failed: {str(e)}")
+#         raise
+
+#     finally:
+#         if cur:
+#             cur.close()
+#         if conn:
+#             conn.close()
 
 
 """

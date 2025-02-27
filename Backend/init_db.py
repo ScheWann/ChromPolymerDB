@@ -173,6 +173,7 @@ def initialize_tables():
         print("Creating distance table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS distance ("
+            "dID Serial PRIMARY KEY,"
             "cell_line VARCHAR(50) NOT NULL,"
             "chrID VARCHAR(50) NOT NULL,"
             "sampleID INT NOT NULL DEFAULT 0,"
@@ -180,7 +181,6 @@ def initialize_tables():
             "bead_j BIGINT NOT NULL DEFAULT 0,"
             "distance DOUBLE PRECISION NOT NULL DEFAULT 0.0,"
             "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-            "PRIMARY KEY (cell_line, chrID, sampleID, bead_i, bead_j),"
             "CHECK (bead_i < bead_j),"
             "CHECK (distance >= 0)"
             ") WITH (FILLFACTOR = 90);"
@@ -350,7 +350,7 @@ def process_distance_index():
     else:
         print("Creating index idx_distance_search...")
         cur.execute(
-            "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID);"
+            "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID, start_value, end_value);"
         )
         print("Index idx_distance_search created successfully.")
     
