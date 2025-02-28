@@ -443,9 +443,9 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             SELECT *
             FROM distance
             WHERE chrID = %s
-              AND cell_line = %s
-              AND start_value = %s
-              AND end_value = %s
+                AND cell_line = %s
+                AND start_value = %s
+                AND end_value = %s
             """,
             (
                 chromosome_name,
@@ -503,11 +503,11 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 SELECT chrid, fdr, ibp, jbp, fq
                 FROM non_random_hic
                 WHERE chrID = %s
-                  AND cell_line = %s
-                  AND ibp >= %s
-                  AND ibp <= %s
-                  AND jbp >= %s
-                  AND jbp <= %s
+                    AND cell_line = %s
+                    AND ibp >= %s
+                    AND ibp <= %s
+                    AND jbp >= %s
+                    AND jbp <= %s
                 """,
                 (
                     chromosome_name,
@@ -575,7 +575,6 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             )
 
             all_columns = [desc[0] for desc in cur.description]
-            # 排除 insert_time 字段
             selected_cols = [col for col in all_columns if col.lower() != 'insert_time']
             col_indices = [i for i, col in enumerate(all_columns) if col.lower() != 'insert_time']
             
@@ -595,8 +594,6 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         if cur:
             cur.close()
         if conn:
-            conn.close()
-
             conn.close()
 
 """
