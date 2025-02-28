@@ -278,7 +278,7 @@ def process_non_random_hic_data(chromosome_dir):
             for chunk in pd.read_csv(
                 file_path,
                 usecols=["chr", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"],
-                chunksize=500000
+                chunksize=100000
             ):
                 chunk.rename(columns={"chr": "chrid"}, inplace=True)
                 
