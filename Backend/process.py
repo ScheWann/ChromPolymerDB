@@ -1,3 +1,4 @@
+import gzip
 from io import BytesIO
 import pandas as pd
 import psycopg2
@@ -485,21 +486,16 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             columns = [col for col in existing_columns if col != 'insert_time']
             
             base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
-            csv_file = f"{base_name}.csv"
-            zip_file = f"{base_name}.zip"
+            gz_file = f"{base_name}.csv.gz" 
             
-            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow(columns)
                 for row in existing_data:
                     filtered_row = [row[col] for col in columns]
                     writer.writerow(filtered_row)
-            
-            with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
-                zf.write(csv_file, os.path.basename(csv_file))
-            os.remove(csv_file)
-            
-            return f"Succeed: {zip_file}"
+
+            return f"Succeed: {gz_file}"
         else:
             cur.execute(
                 """
@@ -560,8 +556,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     os.remove(custom_file_path)
 
             base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
-            csv_file = f"{base_name}.csv"
-            zip_file = f"{base_name}.zip"
+            gz_file = f"{base_name}.csv.gz"
 
             cur.execute(
                 """
@@ -575,7 +570,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             # Writing the data to a CSV file
             columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
             
-            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow(columns)
                 while True:
@@ -585,19 +580,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     for row in rows:
                         writer.writerow([row[col] for col in columns])
 
-            # Zip file
-            with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
-                zf.write(csv_file, os.path.basename(csv_file))
-            os.remove(csv_file)
-
-            return f"Succeed: {zip_file}"
-    
-    except Exception as e:
-        if 'csv_file' in locals() and os.path.exists(csv_file):
-            os.remove(csv_file)
-        if 'zip_file' in locals() and os.path.exists(zip_file):
-            os.remove(zip_file)
-        raise
+            return f"Succeed: {gz_file}"
 
     finally:
         if cur:
