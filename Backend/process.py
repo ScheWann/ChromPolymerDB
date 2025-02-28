@@ -305,7 +305,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     def get_fold_inputs(spe_df):
         """Prepare folding input file from the filtered significant interactions."""
-        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]]
+        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]].copy()
         spe_out_df["w"] = 1
         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
         return result
@@ -431,10 +431,11 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             cur = conn.cursor()
             cur.execute("DELETE FROM distance WHERE insert_time < NOW() - INTERVAL '10 minutes'")
             conn.commit()
-        except:
+            cur.close()
+        except Exception as e:
             conn.rollback()
-            raise
-    
+            raise e
+
     def checking_existing_data(conn, chromosome_name, cell_line):
         cur = conn.cursor()
         cur.execute(
@@ -442,26 +443,25 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             SELECT *
             FROM distance
             WHERE chrID = %s
-            AND cell_line = %s
-            AND start_value = %s
-            AND end_value = %s
-        """,
+              AND cell_line = %s
+              AND start_value = %s
+              AND end_value = %s
+            """,
             (
                 chromosome_name,
                 cell_line,
-                sequences["start"],
-                sequences["end"],
+                sequences['start'],
+                sequences['end'],
             ),
         )
         distance_data = cur.fetchall()
         columns = [desc[0] for desc in cur.description] if cur.description else []
         cur.close()
-
         if distance_data:
             return distance_data, columns
         else:
             return None, None
-    
+
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
         hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
@@ -469,11 +469,11 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 
     def get_fold_inputs(spe_df):
         """Prepare folding input file from the filtered significant interactions."""
-        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]]
+        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]].copy()
         spe_out_df["w"] = 1
         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
         return result
-    
+
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -483,16 +483,17 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         existing_data, existing_columns = checking_existing_data(conn, chromosome_name, cell_line)
         
         if existing_data:
-            columns = [col for col in existing_columns if col != 'insert_time']
+            selected_cols = [col for col in existing_columns if col.lower() != 'insert_time']
+            col_indices = [i for i, col in enumerate(existing_columns) if col.lower() != 'insert_time']
             
-            base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
+            base_name = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
             gz_file = f"{base_name}.csv.gz" 
             
             with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
-                writer.writerow(columns)
+                writer.writerow(selected_cols)
                 for row in existing_data:
-                    filtered_row = [row[col] for col in columns]
+                    filtered_row = [row[i] for i in col_indices]
                     writer.writerow(filtered_row)
 
             return f"Succeed: {gz_file}"
@@ -502,13 +503,20 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 SELECT chrid, fdr, ibp, jbp, fq
                 FROM non_random_hic
                 WHERE chrID = %s
-                AND cell_line = %s
-                AND ibp >= %s
-                AND ibp <= %s
-                AND jbp >= %s
-                AND jbp <= %s
+                  AND cell_line = %s
+                  AND ibp >= %s
+                  AND ibp <= %s
+                  AND jbp >= %s
+                  AND jbp <= %s
                 """,
-                (chromosome_name, cell_line, sequences["start"], sequences["end"], sequences["start"], sequences["end"]),
+                (
+                    chromosome_name,
+                    cell_line,
+                    sequences['start'],
+                    sequences['end'],
+                    sequences['start'],
+                    sequences['end']
+                ),
             )
             original_data = cur.fetchall()
 
@@ -549,36 +557,37 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             except subprocess.CalledProcessError as e:
                 print(f"Subprocess failed with error: {e.stderr}")
                 raise RuntimeError("sBIF.sh execution failed") from e
-            
             finally:
                 if os.path.exists(custom_file_path):
                     print(f"Removing temporary file: {custom_file_path}")
                     os.remove(custom_file_path)
 
-            base_name = f"{cell_line}_{chromosome_name}_{sequences["start"]}_{sequences["end"]}"
+            base_name = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
             gz_file = f"{base_name}.csv.gz"
 
             cur.execute(
                 """
                 SELECT *
                 FROM distance
-                WHERE cell_line = %s AND chrid = %s
+                WHERE cell_line = %s AND chrID = %s
                 """,
                 (cell_line, chromosome_name),
             )
 
-            # Writing the data to a CSV file
-            columns = [desc[0] for desc in cur.description if desc[0] != 'insert_time']
+            all_columns = [desc[0] for desc in cur.description]
+            # 排除 insert_time 字段
+            selected_cols = [col for col in all_columns if col.lower() != 'insert_time']
+            col_indices = [i for i, col in enumerate(all_columns) if col.lower() != 'insert_time']
             
             with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
-                writer.writerow(columns)
+                writer.writerow(selected_cols)
                 while True:
                     rows = cur.fetchmany(5000)
                     if not rows:
                         break
                     for row in rows:
-                        writer.writerow([row[col] for col in columns])
+                        writer.writerow([row[i] for i in col_indices])
 
             return f"Succeed: {gz_file}"
 
@@ -588,6 +597,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         if conn:
             conn.close()
 
+            conn.close()
 
 """
 Returns currently existing other cell line list in given chromosome name and sequences

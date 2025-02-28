@@ -177,13 +177,12 @@ def initialize_tables():
             "cell_line VARCHAR(50) NOT NULL,"
             "chrID VARCHAR(50) NOT NULL,"
             "sampleID INT NOT NULL DEFAULT 0,"
-            "bead_i BIGINT NOT NULL DEFAULT 0,"
-            "bead_j BIGINT NOT NULL DEFAULT 0,"
-            "distance DOUBLE PRECISION NOT NULL DEFAULT 0.0,"
+            "start_value BIGINT NOT NULL DEFAULT 0,"
+            "end_value BIGINT NOT NULL DEFAULT 0,"
+            "n_beads INT NOT NULL,"
+            "distance_vector DOUBLE PRECISION[] NOT NULL,"
             "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-            "CHECK (bead_i < bead_j),"
-            "CHECK (distance >= 0)"
-            ") WITH (FILLFACTOR = 90);"
+            ");"
         )
         conn.commit()
         print("distance table created successfully.")
@@ -350,7 +349,7 @@ def process_distance_index():
     else:
         print("Creating index idx_distance_search...")
         cur.execute(
-            "CREATE INDEX idx_distance_search ON distance USING BRIN (cell_line, chrID, sampleID, start_value, end_value);"
+            "CREATE INDEX idx_distance_search ON distance (cell_line, chrID, sampleID, start_value, end_value, sampleID);"
         )
         print("Index idx_distance_search created successfully.")
     
