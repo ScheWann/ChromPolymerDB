@@ -573,14 +573,15 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     AND start_value = %s 
                     AND end_value = %s
                 """,
-                (cell_line, chromosome_name, 
-                sequences['start'], sequences['end'])
+                (cell_line, chromosome_name, sequences['start'], sequences['end'])
             )
 
             all_columns = [desc[0] for desc in cur.description]
             selected_cols = [col for col in all_columns if col.lower() != 'insert_time']
             col_indices = [i for i, col in enumerate(all_columns) if col.lower() != 'insert_time']
             
+            print(f"Selected columns: {selected_cols}")
+            print(f"Column indices: {col_indices}")
             with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow(selected_cols)
