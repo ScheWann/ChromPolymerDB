@@ -1,5 +1,7 @@
 import os
 import re
+import gzip
+from io import StringIO
 from psycopg2 import sql
 import psycopg2.extras
 import pandas as pd
@@ -61,7 +63,7 @@ def initialize_tables():
         print("Creating chromosome table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS chromosome ("
-            "chrID varchar(50) PRIMARY KEY,"
+            "chrid varchar(50) PRIMARY KEY,"
             "size INT NOT NULL DEFAULT 0"
             ");"
         )
@@ -74,7 +76,7 @@ def initialize_tables():
         print("Creating gene table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS gene ("
-            "gID serial PRIMARY KEY,"
+            "gid serial PRIMARY KEY,"
             "chromosome VARCHAR(50) NOT NULL,"
             "orientation VARCHAR(10) NOT NULL DEFAULT 'plus',"
             "start_location BIGINT NOT NULL DEFAULT 0,"
@@ -91,15 +93,15 @@ def initialize_tables():
         print("Creating non_random_hic table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS non_random_hic ("
-            "hID serial PRIMARY KEY,"
-            "chrID VARCHAR(50) NOT NULL,"
-            "cell_line VARCHAR(50) NOT NULL,"
-            "fq FLOAT NOT NULL DEFAULT 0.0,"
-            "rawc FLOAT NOT NULL DEFAULT 0.0,"
-            "fdr FLOAT NOT NULL DEFAULT 0.0,"
+            "hid serial PRIMARY KEY,"
+            "chrid VARCHAR(50) NOT NULL,"
             "ibp BIGINT NOT NULL DEFAULT 0,"
             "jbp BIGINT NOT NULL DEFAULT 0,"
-            "CONSTRAINT fk_non_random_hic_chrID FOREIGN KEY (chrID) REFERENCES chromosome(chrID) ON DELETE CASCADE ON UPDATE CASCADE"
+            "fq FLOAT NOT NULL DEFAULT 0.0,"
+            "fdr FLOAT NOT NULL DEFAULT 0.0,"
+            "rawc FLOAT NOT NULL DEFAULT 0.0,"
+            "cell_line VARCHAR(50) NOT NULL,"
+            "CONSTRAINT fk_non_random_hic_chrid FOREIGN KEY (chrid) REFERENCES chromosome(chrid) ON DELETE CASCADE ON UPDATE CASCADE"
             ");"
         )
         conn.commit()
@@ -111,8 +113,8 @@ def initialize_tables():
         print("Creating epigenetic_track table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS epigenetic_track ("
-            "etID serial PRIMARY KEY,"
-            "chrID VARCHAR(50) NOT NULL,"
+            "etid serial PRIMARY KEY,"
+            "chrid VARCHAR(50) NOT NULL,"
             "cell_line VARCHAR(50) NOT NULL,"
             "epigenetic VARCHAR(50) NOT NULL,"
             "start_value BIGINT NOT NULL DEFAULT 0,"
@@ -135,12 +137,12 @@ def initialize_tables():
         print("Creating sequence table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS sequence ("
-            "sID serial PRIMARY KEY,"
-            "chrID VARCHAR(50) NOT NULL,"
+            "sid serial PRIMARY KEY,"
+            "chrid VARCHAR(50) NOT NULL,"
             "cell_line VARCHAR(50) NOT NULL,"
             "start_value BIGINT NOT NULL DEFAULT 0,"
             "end_value BIGINT NOT NULL DEFAULT 0,"
-            "UNIQUE(chrID, cell_line, start_value, end_value)"
+            "UNIQUE(chrid, cell_line, start_value, end_value)"
             ");"
         )
         conn.commit()
@@ -152,10 +154,10 @@ def initialize_tables():
         print("Creating position table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS position ("
-            "pID serial PRIMARY KEY,"
+            "pid serial PRIMARY KEY,"
             "cell_line VARCHAR(50) NOT NULL,"
-            "chrID VARCHAR(50) NOT NULL,"
-            "sampleID INT NOT NULL DEFAULT 0,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "sampleid INT NOT NULL DEFAULT 0,"
             "start_value BIGINT NOT NULL DEFAULT 0,"
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "X FLOAT NOT NULL DEFAULT 0.0,"
@@ -173,10 +175,10 @@ def initialize_tables():
         print("Creating distance table...")
         cur.execute(
             "CREATE TABLE IF NOT EXISTS distance ("
-            "dID Serial PRIMARY KEY,"
+            "did Serial PRIMARY KEY,"
             "cell_line VARCHAR(50) NOT NULL,"
-            "chrID VARCHAR(50) NOT NULL,"
-            "sampleID INT NOT NULL DEFAULT 0,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "sampleid INT NOT NULL DEFAULT 0,"
             "start_value BIGINT NOT NULL DEFAULT 0,"
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "n_beads INT NOT NULL,"
@@ -198,7 +200,7 @@ def process_chromosome_data(cur, file_path):
     """Process and insert chromosome data from the specified file."""
     with open(file_path, "r") as f:
         data_to_insert = []
-        query = "INSERT INTO chromosome (chrID, size) VALUES (%s, %s);"
+        query = "INSERT INTO chromosome (chrid, size) VALUES (%s, %s);"
         for line in f:
             # Split each line by tab and strip extra spaces/newlines
             data = line.strip().split("\t")
@@ -223,49 +225,81 @@ def process_gene_data(cur, file_path):
     psycopg2.extras.execute_batch(cur, query, data_to_insert)
 
 
-def process_non_random_hic_data(chromosome_dir):
-    """Process and insert Hi-C data from CSV files in the specified directory."""
-    query = """
-    INSERT INTO non_random_hic (chrID, cell_line, ibp, jbp, fq, fdr, rawc)
-    VALUES (%s, %s, %s, %s, %s, %s, %s);
-    """
+# def process_non_random_hic_data(chromosome_dir):
+#     """Process and insert Hi-C data from CSV files in the specified directory."""
+#     query = """
+#     INSERT INTO non_random_hic (chrid, cell_line, ibp, jbp, fq, fdr, rawc)
+#     VALUES (%s, %s, %s, %s, %s, %s, %s);
+#     """
 
-    # Loop through all files in the directory
+#     # Loop through all files in the directory
+#     for file_name in os.listdir(chromosome_dir):
+#         if file_name.endswith(".csv.gz"):
+#             # Get the cell_line from the file name
+#             cell_line = re.search(r"^(\w+)_", file_name).group(1)
+#             file_path = os.path.join(chromosome_dir, file_name)
+
+#             # Read the CSV file in chunks
+#             for chunk in pd.read_csv(
+#                 file_path, usecols=["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"], chunksize=10000
+#             ):
+#                 # Convert the chunk to a list of tuples
+#                 non_random_hic_records = chunk[
+#                     ["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"]
+#                 ].values.tolist()
+
+#                 # Prepare data for batch insertion
+#                 data_to_insert = [
+#                     (record[0], record[1], record[2], record[3], record[4], record[5], record[6])
+#                     for record in non_random_hic_records
+#                 ]
+
+#                 conn = get_db_connection(database=DB_NAME)
+#                 cur = conn.cursor()
+
+#                 # Batch insert the records and commit after each chunk
+#                 psycopg2.extras.execute_batch(cur, query, data_to_insert)
+#                 print(f"Inserted {len(data_to_insert)} records for {cell_line}.")
+                
+#                 conn.commit()
+#                 cur.close()
+#                 conn.close()
+
+#             print(
+#                 f"Non-random Hi-C data for cell line {cell_line} inserted successfully."
+#             )
+
+def process_non_random_hic_data(chromosome_dir):
     for file_name in os.listdir(chromosome_dir):
         if file_name.endswith(".csv.gz"):
-            # Get the cell_line from the file name
-            cell_line = re.search(r"^(\w+)_", file_name).group(1)
             file_path = os.path.join(chromosome_dir, file_name)
-
-            # Read the CSV file in chunks
+            print(f"Processing file: {file_name}")
+            
             for chunk in pd.read_csv(
-                file_path, usecols=["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"], chunksize=10000
+                file_path,
+                usecols=["chr", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"],
+                chunksize=500000
             ):
-                # Convert the chunk to a list of tuples
-                non_random_hic_records = chunk[
-                    ["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"]
-                ].values.tolist()
-
-                # Prepare data for batch insertion
-                data_to_insert = [
-                    (record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-                    for record in non_random_hic_records
-                ]
+                chunk.rename(columns={"chr": "chrid"}, inplace=True)
+                
+                buffer = StringIO()
+                chunk.to_csv(buffer, sep='\t', index=False, header=False)
+                buffer.seek(0)
 
                 conn = get_db_connection(database=DB_NAME)
                 cur = conn.cursor()
-
-                # Batch insert the records and commit after each chunk
-                psycopg2.extras.execute_batch(cur, query, data_to_insert)
-                print(f"Inserted {len(data_to_insert)} records for {cell_line}.")
                 
+                cur.copy_from(
+                    file=buffer,
+                    table='non_random_hic',
+                    columns=("chrid", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"),
+                    sep='\t'
+                )
                 conn.commit()
                 cur.close()
                 conn.close()
-
-            print(
-                f"Non-random Hi-C data for cell line {cell_line} inserted successfully."
-            )
+                
+                print(f"Inserted {len(chunk)} records from {file_name}.")
 
 
 def process_epigenetic_track_data(cur):
@@ -281,16 +315,16 @@ def process_epigenetic_track_data(cur):
             epigenetic = parts[1]
 
             df = pd.read_csv(file_path, sep="\t", header=None)
-            df.columns = ["chrID", "start_value", "end_value", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]
+            df.columns = ["chrid", "start_value", "end_value", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]
 
             df["cell_line"] = cell_line
             df["epigenetic"] = epigenetic
             
-            df = df[["chrID", "cell_line", "epigenetic", "start_value", "end_value", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]]
+            df = df[["chrid", "cell_line", "epigenetic", "start_value", "end_value", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]]
 
             query = """
 
-            INSERT INTO epigenetic_track (chrID, cell_line, epigenetic, start_value, end_value, name, score, strand, signal_value, p_value, q_value, peak)
+            INSERT INTO epigenetic_track (chrid, cell_line, epigenetic, start_value, end_value, name, score, strand, signal_value, p_value, q_value, peak)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
 
@@ -314,7 +348,7 @@ def process_sequence_data(cur):
 
             query = """
 
-            INSERT INTO sequence (chrID, cell_line, start_value, end_value)
+            INSERT INTO sequence (chrid, cell_line, start_value, end_value)
             VALUES (%s, %s, %s, %s);
             """
 
@@ -327,7 +361,7 @@ def process_non_random_hic_index(cur):
     print("Creating index idx_hic_search...")
     cur.execute(
         """
-        CREATE INDEX idx_hic_search ON non_random_hic (chrID, cell_line, ibp, jbp);
+        CREATE INDEX idx_hic_search ON non_random_hic (chrid, cell_line, ibp, jbp);
         """
     )
     print("Index idx_hic_search created successfully.")
@@ -349,7 +383,7 @@ def process_distance_index():
     else:
         print("Creating index idx_distance_search...")
         cur.execute(
-            "CREATE INDEX idx_distance_search ON distance (cell_line, chrID, start_value, end_value);"
+            "CREATE INDEX idx_distance_search ON distance (cell_line, chrid, start_value, end_value);"
         )
         print("Index idx_distance_search created successfully.")
     

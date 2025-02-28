@@ -75,35 +75,49 @@ services:
     networks:
       - example
 
-  db_cleaner:
-    image: postgres:17.0-bookworm
-    container_name: db_cleaner
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
-    environment:
-      PGPASSWORD: ${DB_PASSWORD}
-    command: >
-      sh -c "while true; do
-              psql -h db -U ${DB_USERNAME} -d ${DB_NAME} -c \"DO \$\$ BEGIN
-                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'position') THEN
-                  IF EXISTS (SELECT 1 FROM position LIMIT 1) THEN
-                    EXECUTE 'TRUNCATE TABLE position;';
-                  END IF;
-                END IF;
-              END \$\$;\";
-              psql -h db -U ${DB_USERNAME} -d ${DB_NAME} -c \"DO \$\$ BEGIN
-                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'distance') THEN
-                  IF EXISTS (SELECT 1 FROM distance LIMIT 1) THEN
-                    EXECUTE 'TRUNCATE TABLE distance;';
-                  END IF;
-                END IF;
-              END \$\$;\";
-              sleep 600;
-              done"
-    networks:
-      - example
+  # db_cleaner:
+  #   image: postgres:17.0-bookworm
+  #   container_name: db_cleaner
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #       restart: true
+  #   environment:
+  #     DB_USERNAME: ${DB_USERNAME}
+  #     DB_NAME: ${DB_NAME}
+  #     PGPASSWORD: ${DB_PASSWORD} 
+  #   command: >
+  #     sh -c "
+  #       while true; do
+  #         psql -h db -U \"$$DB_USERNAME\" -d \"$$DB_NAME\" <<EOSQL
+  #           DO \$\$
+  #           BEGIN
+  #             IF EXISTS (
+  #               SELECT 1
+  #               FROM information_schema.tables
+  #               WHERE table_schema = 'public' AND table_name = 'position'
+  #             ) THEN
+  #               TRUNCATE position;
+  #             END IF;
+  #           END;
+  #           \$\$ LANGUAGE plpgsql;
+
+  #           DO \$\$
+  #           BEGIN
+  #             IF EXISTS (
+  #               SELECT 1
+  #               FROM information_schema.tables
+  #               WHERE table_schema = 'public' AND table_name = 'distance'
+  #             ) THEN
+  #               TRUNCATE distance;
+  #             END IF;
+  #           END;
+  #           \$\$ LANGUAGE plpgsql;
+  #         EOSQL
+  #         sleep 600
+  #       done"
+  #   networks:
+  #     - example
 
 networks:
   example:
