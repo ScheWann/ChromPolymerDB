@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:17.0-bookworm
     container_name: db
+    command: postgres -c max_wal_size=2GB
     restart: on-failure
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -71,6 +72,23 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     ports:
       - "8080:80"
+    networks:
+      - example
+
+  db_cleaner:
+    image: postgres:17.0-bookworm
+    container_name: db_cleaner
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    command: >
+      sh -c "while true; do
+              psql -h db -U ${DB_USERNAME} -d ${DB_NAME} -c 'TRUNCATE TABLE position, distance;';
+              sleep 600;
+              done"
     networks:
       - example
 

@@ -181,7 +181,7 @@ def initialize_tables():
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "n_beads INT NOT NULL,"
             "distance_vector DOUBLE PRECISION[] NOT NULL,"
-            "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+            "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
             ");"
         )
         conn.commit()
