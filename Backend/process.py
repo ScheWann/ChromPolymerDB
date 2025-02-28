@@ -567,11 +567,14 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 
             cur.execute(
                 """
-                SELECT *
-                FROM distance
-                WHERE cell_line = %s AND chrID = %s
+                SELECT * FROM distance 
+                WHERE cell_line = %s 
+                    AND chrID = %s 
+                    AND start_value = %s 
+                    AND end_value = %s
                 """,
-                (cell_line, chromosome_name),
+                (cell_line, chromosome_name, 
+                sequences['start'], sequences['end'])
             )
 
             all_columns = [desc[0] for desc in cur.description]

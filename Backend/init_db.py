@@ -349,7 +349,7 @@ def process_distance_index():
     else:
         print("Creating index idx_distance_search...")
         cur.execute(
-            "CREATE INDEX idx_distance_search ON distance (cell_line, chrID, sampleID, start_value, end_value, sampleID);"
+            "CREATE INDEX idx_distance_search ON distance (cell_line, chrID, start_value, end_value);"
         )
         print("Index idx_distance_search created successfully.")
     
