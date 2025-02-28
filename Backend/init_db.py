@@ -183,7 +183,8 @@ def initialize_tables():
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "n_beads INT NOT NULL,"
             "distance_vector DOUBLE PRECISION[] NOT NULL,"
-            "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+            "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+            "UNIQUE(cell_line, chrid, sampleid, start_value, end_value, n_beads)"
             ");"
         )
         conn.commit()
@@ -224,50 +225,6 @@ def process_gene_data(cur, file_path):
 
     psycopg2.extras.execute_batch(cur, query, data_to_insert)
 
-
-# def process_non_random_hic_data(chromosome_dir):
-#     """Process and insert Hi-C data from CSV files in the specified directory."""
-#     query = """
-#     INSERT INTO non_random_hic (chrid, cell_line, ibp, jbp, fq, fdr, rawc)
-#     VALUES (%s, %s, %s, %s, %s, %s, %s);
-#     """
-
-#     # Loop through all files in the directory
-#     for file_name in os.listdir(chromosome_dir):
-#         if file_name.endswith(".csv.gz"):
-#             # Get the cell_line from the file name
-#             cell_line = re.search(r"^(\w+)_", file_name).group(1)
-#             file_path = os.path.join(chromosome_dir, file_name)
-
-#             # Read the CSV file in chunks
-#             for chunk in pd.read_csv(
-#                 file_path, usecols=["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"], chunksize=10000
-#             ):
-#                 # Convert the chunk to a list of tuples
-#                 non_random_hic_records = chunk[
-#                     ["chr", "cell_line", "ibp", "jbp", "fq", "fdr", "rawc"]
-#                 ].values.tolist()
-
-#                 # Prepare data for batch insertion
-#                 data_to_insert = [
-#                     (record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-#                     for record in non_random_hic_records
-#                 ]
-
-#                 conn = get_db_connection(database=DB_NAME)
-#                 cur = conn.cursor()
-
-#                 # Batch insert the records and commit after each chunk
-#                 psycopg2.extras.execute_batch(cur, query, data_to_insert)
-#                 print(f"Inserted {len(data_to_insert)} records for {cell_line}.")
-                
-#                 conn.commit()
-#                 cur.close()
-#                 conn.close()
-
-#             print(
-#                 f"Non-random Hi-C data for cell line {cell_line} inserted successfully."
-#             )
 
 def process_non_random_hic_data(chromosome_dir):
     for file_name in os.listdir(chromosome_dir):

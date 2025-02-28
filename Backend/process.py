@@ -115,7 +115,7 @@ def chromosomes_list(cell_line):
 
     cur.execute(
         """
-        SELECT DISTINCT chrID
+        SELECT DISTINCT chrid
         FROM sequence
         WHERE cell_line = %s
     """,
@@ -151,7 +151,7 @@ def chromosome_size(chromosome_name):
         """
         SELECT size
         FROM chromosome
-        WHERE chrID = %s
+        WHERE chrid = %s
     """,
         (chromosome_name,),
     )
@@ -173,7 +173,7 @@ def chromosome_sequences(cell_line, chromosome_name):
         SELECT start_value, end_value
         FROM sequence
         WHERE cell_line = %s
-        AND chrID = %s
+        AND chrid = %s
         ORDER BY start_value
     """,
         (cell_line, chromosome_name),
@@ -219,7 +219,7 @@ def chromosome_data(cell_line, chromosome_name, sequences):
         """
         SELECT cell_line, chrid, fdr, ibp, jbp, fq, rawc
         FROM non_random_hic
-        WHERE chrID = %s
+        WHERE chrid = %s
         AND cell_line = %s
         AND ibp >= %s
         AND ibp <= %s
@@ -252,7 +252,7 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
         """
             SELECT DISTINCT ibp
             FROM non_random_hic
-            WHERE chrID = %s
+            WHERE chrid = %s
             AND cell_line = %s
             AND ibp >= %s
             AND ibp <= %s
@@ -316,7 +316,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             """
             SELECT *
             FROM position
-            WHERE chrID = %s
+            WHERE chrid = %s
             AND cell_line = %s
             AND start_value = %s
             AND end_value = %s
@@ -348,7 +348,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             """
             SELECT *
             FROM non_random_hic
-            WHERE chrID = %s
+            WHERE chrid = %s
             AND cell_line = %s
             AND ibp >= %s
             AND ibp <= %s
@@ -442,7 +442,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             """
             SELECT *
             FROM distance
-            WHERE chrID = %s
+            WHERE chrid = %s
                 AND cell_line = %s
                 AND start_value = %s
                 AND end_value = %s
@@ -484,7 +484,6 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         
         if existing_data:
             selected_cols = [col for col in existing_columns if col.lower() != 'insert_time']
-            col_indices = [i for i, col in enumerate(existing_columns) if col.lower() != 'insert_time']
             
             base_name = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
             gz_file = f"{base_name}.csv.gz" 
@@ -493,7 +492,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow(selected_cols)
                 for row in existing_data:
-                    filtered_row = [row[i] for i in col_indices]
+                    filtered_row = [row[col] for col in selected_cols]
                     writer.writerow(filtered_row)
 
             return f"Succeed: {gz_file}"
@@ -502,7 +501,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 """
                 SELECT chrid, fdr, ibp, jbp, fq
                 FROM non_random_hic
-                WHERE chrID = %s
+                WHERE chrid = %s
                     AND cell_line = %s
                     AND ibp >= %s
                     AND ibp <= %s
@@ -542,6 +541,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 temp_file.write(txt_data)
                 custom_file_path = temp_file.name
             
+            print(f"Temporary file created: {custom_file_path}")
             try:
                 script = "./sBIF.sh"
                 n_samples = 5000
@@ -569,7 +569,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 """
                 SELECT * FROM distance 
                 WHERE cell_line = %s 
-                    AND chrID = %s 
+                    AND chrid = %s 
                     AND start_value = %s 
                     AND end_value = %s
                 """,
@@ -578,19 +578,17 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 
             all_columns = [desc[0] for desc in cur.description]
             selected_cols = [col for col in all_columns if col.lower() != 'insert_time']
-            col_indices = [i for i, col in enumerate(all_columns) if col.lower() != 'insert_time']
             
             print(f"Selected columns: {selected_cols}")
-            print(f"Column indices: {col_indices}")
             with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerow(selected_cols)
                 while True:
-                    rows = cur.fetchmany(5000)
+                    rows = cur.fetchmany(size=1000)
                     if not rows:
                         break
                     for row in rows:
-                        writer.writerow([row[i] for i in col_indices])
+                        writer.writerow([row[col] for col in selected_cols])
 
             return f"Succeed: {gz_file}"
 
@@ -681,7 +679,7 @@ def epigenetic_track_data(cell_line, chromosome_name, sequences):
         """
         SELECT *
         FROM epigenetic_track
-        WHERE chrID = %s
+        WHERE chrid = %s
         AND cell_line = %s
         AND start_value >= %s
         AND end_value <= %s
