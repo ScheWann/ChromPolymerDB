@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ##parameters
-chrlensfile="../Data/chromosome_sizes.txt"
+chrlensfile="./chromosome_sizes.txt"
 res=5000
 threads=50
 EXE_PATH="../sBIF/bin/sBIF"

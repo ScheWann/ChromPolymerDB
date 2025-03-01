@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:17.0-bookworm
     container_name: db
-    command: postgres -c max_wal_size=2GB
+    command: postgres -c max_wal_size=4GB
     restart: on-failure
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -30,14 +30,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./backend:/chromosome/backend
-      - ./Data:/chromosome/Data
+      - backend_data:/chromosome/Data
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
-        restart: true
     ports:
       - "5001:5001"
     networks:
@@ -48,7 +47,7 @@ services:
     restart: on-failure
     volumes:
       - ./frontend:/chromosome/frontend:cached
-      - /chromosome/frontend/node_modules
+      - frontend_module:/chromosome/frontend/node_modules
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -75,54 +74,29 @@ services:
     networks:
       - example
 
-  # db_cleaner:
-  #   image: postgres:17.0-bookworm
-  #   container_name: db_cleaner
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #       restart: true
-  #   environment:
-  #     DB_USERNAME: ${DB_USERNAME}
-  #     DB_NAME: ${DB_NAME}
-  #     PGPASSWORD: ${DB_PASSWORD} 
-  #   command: >
-  #     sh -c "
-  #       while true; do
-  #         psql -h db -U \"$$DB_USERNAME\" -d \"$$DB_NAME\" <<EOSQL
-  #           DO \$\$
-  #           BEGIN
-  #             IF EXISTS (
-  #               SELECT 1
-  #               FROM information_schema.tables
-  #               WHERE table_schema = 'public' AND table_name = 'position'
-  #             ) THEN
-  #               TRUNCATE position;
-  #             END IF;
-  #           END;
-  #           \$\$ LANGUAGE plpgsql;
-
-  #           DO \$\$
-  #           BEGIN
-  #             IF EXISTS (
-  #               SELECT 1
-  #               FROM information_schema.tables
-  #               WHERE table_schema = 'public' AND table_name = 'distance'
-  #             ) THEN
-  #               TRUNCATE distance;
-  #             END IF;
-  #           END;
-  #           \$\$ LANGUAGE plpgsql;
-  #         EOSQL
-  #         sleep 600
-  #       done"
-  #   networks:
-  #     - example
+  db-cron:
+    build:
+      context: ./cron
+      dockerfile: Dockerfile
+    container_name: db-cron
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    command: sh -c 'echo "$${DB_HOST}:5432:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - example
 
 networks:
   example:
     driver: bridge
 
 volumes:
+  frontend_module:
+  backend_data:
   pgadmin_data:
   pgdata:

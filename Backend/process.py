@@ -6,11 +6,11 @@ import os
 import re
 import tempfile
 import subprocess
-import shutil
 from psycopg2.extras import RealDictCursor
+from psycopg2 import sql
 import csv
+import io
 import uuid
-import zipfile
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -285,18 +285,18 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     temp_folding_input_path = "../Data/Folding_input"
 
-    def delete_old_samples(conn):
-        """Delete old samples from the position table."""
-        cur = conn.cursor()
+    # def delete_old_samples(conn):
+    #     """Delete old samples from the position table."""
+    #     cur = conn.cursor()
 
-        cur.execute(
-            """
-            DELETE FROM position
-            WHERE insert_time < CURRENT_TIMESTAMP - INTERVAL '10 minutes';
-        """
-        )
+    #     cur.execute(
+    #         """
+    #         DELETE FROM position
+    #         WHERE insert_time < CURRENT_TIMESTAMP - INTERVAL '10 minutes';
+    #     """
+    #     )
 
-        print("Old samples deleted successfully.")
+    #     print("Old samples deleted successfully.")
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
@@ -331,13 +331,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             ),
         )
         position_data = cur.fetchall()
-
         if position_data:
             return position_data
         else:
             return None
 
-    delete_old_samples(conn)
+    # delete_old_samples(conn)
 
     if checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
         return checking_existing_data(
@@ -421,46 +420,19 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
 def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
-    conn = None
-    cur = None
     temp_folding_input_path = "../Data/Folding_input"
+    output_parquet = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.parquet"
     unique_id = uuid.uuid4().hex
 
-    def delete_old_samples(conn):
-        try:
-            cur = conn.cursor()
-            cur.execute("DELETE FROM distance WHERE insert_time < NOW() - INTERVAL '10 minutes'")
-            conn.commit()
-            cur.close()
-        except Exception as e:
-            conn.rollback()
-            raise e
-
-    def checking_existing_data(conn, chromosome_name, cell_line):
+    def checking_existing_data(conn):
         cur = conn.cursor()
         cur.execute(
-            """
-            SELECT *
-            FROM distance
-            WHERE chrid = %s
-                AND cell_line = %s
-                AND start_value = %s
-                AND end_value = %s
-            """,
-            (
-                chromosome_name,
-                cell_line,
-                sequences['start'],
-                sequences['end'],
-            ),
+            ("SELECT EXISTS (SELECT 1 FROM distance LIMIT 1);")
         )
-        distance_data = cur.fetchall()
-        columns = [desc[0] for desc in cur.description] if cur.description else []
+        data = cur.fetchone()
         cur.close()
-        if distance_data:
-            return distance_data, columns
-        else:
-            return None, None
+
+        return data
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
@@ -474,28 +446,42 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
         return result
 
+    def get_distance_data(conn):
+        cur = conn.cursor()
+        copy_query = sql.SQL(
+            """
+                COPY (
+                    SELECT cell_line, chrid, sampleid, start_value, end_value, n_beads, distance_vector
+                    FROM distance
+                    WHERE cell_line = {cell_line}
+                        AND chrid = {chrid}
+                        AND start_value = {start_value}
+                        AND end_value = {end_value}
+                ) TO STDOUT WITH CSV HEADER DELIMITER E'\t'
+            """
+        ).format(
+            cell_line=sql.Literal(cell_line),
+            chrid=sql.Literal(chromosome_name),
+            start_value=sql.Literal(sequences["start"]),
+            end_value=sql.Literal(sequences["end"]),
+        )
+
+        csv_buffer = io.StringIO()
+        cur.copy_expert(copy_query.as_string(conn), csv_buffer)
+        csv_buffer.seek(0)
+
+        df = pd.read_csv(csv_buffer, delimiter="\t")
+        df.to_parquet(output_parquet, engine="pyarrow", index=False)
+
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        delete_old_samples(conn)
-
-        existing_data, existing_columns = checking_existing_data(conn, chromosome_name, cell_line)
-        
-        if existing_data:
-            selected_cols = [col for col in existing_columns if col.lower() != 'insert_time']
-            
-            base_name = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
-            gz_file = f"{base_name}.csv.gz" 
-            
-            with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerow(selected_cols)
-                for row in existing_data:
-                    filtered_row = [row[col] for col in selected_cols]
-                    writer.writerow(filtered_row)
-
-            return f"Succeed: {gz_file}"
+        existing_data_status = checking_existing_data(conn)
+        print(existing_data_status)
+        if existing_data_status['exists']:        
+            get_distance_data(conn)
+            return f"Succeed: {output_parquet}"
         else:
             cur.execute(
                 """
@@ -518,6 +504,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 ),
             )
             original_data = cur.fetchall()
+            cur.close()
 
             if not original_data:
                 return "Failed: No data found"
@@ -562,35 +549,8 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     print(f"Removing temporary file: {custom_file_path}")
                     os.remove(custom_file_path)
 
-            base_name = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}"
-            gz_file = f"{base_name}.csv.gz"
-
-            cur.execute(
-                """
-                SELECT * FROM distance 
-                WHERE cell_line = %s 
-                    AND chrid = %s 
-                    AND start_value = %s 
-                    AND end_value = %s
-                """,
-                (cell_line, chromosome_name, sequences['start'], sequences['end'])
-            )
-
-            all_columns = [desc[0] for desc in cur.description]
-            selected_cols = [col for col in all_columns if col.lower() != 'insert_time']
-            
-            print(f"Selected columns: {selected_cols}")
-            with gzip.open(gz_file, 'wt', compresslevel=6, newline='', encoding='utf-8') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerow(selected_cols)
-                while True:
-                    rows = cur.fetchmany(size=1000)
-                    if not rows:
-                        break
-                    for row in rows:
-                        writer.writerow([row[col] for col in selected_cols])
-
-            return f"Succeed: {gz_file}"
+            get_distance_data(conn)
+            return f"Succeed: {output_parquet}"
 
     finally:
         if cur:

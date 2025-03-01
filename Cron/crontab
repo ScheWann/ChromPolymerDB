@@ -1,0 +1,7 @@
+# cron/crontab
+DB_HOST=db
+DB_USERNAME=admin
+DB_NAME=chromosome_db
+DB_PASSWORD=chromosome
+
+*/10 * * * * pg_isready -h ${DB_HOST} -U ${DB_USERNAME} -d ${DB_NAME} && psql -h ${DB_HOST} -U ${DB_USERNAME} -d ${DB_NAME} -f /scripts/clear_table.sql >> /var/log/cron.log 2>&1
