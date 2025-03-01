@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request
 from process import gene_names_list, cell_lines_list, chromosome_size, chromosomes_list, chromosome_sequences, chromosome_data, example_chromosome_3d_data, comparison_cell_line_list, gene_list, gene_names_list_search, chromosome_size_by_gene_name, chromosome_valid_ibp_data, epigenetic_track_data, download_full_chromosome_3d_distance_data
 from flask_cors import CORS
 
@@ -98,7 +98,7 @@ def downloadFullChromosome3dDistanceData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
-    return jsonify(download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences))
+    return download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5001, debug=True)
