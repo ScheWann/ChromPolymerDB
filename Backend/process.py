@@ -576,7 +576,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 
             parquet_file_path = get_distance_data(conn)
 
-            return send_file(
+            return parquet_file_path, send_file(
                 parquet_file_path,
                 as_attachment=True,
                 download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
