@@ -104,12 +104,14 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                         setComparisonCellLine3DData(prev => ({
                             ...prev,
                             [cacheKey]: data["position_data"],
+                            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
                         }));
                         setComparisonCellLine3DLoading(false);
                     } else {
                         setChromosome3DExampleData(prev => ({
                             ...prev,
                             [cacheKey]: data["position_data"],
+                            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
                         }));
                         if (sampleChange === "submit") {
                             setChromosome3DLoading(false);

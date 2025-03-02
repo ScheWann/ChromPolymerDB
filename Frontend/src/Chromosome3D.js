@@ -2,12 +2,13 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
-import { Button, Tooltip, ColorPicker, Switch, InputNumber } from 'antd';
-import { RollbackOutlined, ClearOutlined, FileImageOutlined } from "@ant-design/icons";
+import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal } from 'antd';
+import { RollbackOutlined, ClearOutlined, FileImageOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { Chromosome3DDistance } from './Chromosome3DDistance';
+import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -22,11 +23,12 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
     const [showBeadInfo, setShowBeadInfo] = useState(false)
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
-    const [downloadSpinner, setDownloadSpinner] = useState(false);
+    const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    console.log(chromosome3DAvgMatrixData, '?')
     const presetColors = [
         {
             label: 'Theme Colors',
@@ -311,6 +313,38 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             icon={<FileImageOutlined />}
                             onClick={downloadImage}
                         />
+                    </Tooltip>
+                    <Tooltip
+                        title="Check the average distance heatmap"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<AreaChartOutlined />}
+                            onClick={() => setOpenAvgMatrixModal(true)}
+                        />
+                        <Modal
+                            title="Average Distance Heatmap"
+                            width={"40vw"}
+                            height={"40vh"}
+                            open={openAvgMatrixModal}
+                            onCancel={() => setOpenAvgMatrixModal(false)}
+                            footer={[
+                                <Button key="back" onClick={() => setOpenAvgMatrixModal(false)}>
+                                    Close
+                                </Button>
+                            ]}
+                        >
+                            <AvgDistanceHeatmap 
+                                chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
+                            />
+                        </Modal>
                     </Tooltip>
                     <Tooltip
                         title="Generate pairwise distances for selected beads"
