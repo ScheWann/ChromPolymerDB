@@ -392,7 +392,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            is_download = "false"
+            is_download = 0
             subprocess.run(
                 [
                     "bash",
@@ -500,7 +500,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         if existing_data_status['exists']:        
             parquet_file_path = get_distance_data(conn)
             print(f"Existing data found: {parquet_file_path}")
-            return send_file(
+            return parquet_file_path, send_file(
                 parquet_file_path,
                 as_attachment=True,
                 download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
@@ -558,7 +558,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 script = "./sBIF.sh"
                 n_samples = 5000
                 n_samples_per_run = 100
-                is_download = "True"
+                is_download = 1
                 
                 subprocess.run(
                     ["bash", script, str(n_samples), str(n_samples_per_run), str(is_download)],

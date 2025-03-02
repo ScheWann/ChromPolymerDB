@@ -951,6 +951,7 @@ function App() {
                                   marginRight: 5,
                                 }}
                                 size="small"
+                                disabled={Object.keys(comparisonCellLine3DData).length === 0}
                                 icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                                 onClick={() => downloadDistance(true)}
                               />
