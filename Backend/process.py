@@ -1,5 +1,6 @@
-import gzip
-from io import BytesIO
+from flask import send_file
+import numpy as np
+from scipy.sparse import csr_matrix, save_npz
 import pandas as pd
 import psycopg2
 import os
@@ -8,8 +9,8 @@ import tempfile
 import subprocess
 from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
-import csv
-import io
+import pyarrow.parquet as pq
+import pyarrow.csv as pv
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -285,19 +286,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     temp_folding_input_path = "../Data/Folding_input"
 
-    # def delete_old_samples(conn):
-    #     """Delete old samples from the position table."""
-    #     cur = conn.cursor()
-
-    #     cur.execute(
-    #         """
-    #         DELETE FROM position
-    #         WHERE insert_time < CURRENT_TIMESTAMP - INTERVAL '10 minutes';
-    #     """
-    #     )
-
-    #     print("Old samples deleted successfully.")
-
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
         hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
@@ -314,6 +302,26 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         cur = conn.cursor()
         cur.execute(
             """
+            SELECT EXISTS (
+                SELECT 1
+                FROM position
+                WHERE chrid = %s
+                AND cell_line = %s
+                AND start_value = %s
+                AND end_value = %s
+                AND sampleID = %s
+            );
+            """,
+            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
+        )
+        data = cur.fetchone()
+        cur.close()
+        return data
+
+    def get_position_data(conn, chromosome_name, cell_line, sequences, sample_id):
+        cur = conn.cursor()
+        cur.execute(
+            """
             SELECT *
             FROM position
             WHERE chrid = %s
@@ -322,27 +330,17 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND end_value = %s
             AND sampleID = %s
         """,
-            (
-                chromosome_name,
-                cell_line,
-                sequences["start"],
-                sequences["end"],
-                sample_id,
-            ),
+            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
         )
-        position_data = cur.fetchall()
-        if position_data:
-            return position_data
-        else:
-            return None
+        data = cur.fetchall()
+        cur.close()
+        return data
 
-    # delete_old_samples(conn)
-
-    if checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
-        return checking_existing_data(
-            conn, chromosome_name, cell_line, sequences, sample_id
-        )
+    existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
+    if existing_data_status['exists']: 
+        return get_position_data(conn, chromosome_name, cell_line, sequences, sample_id)
     else:
+        cur = conn.cursor()
         cur.execute(
             """
             SELECT *
@@ -364,6 +362,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             ),
         )
         original_data = cur.fetchall()
+        cur.close()
 
         if original_data:
             original_df = pd.DataFrame(
@@ -409,9 +408,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
-            return checking_existing_data(
-                conn, chromosome_name, cell_line, sequences, sample_id
-            )
+            return get_position_data(conn, chromosome_name, cell_line, sequences, sample_id)
         else:
             return []
 
@@ -421,17 +418,24 @@ Download the full 3D chromosome samples distance data in the given cell line, ch
 """
 def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
     temp_folding_input_path = "../Data/Folding_input"
-    output_parquet = f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.parquet"
     unique_id = uuid.uuid4().hex
 
     def checking_existing_data(conn):
         cur = conn.cursor()
-        cur.execute(
-            ("SELECT EXISTS (SELECT 1 FROM distance LIMIT 1);")
-        )
+        query = """
+            SELECT EXISTS (
+                SELECT 1 FROM distance
+                WHERE cell_line = %s
+                    AND chrid = %s
+                    AND start_value = %s
+                    AND end_value = %s
+                LIMIT 1
+            );
+        """
+        cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
         data = cur.fetchone()
+        print("Existing data check:", data)
         cur.close()
-
         return data
 
     def get_spe_inter(hic_data, alpha=0.05):
@@ -447,41 +451,61 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         return result
 
     def get_distance_data(conn):
-        cur = conn.cursor()
-        copy_query = sql.SQL(
+        with conn.cursor() as cur:
+            query = """
+                SELECT distance_vector
+                FROM distance
+                WHERE cell_line = %s
+                    AND chrid = %s
+                    AND start_value = %s
+                    AND end_value = %s
             """
-                COPY (
-                    SELECT cell_line, chrid, sampleid, start_value, end_value, n_beads, distance_vector
-                    FROM distance
-                    WHERE cell_line = {cell_line}
-                        AND chrid = {chrid}
-                        AND start_value = {start_value}
-                        AND end_value = {end_value}
-                ) TO STDOUT WITH CSV HEADER DELIMITER E'\t'
-            """
-        ).format(
-            cell_line=sql.Literal(cell_line),
-            chrid=sql.Literal(chromosome_name),
-            start_value=sql.Literal(sequences["start"]),
-            end_value=sql.Literal(sequences["end"]),
-        )
+            cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
 
-        csv_buffer = io.StringIO()
-        cur.copy_expert(copy_query.as_string(conn), csv_buffer)
-        csv_buffer.seek(0)
+            vectors = []
+            batch_size = 1000
 
-        df = pd.read_csv(csv_buffer, delimiter="\t")
-        df.to_parquet(output_parquet, engine="pyarrow", index=False)
+            while True:
+                rows = cur.fetchmany(batch_size)
+                if not rows:
+                    break
+                for row in rows:
+                    vector_str = row["distance_vector"]
+                    try:
+                        vector = np.array(vector_str, dtype=np.float32)
+                        vectors.append(vector)
+                    except Exception as e:
+                        print("Error parsing distance_vector:", e)
+                        continue
+
+        if not vectors:
+            print("No valid distance_vector")
+            return None
+
+        matrix = np.array(vectors, dtype=np.float32)
+        sparse_matrix = csr_matrix(matrix)
+
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.npz') as tmp_file:
+            save_npz(tmp_file.name, sparse_matrix)
+            sparse_file_path = tmp_file.name
+
+        return sparse_file_path
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
         existing_data_status = checking_existing_data(conn)
-        print(existing_data_status)
+
         if existing_data_status['exists']:        
-            get_distance_data(conn)
-            return f"Succeed: {output_parquet}"
+            parquet_file_path = get_distance_data(conn)
+            print(f"Existing data found: {parquet_file_path}")
+            return send_file(
+                parquet_file_path,
+                as_attachment=True,
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+            )
+
         else:
             cur.execute(
                 """
@@ -529,6 +553,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 custom_file_path = temp_file.name
             
             print(f"Temporary file created: {custom_file_path}")
+
             try:
                 script = "./sBIF.sh"
                 n_samples = 5000
@@ -549,9 +574,13 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                     print(f"Removing temporary file: {custom_file_path}")
                     os.remove(custom_file_path)
 
-            get_distance_data(conn)
-            return f"Succeed: {output_parquet}"
+            parquet_file_path = get_distance_data(conn)
 
+            return send_file(
+                parquet_file_path,
+                as_attachment=True,
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+            )
     finally:
         if cur:
             cur.close()

@@ -157,21 +157,55 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         }
     };
 
-    const downloadDistance = () => {
+    const downloadDistance = async () => {
         setDownloadSpinner(true);
-        fetch("downloadFullChromosome3dDistanceData", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ cell_line: chromosome3DExampleData[0].cell_line, chromosome_name: chromosome3DExampleData[0].chrid, sequences: selectedChromosomeSequence}),
-        })
-            .then(res => res.json())
-            .then(data => {
-                setDownloadSpinner(false);
-                console.log(data);
-            })
+
+        try {
+            const response = await fetch("downloadFullChromosome3dDistanceData", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    cell_line: chromosome3DExampleData[0].cell_line,
+                    chromosome_name: chromosome3DExampleData[0].chrid,
+                    sequences: selectedChromosomeSequence,
+                }),
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch file");
+
+            const reader = response.body.getReader();
+            const stream = new ReadableStream({
+                start(controller) {
+                    function push() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                controller.close();
+                                return;
+                            }
+                            controller.enqueue(value);
+                            push();
+                        });
+                    }
+                    push();
+                },
+            });
+
+            const blob = await new Response(stream).blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `${chromosome3DExampleData[0].cell_line}_${chromosome3DExampleData[0].chrid}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download error:", error);
+        } finally {
+            setDownloadSpinner(false);
+        }
     };
+
 
     // fli[ the image vertically
     const flipY = (buffer, width, height) => {
@@ -340,7 +374,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 fontSize: 15,
                                 cursor: "pointer",
                             }}
-                            icon={ downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                            icon={downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                             onClick={downloadDistance}
                         />
                     </Tooltip>

@@ -29,7 +29,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./backend:/chromosome/backend
+      - ./backend:/chromosome/backend:cached
       - backend_data:/chromosome/Data
     build:
       context: ./backend
