@@ -300,8 +300,9 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     def checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
         cur = conn.cursor()
-        cur.execute(
-            """
+        
+        # checking position table
+        query_position = """
             SELECT EXISTS (
                 SELECT 1
                 FROM position
@@ -311,12 +312,30 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 AND end_value = %s
                 AND sampleID = %s
             );
-            """,
-            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
-        )
-        data = cur.fetchone()
+        """
+        cur.execute(query_position, (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id))
+        position_exists = cur.fetchone()['exists']
+        
+        # # checking distance table
+        query_distance = """
+            SELECT EXISTS (
+                SELECT 1 FROM distance
+                WHERE cell_line = %s
+                    AND chrid = %s
+                    AND start_value = %s
+                    AND end_value = %s
+                LIMIT 1
+            );
+        """
+        cur.execute(query_distance, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
+        distance_exists = cur.fetchone()['exists']
+        
         cur.close()
-        return data
+        
+        return {
+            "position_exists": bool(position_exists),
+            "distance_exists": bool(distance_exists)
+        }
 
     def get_position_data(conn, chromosome_name, cell_line, sequences, sample_id):
         cur = conn.cursor()
@@ -337,7 +356,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         return data
 
     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
-    if existing_data_status['exists']: 
+
+    if existing_data_status["position_exists"] and existing_data_status["distance_exists"]: 
         return get_position_data(conn, chromosome_name, cell_line, sequences, sample_id)
     else:
         cur = conn.cursor()
@@ -392,7 +412,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            is_download = 0
+            is_download = 1
             subprocess.run(
                 [
                     "bash",
@@ -417,9 +437,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
 def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
-    temp_folding_input_path = "../Data/Folding_input"
-    unique_id = uuid.uuid4().hex
-
     def checking_existing_data(conn):
         cur = conn.cursor()
         query = """
@@ -437,19 +454,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         print("Existing data check:", data)
         cur.close()
         return data
-
-    def get_spe_inter(hic_data, alpha=0.05):
-        """Filter Hi-C data for significant interactions based on the alpha threshold."""
-        hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
-        return hic_spe
-
-    def get_fold_inputs(spe_df):
-        """Prepare folding input file from the filtered significant interactions."""
-        spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]].copy()
-        spe_out_df["w"] = 1
-        result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
-        return result
-
+    
     def get_distance_data(conn):
         with conn.cursor() as cur:
             query = """
@@ -490,102 +495,21 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             sparse_file_path = tmp_file.name
 
         return sparse_file_path
+    
+    conn = get_db_connection()
 
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+    existing_data_status = checking_existing_data(conn)
 
-        existing_data_status = checking_existing_data(conn)
-
-        if existing_data_status['exists']:        
-            parquet_file_path = get_distance_data(conn)
-            print(f"Existing data found: {parquet_file_path}")
-            return parquet_file_path, send_file(
-                parquet_file_path,
-                as_attachment=True,
-                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
-            )
-
-        else:
-            cur.execute(
-                """
-                SELECT chrid, fdr, ibp, jbp, fq
-                FROM non_random_hic
-                WHERE chrid = %s
-                    AND cell_line = %s
-                    AND ibp >= %s
-                    AND ibp <= %s
-                    AND jbp >= %s
-                    AND jbp <= %s
-                """,
-                (
-                    chromosome_name,
-                    cell_line,
-                    sequences['start'],
-                    sequences['end'],
-                    sequences['start'],
-                    sequences['end']
-                ),
-            )
-            original_data = cur.fetchall()
-            cur.close()
-
-            if not original_data:
-                return "Failed: No data found"
-
-            original_df = pd.DataFrame(original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"])
-            filtered_df = get_spe_inter(original_df)
-            fold_inputs = get_fold_inputs(filtered_df)
-
-            txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
-
-            os.makedirs(temp_folding_input_path, exist_ok=True)
-            custom_name = f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}.{unique_id}"
-
-            with tempfile.NamedTemporaryFile(
-                mode='w',
-                dir=temp_folding_input_path,
-                prefix=custom_name,
-                suffix=".txt",
-                delete=False
-            ) as temp_file:
-                temp_file.write(txt_data)
-                custom_file_path = temp_file.name
-            
-            print(f"Temporary file created: {custom_file_path}")
-
-            try:
-                script = "./sBIF.sh"
-                n_samples = 5000
-                n_samples_per_run = 100
-                is_download = 1
-                
-                subprocess.run(
-                    ["bash", script, str(n_samples), str(n_samples_per_run), str(is_download)],
-                    capture_output=True,
-                    text=True,
-                    check=True
-                )
-            except subprocess.CalledProcessError as e:
-                print(f"Subprocess failed with error: {e.stderr}")
-                raise RuntimeError("sBIF.sh execution failed") from e
-            finally:
-                if os.path.exists(custom_file_path):
-                    print(f"Removing temporary file: {custom_file_path}")
-                    os.remove(custom_file_path)
-
-            parquet_file_path = get_distance_data(conn)
-
-            return parquet_file_path, send_file(
-                parquet_file_path,
-                as_attachment=True,
-                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
-            )
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    if existing_data_status['exists']:
+        parquet_file_path = get_distance_data(conn)
+        print(f"Existing data found: {parquet_file_path}")
+        return parquet_file_path, send_file(
+            parquet_file_path,
+            as_attachment=True,
+            download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+        )
+    else:
+        return None, None
 
 """
 Returns currently existing other cell line list in given chromosome name and sequences
