@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Input, Button, message, Empty, Spin, Tabs, Switch, Tooltip, Tour, Typography } from 'antd';
+import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography } from 'antd';
 import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
-import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons";
 
 // Random number generator from 0 to 5000
 const getRandomKey = () => Math.floor(Math.random() * 5001);
@@ -35,6 +35,7 @@ function App() {
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
   const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
+  const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDistanceDownloadSpinner] = useState(false);
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -46,6 +47,7 @@ function App() {
   const [comparisonCellLine3DData, setComparisonCellLine3DData] = useState({});
   const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
   const [comparisonCellLine3DLoading, setComparisonCellLine3DLoading] = useState(false);
+  const [comparisonChromosomeDistanceDownloadSpinner, setComparisonChromosomeDistanceDownloadSpinner] = useState(false);
 
 
   // Tour visibility state
@@ -431,7 +433,7 @@ function App() {
   // Chromosome sequence change
   const chromosomeSequenceChange = (position, value, isBlur = false) => {
     let newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
-  
+
     if (isBlur) {
       newValue = Math.round(newValue / 5000) * 5000;
     }
@@ -455,6 +457,68 @@ function App() {
 
   const removeComparisonHeatmap = (index) => {
     setComparisonHeatmapList((prev) => prev.filter((i) => i !== index));
+  };
+
+  // Download 5000 samples of beads' distance data
+  const downloadDistance = async (isComparison) => {
+    if (isComparison) {
+      setComparisonChromosomeDistanceDownloadSpinner(true);
+    } else {
+      setOriginalChromosomeDistanceDownloadSpinner(true);
+    }
+
+    try {
+      const response = await fetch("downloadFullChromosome3dDistanceData", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
+          chromosome_name: chromosomeName,
+          sequences: selectedChromosomeSequence,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const reader = response.body.getReader();
+      const stream = new ReadableStream({
+        start(controller) {
+          function push() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                controller.close();
+                return;
+              }
+              controller.enqueue(value);
+              push();
+            });
+          }
+          push();
+        },
+      });
+
+      const blob = await new Response(stream).blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      if (isComparison) {
+        a.download = `${comparisonCellLine}_${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
+      } else {
+        a.download = `${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
+      }
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      if (isComparison) {
+        setComparisonChromosomeDistanceDownloadSpinner(false);
+      } else {
+        setOriginalChromosomeDistanceDownloadSpinner(false);
+      }
+    }
   };
 
   // 3D Original Chromosome sample change
@@ -782,6 +846,30 @@ function App() {
                             <span>{cellLineDict[chromosome3DCellLineName]}</span>
                           </div>
                           <Tooltip
+                            title={
+                              <span>
+                                Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
+                                <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
+                                <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
+                              </span>
+                            }
+                            color='white'
+                            overlayInnerStyle={{
+                              color: 'black'
+                            }}
+                          >
+                            <Button
+                              style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                                marginRight: 5,
+                              }}
+                              size="small"
+                              icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                              onClick={() => downloadDistance(false)}
+                            />
+                          </Tooltip>
+                          <Tooltip
                             title="Add a second cell line to compare"
                             color='white'
                             overlayInnerStyle={{
@@ -843,6 +931,30 @@ function App() {
                               onChange={comparisonCellLineChange}
                               options={cellLineList}
                             />
+                            <Tooltip
+                              title={
+                                <span>
+                                  Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
+                                  <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
+                                  <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
+                                </span>
+                              }
+                              color='white'
+                              overlayInnerStyle={{
+                                color: 'black'
+                              }}
+                            >
+                              <Button
+                                style={{
+                                  fontSize: 15,
+                                  cursor: "pointer",
+                                  marginRight: 5,
+                                }}
+                                size="small"
+                                icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                                onClick={() => downloadDistance(true)}
+                              />
+                            </Tooltip>
                             <Tooltip
                               title="Collapse the second cell line window"
                               color='white'
