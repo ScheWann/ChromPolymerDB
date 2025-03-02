@@ -103,13 +103,13 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                     if (isComparison) {
                         setComparisonCellLine3DData(prev => ({
                             ...prev,
-                            [cacheKey]: data,
+                            [cacheKey]: data["position_data"],
                         }));
                         setComparisonCellLine3DLoading(false);
                     } else {
                         setChromosome3DExampleData(prev => ({
                             ...prev,
-                            [cacheKey]: data,
+                            [cacheKey]: data["position_data"],
                         }));
                         if (sampleChange === "submit") {
                             setChromosome3DLoading(false);

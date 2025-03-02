@@ -11,6 +11,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
 import pyarrow.parquet as pq
 import pyarrow.csv as pv
+from scipy.spatial.distance import squareform
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -355,10 +356,43 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         cur.close()
         return data
 
+    def get_avg_distance_data(conn, chromosome_name, cell_line, sequences):
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT distance_vector
+            FROM distance
+            WHERE cell_line = %s
+            AND chrid = %s
+            AND start_value = %s
+            AND end_value = %s
+        """,
+            (cell_line, chromosome_name, sequences["start"], sequences["end"]),
+        )
+
+        rows = cur.fetchall()
+        first_vector = np.array(rows[0]["distance_vector"], dtype=float)
+        sum_vector = first_vector.copy()
+        
+        for row in rows:
+            vector = np.array(row["distance_vector"], dtype=float)
+            sum_vector += vector
+
+        count = len(rows)
+        avg_vector = sum_vector / count
+        
+        full_distance_matrix = squareform(avg_vector)
+        avg_distance_matrix = full_distance_matrix.tolist()
+        
+        return avg_distance_matrix
+
     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
 
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]: 
-        return get_position_data(conn, chromosome_name, cell_line, sequences, sample_id)
+        return { 
+                "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
+                "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+            }
     else:
         cur = conn.cursor()
         cur.execute(
@@ -428,7 +462,10 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
-            return get_position_data(conn, chromosome_name, cell_line, sequences, sample_id)
+            return { 
+                "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
+                "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+            }
         else:
             return []
 
