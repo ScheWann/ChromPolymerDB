@@ -1,9 +1,40 @@
 import React, { useEffect, useState, useRef } from "react";
+import { InputNumber, Slider } from "antd";
 import * as d3 from "d3";
 
 export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 600, height: 650 });
+    const [colorScaleRange, setColorScaleRange] = useState([0, 0]);
+    const [dataMin, setDataMin] = useState(0);
+    const [dataMax, setDataMax] = useState(0);
+
+    const changeColorByInput = (type) => (value) => {
+        let newRange = [...colorScaleRange];
+        if (type === "min") {
+            newRange[0] = Math.min(value, colorScaleRange[1]);
+            newRange[0] = Math.max(newRange[0], dataMin);
+        } else if (type === "max") {
+            newRange[1] = Math.max(value, colorScaleRange[0]);
+            newRange[1] = Math.min(newRange[1], dataMax);
+        }
+        setColorScaleRange(newRange);
+    };
+
+    const changeColorScale = (value) => {
+        setColorScaleRange(value);
+    };
+
+    useEffect(() => {
+        if (!chromosome3DAvgMatrixData.length) return;
+
+        const allValues = chromosome3DAvgMatrixData.flat();
+        const min = d3.min(allValues);
+        const max = d3.max(allValues);
+        setDataMin(min);
+        setDataMax(max);
+        setColorScaleRange([min, max]);
+    }, [chromosome3DAvgMatrixData]);
 
     useEffect(() => {
         if (!chromosome3DAvgMatrixData.length) return;
@@ -18,13 +49,13 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
         const cellHeight = (svgHeight - margin.top - margin.bottom) / numRows;
 
         const allValues = chromosome3DAvgMatrixData.flat();
-        const minVal = d3.min(allValues);
-        const midVal = d3.median(allValues);
-        const maxVal = d3.max(allValues);
+        const dataMin = d3.min(allValues);
+        const dataMax = d3.max(allValues);
+        const dataMid = (dataMin + dataMax) / 2;
 
         const colorScale = d3
-            .scaleDiverging(d3.interpolateRdYlBu)
-            .domain([minVal, midVal, maxVal]);
+            .scaleSequential(t => d3.interpolateReds(1 - t))
+            .domain([colorScaleRange[0], (colorScaleRange[0] + colorScaleRange[1]) / 2, colorScaleRange[1]]);
 
         const svg = d3.select("#distance-heatmap-svg");
         svg.selectAll("*").remove();
@@ -41,11 +72,12 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
             .attr("x2", "100%")
             .attr("y2", "0%");
 
-        gradient.selectAll("stop")
+        gradient
+            .selectAll("stop")
             .data([
-                { offset: "0%", color: colorScale(minVal) },
-                { offset: "50%", color: colorScale(midVal) },
-                { offset: "100%", color: colorScale(maxVal) }
+                { offset: "0%", color: colorScale(dataMin) },
+                { offset: "50%", color: colorScale(dataMid) },
+                { offset: "100%", color: colorScale(dataMax) }
             ])
             .enter()
             .append("stop")
@@ -58,7 +90,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
             .padding(0.01);
 
         const yScale = d3.scaleBand()
-            .domain(d3.range(numRows))
+            .domain(d3.range(numRows).reverse())
             .range([0, numRows * cellHeight])
             .padding(0.01);
 
@@ -67,7 +99,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
             .enter()
             .append("rect")
             .attr("x", (d, i) => (i % numCols) * cellWidth)
-            .attr("y", (d, i) => Math.floor(i / numCols) * cellHeight)
+            .attr("y", (d, i) => (numRows - 1 - Math.floor(i / numCols)) * cellHeight)
             .attr("width", cellWidth)
             .attr("height", cellHeight)
             .attr("fill", d => colorScale(d));
@@ -100,7 +132,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
 
         // legend scale
         const legendScale = d3.scaleLinear()
-            .domain([minVal, maxVal])
+            .domain([colorScaleRange[0], colorScaleRange[1]])
             .range([0, legendWidth]);
 
         const legendAxis = d3.axisBottom(legendScale)
@@ -123,7 +155,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
             .attr("text-anchor", "middle")
             .style("font-size", "14px")
 
-    }, [chromosome3DAvgMatrixData, dimensions]);
+    }, [chromosome3DAvgMatrixData, dimensions, colorScaleRange]);
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center" }}>
@@ -132,6 +164,43 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData }) => {
                 width={dimensions.width}
                 height={dimensions.height}
             ></svg>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <InputNumber
+                    size="small"
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[1]}
+                    min={colorScaleRange[0]}
+                    max={dataMax}
+                    onChange={changeColorByInput("max")}
+                />
+                <Slider
+                    range={{ draggableTrack: true }}
+                    vertical
+                    style={{ height: 200 }}
+                    min={dataMin}
+                    max={dataMax}
+                    onChange={changeColorScale}
+                    value={colorScaleRange}
+                />
+                <InputNumber
+                    size="small"
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[0]}
+                    min={dataMin}
+                    max={colorScaleRange[1]}
+                    onChange={changeColorByInput("min")}
+                />
+            </div>
         </div>
     );
 };
