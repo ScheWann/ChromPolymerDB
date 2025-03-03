@@ -30,7 +30,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./backend:/chromosome/backend
-      - ./Data:/chromosome/Data
+      # - ./Data:/chromosome/Data
     build:
       context: ./backend
       dockerfile: Dockerfile

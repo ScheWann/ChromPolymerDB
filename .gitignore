@@ -4,4 +4,5 @@
 /Example_Data
 /Backend/venv
 /Backend/__pycache__
+/Backend/Folding_input
 .env

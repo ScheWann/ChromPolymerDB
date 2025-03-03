@@ -10,10 +10,10 @@ n_samples_per_run=$2
 is_download=$3
 
 count=1
-total_files=$(find ../Data/Folding_input -name "*.txt" | wc -l | xargs)
+total_files=$(find ./Folding_input -name "*.txt" | wc -l | xargs)
 
 
-for interfile in ../Data/Folding_input/*.txt; do
+for interfile in ./Folding_input/*.txt; do
     filename=$(basename "$interfile")
     
     # Extract cell_line, chromosome, start, and end from the filename

@@ -285,7 +285,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     conn = get_db_connection()
     cur = conn.cursor()
 
-    temp_folding_input_path = "../Data/Folding_input"
+    temp_folding_input_path = "./Folding_input"
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
