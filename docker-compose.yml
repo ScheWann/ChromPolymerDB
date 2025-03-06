@@ -20,6 +20,36 @@ services:
     networks:
       - example
 
+  data-importer:
+    build:
+      context: ./backend
+    container_name: data-importer
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./Data:/chromosome/Data
+      - data_import_volume:/chromosome/import_status
+    command: >
+      sh -c "
+        if [ ! -f /chromosome/import_status/.imported ]; then
+          echo 'Start to import data...' &&
+          python /chromosome/backend/init_db.py &&
+          touch /chromosome/import_status/.imported &&
+          echo 'Data imported'
+        else
+          echo 'Data exists, skip importing'
+        fi
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - example
+    restart: 'no'  
+
   backend:
     container_name: backend
     restart: on-failure
@@ -30,13 +60,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./backend:/chromosome/backend
-      # - ./Data:/chromosome/Data
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
+      data-importer:
+        condition: service_started
     ports:
       - "5001:5001"
     networks:
@@ -98,4 +129,5 @@ networks:
 volumes:
   frontend_module:
   pgadmin_data:
+  data_import_volume:
   pgdata:
