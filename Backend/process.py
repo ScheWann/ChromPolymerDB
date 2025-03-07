@@ -11,7 +11,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
 import pyarrow.parquet as pq
 import pyarrow.csv as pv
-from scipy.spatial.distance import squareform
+from scipy.spatial.distance import squareform, pdist
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -281,6 +281,194 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the example(3) 3D chromosome data in the given cell line, chromosome name, start, end
 """
+# def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id):
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+
+#     temp_folding_input_path = "./Folding_input"
+
+#     def get_spe_inter(hic_data, alpha=0.05):
+#         """Filter Hi-C data for significant interactions based on the alpha threshold."""
+#         hic_spe = hic_data.loc[hic_data["fdr"] < alpha]
+#         return hic_spe
+
+#     def get_fold_inputs(spe_df):
+#         """Prepare folding input file from the filtered significant interactions."""
+#         spe_out_df = spe_df[["ibp", "jbp", "fq", "chrid", "fdr"]].copy()
+#         spe_out_df["w"] = 1
+#         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
+#         return result
+
+#     def checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
+#         cur = conn.cursor()
+        
+#         # checking position table
+#         query_position = """
+#             SELECT EXISTS (
+#                 SELECT 1
+#                 FROM position
+#                 WHERE chrid = %s
+#                 AND cell_line = %s
+#                 AND start_value = %s
+#                 AND end_value = %s
+#                 AND sampleID = %s
+#             );
+#         """
+#         cur.execute(query_position, (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id))
+#         position_exists = cur.fetchone()['exists']
+        
+#         # # checking distance table
+#         query_distance = """
+#             SELECT EXISTS (
+#                 SELECT 1 FROM distance
+#                 WHERE cell_line = %s
+#                     AND chrid = %s
+#                     AND start_value = %s
+#                     AND end_value = %s
+#                 LIMIT 1
+#             );
+#         """
+#         cur.execute(query_distance, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
+#         distance_exists = cur.fetchone()['exists']
+        
+#         cur.close()
+        
+#         return {
+#             "position_exists": bool(position_exists),
+#             "distance_exists": bool(distance_exists)
+#         }
+
+#     def get_position_data(conn, chromosome_name, cell_line, sequences, sample_id):
+#         cur = conn.cursor()
+#         cur.execute(
+#             """
+#             SELECT *
+#             FROM position
+#             WHERE chrid = %s
+#             AND cell_line = %s
+#             AND start_value = %s
+#             AND end_value = %s
+#             AND sampleID = %s
+#         """,
+#             (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
+#         )
+#         data = cur.fetchall()
+#         cur.close()
+#         return data
+
+#     def get_avg_distance_data(conn, chromosome_name, cell_line, sequences):
+#         cur = conn.cursor()
+#         cur.execute(
+#             """
+#             SELECT distance_vector
+#             FROM distance
+#             WHERE cell_line = %s
+#             AND chrid = %s
+#             AND start_value = %s
+#             AND end_value = %s
+#         """,
+#             (cell_line, chromosome_name, sequences["start"], sequences["end"]),
+#         )
+
+#         rows = cur.fetchall()
+#         first_vector = np.array(rows[0]["distance_vector"], dtype=float)
+#         sum_vector = first_vector.copy()
+        
+#         for row in rows:
+#             vector = np.array(row["distance_vector"], dtype=float)
+#             sum_vector += vector
+
+#         count = len(rows)
+#         avg_vector = sum_vector / count
+        
+#         full_distance_matrix = squareform(avg_vector)
+#         avg_distance_matrix = full_distance_matrix.tolist()
+        
+#         return avg_distance_matrix
+
+#     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
+
+#     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]: 
+#         return { 
+#                 "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
+#                 "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+#             }
+#     else:
+#         cur = conn.cursor()
+#         cur.execute(
+#             """
+#             SELECT *
+#             FROM non_random_hic
+#             WHERE chrid = %s
+#             AND cell_line = %s
+#             AND ibp >= %s
+#             AND ibp <= %s
+#             AND jbp >= %s
+#             AND jbp <= %s
+#         """,
+#             (
+#                 chromosome_name,
+#                 cell_line,
+#                 sequences["start"],
+#                 sequences["end"],
+#                 sequences["start"],
+#                 sequences["end"],
+#             ),
+#         )
+#         original_data = cur.fetchall()
+#         cur.close()
+
+#         if original_data:
+#             original_df = pd.DataFrame(
+#                 original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"]
+#             )
+
+#             filtered_df = get_spe_inter(original_df)
+#             fold_inputs = get_fold_inputs(filtered_df)
+
+#             txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
+#             custom_name = (
+#                 f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}"
+#             )
+
+#             # Ensure the custom path exists, create it if it doesn't
+#             os.makedirs(temp_folding_input_path, exist_ok=True)
+
+#             # Define the full path where the file will be stored
+#             custom_file_path = os.path.join(
+#                 temp_folding_input_path, custom_name + ".txt"
+#             )
+
+#             # Write the file to the custom path
+#             with open(custom_file_path, "w") as temp_file:
+#                 temp_file.write(txt_data)
+
+#             script = "./sBIF.sh"
+#             n_samples = 5000
+#             n_samples_per_run = 100
+#             is_download = 1
+#             subprocess.run(
+#                 [
+#                     "bash",
+#                     script,
+#                     str(n_samples),
+#                     str(n_samples_per_run),
+#                     str(is_download),
+#                 ],
+#                 capture_output=True,
+#                 text=True,
+#                 check=True,
+#             )
+
+#             os.remove(custom_file_path)
+
+#             return { 
+#                 "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
+#                 "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+#             }
+#         else:
+#             return []
+
 def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -299,7 +487,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
         return result
 
-    def checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id):
+    def checking_existing_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
         
         # checking position table
@@ -311,10 +499,9 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 AND cell_line = %s
                 AND start_value = %s
                 AND end_value = %s
-                AND sampleID = %s
             );
         """
-        cur.execute(query_position, (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id))
+        cur.execute(query_position, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
         position_exists = cur.fetchone()['exists']
         
         # # checking distance table
@@ -338,7 +525,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(distance_exists)
         }
 
-    def get_position_data(conn, chromosome_name, cell_line, sequences, sample_id):
+    def get_position_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
         cur.execute(
             """
@@ -348,9 +535,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND cell_line = %s
             AND start_value = %s
             AND end_value = %s
-            AND sampleID = %s
         """,
-            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
+            (chromosome_name, cell_line, sequences["start"], sequences["end"]),
         )
         data = cur.fetchall()
         cur.close()
@@ -386,13 +572,42 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         
         return avg_distance_matrix
 
-    existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences, sample_id)
+    def compute_correlation(sample_matrix, avg_matrix):
+        flat_sample = np.array(sample_matrix).flatten()
+        flat_avg = np.array(avg_matrix).flatten()
+        if len(flat_sample) != len(flat_avg):
+            return -1
+        return np.corrcoef(flat_sample, flat_avg)[0, 1]
+
+    def get_best_chain_sample():
+        avg_distance_data = get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+        all_position_data = get_position_data(conn, chromosome_name, cell_line, sequences)
+
+        df = pd.DataFrame(all_position_data)
+        best_corr = -1
+        best_sample = None
+
+        for sample_id, group in df.groupby('sampleid'):
+            sorted_group = group.sort_values('start_value')
+
+            coords = sorted_group[['x', 'y', 'z']].values
+            sample_dist_matrix = squareform(pdist(coords))
+            
+            corr = compute_correlation(sample_dist_matrix, avg_distance_data)
+            
+            if corr > best_corr:
+                best_corr = corr
+                best_sample = sorted_group.to_dict('records')
+
+        return best_sample if best_sample else []
+
+    existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences)
 
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]: 
-        return { 
-                "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
-                "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
-            }
+        return {
+            "position_data": get_best_chain_sample(),
+            "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+        }
     else:
         cur = conn.cursor()
         cur.execute(
@@ -463,12 +678,11 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             os.remove(custom_file_path)
 
             return { 
-                "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, sample_id),
+                "position_data": get_best_chain_sample(),
                 "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
             }
         else:
             return []
-
 
 """
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
