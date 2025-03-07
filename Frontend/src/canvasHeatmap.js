@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty } from "antd";
+import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch } from "antd";
 import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
@@ -21,6 +21,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     const [independentHeatmapData, setIndependentHeatmapData] = useState(chromosomeData);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(independentHeatmapData);
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
+    const [fqRawcMode, setFqRawcMode] = useState(false);
 
     const modalStyles = {
         body: {
@@ -150,6 +151,10 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         }
     };
 
+    const changeFqRawcMode = () => {
+        setFqRawcMode(!fqRawcMode);
+    }
+
     useEffect(() => {
         const observer = new ResizeObserver((entries) => {
             for (let entry of entries) {
@@ -244,7 +249,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                 const width = xScale.bandwidth();
                 const height = yScale.bandwidth();
 
-                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(rawc);
+                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 context.fillRect(x, y, width, height);
             });
         });
@@ -307,8 +312,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
         // Color Scale
         const colorScaleSvg = d3.select(colorScaleRef.current)
-            .attr('width', (parentWidth - minDimension)/2)
-            .attr('height', parentHeight); 
+            .attr('width', (parentWidth - minDimension) / 2)
+            .attr('height', parentHeight);
 
         colorScaleSvg.selectAll('*').remove();
 
@@ -410,7 +415,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         } else {
             axisSvg.selectAll('.gene-line').remove();
         }
-    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData]);
+    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: '320px', maxWidth: 720, width: '100%', height: '100%', position: 'relative' }}>
@@ -435,7 +440,25 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                         <span style={{ marginRight: 5 }}>~</span>
                         <span>{formatNumber(currentChromosomeSequence.end)}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '5px' }}>
+                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        <Tooltip
+                            title="fq/rawc value of the heatmap"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Switch
+                                size='small'
+                                checkedChildren="fq"
+                                unCheckedChildren="rawc"
+                                checked={fqRawcMode}
+                                style={{
+                                    backgroundColor: fqRawcMode ? '#74C365' : '#ED9121'
+                                }}
+                                onChange={changeFqRawcMode}
+                            />
+                        </Tooltip>
                         <Tooltip
                             title="Restore the original heatmap"
                             color='white'
