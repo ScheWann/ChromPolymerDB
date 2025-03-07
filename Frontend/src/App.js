@@ -891,7 +891,7 @@ function App() {
                           </Tooltip>
                         </div>
                       }
-                      items={randomKeys.map((sampleId, i) => {
+                      items={[chromosome3DExampleID].map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
                           label: `Sample ${i + 1}`,
@@ -979,7 +979,7 @@ function App() {
                           </div>
                         }
 
-                        items={randomKeys.map((sampleId, i) => {
+                        items={[chromosome3DExampleID].map((sampleId, i) => {
                           const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                           return {

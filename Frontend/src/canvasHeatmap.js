@@ -55,7 +55,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${independentHeatmapData}.${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
+            link.download = `${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
             link.click();
 
             URL.revokeObjectURL(url);
