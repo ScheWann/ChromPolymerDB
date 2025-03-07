@@ -1,5 +1,5 @@
 -- clear_tables.sql
+SET LOCAL lock_timeout = '5s';
 BEGIN;
-LOCK TABLE position, distance IN SHARE MODE NOWAIT;
 TRUNCATE position, distance;
 COMMIT;
