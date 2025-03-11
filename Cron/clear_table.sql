@@ -1,5 +1,7 @@
 -- clear_tables.sql
-SET LOCAL lock_timeout = '5s';
-BEGIN;
-TRUNCATE position, distance;
-COMMIT;
+SELECT cron.schedule('daily_clear', '0 3 * * *', $$
+    BEGIN;
+        TRUNCATE position, distance;
+    COMMIT;
+    END;
+$$);
