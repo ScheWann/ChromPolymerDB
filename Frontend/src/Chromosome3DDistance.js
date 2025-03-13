@@ -14,9 +14,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const [distributionData, setDistributionData] = useState([]);
 
     const spheresData = useMemo(() => {
-        return Object.values(selectedSphereList).map(({ position, color }) => {
+        return Object.entries(selectedSphereList).map(([key, { position, color }]) => {
             const { x, y, z } = position;
             return {
+                key,
                 position: new THREE.Vector3(x / 0.15, y / 0.15, z / 0.15),
                 color,
             };
@@ -108,12 +109,12 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                 link.download = `chromosome_3d_${Date.now()}.png`;
                 link.click();
             });
-    
+
             renderTarget.dispose();
         } else {
             console.error("Renderer not properly initialized for download.");
         }
-    };    
+    };
 
     const openDistribution = () => {
         setOpenDistrubutionModal(true);
@@ -124,8 +125,8 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                cell_line: celllineName, 
+            body: JSON.stringify({
+                cell_line: celllineName,
                 chromosome_name: chromosomeName,
                 sequences: currentChromosomeSequence,
                 indices: beadsArray
@@ -264,9 +265,9 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         </Button>
                     ]}
                 >
-                    <BeadDistributionPlot 
-                        selectedSphereList={selectedSphereList} 
-                        distributionData={distributionData} 
+                    <BeadDistributionPlot
+                        selectedSphereList={selectedSphereList}
+                        distributionData={distributionData}
                     />
                 </Modal>
 
@@ -346,6 +347,24 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             }
                             return null;
                         })
+                    ))}
+
+                    {spheresData.map(({ position, key, color }) => (
+                        <group key={key}>
+                            <mesh position={position}>
+                                <sphereGeometry args={[1, 32, 32]} />
+                                <meshStandardMaterial color={color} />
+                            </mesh>
+                            <Text
+                                position={[position.x, position.y, position.z]}
+                                fontSize={10}
+                                color="#DAA520"
+                                anchorX="center"
+                                anchorY="bottom"
+                            >
+                                {key}
+                            </Text>
+                        </group>
                     ))}
                 </Canvas>
             </div>
