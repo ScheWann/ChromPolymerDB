@@ -899,6 +899,9 @@ function App() {
                           children: chromosome3DExampleData[cacheKey] ? (
                             <Chromosome3D
                               formatNumber={formatNumber}
+                              celllineName={cellLineName}
+                              chromosomeName={chromosomeName}
+                              currentChromosomeSequence={currentChromosomeSequence}
                               geneSize={geneSize}
                               chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
                               chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
@@ -991,6 +994,9 @@ function App() {
                               ) : (
                                 <Chromosome3D
                                   formatNumber={formatNumber}
+                                  comparisonCellLine={comparisonCellLine}
+                                  chromosomeName={chromosomeName}
+                                  currentChromosomeSequence={currentChromosomeSequence}
                                   geneSize={geneSize}
                                   chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
                                   chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}

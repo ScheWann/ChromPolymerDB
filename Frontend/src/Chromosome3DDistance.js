@@ -1,14 +1,15 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip } from 'antd';
+import { Button, Tooltip, Modal } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
-import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
+import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
 
-export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance }) => {
+export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
+    const [openDistrubutionModal, setOpenDistrubutionModal] = useState(false);
 
     const spheresData = useMemo(() => {
         return Object.values(selectedSphereList).map(({ position, color }) => {
@@ -81,6 +82,29 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         } else {
             console.error("Renderer not properly initialized for download.");
         }
+    };
+
+    const openDistribution = () => {
+        setOpenDistrubutionModal(true);
+        const beadsArray = Object.keys(selectedSphereList);
+
+        fetch('/getBeadDistribution', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                cell_line: celllineName, 
+                chromosome_name: chromosomeName,
+                sequences: currentChromosomeSequence,
+                indices: beadsArray
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data, 'zsy');
+                setTotalChromosomeSequences(data);
+            });
     };
 
     useEffect(() => {
@@ -164,6 +188,22 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         />
                     </Tooltip>
                     <Tooltip
+                        title="Show distribution of the selected beads"
+                        color='white'
+                        overlayInnerStyle={{
+                            color: 'black'
+                        }}
+                    >
+                        <Button
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                            }}
+                            icon={<DotChartOutlined />}
+                            onClick={openDistribution}
+                        />
+                    </Tooltip>
+                    <Tooltip
                         title="Collapse the distance window"
                         color='white'
                         overlayInnerStyle={{
@@ -177,8 +217,24 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             }}
                             icon={<CaretUpOutlined />}
                             onClick={() => setShowChromosome3DDistance(false)}
-                        /></Tooltip>
+                        />
+                    </Tooltip>
                 </div>
+
+                <Modal
+                    title="Distribution of the selected beads"
+                    width={"40vw"}
+                    height={"40vh"}
+                    open={openDistrubutionModal}
+                    onCancel={() => setOpenDistrubutionModal(false)}
+                    footer={[
+                        <Button key="back" onClick={() => setOpenDistrubutionModal(false)}>
+                            Close
+                        </Button>
+                    ]}
+                >
+                    123
+                </Modal>
 
                 <Canvas
                     shadows

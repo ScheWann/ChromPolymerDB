@@ -8,7 +8,7 @@ import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -60,20 +60,23 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     }, [geneSize]);
 
     const processedChromosomeData = useMemo(() => {
-        return chromosome3DExampleData.map((data, index) => {
-            const marker = newStart + index * step; // Start ibp
-            const isValid = validChromosomeValidIbpData.includes(marker); // Whether the current bead exists
-            const isGeneBead = geneBeadSeq.includes(marker); // Whether the bead in the selected gene sequences
-            const orientation = data.orientation;
+        return chromosome3DExampleData
+            .slice()
+            .sort((a, b) => a.pid - b.pid)
+            .map((data, index) => {
+                const marker = newStart + index * step; // Start ibp
+                const isValid = validChromosomeValidIbpData.includes(marker); // Whether the current bead exists
+                const isGeneBead = geneBeadSeq.includes(marker); // Whether the bead in the selected gene sequences
+                const orientation = data.orientation;
 
-            return {
-                ...data,
-                orientation,
-                marker,
-                isValid,
-                isGeneBead
-            };
-        });
+                return {
+                    ...data,
+                    orientation,
+                    marker,
+                    isValid,
+                    isGeneBead
+                };
+            });
     }, [chromosome3DExampleData, validChromosomeValidIbpData, geneBeadSeq]);
 
     const coordinates = useMemo(() => {
@@ -340,7 +343,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                 </Button>
                             ]}
                         >
-                            <AvgDistanceHeatmap 
+                            <AvgDistanceHeatmap
                                 chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
                             />
                         </Modal>
@@ -550,6 +553,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
             {showChromosome3DDistance && (
                 <div style={{ height: '35%', marginTop: 2 }}>
                     <Chromosome3DDistance
+                        celllineName={celllineName}
+                        chromosomeName={chromosomeName}
+                        currentChromosomeSequence={currentChromosomeSequence}
                         setShowChromosome3DDistance={setShowChromosome3DDistance}
                         selectedSphereList={selectedSphereList}
                     />
