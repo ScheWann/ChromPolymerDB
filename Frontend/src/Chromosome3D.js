@@ -262,7 +262,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         }}
                     >
                         <ColorPicker
-                            value={selectedSphereList[selectedIndex]?.color || '#ffffff'}
+                            value={selectedSphereList[selectedIndex]?.color || '#00BFFF'}
                             disabled={selectedIndex === null}
                             presets={presetColors}
                             onChange={handleColorChange}
