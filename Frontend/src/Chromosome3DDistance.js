@@ -103,7 +103,6 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             .then(res => res.json())
             .then(data => {
                 console.log(data, 'zsy');
-                setTotalChromosomeSequences(data);
             });
     };
 
