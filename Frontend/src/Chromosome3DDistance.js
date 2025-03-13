@@ -41,50 +41,79 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         return calculatedCenter;
     }, [spheresData]);
 
+    const flipY = (buffer, width, height) => {
+        const bytesPerRow = width * 4;
+        const halfHeight = Math.floor(height / 2);
+        const temp = new Uint8ClampedArray(bytesPerRow);
+        for (let y = 0; y < halfHeight; y++) {
+            const topOffset = y * bytesPerRow;
+            const bottomOffset = (height - y - 1) * bytesPerRow;
+
+            temp.set(buffer.slice(topOffset, topOffset + bytesPerRow));
+            buffer.copyWithin(topOffset, bottomOffset, bottomOffset + bytesPerRow);
+            buffer.set(temp, bottomOffset);
+        }
+    }
+
     const download = () => {
-        if (rendererRef.current) {
+        if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
+            const scale = 4;
+            const width = window.innerWidth * scale;
+            const height = window.innerHeight * scale;
 
-            const width = window.innerWidth * 2;
-            const height = window.innerHeight * 2;
-            const renderTarget = new THREE.WebGLRenderTarget(width, height);
+            const exportCamera = camera.clone();
+            exportCamera.aspect = width / height;
+            exportCamera.updateProjectionMatrix();
 
-            // render the scene to the RenderTarget
-            const originalTarget = gl.getRenderTarget?.();
+            const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBAFormat,
+                samples: 8,
+                stencilBuffer: false
+            });
+            renderTarget.texture.colorSpace = THREE.SRGBColorSpace;
+
+            const originalRenderTarget = gl.getRenderTarget();
+            const originalSize = gl.getSize(new THREE.Vector2());
+            const originalPixelRatio = gl.getPixelRatio();
+
             gl.setRenderTarget(renderTarget);
-            gl.render(scene, camera);
-            gl.setRenderTarget(originalTarget);
+            gl.setSize(width, height);
+            gl.setPixelRatio(1);
+            gl.clear();
 
-            // extract the pixel data from the RenderTarget
-            const pixelBuffer = new Uint8Array(width * height * 4);
-            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixelBuffer);
+            gl.render(scene, exportCamera);
 
-            // create a canvas and context to draw the image data
+            const buffer = new Uint8ClampedArray(width * height * 4);
+            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, buffer);
+
+            flipY(buffer, width, height);
+
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            const imageData = ctx.createImageData(width, height);
-
-            // flip the image data vertically
-            for (let row = 0; row < height; row++) {
-                const rowOffset = row * width * 4;
-                const flippedRowOffset = (height - row - 1) * width * 4;
-                imageData.data.set(pixelBuffer.slice(rowOffset, rowOffset + width * 4), flippedRowOffset);
-            }
+            const imageData = new ImageData(buffer, width, height);
             ctx.putImageData(imageData, 0, 0);
 
-            // generate download link
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'chromosome_3d_distance.png';
-            link.click();
+            gl.setRenderTarget(originalRenderTarget);
+            gl.setSize(originalSize.x, originalSize.y);
+            gl.setPixelRatio(originalPixelRatio);
 
+            canvas.toBlob((blob) => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `chromosome_3d_${Date.now()}.png`;
+                link.click();
+            });
+    
             renderTarget.dispose();
         } else {
             console.error("Renderer not properly initialized for download.");
         }
-    };
+    };    
 
     const openDistribution = () => {
         setOpenDistrubutionModal(true);
