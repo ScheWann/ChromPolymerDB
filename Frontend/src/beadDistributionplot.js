@@ -8,7 +8,7 @@ export const BeadDistributionPlot = ({
 }) => {
     const containerRef = useRef(null);
     const svgRef = useRef(null);
-    const [dimensions, setDimensions] = useState({ width: 750, height: 400 });
+    const [dimensions, setDimensions] = useState({ width: 750, height: 450 });
 
     useEffect(() => {
         const container = containerRef.current;
@@ -41,7 +41,6 @@ export const BeadDistributionPlot = ({
         const allValues = Object.values(distributionData).flat();
         const globalExtent = d3.extent(allValues);
 
-        console.log(globalExtent, '?????');
         const binGenerator = d3.histogram()
             .domain(globalExtent)
             .thresholds(30);
@@ -87,18 +86,42 @@ export const BeadDistributionPlot = ({
         keys.forEach(key => {
             const bins = binnedData[key];
 
-            g.append('path')
+            const areaPath = g.append('path')
                 .datum(bins)
+                .attr('data-key', key)
                 .attr('fill', colorScale(key))
                 .attr('fill-opacity', 0.3)
-                .attr('d', areaGenerator);
+                .attr('d', areaGenerator)
+                .style('cursor', 'pointer')
+                .on('mouseover', function (event) {
+                    const hoveredKey = d3.select(this).attr('data-key');
+                    svg.selectAll('[data-key]')
+                        .transition().duration(200)    
+                        .attr('opacity', 0.1);
+                    svg.selectAll(`[data-key="${hoveredKey}"]`)
+                        .transition().duration(200)    
+                        .attr('opacity', 1);
 
-            g.append('path')
+                    legend.selectAll('rect, text')
+                        .attr('opacity', d => d === hoveredKey ? 1 : 0.1);
+                })
+                .on('mouseout', function () {
+                    svg.selectAll('[data-key]')
+                        .transition().duration(200)
+                        .attr('opacity', 1);
+                    legend.selectAll('rect, text').attr('opacity', 1);
+                });
+
+            const linePath = g.append('path')
                 .datum(bins)
+                .attr('data-key', key)
                 .attr('fill', 'none')
                 .attr('stroke', colorScale(key))
                 .attr('stroke-width', 2)
-                .attr('d', lineGenerator);
+                .attr('d', lineGenerator)
+                .style('cursor', 'pointer')
+                .on('mouseover', areaPath.on('mouseover'))
+                .on('mouseout', areaPath.on('mouseout'));
         });
 
         keys.forEach(key => {
@@ -126,6 +149,7 @@ export const BeadDistributionPlot = ({
                     );
                     console.log(distance);
                     g.append('line')
+                        .attr('data-key', key)
                         .attr('x1', xScale(distance))
                         .attr('x2', xScale(distance))
                         .attr('y1', 0)
@@ -136,10 +160,50 @@ export const BeadDistributionPlot = ({
                 }
             }
         });
+
+        const legend = svg.append('g')
+            .attr('transform', `translate(${margin.left}, ${height - margin.bottom + margin.top})`);
+
+        const legendItemSize = 10;
+        const legendSpacing = 4;
+        const legendOffset = 20;
+
+        keys.forEach((key, i) => {
+            const legendRow = legend.append('g')
+                .attr('transform', `translate(${i * legendOffset * 5}, 0)`)
+                .attr('data-key', key)
+                .on('mouseover', function () {
+                    d3.selectAll('[data-key]')
+                        .transition().duration(200)      
+                        .attr('opacity', 0.1);
+                    d3.selectAll(`[data-key='${key}']`)
+                        .transition().duration(200)  
+                        .attr('opacity', 1);
+                })
+                .on('mouseout', function () {
+                    d3.selectAll('[data-key]')
+                        .transition().duration(200)  
+                        .attr('opacity', 1);
+                });
+
+            legendRow.append('rect')
+                .attr('data-key', key)
+                .attr('width', legendItemSize)
+                .attr('height', legendItemSize)
+                .attr('fill', colorScale(key));
+
+            legendRow.append('text')
+                .attr('data-key', key)
+                .attr('x', legendItemSize + legendSpacing)
+                .attr('y', legendItemSize)
+                .attr('font-size', '12px')
+                .attr('fill', '#000')
+                .text(key);
+        });
     }, [distributionData, selectedSphereList, dimensions, margin]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '400px' }}>
+        <div ref={containerRef} style={{ width: '100%', height: '450px' }}>
             <svg ref={svgRef}></svg>
         </div>
     );
