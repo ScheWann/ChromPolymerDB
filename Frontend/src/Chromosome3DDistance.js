@@ -297,10 +297,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     {spheresData.map(({ position: positionA }, indexA) => (
                         spheresData.map(({ position: positionB }, indexB) => {
                             if (indexA < indexB) {
-                                const scaledA = positionA.clone().multiplyScalar(0.15);
-                                const scaledB = positionB.clone().multiplyScalar(0.15);
-                                
-                                const distance = scaledA.distanceTo(scaledB);
+                                const distance = positionA.distanceTo(positionB);
                                 const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
 
                                 return (
