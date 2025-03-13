@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { Button, Tooltip, Modal } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
+import { BeadDistributionPlot } from './beadDistributionplot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
 
 export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence }) => {
@@ -10,6 +11,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const cameraRef = useRef();
     const rendererRef = useRef();
     const [openDistrubutionModal, setOpenDistrubutionModal] = useState(false);
+    const [distributionData, setDistributionData] = useState([]);
 
     const spheresData = useMemo(() => {
         return Object.values(selectedSphereList).map(({ position, color }) => {
@@ -103,6 +105,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             .then(res => res.json())
             .then(data => {
                 console.log(data, 'zsy');
+                setDistributionData(data);
             });
     };
 
@@ -232,7 +235,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         </Button>
                     ]}
                 >
-                    123
+                    <BeadDistributionPlot 
+                        selectedSphereList={selectedSphereList} 
+                        distributionData={distributionData} 
+                    />
                 </Modal>
 
                 <Canvas
@@ -291,7 +297,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     {spheresData.map(({ position: positionA }, indexA) => (
                         spheresData.map(({ position: positionB }, indexB) => {
                             if (indexA < indexB) {
-                                const distance = positionA.distanceTo(positionB);
+                                const scaledA = positionA.clone().multiplyScalar(0.15);
+                                const scaledB = positionB.clone().multiplyScalar(0.15);
+                                
+                                const distance = scaledA.distanceTo(scaledB);
                                 const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
 
                                 return (
