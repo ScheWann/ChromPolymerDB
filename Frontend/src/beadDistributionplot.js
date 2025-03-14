@@ -147,7 +147,7 @@ export const BeadDistributionPlot = ({
                         Math.pow(normA.y - normB.y, 2) +
                         Math.pow(normA.z - normB.z, 2)
                     );
-                    console.log(distance);
+
                     g.append('line')
                         .attr('data-key', key)
                         .attr('x1', xScale(distance))

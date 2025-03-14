@@ -53,12 +53,14 @@ def get_ChromosData():
     sequences = request.json['sequences']
     return jsonify(chromosome_data(cell_line, chromosome_name, sequences))
 
+
 @app.route('/getChromosValidIBPData', methods=['POST'])
 def get_ChromosValidIBPData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     return jsonify(chromosome_valid_ibp_data(cell_line, chromosome_name, sequences))
+
 
 @app.route('/getExampleChromos3DData', methods=['POST'])
 def get_ExampleChromos3DData():
@@ -81,12 +83,14 @@ def get_GeneList():
     sequences = request.json['sequences']
     return jsonify(gene_list(chromosome_name, sequences))
 
+
 @app.route('/getepigeneticTrackData', methods=['POST'])
 def get_epigeneticTrackData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     return jsonify(epigenetic_track_data(cell_line, chromosome_name, sequences))
+
 
 @app.route('/geneListSearch', methods=['POST'])
 def geneListSearch():

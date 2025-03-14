@@ -284,6 +284,7 @@ function App() {
               ...prev,
               [cacheKey]: data["position_data"],
               [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+              [cacheKey + "_fq_data"]: data["fq_data"],
             }));
             setComparisonCellLine3DLoading(false);
           } else {
@@ -291,6 +292,7 @@ function App() {
               ...prev,
               [cacheKey]: data["position_data"],
               [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+              [cacheKey + "_fq_data"]: data["fq_data"],
             }));
             if (sampleChange === "submit") {
               setChromosome3DLoading(false);
@@ -905,6 +907,7 @@ function App() {
                               geneSize={geneSize}
                               chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
                               chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
+                              chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
                               validChromosomeValidIbpData={validChromosomeValidIbpData}
                               selectedChromosomeSequence={selectedChromosomeSequence}
                             />
@@ -989,7 +992,7 @@ function App() {
                             label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
-                              comparisonCellLine3DLoading && !comparisonCellLine3DData[cacheKey] && !chromosome3DExampleData[cacheKey + "_avg_matrix"] ? (
+                              comparisonCellLine3DLoading && !comparisonCellLine3DData[cacheKey] && !comparisonCellLine3DData[cacheKey + "_avg_matrix"] ? (
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D
@@ -999,7 +1002,8 @@ function App() {
                                   currentChromosomeSequence={currentChromosomeSequence}
                                   geneSize={geneSize}
                                   chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
-                                  chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
+                                  chromosome3DAvgMatrixData={comparisonCellLine3DData[cacheKey + "_avg_matrix"]}
+                                  chromosomefqData={comparisonCellLine3DData[cacheKey + "_fq_data"]}
                                   validChromosomeValidIbpData={validChromosomeValidIbpData}
                                   selectedChromosomeSequence={selectedChromosomeSequence}
                                 />
