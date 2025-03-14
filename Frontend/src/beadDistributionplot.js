@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 export const BeadDistributionPlot = ({
     distributionData,
     selectedSphereList,
-    margin = { top: 20, right: 30, bottom: 30, left: 40 }
+    margin = { top: 20, right: 30, bottom: 40, left: 40 }
 }) => {
     const containerRef = useRef(null);
     const svgRef = useRef(null);
@@ -190,12 +190,13 @@ export const BeadDistributionPlot = ({
                 .attr('data-key', key)
                 .attr('width', legendItemSize)
                 .attr('height', legendItemSize)
-                .attr('fill', colorScale(key));
+                .attr('fill', colorScale(key))
+                .attr('y', 10);
 
             legendRow.append('text')
                 .attr('data-key', key)
                 .attr('x', legendItemSize + legendSpacing)
-                .attr('y', legendItemSize)
+                .attr('y', legendItemSize + 10)
                 .attr('font-size', '12px')
                 .attr('fill', '#000')
                 .text(key);
