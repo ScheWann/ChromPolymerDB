@@ -411,11 +411,17 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 )}
             </div>
 
-            <div style={{ width: "20%", aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10, backgroundColor: 'white' }}>
-                <SimulatedFqHeatmap 
-                    data={chromosomefqData}
-                />
-            </div>
+            {showChromosome3DDistance ? (
+                <div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10, backgroundColor: 'white' }}>
+                    <SimulatedFqHeatmap
+                        data={chromosomefqData}
+                    />
+                </div>) : (<div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10, backgroundColor: 'white' }}>
+                    <SimulatedFqHeatmap
+                        data={chromosomefqData}
+                    />
+                </div>)}
+
             <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
                 <Canvas
                     shadows
