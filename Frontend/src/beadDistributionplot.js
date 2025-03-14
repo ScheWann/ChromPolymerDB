@@ -43,7 +43,7 @@ export const BeadDistributionPlot = ({
 
         const binGenerator = d3.histogram()
             .domain(globalExtent)
-            .thresholds(30);
+            .thresholds(8);
 
         const binnedData = {};
         Object.keys(distributionData).forEach(key => {
@@ -75,13 +75,13 @@ export const BeadDistributionPlot = ({
         const lineGenerator = d3.line()
             .x(bin => xScale((bin.x0 + bin.x1) / 2))
             .y(bin => yScale(bin.length))
-            .curve(d3.curveMonotoneX);
+            .curve(d3.curveBasis);
 
         const areaGenerator = d3.area()
             .x(bin => xScale((bin.x0 + bin.x1) / 2))
             .y0(plotHeight)
             .y1(bin => yScale(bin.length))
-            .curve(d3.curveMonotoneX);
+            .curve(d3.curveBasis);
 
         keys.forEach(key => {
             const bins = binnedData[key];
