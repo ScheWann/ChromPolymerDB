@@ -285,6 +285,7 @@ function App() {
               [cacheKey]: data["position_data"],
               [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
               [cacheKey + "_fq_data"]: data["fq_data"],
+              [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
             }));
             setComparisonCellLine3DLoading(false);
           } else {
@@ -293,6 +294,7 @@ function App() {
               [cacheKey]: data["position_data"],
               [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
               [cacheKey + "_fq_data"]: data["fq_data"],
+              [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
             }));
             if (sampleChange === "submit") {
               setChromosome3DLoading(false);
@@ -908,6 +910,7 @@ function App() {
                               chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
                               chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
                               chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
+                              chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
                               validChromosomeValidIbpData={validChromosomeValidIbpData}
                               selectedChromosomeSequence={selectedChromosomeSequence}
                             />
@@ -1004,6 +1007,7 @@ function App() {
                                   chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
                                   chromosome3DAvgMatrixData={comparisonCellLine3DData[cacheKey + "_avg_matrix"]}
                                   chromosomefqData={comparisonCellLine3DData[cacheKey + "_fq_data"]}
+                                  chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
                                   validChromosomeValidIbpData={validChromosomeValidIbpData}
                                   selectedChromosomeSequence={selectedChromosomeSequence}
                                 />

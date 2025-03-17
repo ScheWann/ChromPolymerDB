@@ -9,7 +9,7 @@ import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -35,6 +35,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
         },
     };
 
+    console.log(chromosomeCurrentSampleDistanceVector, '????')
     const presetColors = [
         {
             label: 'Theme Colors',

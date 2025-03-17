@@ -450,11 +450,39 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences)
 
-    if existing_data_status["position_exists"] and existing_data_status["distance_exists"]: 
+    def get_distance_vector_by_sample(conn, chromosome_name, cell_line, sampleid, sequences):
+        cur = conn.cursor()
+        query = """
+            SELECT distance_vector
+            FROM distance
+            WHERE cell_line = %s
+                AND sampleid = %s
+                AND chrid = %s
+                AND start_value = %s
+                AND end_value = %s
+            LIMIT 1;
+        """
+        cur.execute(query, (cell_line, sampleid, chromosome_name, sequences["start"], sequences["end"]))
+        row = cur.fetchone()
+        cur.close()
+
+        full_distance_matrix = squareform(row["distance_vector"])
+        avg_distance_matrix = full_distance_matrix.tolist()
+        return avg_distance_matrix
+
+    if existing_data_status["position_exists"] and existing_data_status["distance_exists"]:
+        best_sample = get_best_chain_sample()
+        if best_sample and len(best_sample) > 0:
+            sample_id = best_sample[0]["sampleid"]
+            sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, sample_id, sequences)
+        else:
+            sample_distance_vector = None 
+
         return {
             "position_data": get_best_chain_sample(),
             "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences),
-            "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences)
+            "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences),
+            "sample_distance_vector": sample_distance_vector
         }
     else:
         cur = conn.cursor()
@@ -525,10 +553,18 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
+            best_sample = get_best_chain_sample()
+            if best_sample and len(best_sample) > 0:
+                sample_id = best_sample[0]["sampleid"]
+                sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, sample_id, sequences)
+            else:
+                sample_distance_vector = None
+
             return { 
                 "position_data": get_best_chain_sample(),
                 "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences),
-                "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences)
+                "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences),
+                "sample_distance_vector": sample_distance_vector
             }
         else:
             return []
