@@ -157,6 +157,11 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
     const changeFqRawcMode = () => {
         setFqRawcMode(!fqRawcMode);
+        if (fqRawcMode) {
+            setColorScaleRange([0, 30]);
+        } else {
+            setColorScaleRange([0, 1]);
+        }
     }
 
     useEffect(() => {
@@ -612,7 +617,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     controls={false}
                                     value={colorScaleRange[1]}
                                     min={0}
-                                    max={200}
+                                    max={fqRawcMode ? 1 : 200}
                                     onChange={changeColorByInput("max")}
                                 />
                                 <Slider
@@ -620,7 +625,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     vertical
                                     style={{ height: 200 }}
                                     min={0}
-                                    max={200}
+                                    max={fqRawcMode ? 1 : 200}
+                                    step={fqRawcMode ? 0.1: 1}
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
                                 />
@@ -630,7 +636,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     controls={false}
                                     value={colorScaleRange[0]}
                                     min={0}
-                                    max={200}
+                                    max={fqRawcMode ? 1 : 200}
                                     onChange={changeColorByInput("min")}
                                 />
                             </div>
