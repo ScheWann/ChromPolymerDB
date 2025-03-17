@@ -995,7 +995,7 @@ function App() {
                             label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
-                              comparisonCellLine3DLoading && !comparisonCellLine3DData[cacheKey] && !comparisonCellLine3DData[cacheKey + "_avg_matrix"] ? (
+                              comparisonCellLine3DLoading && !comparisonCellLine3DData[cacheKey] && !comparisonCellLine3DData[cacheKey + "_avg_matrix"] && comparisonCellLine3DData[cacheKey + "_fq_data"] && chromosome3DExampleData[cacheKey + "sample_distance_vector"] ? (
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D

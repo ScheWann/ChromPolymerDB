@@ -419,7 +419,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 )}
             </div>
 
-            {showChromosome3DDistance ? (
+            {showChromosome3DDistance && chromosomeCurrentSampleDistanceVector ? (
                 <div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10, backgroundColor: 'white' }}>
                     <CurrentChainDistanceHeatmap
                         chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}

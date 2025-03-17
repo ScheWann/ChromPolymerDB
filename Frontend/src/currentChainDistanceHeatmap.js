@@ -22,7 +22,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
     }, []);
 
     useEffect(() => {
-        if (!dimensions.width || !dimensions.height || !chromosomeCurrentSampleDistanceVector.length) return;
+        if (!dimensions.width || !dimensions.height || !chromosomeCurrentSampleDistanceVector) return;
 
         const svg = d3.select(svgRef.current);
         svg.selectAll('*').remove();
