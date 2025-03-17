@@ -995,7 +995,7 @@ function App() {
                             label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
-                              comparisonCellLine3DLoading && !comparisonCellLine3DData[cacheKey] && !comparisonCellLine3DData[cacheKey + "_avg_matrix"] && comparisonCellLine3DData[cacheKey + "_fq_data"] && chromosome3DExampleData[cacheKey + "sample_distance_vector"] ? (
+                              comparisonCellLine3DLoading ? (
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D
@@ -1007,7 +1007,7 @@ function App() {
                                   chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
                                   chromosome3DAvgMatrixData={comparisonCellLine3DData[cacheKey + "_avg_matrix"]}
                                   chromosomefqData={comparisonCellLine3DData[cacheKey + "_fq_data"]}
-                                  chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
+                                  chromosomeCurrentSampleDistanceVector={comparisonCellLine3DData[cacheKey + "sample_distance_vector"]}
                                   validChromosomeValidIbpData={validChromosomeValidIbpData}
                                   selectedChromosomeSequence={selectedChromosomeSequence}
                                 />
