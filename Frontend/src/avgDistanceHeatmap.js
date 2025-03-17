@@ -77,14 +77,16 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
             .domain([colorScaleRange[0], colorScaleRange[1]]);
 
         const svg = d3.select("#distance-heatmap-svg");
+        
+        svg.attr("width", heatmapWidth + margin.left + margin.right).attr("height", svgHeight);
         svg.selectAll("*").remove();
 
         const g = svg
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        const legendWidth = 20; // legend的宽度
-        const legendMargin = 30; // legend与热图之间的间距
+        const legendWidth = 20;
+        const legendMargin = 30;
 
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
@@ -194,8 +196,6 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
                 >
                     <svg
                         id="distance-heatmap-svg"
-                        width={svgDimensions.width}
-                        height={svgDimensions.height}
                     ></svg>
                     <div
                         style={{

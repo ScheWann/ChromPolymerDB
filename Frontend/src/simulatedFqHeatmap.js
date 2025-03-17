@@ -7,7 +7,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
     const [heatmapData, setHeatmapData] = useState([]);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 0.3]);
+    const [colorScaleRange, setColorScaleRange] = useState([0, 1]);
     const [dataMin, setDataMin] = useState(0);
     const [dataMax, setDataMax] = useState(0);
 
