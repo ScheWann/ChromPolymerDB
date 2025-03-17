@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { InputNumber, Slider } from 'antd';
 import * as d3 from 'd3';
 
 export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
@@ -6,22 +7,63 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
     const [heatmapData, setHeatmapData] = useState([]);
+    const [colorScaleRange, setColorScaleRange] = useState([0, 0.3]);
+    const [dataMin, setDataMin] = useState(0);
+    const [dataMax, setDataMax] = useState(0);
+
+    const changeColorByInput = (type) => (value) => {
+        setColorScaleRange((current) => {
+            let newRange = [...current];
+            if (type === "min") {
+                newRange[0] = Math.max(Math.min(value, current[1]), dataMin);
+            } else if (type === "max") {
+                newRange[1] = Math.min(Math.max(value, current[0]), dataMax);
+            }
+            return newRange;
+        });
+    };
+
+    const changeColorScale = (value) => {
+        setColorScaleRange(value);
+    };
 
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-
         const resizeObserver = new ResizeObserver((entries) => {
             for (let entry of entries) {
                 const { width, height } = entry.contentRect;
                 setContainerSize({ width, height });
             }
         });
-
         resizeObserver.observe(container);
-
         return () => resizeObserver.disconnect();
     }, []);
+
+    useEffect(() => {
+        if (
+            chromosomefqData &&
+            chromosomefqData.length > 0 &&
+            chromosomefqData[0].length > 0
+        ) {
+            const flatData = chromosomefqData.flat();
+            const newDataMin = d3.min(flatData);
+            const newDataMax = d3.max(flatData);
+            setDataMin(newDataMin);
+            setDataMax(newDataMax);
+            setColorScaleRange((current) => {
+                let lower = current[0];
+                let upper = current[1];
+                if (lower < newDataMin) {
+                    lower = newDataMin;
+                }
+                if (upper > newDataMax) {
+                    upper = newDataMax;
+                }
+                return [lower, upper];
+            });
+        }
+    }, [chromosomefqData]);
 
     useEffect(() => {
         if (
@@ -33,19 +75,16 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
         ) {
             const numRows = chromosomefqData.length;
             const numCols = chromosomefqData[0].length;
-            // 根据容器大小计算单元格尺寸，确保单元格正方形
             const cellSize = Math.min(containerSize.width / numCols, containerSize.height / numRows);
             const svgWidth = numCols * cellSize;
             const svgHeight = numRows * cellSize;
 
-            // 使用d3计算数据的最小/最大值
             const flatData = chromosomefqData.flat();
             const minValue = d3.min(flatData);
             const maxValue = d3.max(flatData);
             const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
-                .domain([minValue, maxValue]);
+                .domain([colorScaleRange[0], colorScaleRange[1]]);
 
-            // 构造热图每个单元格的数据（将 y 坐标翻转，使其左下角为原点）
             const cells = chromosomefqData.map((row, rowIndex) =>
                 row.map((value, colIndex) => ({
                     x: colIndex * cellSize,
@@ -57,11 +96,10 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
                     colIndex,
                 }))
             );
-
             setHeatmapData(cells);
             setSvgSize({ width: svgWidth, height: svgHeight });
         }
-    }, [chromosomefqData, containerSize]);
+    }, [chromosomefqData, containerSize, colorScaleRange]);
 
     return (
         <div
@@ -71,6 +109,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
                 height: '100%',
                 position: 'relative',
                 overflow: 'hidden',
+                display: 'flex',
             }}
         >
             {heatmapData.length > 0 && (
@@ -87,6 +126,45 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
                     ))}
                 </svg>
             )}
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "5px",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginLeft: "10px"
+                }}
+            >
+                <InputNumber
+                    size="small"
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[1]}
+                    min={colorScaleRange[0]}
+                    max={dataMax}
+                    onChange={changeColorByInput("max")}
+                />
+                <Slider
+                    range={{ draggableTrack: true }}
+                    vertical
+                    style={{ height: 200 }}
+                    step={0.1}
+                    min={dataMin}
+                    max={dataMax}
+                    onChange={changeColorScale}
+                    value={colorScaleRange}
+                />
+                <InputNumber
+                    size="small"
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[0]}
+                    min={dataMin}
+                    max={colorScaleRange[1]}
+                    onChange={changeColorByInput("min")}
+                />
+            </div>
         </div>
     );
 };
