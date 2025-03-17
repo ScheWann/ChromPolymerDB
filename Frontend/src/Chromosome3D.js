@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal } from 'antd';
 import { RollbackOutlined, ClearOutlined, FileImageOutlined, AreaChartOutlined } from "@ant-design/icons";
-import { SimulatedFqHeatmap } from './simulatedFqHeatmap';
+import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
@@ -419,16 +419,16 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 )}
             </div>
 
-            {/* {showChromosome3DDistance ? (
+            {showChromosome3DDistance ? (
                 <div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10, backgroundColor: 'white' }}>
-                    <SimulatedFqHeatmap
-                        chromosomefqData={chromosomefqData}
+                    <CurrentChainDistanceHeatmap
+                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                     />
                 </div>) : (<div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10, backgroundColor: 'white' }}>
-                    <SimulatedFqHeatmap
-                        chromosomefqData={chromosomefqData}
+                    <CurrentChainDistanceHeatmap
+                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                     />
-                </div>)} */}
+                </div>)}
 
             <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
                 <Canvas
