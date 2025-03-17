@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-export const SimulatedFqHeatmap = ({ data, cellSpacing = 2 }) => {
+export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
     const containerRef = useRef(null);
-
-    const [dimensions, setDimensions] = useState({
-        width: 0,
-        height: 0,
-        svgWidth: 0,
-        svgHeight: 0,
-    });
+    const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+    const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
     const [heatmapData, setHeatmapData] = useState([]);
 
     useEffect(() => {
@@ -19,9 +14,10 @@ export const SimulatedFqHeatmap = ({ data, cellSpacing = 2 }) => {
         const resizeObserver = new ResizeObserver((entries) => {
             for (let entry of entries) {
                 const { width, height } = entry.contentRect;
-                setDimensions((prev) => ({ ...prev, width, height }));
+                setContainerSize({ width, height });
             }
         });
+
         resizeObserver.observe(container);
 
         return () => resizeObserver.disconnect();
@@ -29,53 +25,56 @@ export const SimulatedFqHeatmap = ({ data, cellSpacing = 2 }) => {
 
     useEffect(() => {
         if (
-            data &&
-            data.length > 0 &&
-            data[0].length > 0 &&
-            dimensions.width > 0 &&
-            dimensions.height > 0
+            chromosomefqData &&
+            chromosomefqData.length > 0 &&
+            chromosomefqData[0].length > 0 &&
+            containerSize.width > 0 &&
+            containerSize.height > 0
         ) {
-            const numRows = data.length;
-            const numCols = data[0].length;
-            const cellSizeX =
-                (dimensions.width - (numCols - 1) * cellSpacing) / numCols;
-            const cellSizeY =
-                (dimensions.height - (numRows - 1) * cellSpacing) / numRows;
-            const cellSize = Math.min(cellSizeX, cellSizeY);
+            const numRows = chromosomefqData.length;
+            const numCols = chromosomefqData[0].length;
+            // 根据容器大小计算单元格尺寸，确保单元格正方形
+            const cellSize = Math.min(containerSize.width / numCols, containerSize.height / numRows);
+            const svgWidth = numCols * cellSize;
+            const svgHeight = numRows * cellSize;
 
-            const svgWidth = numCols * cellSize + (numCols - 1) * cellSpacing;
-            const svgHeight = numRows * cellSize + (numRows - 1) * cellSpacing;
-
-
-            const flatData = data.flat();
+            // 使用d3计算数据的最小/最大值
+            const flatData = chromosomefqData.flat();
             const minValue = d3.min(flatData);
             const maxValue = d3.max(flatData);
-
-            const colorScale = d3
-                .scaleSequential(t => d3.interpolateReds((1 - t) * 0.9 + 0.1))
+            const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
                 .domain([minValue, maxValue]);
 
-            const cells = data.map((row, rowIndex) =>
-                row.map((value, colIndex) => {
-                    const fillColor = colorScale(value);
-                    const x = colIndex * (cellSize + cellSpacing);
-                    const y = (numRows - rowIndex - 1) * (cellSize + cellSpacing);
-                    return { x, y, fillColor, value, rowIndex, colIndex, cellSize };
-                })
+            // 构造热图每个单元格的数据（将 y 坐标翻转，使其左下角为原点）
+            const cells = chromosomefqData.map((row, rowIndex) =>
+                row.map((value, colIndex) => ({
+                    x: colIndex * cellSize,
+                    y: (numRows - rowIndex - 1) * cellSize,
+                    cellSize,
+                    fillColor: colorScale(value),
+                    value,
+                    rowIndex,
+                    colIndex,
+                }))
             );
 
             setHeatmapData(cells);
-            setDimensions((prev) => ({ ...prev, svgWidth, svgHeight }));
+            setSvgSize({ width: svgWidth, height: svgHeight });
         }
-    }, [data, dimensions.width, dimensions.height, cellSpacing]);
+    }, [chromosomefqData, containerSize]);
 
     return (
         <div
             ref={containerRef}
-            style={{ width: '100%', height: '100%', position: 'relative' }}
+            style={{
+                width: '50%',
+                height: '100%',
+                position: 'relative',
+                overflow: 'hidden',
+            }}
         >
             {heatmapData.length > 0 && (
-                <svg width={dimensions.svgWidth} height={dimensions.svgHeight}>
+                <svg width={svgSize.width} height={svgSize.height}>
                     {heatmapData.flat().map((cell) => (
                         <rect
                             key={`cell-${cell.rowIndex}-${cell.colIndex}`}

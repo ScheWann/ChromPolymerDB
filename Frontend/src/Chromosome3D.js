@@ -29,6 +29,12 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    const modalStyles = {
+        body: {
+            height: '40vh'
+        },
+    };
+
     const presetColors = [
         {
             label: 'Theme Colors',
@@ -334,8 +340,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         />
                         <Modal
                             title="Average Distance Heatmap"
-                            width={"40vw"}
-                            height={"40vh"}
+                            width={"70vw"}
+                            styles={modalStyles}
                             open={openAvgMatrixModal}
                             onCancel={() => setOpenAvgMatrixModal(false)}
                             footer={[
@@ -346,6 +352,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         >
                             <AvgDistanceHeatmap
                                 chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
+                                chromosomefqData={chromosomefqData}
                             />
                         </Modal>
                     </Tooltip>
@@ -411,16 +418,16 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 )}
             </div>
 
-            {showChromosome3DDistance ? (
+            {/* {showChromosome3DDistance ? (
                 <div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10, backgroundColor: 'white' }}>
                     <SimulatedFqHeatmap
-                        data={chromosomefqData}
+                        chromosomefqData={chromosomefqData}
                     />
                 </div>) : (<div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10, backgroundColor: 'white' }}>
                     <SimulatedFqHeatmap
-                        data={chromosomefqData}
+                        chromosomefqData={chromosomefqData}
                     />
-                </div>)}
+                </div>)} */}
 
             <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
                 <Canvas
