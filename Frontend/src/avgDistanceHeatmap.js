@@ -55,12 +55,17 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
 
         const svgWidth = svgDimensions.width;
         const svgHeight = svgDimensions.height;
-        const margin = { top: 40, right: 40, bottom: 100, left: 60 };
+        const margin = { top: 10, right: 0, bottom: 20, left: 80 };
 
         const numRows = chromosome3DAvgMatrixData.length;
         const numCols = chromosome3DAvgMatrixData[0].length;
-        const cellWidth = (svgWidth - margin.left - margin.right) / numCols;
-        const cellHeight = (svgHeight - margin.top - margin.bottom) / numRows;
+
+
+        const availableWidth = svgWidth - margin.left - margin.right;
+        const availableHeight = svgHeight - margin.top - margin.bottom;
+        const cellSize = Math.min(availableWidth / numCols, availableHeight / numRows);
+        const heatmapWidth = numCols * cellSize;
+        const heatmapHeight = numRows * cellSize;
 
         const allValues = chromosome3DAvgMatrixData.flat();
         const dataMinLocal = d3.min(allValues);
@@ -78,12 +83,15 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+        const legendWidth = 20; // legend的宽度
+        const legendMargin = 30; // legend与热图之间的间距
+
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
             .attr("id", "legend-gradient")
             .attr("x1", "0%")
-            .attr("y1", "0%")
-            .attr("x2", "100%")
+            .attr("y1", "100%")
+            .attr("x2", "0%")
             .attr("y2", "0%");
 
         gradient
@@ -100,22 +108,22 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
 
         const xScale = d3.scaleBand()
             .domain(d3.range(numCols))
-            .range([0, numCols * cellWidth])
+            .range([0, heatmapWidth])
             .padding(0.01);
 
         const yScale = d3.scaleBand()
             .domain(d3.range(numRows).reverse())
-            .range([0, numRows * cellHeight])
+            .range([0, heatmapHeight])
             .padding(0.01);
 
         g.selectAll("rect")
             .data(allValues)
             .enter()
             .append("rect")
-            .attr("x", (d, i) => (i % numCols) * cellWidth)
-            .attr("y", (d, i) => (numRows - 1 - Math.floor(i / numCols)) * cellHeight)
-            .attr("width", cellWidth)
-            .attr("height", cellHeight)
+            .attr("x", (d, i) => (i % numCols) * cellSize)
+            .attr("y", (d, i) => (numRows - 1 - Math.floor(i / numCols)) * cellSize)
+            .attr("width", cellSize)
+            .attr("height", cellSize)
             .attr("fill", d => colorScale(d));
 
         const xAxis = d3.axisBottom(xScale)
@@ -123,7 +131,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
             .tickFormat(d => `${d + 1}`);
 
         g.append("g")
-            .attr("transform", `translate(0, ${numRows * cellHeight})`)
+            .attr("transform", `translate(0, ${heatmapHeight})`)
             .call(xAxis)
             .selectAll("text")
             .style("text-anchor", "middle");
@@ -133,29 +141,29 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
             .tickFormat(d => `${d + 1}`);
         g.append("g").call(yAxis);
 
-        const legendWidth = numCols * cellWidth;
-        const legendY = margin.top + numRows * cellHeight + 30;
+        const legendX = margin.left - legendWidth - legendMargin;
+        const legendY = margin.top;
 
         svg.append("rect")
-            .attr("x", margin.left)
+            .attr("x", legendX)
             .attr("y", legendY)
             .attr("width", legendWidth)
-            .attr("height", 20)
+            .attr("height", heatmapHeight)
             .style("fill", "url(#legend-gradient)");
 
         const legendScale = d3.scaleLinear()
             .domain([colorScaleRange[0], colorScaleRange[1]])
-            .range([0, legendWidth]);
+            .range([heatmapHeight, 0]);
 
-        const legendAxis = d3.axisBottom(legendScale)
+        const legendAxis = d3.axisLeft(legendScale)
             .ticks(5);
 
         svg.append("g")
-            .attr("transform", `translate(${margin.left}, ${legendY + 20})`)
+            .attr("transform", `translate(${legendX}, ${legendY})`)
             .call(legendAxis);
 
         svg.append("text")
-            .attr("x", svgWidth / 2)
+            .attr("x", (margin.left + heatmapWidth) / 2)
             .attr("y", svgHeight - 40)
             .attr("text-anchor", "middle")
             .style("font-size", "14px");
@@ -179,7 +187,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
                 justifyContent: "center"
             }}
         >
-            <div style={{ display: "flex" }}>
+            <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
                 <div
                     ref={svgContainerRef}
                     style={{ display: "flex", alignItems: "center", overflow: "hidden" }}

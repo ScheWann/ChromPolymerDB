@@ -110,6 +110,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData }) => {
                 position: 'relative',
                 overflow: 'hidden',
                 display: 'flex',
+                justifyContent: 'space-evenly',
             }}
         >
             {heatmapData.length > 0 && (
