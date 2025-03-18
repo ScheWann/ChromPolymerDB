@@ -35,7 +35,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
         },
     };
 
-    console.log(chromosomeCurrentSampleDistanceVector, '????')
     const presetColors = [
         {
             label: 'Theme Colors',
