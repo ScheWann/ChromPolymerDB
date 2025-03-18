@@ -3,7 +3,7 @@ import { InputNumber, Slider } from "antd";
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
 import * as d3 from "d3";
 
-export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData }) => {
+export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromosomeSequence, chromosomefqData }) => {
     const containerRef = useRef(null);
     const svgContainerRef = useRef(null);
     const [svgDimensions, setSvgDimensions] = useState({ width: 600, height: 650 });
@@ -236,7 +236,10 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, chromosomefqData
                         />
                     </div>
                 </div>
-                <SimulatedFqHeatmap chromosomefqData={chromosomefqData} />
+                <SimulatedFqHeatmap 
+                    chromosomefqData={chromosomefqData} 
+                    selectedChromosomeSequence={selectedChromosomeSequence}
+                />
             </div>
         </div>
     );

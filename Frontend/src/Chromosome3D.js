@@ -353,6 +353,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         >
                             <AvgDistanceHeatmap
                                 chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
+                                selectedChromosomeSequence={selectedChromosomeSequence}
                                 chromosomefqData={chromosomefqData}
                             />
                         </Modal>
