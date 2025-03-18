@@ -78,7 +78,7 @@ export const BeadDistributionPlot = ({
 
         g.append('text')
             .attr('text-anchor', 'middle')
-            .attr('x', -20)
+            .attr('x', -15)
             .attr('y', -5)
             .style('font-size', '14px')
             .text('Counts');
