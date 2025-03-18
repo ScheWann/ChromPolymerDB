@@ -339,7 +339,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                             onClick={() => setOpenAvgMatrixModal(true)}
                         />
                         <Modal
-                            title="Average Distance Heatmap"
+                            destroyOnClose
                             width={"65vw"}
                             styles={modalStyles}
                             open={openAvgMatrixModal}

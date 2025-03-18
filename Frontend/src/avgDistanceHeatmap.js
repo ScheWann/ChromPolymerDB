@@ -77,7 +77,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
             .domain([colorScaleRange[0], colorScaleRange[1]]);
 
         const svg = d3.select("#distance-heatmap-svg");
-        
+
         svg.attr("width", heatmapWidth + margin.left + margin.right).attr("height", svgHeight);
         svg.selectAll("*").remove();
 
@@ -190,54 +190,57 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
             }}
         >
             <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
-                <div
-                    ref={svgContainerRef}
-                    style={{ display: "flex", alignItems: "center", overflow: "hidden" }}
-                >
-                    <svg
-                        id="distance-heatmap-svg"
-                    ></svg>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: 'center', alignItems: 'center', width: '50%', height: '100%' }}>
+                    <div>Average Distance Heatmap</div>
                     <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "5px",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginLeft: "10px"
-                        }}
+                        ref={svgContainerRef}
+                        style={{ display: "flex", alignItems: "center", overflow: "hidden", height: '100%' }}
                     >
-                        <InputNumber
-                            size="small"
-                            style={{ width: 60 }}
-                            controls={false}
-                            value={colorScaleRange[1]}
-                            min={colorScaleRange[0]}
-                            max={dataMax}
-                            onChange={changeColorByInput("max")}
-                        />
-                        <Slider
-                            range={{ draggableTrack: true }}
-                            vertical
-                            style={{ height: 200 }}
-                            min={dataMin}
-                            max={dataMax}
-                            onChange={changeColorScale}
-                            value={colorScaleRange}
-                        />
-                        <InputNumber
-                            size="small"
-                            style={{ width: 60 }}
-                            controls={false}
-                            value={colorScaleRange[0]}
-                            min={dataMin}
-                            max={colorScaleRange[1]}
-                            onChange={changeColorByInput("min")}
-                        />
+                        <svg
+                            id="distance-heatmap-svg"
+                        ></svg>
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "5px",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "10px"
+                            }}
+                        >
+                            <InputNumber
+                                size="small"
+                                style={{ width: 60 }}
+                                controls={false}
+                                value={colorScaleRange[1]}
+                                min={colorScaleRange[0]}
+                                max={dataMax}
+                                onChange={changeColorByInput("max")}
+                            />
+                            <Slider
+                                range={{ draggableTrack: true }}
+                                vertical
+                                style={{ height: 200 }}
+                                min={dataMin}
+                                max={dataMax}
+                                onChange={changeColorScale}
+                                value={colorScaleRange}
+                            />
+                            <InputNumber
+                                size="small"
+                                style={{ width: 60 }}
+                                controls={false}
+                                value={colorScaleRange[0]}
+                                min={dataMin}
+                                max={colorScaleRange[1]}
+                                onChange={changeColorByInput("min")}
+                            />
+                        </div>
                     </div>
                 </div>
-                <SimulatedFqHeatmap 
-                    chromosomefqData={chromosomefqData} 
+                <SimulatedFqHeatmap
+                    chromosomefqData={chromosomefqData}
                     selectedChromosomeSequence={selectedChromosomeSequence}
                 />
             </div>

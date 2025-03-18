@@ -74,21 +74,20 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             chromosomefqData &&
             chromosomefqData.length > 0 &&
             chromosomefqData[0].length > 0 &&
-            containerSize.width > 0 &&
-            containerSize.height > 0 &&
+            // containerSize.width > 0 &&
+            // containerSize.height > 0 &&
             selectedChromosomeSequence
         ) {
-            const margin = { top: 10, right: 0, bottom: 20, left: 80 };
-            const legendMargin = 30;
+            const margin = { top: 10, right: 10, bottom: 40, left: 80 };
+            const legendMargin = 20;
             const legendWidth = 20;
 
             const numRows = chromosomefqData.length;
             const numCols = chromosomefqData[0].length;
 
-            const cellSize = Math.min(
-                (containerSize.width - margin.left - margin.right - legendMargin - legendWidth) / numCols,
-                (containerSize.height - margin.top - margin.bottom) / numRows
-            );
+            const availableWidth = containerSize.width - margin.left - margin.right - legendMargin - legendWidth;
+            const availableHeight = containerSize.height - margin.top - margin.bottom;
+            const cellSize = Math.min(availableWidth / numCols, availableHeight / numRows);
             const heatmapWidth = numCols * cellSize;
             const heatmapHeight = numRows * cellSize;
 
@@ -109,14 +108,14 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                 .domain(axisValues)
                 .range([0, heatmapWidth])
                 .padding(0.1);
-    
+
             const yScale = d3.scaleBand()
                 .domain(axisValues)
                 .range([heatmapHeight, 0])
                 .padding(0.1);
 
             let tickCount;
-            const range = selectedChromosomeSequence.end - selectedChromosomeSequence.start;
+            const range = end - start;
             if (range < 1000000) {
                 tickCount = Math.max(Math.floor(range / 20000), 5);
             } else if (range >= 1000000 && range <= 10000000) {
@@ -165,6 +164,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                             .tickFormat(tickFormats)
                     );
             }
+
             if (yAxisRef.current) {
                 d3.select(yAxisRef.current)
                     .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${margin.top})`)
@@ -214,7 +214,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             legendGroup.append("g")
                 .call(legendAxis);
         }
-    }, [chromosomefqData, containerSize, colorScaleRange, selectedChromosomeSequence, dataMin, dataMax]);
+    }, [chromosomefqData, containerSize, colorScaleRange, selectedChromosomeSequence]);
 
     return (
         <div
@@ -223,67 +223,72 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                 width: '50%',
                 height: '100%',
                 position: 'relative',
-                overflow: 'hidden',
+                overflow: 'visible',
                 display: 'flex',
-                justifyContent: 'space-evenly',
+                justifyContent: 'center',
             }}
         >
-            {heatmapData.length > 0 && (
-                <svg ref={svgRef} width={svgSize.width} height={svgSize.height}>
-                    <g transform={`translate(130, 10)`}>
-                        {heatmapData.flat().map((cell) => (
-                            <rect
-                                key={`cell-${cell.rowIndex}-${cell.colIndex}`}
-                                x={cell.x}
-                                y={cell.y}
-                                width={cell.cellSize}
-                                height={cell.cellSize}
-                                fill={cell.fillColor}
-                            />
-                        ))}
-                    </g>
-                    <g className="axis" ref={xAxisRef} />
-                    <g className="axis" ref={yAxisRef} />
-                </svg>
-            )}
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "5px",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginLeft: "10px"
-                }}
-            >
-                <InputNumber
-                    size="small"
-                    style={{ width: 60 }}
-                    controls={false}
-                    value={colorScaleRange[1]}
-                    min={colorScaleRange[0]}
-                    max={dataMax}
-                    onChange={changeColorByInput("max")}
-                />
-                <Slider
-                    range={{ draggableTrack: true }}
-                    vertical
-                    style={{ height: 200 }}
-                    step={0.1}
-                    min={dataMin}
-                    max={dataMax}
-                    onChange={changeColorScale}
-                    value={colorScaleRange}
-                />
-                <InputNumber
-                    size="small"
-                    style={{ width: 60 }}
-                    controls={false}
-                    value={colorScaleRange[0]}
-                    min={dataMin}
-                    max={colorScaleRange[1]}
-                    onChange={changeColorByInput("min")}
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div>Simulated fq Heatmap</div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {heatmapData.length > 0 && (
+                        <svg ref={svgRef} width={svgSize.width} height={svgSize.height}>
+                            <g transform={`translate(${80 + 20 + 20}, 10)`}>
+                                {heatmapData.flat().map((cell) => (
+                                    <rect
+                                        key={`cell-${cell.rowIndex}-${cell.colIndex}`}
+                                        x={cell.x}
+                                        y={cell.y}
+                                        width={cell.cellSize}
+                                        height={cell.cellSize}
+                                        fill={cell.fillColor}
+                                    />
+                                ))}
+                            </g>
+                            <g className="axis" ref={xAxisRef} />
+                            <g className="axis" ref={yAxisRef} />
+                        </svg>
+                    )}
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "5px",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginLeft: "10px"
+                        }}
+                    >
+                        <InputNumber
+                            size="small"
+                            style={{ width: 60 }}
+                            controls={false}
+                            value={colorScaleRange[1]}
+                            min={colorScaleRange[0]}
+                            max={dataMax}
+                            onChange={changeColorByInput("max")}
+                        />
+                        <Slider
+                            range={{ draggableTrack: true }}
+                            vertical
+                            style={{ height: 200 }}
+                            step={0.1}
+                            min={dataMin}
+                            max={dataMax}
+                            onChange={changeColorScale}
+                            value={colorScaleRange}
+                        />
+                        <InputNumber
+                            size="small"
+                            style={{ width: 60 }}
+                            controls={false}
+                            value={colorScaleRange[0]}
+                            min={dataMin}
+                            max={colorScaleRange[1]}
+                            onChange={changeColorByInput("min")}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
