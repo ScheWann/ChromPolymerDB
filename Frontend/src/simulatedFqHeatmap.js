@@ -14,6 +14,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     const [colorScaleRange, setColorScaleRange] = useState([0, 1]);
     const [dataMin, setDataMin] = useState(0);
     const [dataMax, setDataMax] = useState(0);
+    const [layout, setLayout] = useState(null);
 
     const changeColorByInput = (type) => (value) => {
         setColorScaleRange((current) => {
@@ -45,11 +46,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     }, []);
 
     useEffect(() => {
-        if (
-            chromosomefqData &&
-            chromosomefqData.length > 0 &&
-            chromosomefqData[0].length > 0
-        ) {
+        if (chromosomefqData && chromosomefqData.length > 0 && chromosomefqData[0].length > 0) {
             const flatData = chromosomefqData.flat();
             const newDataMin = d3.min(flatData);
             const newDataMax = d3.max(flatData);
@@ -58,12 +55,8 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             setColorScaleRange((current) => {
                 let lower = current[0];
                 let upper = current[1];
-                if (lower < newDataMin) {
-                    lower = newDataMin;
-                }
-                if (upper > newDataMax) {
-                    upper = newDataMax;
-                }
+                if (lower < newDataMin) lower = newDataMin;
+                if (upper > newDataMax) upper = newDataMax;
                 return [lower, upper];
             });
         }
@@ -71,150 +64,160 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
 
     useEffect(() => {
         if (
-            chromosomefqData &&
-            chromosomefqData.length > 0 &&
-            chromosomefqData[0].length > 0 &&
-            // containerSize.width > 0 &&
-            // containerSize.height > 0 &&
-            selectedChromosomeSequence
+            !containerSize.width ||
+            !containerSize.height ||
+            !chromosomefqData ||
+            chromosomefqData.length === 0 ||
+            !selectedChromosomeSequence
         ) {
-            const margin = { top: 10, right: 10, bottom: 40, left: 80 };
-            const legendMargin = 20;
-            const legendWidth = 20;
-
-            const numRows = chromosomefqData.length;
-            const numCols = chromosomefqData[0].length;
-
-            const availableWidth = containerSize.width - margin.left - margin.right - legendMargin - legendWidth;
-            const availableHeight = containerSize.height - margin.top - margin.bottom;
-            const cellSize = Math.min(availableWidth / numCols, availableHeight / numRows);
-            const heatmapWidth = numCols * cellSize;
-            const heatmapHeight = numRows * cellSize;
-
-            const totalSvgWidth = heatmapWidth + margin.left + margin.right + legendMargin + legendWidth;
-            const totalSvgHeight = heatmapHeight + margin.top + margin.bottom;
-            setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
-
-            const { start, end } = selectedChromosomeSequence;
-            const step = 5000;
-            const adjustedStart = Math.floor(start / step) * step;
-            const adjustedEnd = Math.ceil(end / step) * step;
-            const axisValues = Array.from(
-                { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
-                (_, i) => adjustedStart + i * step
-            );
-
-            const xScale = d3.scaleBand()
-                .domain(axisValues)
-                .range([0, heatmapWidth])
-                .padding(0.1);
-
-            const yScale = d3.scaleBand()
-                .domain(axisValues)
-                .range([heatmapHeight, 0])
-                .padding(0.1);
-
-            let tickCount;
-            const range = end - start;
-            if (range < 1000000) {
-                tickCount = Math.max(Math.floor(range / 20000), 5);
-            } else if (range >= 1000000 && range <= 10000000) {
-                tickCount = Math.max(Math.floor(range / 50000), 5);
-            } else {
-                tickCount = 30;
-            }
-            tickCount = Math.min(tickCount, 30);
-            const tickFormats = d => {
-                if (d >= 1000000) {
-                    return `${(d / 1000000).toFixed(3)}M`;
-                }
-                if (d > 10000 && d < 1000000) {
-                    return `${(d / 10000).toFixed(3)}W`;
-                }
-                return d;
-            };
-            const filteredTicks = axisValues.filter((_, i) => i % tickCount === 0);
-
-            const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
-                .domain([colorScaleRange[0], colorScaleRange[1]]);
-
-            const cells = chromosomefqData.map((row, rowIndex) =>
-                row.map((value, colIndex) => ({
-                    x: colIndex * cellSize,
-                    y: (numRows - rowIndex - 1) * cellSize,
-                    cellSize,
-                    fillColor: colorScale(value),
-                    value,
-                    rowIndex,
-                    colIndex,
-                }))
-            );
-            setHeatmapData(cells);
-
-            const svg = d3.select(svgRef.current);
-            svg.selectAll("defs").remove();
-            svg.selectAll(".legendGroup").remove();
-
-            if (xAxisRef.current) {
-                d3.select(xAxisRef.current)
-                    .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${heatmapHeight + margin.top})`)
-                    .call(
-                        d3.axisBottom(xScale)
-                            .tickValues(filteredTicks)
-                            .tickFormat(tickFormats)
-                    );
-            }
-
-            if (yAxisRef.current) {
-                d3.select(yAxisRef.current)
-                    .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${margin.top})`)
-                    .call(
-                        d3.axisLeft(yScale)
-                            .tickValues(filteredTicks)
-                            .tickFormat(tickFormats)
-                    );
-            }
-
-            const defs = svg.append("defs");
-            const gradient = defs.append("linearGradient")
-                .attr("id", "legend-gradient")
-                .attr("x1", "0%")
-                .attr("y1", "100%")
-                .attr("x2", "0%")
-                .attr("y2", "0%");
-
-            const dataMinLocal = colorScaleRange[0];
-            const dataMaxLocal = colorScaleRange[1];
-            const dataMid = (dataMinLocal + dataMaxLocal) / 2;
-            gradient
-                .selectAll("stop")
-                .data([
-                    { offset: "0%", color: colorScale(dataMinLocal) },
-                    { offset: "50%", color: colorScale(dataMid) },
-                    { offset: "100%", color: colorScale(dataMaxLocal) }
-                ])
-                .enter()
-                .append("stop")
-                .attr("offset", d => d.offset)
-                .attr("stop-color", d => d.color);
-
-            const legendGroup = svg.append("g")
-                .attr("class", "legendGroup")
-                .attr("transform", `translate(${margin.left - legendMargin - legendWidth}, ${margin.top})`);
-
-            legendGroup.append("rect")
-                .attr("width", legendWidth)
-                .attr("height", heatmapHeight)
-                .style("fill", "url(#legend-gradient)");
-
-            const legendScale = d3.scaleLinear()
-                .domain([dataMinLocal, dataMaxLocal])
-                .range([heatmapHeight, 0]);
-            const legendAxis = d3.axisLeft(legendScale).ticks(5);
-            legendGroup.append("g")
-                .call(legendAxis);
+            return;
         }
-    }, [chromosomefqData, containerSize, colorScaleRange, selectedChromosomeSequence]);
+        const margin = { top: 10, right: 10, bottom: 40, left: 80 };
+        const legendMargin = 20;
+        const legendWidth = 20;
+
+        const numRows = chromosomefqData.length;
+        const numCols = chromosomefqData[0].length;
+
+        const availableWidth = containerSize.width - margin.left - margin.right - legendMargin - legendWidth;
+        const availableHeight = containerSize.height - margin.top - margin.bottom;
+        const cellSize = Math.min(availableWidth / numCols, availableHeight / numRows);
+        const heatmapWidth = numCols * cellSize;
+        const heatmapHeight = numRows * cellSize;
+
+        const totalSvgWidth = heatmapWidth + margin.left + margin.right + legendMargin + legendWidth;
+        const totalSvgHeight = heatmapHeight + margin.top + margin.bottom;
+        setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
+
+        const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
+            .domain([colorScaleRange[0], colorScaleRange[1]]);
+        const cells = chromosomefqData.map((row, rowIndex) =>
+            row.map((value, colIndex) => ({
+                x: colIndex * cellSize,
+                y: (numRows - rowIndex - 1) * cellSize,
+                cellSize,
+                fillColor: colorScale(value),
+                value,
+                rowIndex,
+                colIndex,
+            }))
+        );
+        setHeatmapData(cells);
+
+        setLayout({
+            margin,
+            legendMargin,
+            legendWidth,
+            heatmapWidth,
+            heatmapHeight,
+            cellSize,
+            numRows,
+            numCols
+        });
+    }, [chromosomefqData, containerSize, selectedChromosomeSequence, colorScaleRange]);
+
+    useEffect(() => {
+        if (!layout || !selectedChromosomeSequence) return;
+        const { margin, legendMargin, legendWidth, heatmapWidth, heatmapHeight } = layout;
+        const { start, end } = selectedChromosomeSequence;
+        const step = 5000;
+        const adjustedStart = Math.floor(start / step) * step;
+        const adjustedEnd = Math.ceil(end / step) * step;
+        const axisValues = Array.from(
+            { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
+            (_, i) => adjustedStart + i * step
+        );
+
+        const xScale = d3.scaleBand()
+            .domain(axisValues)
+            .range([0, heatmapWidth])
+            .padding(0.1);
+        const yScale = d3.scaleBand()
+            .domain(axisValues)
+            .range([heatmapHeight, 0])
+            .padding(0.1);
+
+        let tickCount;
+        const range = end - start;
+        if (range < 1000000) {
+            tickCount = Math.max(Math.floor(range / 20000), 5);
+        } else if (range >= 1000000 && range <= 10000000) {
+            tickCount = Math.max(Math.floor(range / 50000), 5);
+        } else {
+            tickCount = 30;
+        }
+        tickCount = Math.min(tickCount, 30);
+        const tickFormats = d => {
+            if (d >= 1000000) {
+                return `${(d / 1000000).toFixed(3)}M`;
+            }
+            if (d > 10000 && d < 1000000) {
+                return `${(d / 10000).toFixed(3)}W`;
+            }
+            return d;
+        };
+        const filteredTicks = axisValues.filter((_, i) => i % tickCount === 0);
+
+        const svg = d3.select(svgRef.current);
+
+        svg.selectAll("defs").remove();
+        svg.selectAll(".legendGroup").remove();
+
+        if (xAxisRef.current) {
+            d3.select(xAxisRef.current)
+                .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${heatmapHeight + margin.top})`)
+                .call(d3.axisBottom(xScale)
+                    .tickValues(filteredTicks)
+                    .tickFormat(tickFormats)
+                );
+        }
+
+        if (yAxisRef.current) {
+            d3.select(yAxisRef.current)
+                .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${margin.top})`)
+                .call(d3.axisLeft(yScale)
+                    .tickValues(filteredTicks)
+                    .tickFormat(tickFormats)
+                );
+        }
+
+        const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
+            .domain([colorScaleRange[0], colorScaleRange[1]]);
+        const defs = svg.append("defs");
+        const gradient = defs.append("linearGradient")
+            .attr("id", "legend-gradient")
+            .attr("x1", "0%")
+            .attr("y1", "100%")
+            .attr("x2", "0%")
+            .attr("y2", "0%");
+        const dataMinLocal = colorScaleRange[0];
+        const dataMaxLocal = colorScaleRange[1];
+        const dataMid = (dataMinLocal + dataMaxLocal) / 2;
+        gradient.selectAll("stop")
+            .data([
+                { offset: "0%", color: colorScale(dataMinLocal) },
+                { offset: "50%", color: colorScale(dataMid) },
+                { offset: "100%", color: colorScale(dataMaxLocal) }
+            ])
+            .enter()
+            .append("stop")
+            .attr("offset", d => d.offset)
+            .attr("stop-color", d => d.color);
+
+        const legendGroup = svg.append("g")
+            .attr("class", "legendGroup")
+            .attr("transform", `translate(${margin.left - legendMargin - legendWidth}, ${margin.top})`);
+        legendGroup.append("rect")
+            .attr("width", legendWidth)
+            .attr("height", heatmapHeight)
+            .style("fill", "url(#legend-gradient)");
+        const legendScale = d3.scaleLinear()
+            .domain([dataMinLocal, dataMaxLocal])
+            .range([heatmapHeight, 0]);
+        const legendAxis = d3.axisLeft(legendScale).ticks(5);
+        legendGroup.append("g")
+            .call(legendAxis);
+    }, [layout, selectedChromosomeSequence, colorScaleRange]);
 
     return (
         <div
