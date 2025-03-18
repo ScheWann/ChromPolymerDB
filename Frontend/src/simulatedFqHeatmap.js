@@ -11,13 +11,13 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
     const [heatmapData, setHeatmapData] = useState([]);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 1]);
+    const [simulatedColorScaleRange, setSimulatedColorScaleRange] = useState([0, 1]);
     const [dataMin, setDataMin] = useState(0);
     const [dataMax, setDataMax] = useState(0);
     const [layout, setLayout] = useState(null);
 
     const changeColorByInput = (type) => (value) => {
-        setColorScaleRange((current) => {
+        setSimulatedColorScaleRange((current) => {
             let newRange = [...current];
             if (type === "min") {
                 newRange[0] = Math.max(Math.min(value, current[1]), dataMin);
@@ -29,7 +29,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     };
 
     const changeColorScale = (value) => {
-        setColorScaleRange(value);
+        setSimulatedColorScaleRange(value);
     };
 
     useEffect(() => {
@@ -52,7 +52,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             const newDataMax = d3.max(flatData);
             setDataMin(newDataMin);
             setDataMax(newDataMax);
-            setColorScaleRange((current) => {
+            setSimulatedColorScaleRange((current) => {
                 let lower = current[0];
                 let upper = current[1];
                 if (lower < newDataMin) lower = newDataMin;
@@ -90,7 +90,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
 
         const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
-            .domain([colorScaleRange[0], colorScaleRange[1]]);
+            .domain([simulatedColorScaleRange[0], simulatedColorScaleRange[1]]);
         const cells = chromosomefqData.map((row, rowIndex) =>
             row.map((value, colIndex) => ({
                 x: colIndex * cellSize,
@@ -114,7 +114,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             numRows,
             numCols
         });
-    }, [chromosomefqData, containerSize, selectedChromosomeSequence, colorScaleRange]);
+    }, [chromosomefqData, containerSize, selectedChromosomeSequence, simulatedColorScaleRange]);
 
     useEffect(() => {
         if (!layout || !selectedChromosomeSequence) return;
@@ -181,8 +181,9 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                 );
         }
 
-        const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
-            .domain([colorScaleRange[0], colorScaleRange[1]]);
+        const legendColorScale = d3.scaleSequential(d3.interpolateReds)
+            .domain([simulatedColorScaleRange[0], simulatedColorScaleRange[1]]);
+
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
             .attr("id", "legend-gradient")
@@ -190,14 +191,14 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             .attr("y1", "100%")
             .attr("x2", "0%")
             .attr("y2", "0%");
-        const dataMinLocal = colorScaleRange[0];
-        const dataMaxLocal = colorScaleRange[1];
+        const dataMinLocal = simulatedColorScaleRange[0];
+        const dataMaxLocal = simulatedColorScaleRange[1];
         const dataMid = (dataMinLocal + dataMaxLocal) / 2;
         gradient.selectAll("stop")
             .data([
-                { offset: "0%", color: colorScale(dataMinLocal) },
-                { offset: "50%", color: colorScale(dataMid) },
-                { offset: "100%", color: colorScale(dataMaxLocal) }
+                { offset: "0%", color: legendColorScale(dataMinLocal) },
+                { offset: "50%", color: legendColorScale(dataMid) },
+                { offset: "100%", color: legendColorScale(dataMaxLocal) }
             ])
             .enter()
             .append("stop")
@@ -217,7 +218,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         const legendAxis = d3.axisLeft(legendScale).ticks(5);
         legendGroup.append("g")
             .call(legendAxis);
-    }, [layout, selectedChromosomeSequence, colorScaleRange]);
+    }, [layout, selectedChromosomeSequence, simulatedColorScaleRange]);
 
     return (
         <div
@@ -266,8 +267,8 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                             size="small"
                             style={{ width: 60 }}
                             controls={false}
-                            value={colorScaleRange[1]}
-                            min={colorScaleRange[0]}
+                            value={simulatedColorScaleRange[1]}
+                            min={simulatedColorScaleRange[0]}
                             max={dataMax}
                             onChange={changeColorByInput("max")}
                         />
@@ -279,15 +280,15 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                             min={dataMin}
                             max={dataMax}
                             onChange={changeColorScale}
-                            value={colorScaleRange}
+                            value={simulatedColorScaleRange}
                         />
                         <InputNumber
                             size="small"
                             style={{ width: 60 }}
                             controls={false}
-                            value={colorScaleRange[0]}
+                            value={simulatedColorScaleRange[0]}
                             min={dataMin}
-                            max={colorScaleRange[1]}
+                            max={simulatedColorScaleRange[1]}
                             onChange={changeColorByInput("min")}
                         />
                     </div>
