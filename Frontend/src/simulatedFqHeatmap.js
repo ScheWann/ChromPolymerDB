@@ -12,23 +12,23 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
     const [heatmapData, setHeatmapData] = useState([]);
     const [simulatedColorScaleRange, setSimulatedColorScaleRange] = useState([0, 1]);
-    const [dataMin, setDataMin] = useState(0);
-    const [dataMax, setDataMax] = useState(0);
+    const [simulatedDataMin, setSimulatedDataMin] = useState(0);
+    const [simulatedDataMax, setSimulatedDataMax] = useState(0);
     const [layout, setLayout] = useState(null);
 
-    const changeColorByInput = (type) => (value) => {
+    const changeSimulatedColorByInput = (type) => (value) => {
         setSimulatedColorScaleRange((current) => {
             let newRange = [...current];
             if (type === "min") {
-                newRange[0] = Math.max(Math.min(value, current[1]), dataMin);
+                newRange[0] = Math.max(Math.min(value, current[1]), simulatedDataMin);
             } else if (type === "max") {
-                newRange[1] = Math.min(Math.max(value, current[0]), dataMax);
+                newRange[1] = Math.min(Math.max(value, current[0]), simulatedDataMax);
             }
             return newRange;
         });
     };
 
-    const changeColorScale = (value) => {
+    const changeSimulatedColorScale = (value) => {
         setSimulatedColorScaleRange(value);
     };
 
@@ -50,8 +50,8 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             const flatData = chromosomefqData.flat();
             const newDataMin = d3.min(flatData);
             const newDataMax = d3.max(flatData);
-            setDataMin(newDataMin);
-            setDataMax(newDataMax);
+            setSimulatedDataMin(newDataMin);
+            setSimulatedDataMax(newDataMax);
             setSimulatedColorScaleRange((current) => {
                 let lower = current[0];
                 let upper = current[1];
@@ -186,7 +186,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
 
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
-            .attr("id", "legend-gradient")
+            .attr("id", "simulated-legend-gradient")
             .attr("x1", "0%")
             .attr("y1", "100%")
             .attr("x2", "0%")
@@ -209,11 +209,11 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         legendGroup.append("rect")
             .attr("width", legendWidth)
             .attr("height", heatmapHeight)
-            .style("fill", "url(#legend-gradient)");
-        const legendScale = d3.scaleLinear()
+            .style("fill", "url(#simulated-legend-gradient)");
+        const simulatedlegendScale = d3.scaleLinear()
             .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
             .range([heatmapHeight, 0]);
-        const legendAxis = d3.axisLeft(legendScale).ticks(5);
+        const legendAxis = d3.axisLeft(simulatedlegendScale).ticks(5);
         legendGroup.append("g")
             .call(legendAxis);
     }, [layout, selectedChromosomeSequence, simulatedColorScaleRange]);
@@ -267,17 +267,17 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                             controls={false}
                             value={simulatedColorScaleRange[1]}
                             min={simulatedColorScaleRange[0]}
-                            max={dataMax}
-                            onChange={changeColorByInput("max")}
+                            max={simulatedDataMax}
+                            onChange={changeSimulatedColorByInput("max")}
                         />
                         <Slider
                             range={{ draggableTrack: true }}
                             vertical
                             style={{ height: 200 }}
                             step={0.1}
-                            min={dataMin}
-                            max={dataMax}
-                            onChange={changeColorScale}
+                            min={simulatedDataMin}
+                            max={simulatedDataMax}
+                            onChange={changeSimulatedColorScale}
                             value={simulatedColorScaleRange}
                         />
                         <InputNumber
@@ -285,9 +285,9 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
                             style={{ width: 60 }}
                             controls={false}
                             value={simulatedColorScaleRange[0]}
-                            min={dataMin}
+                            min={simulatedDataMin}
                             max={simulatedColorScaleRange[1]}
-                            onChange={changeColorByInput("min")}
+                            onChange={changeSimulatedColorByInput("min")}
                         />
                     </div>
                 </div>
