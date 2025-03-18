@@ -69,6 +69,20 @@ export const BeadDistributionPlot = ({
         g.append('g')
             .call(yAxis);
 
+        g.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('x', plotWidth)
+            .attr('y', plotHeight + margin.bottom - 5)
+            .style('font-size', '14px')
+            .text('Distance');
+
+        g.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('x', -20)
+            .attr('y', -5)
+            .style('font-size', '14px')
+            .text('Counts');
+
         const keys = Object.keys(distributionData);
         const colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(keys);
 
@@ -96,10 +110,10 @@ export const BeadDistributionPlot = ({
                 .on('mouseover', function (event) {
                     const hoveredKey = d3.select(this).attr('data-key');
                     svg.selectAll('[data-key]')
-                        .transition().duration(200)    
+                        .transition().duration(200)
                         .attr('opacity', 0.1);
                     svg.selectAll(`[data-key="${hoveredKey}"]`)
-                        .transition().duration(200)    
+                        .transition().duration(200)
                         .attr('opacity', 1);
 
                     legend.selectAll('rect, text')
@@ -174,15 +188,15 @@ export const BeadDistributionPlot = ({
                 .attr('data-key', key)
                 .on('mouseover', function () {
                     d3.selectAll('[data-key]')
-                        .transition().duration(200)      
+                        .transition().duration(200)
                         .attr('opacity', 0.1);
                     d3.selectAll(`[data-key='${key}']`)
-                        .transition().duration(200)  
+                        .transition().duration(200)
                         .attr('opacity', 1);
                 })
                 .on('mouseout', function () {
                     d3.selectAll('[data-key]')
-                        .transition().duration(200)  
+                        .transition().duration(200)
                         .attr('opacity', 1);
                 });
 
