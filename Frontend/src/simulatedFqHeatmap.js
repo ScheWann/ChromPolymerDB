@@ -212,7 +212,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             .style("fill", "url(#simulated-legend-gradient)");
         const simulatedlegendScale = d3.scaleLinear()
             .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
-            .range([heatmapHeight, 0]);
+            .range([0, heatmapHeight]);
         const legendAxis = d3.axisLeft(simulatedlegendScale).ticks(5);
         legendGroup.append("g")
             .call(legendAxis);
