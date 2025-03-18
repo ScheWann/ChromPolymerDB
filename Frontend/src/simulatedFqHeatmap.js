@@ -210,9 +210,8 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             const legendScale = d3.scaleLinear()
                 .domain([dataMinLocal, dataMaxLocal])
                 .range([heatmapHeight, 0]);
-            const legendAxis = d3.axisRight(legendScale).ticks(5);
+            const legendAxis = d3.axisLeft(legendScale).ticks(5);
             legendGroup.append("g")
-                .attr("transform", `translate(${legendWidth}, 0)`)
                 .call(legendAxis);
         }
     }, [chromosomefqData, containerSize, colorScaleRange, selectedChromosomeSequence, dataMin, dataMax]);
@@ -231,7 +230,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         >
             {heatmapData.length > 0 && (
                 <svg ref={svgRef} width={svgSize.width} height={svgSize.height}>
-                    <g transform={`translate(${80 + 30 + 20}, 10)`}>
+                    <g transform={`translate(130, 10)`}>
                         {heatmapData.flat().map((cell) => (
                             <rect
                                 key={`cell-${cell.rowIndex}-${cell.colIndex}`}
