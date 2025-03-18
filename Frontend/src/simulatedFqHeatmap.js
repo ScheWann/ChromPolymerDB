@@ -112,7 +112,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             heatmapHeight,
             cellSize,
             numRows,
-            numCols
+            numCols,
         });
     }, [chromosomefqData, containerSize, selectedChromosomeSequence, simulatedColorScaleRange]);
 
@@ -191,14 +191,12 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             .attr("y1", "100%")
             .attr("x2", "0%")
             .attr("y2", "0%");
-        const dataMinLocal = simulatedColorScaleRange[0];
-        const dataMaxLocal = simulatedColorScaleRange[1];
-        const dataMid = (dataMinLocal + dataMaxLocal) / 2;
+
         gradient.selectAll("stop")
             .data([
-                { offset: "0%", color: legendColorScale(dataMinLocal) },
-                { offset: "50%", color: legendColorScale(dataMid) },
-                { offset: "100%", color: legendColorScale(dataMaxLocal) }
+                { offset: "0%", color: legendColorScale(simulatedColorScaleRange[0]) },
+                { offset: "50%", color: legendColorScale((simulatedColorScaleRange[0] + simulatedColorScaleRange[1]) / 2) },
+                { offset: "100%", color: legendColorScale(simulatedColorScaleRange[1]) }
             ])
             .enter()
             .append("stop")
@@ -213,7 +211,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             .attr("height", heatmapHeight)
             .style("fill", "url(#legend-gradient)");
         const legendScale = d3.scaleLinear()
-            .domain([dataMinLocal, dataMaxLocal])
+            .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
             .range([heatmapHeight, 0]);
         const legendAxis = d3.axisLeft(legendScale).ticks(5);
         legendGroup.append("g")
