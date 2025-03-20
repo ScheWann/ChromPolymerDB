@@ -15,13 +15,13 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 30]);
+    const [colorScaleRange, setColorScaleRange] = useState([0, 0.8]);
     const [igvMountStatus, setIgvMountStatus] = useState(false);
     const [independentHeatmapCellLine, setIndependentHeatmapCellLine] = useState(cellLineName)
     const [independentHeatmapData, setIndependentHeatmapData] = useState(chromosomeData);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(independentHeatmapData);
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
-    const [fqRawcMode, setFqRawcMode] = useState(false);
+    const [fqRawcMode, setFqRawcMode] = useState(true);
 
     const modalStyles = {
         body: {
@@ -160,7 +160,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         if (fqRawcMode) {
             setColorScaleRange([0, 30]);
         } else {
-            setColorScaleRange([0, 1]);
+            setColorScaleRange([0, 0.8]);
         }
     }
 
