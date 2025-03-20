@@ -31,7 +31,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
         const max = d3.max(allValues);
         setDataMin(min);
         setDataMax(max);
-        setColorScaleRange([min, max]);
+        setColorScaleRange([min, max * 0.8]);
     }, [chromosome3DAvgMatrixData]);
 
     const changeColorByInput = (type) => (value) => {
