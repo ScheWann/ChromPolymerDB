@@ -45,7 +45,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
 
         const colorScale = d3
             .scaleSequential(t => d3.interpolateReds(1 - t))
-            .domain([minValue, maxValue / 3]);
+            .domain([minValue, maxValue * 0.17]);
 
         svg
             .selectAll()

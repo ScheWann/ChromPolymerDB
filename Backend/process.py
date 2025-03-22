@@ -14,6 +14,7 @@ import pyarrow.csv as pv
 from itertools import combinations
 import math
 from scipy.spatial.distance import squareform, pdist
+from scipy.stats import spearmanr
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -301,6 +302,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         result = spe_out_df[["chrid", "ibp", "jbp", "fq", "w"]]
         return result
 
+    # Check if the data already exists in the database
     def checking_existing_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
         
@@ -318,7 +320,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         cur.execute(query_position, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
         position_exists = cur.fetchone()['exists']
         
-        # # checking distance table
+        # checking distance table
         query_distance = """
             SELECT EXISTS (
                 SELECT 1 FROM distance
@@ -349,6 +351,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND cell_line = %s
             AND start_value = %s
             AND end_value = %s
+            ORDER BY sampleid, pid
         """,
             (chromosome_name, cell_line, sequences["start"], sequences["end"]),
         )
@@ -356,6 +359,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         cur.close()
         return data
 
+    # Get the average distance data of 5000 chain samples
     def get_avg_distance_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
         cur.execute(
@@ -375,7 +379,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
         first_vector = np.array(rows[0]["distance_vector"], dtype=float)
         sum_vector = first_vector.copy()
-        print("first_vector", first_vector)
         
         for row in rows:
             vector = np.array(row["distance_vector"], dtype=float)
@@ -388,6 +391,45 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         avg_distance_matrix = full_distance_matrix.tolist()
         
         return avg_distance_matrix
+
+    # Get the Hi-C data for the given chromosome, cell line, and sequences(for calculating the correlation)
+    def get_hic_data(conn, chromosome_name, cell_line, sequences):
+        cur = conn.cursor()
+        query = """
+            SELECT *
+            FROM non_random_hic
+            WHERE cell_line = %s
+                AND chrid = %s
+                AND ibp >= %s
+                AND ibp <= %s
+                AND jbp >= %s
+                AND jbp <= %s
+                AND ibp < jbp
+        """
+        cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"], sequences["start"], sequences["end"]))
+        rows = cur.fetchall()
+        cur.close()
+
+        start, end = sequences["start"], sequences["end"]
+        size = (end - start) // 5000
+        if (end - start) % 5000 != 0:
+            size += 1  
+
+        matrix_dict = {}
+        for row in rows:
+            ibp, jbp, fq = row["ibp"], row["jbp"], row["fq"]
+            if (ibp % 5000 == 0) and (jbp % 5000 == 0):
+                i = (ibp - start) // 5000
+                j = (jbp - start) // 5000
+                if i < j:
+                    matrix_dict[(i, j)] = fq
+
+        upper_triangle = []
+        for i in range(size):
+            for j in range(i+1, size):
+                upper_triangle.append(matrix_dict.get((i, j), 0.0))
+        
+        return np.array(upper_triangle)
 
     def get_fq_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
@@ -421,34 +463,33 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         
         return avg_distance_matrix
 
+    # Compute the correlation between the sample half-matrix and the hic(fq) half-matrix
     def compute_correlation(sample_matrix, avg_matrix):
-        flat_sample = np.array(sample_matrix).flatten()
-        flat_avg = np.array(avg_matrix).flatten()
-        if len(flat_sample) != len(flat_avg):
-            return -1
-        return np.corrcoef(flat_sample, flat_avg)[0, 1]
+        corr, _ = spearmanr(sample_matrix, avg_matrix)
+        return corr
 
+    # Return the most similar chain
     def get_best_chain_sample():
-        avg_distance_data = get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+        original_fq_data = get_hic_data(conn, chromosome_name, cell_line, sequences)
         all_position_data = get_position_data(conn, chromosome_name, cell_line, sequences)
 
         df = pd.DataFrame(all_position_data)
-        best_corr = -1
+        best_corr = None
         best_sample = None
 
         for sample_id, group in df.groupby('sampleid'):
             sorted_group = group.sort_values('start_value')
 
             coords = sorted_group[['x', 'y', 'z']].values
-            sample_dist_matrix = squareform(pdist(coords))
+            sample_dist_matrix = pdist(coords)
             
-            corr = compute_correlation(sample_dist_matrix, avg_distance_data)
+            corr = compute_correlation(sample_dist_matrix, original_fq_data)
             
-            if corr > best_corr:
+            if best_corr is None or abs(1 - abs(corr)) < abs(1 - abs(best_corr)):
                 best_corr = corr
                 best_sample = sorted_group.to_dict('records')
 
-        return best_sample if best_sample else []
+        return best_sample if best_corr is not None else []
 
     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences)
 
