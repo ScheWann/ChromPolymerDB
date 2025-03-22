@@ -371,6 +371,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         )
 
         rows = cur.fetchall()
+        cur.close()
+
         first_vector = np.array(rows[0]["distance_vector"], dtype=float)
         sum_vector = first_vector.copy()
         print("first_vector", first_vector)
