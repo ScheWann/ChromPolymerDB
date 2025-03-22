@@ -36,6 +36,8 @@ function App() {
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
   const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
   const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDistanceDownloadSpinner] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedSphereLists, setSelectedSphereLists] = useState({ "original": {}, "comparison": {} });
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -408,6 +410,42 @@ function App() {
     setComparisonCellLine3DData({});
     fetchChromosomeList(value);
     setChromosome3DComparisonShowing(false);
+  };
+
+  const handleColorChange = (color) => {
+    if (selectedIndex !== null) {
+      const originalCoordinates = chromosome3DExampleData[
+        `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`
+      ];
+      const comparisonCoordinates = comparisonCellLine3DData[
+        `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`
+      ];
+
+      setSelectedSphereLists((prev) => {
+        const updatedOriginal = {
+          ...prev.original,
+          [selectedIndex]: {
+            ...(prev.original[selectedIndex] || { position: originalCoordinates?.[selectedIndex] }),
+            color: color.toHexString(),
+          },
+        };
+
+        const updatedComparison = comparisonCoordinates
+          ? {
+            ...prev.comparison,
+            [selectedIndex]: {
+              ...(prev.comparison[selectedIndex] || { position: comparisonCoordinates?.[selectedIndex] }),
+              color: color.toHexString(),
+            },
+          }
+          : prev.comparison;
+
+        return {
+          original: updatedOriginal,
+          comparison: updatedComparison,
+        };
+      });
+    }
   };
 
   // Gene selection change
@@ -902,6 +940,7 @@ function App() {
                           key: sampleId,
                           children: chromosome3DExampleData[cacheKey] ? (
                             <Chromosome3D
+                              instanceId="original"
                               formatNumber={formatNumber}
                               celllineName={cellLineName}
                               chromosomeName={chromosomeName}
@@ -913,6 +952,11 @@ function App() {
                               chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
                               validChromosomeValidIbpData={validChromosomeValidIbpData}
                               selectedChromosomeSequence={selectedChromosomeSequence}
+                              selectedIndex={selectedIndex}
+                              setSelectedIndex={setSelectedIndex}
+                              selectedSphereList={selectedSphereLists["original"] || {}}
+                              setSelectedSphereList={setSelectedSphereLists}
+                              handleColorChange={handleColorChange}
                             />
                           ) : (
                             <Spin size="large" style={{ margin: '20px 0' }} />
@@ -999,6 +1043,7 @@ function App() {
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D
+                                  instanceId="comparison"
                                   formatNumber={formatNumber}
                                   comparisonCellLine={comparisonCellLine}
                                   chromosomeName={chromosomeName}
@@ -1010,6 +1055,11 @@ function App() {
                                   chromosomeCurrentSampleDistanceVector={comparisonCellLine3DData[cacheKey + "sample_distance_vector"]}
                                   validChromosomeValidIbpData={validChromosomeValidIbpData}
                                   selectedChromosomeSequence={selectedChromosomeSequence}
+                                  selectedIndex={selectedIndex}
+                                  setSelectedIndex={setSelectedIndex}
+                                  selectedSphereList={selectedSphereLists["comparison"] || {}}
+                                  setSelectedSphereList={setSelectedSphereLists}
+                                  handleColorChange={handleColorChange}
                                 />
                               )
                             )

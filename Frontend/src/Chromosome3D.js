@@ -9,15 +9,13 @@ import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, instanceId, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
     const rendererRef = useRef();
 
     const [hoveredIndex, setHoveredIndex] = useState(null);
-    const [selectedIndex, setSelectedIndex] = useState(null);
-    const [selectedSphereList, setSelectedSphereList] = useState({});
     const [showChromosome3DDistance, setShowChromosome3DDistance] = useState(false);
     const [geneBeadSeq, setGeneBeadSeq] = useState([]);
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
@@ -199,23 +197,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const resetSelectedBead = () => {
         setHoveredIndex(null);
         setSelectedIndex(null);
-        setSelectedSphereList({});
-    };
-
-    const handleColorChange = (color) => {
-        if (selectedIndex !== null) {
-            setSelectedSphereList((prev) => ({
-                ...prev,
-                [selectedIndex]: {
-                    color: color.toHexString(),
-                    position: {
-                        x: coordinates[selectedIndex].x,
-                        y: coordinates[selectedIndex].y,
-                        z: coordinates[selectedIndex].z,
-                    },
-                },
-            }));
-        }
+        setSelectedSphereList({ "original": {}, "comparison": {} });
     };
 
     const handleResetSelect = (index) => {
