@@ -29,8 +29,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     };
 
     const changeSimulatedColorScale = (value) => {
-        console.log(value);
-        setSimulatedColorScaleRange([value[0],value[1]]);
+        setSimulatedColorScaleRange(value);
     };
 
     useEffect(() => {
