@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { Spin } from 'antd';
 import * as d3 from 'd3';
 
@@ -12,19 +12,19 @@ export const BeadDistributionPlot = ({
     const svgRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 750, height: 450 });
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 const { width, height } = entry.contentRect;
-                setDimensions({ width, height });
+                if (width > 0 && height > 0) {
+                    setDimensions({ width, height });
+                }
             }
         });
         resizeObserver.observe(container);
-        return () => {
-            resizeObserver.disconnect();
-        };
+        return () => resizeObserver.disconnect();
     }, []);
 
     useEffect(() => {
@@ -35,7 +35,9 @@ export const BeadDistributionPlot = ({
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
             .attr('width', width)
-            .attr('height', height);
+            .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
 
         const plotWidth = width - margin.left - margin.right;
         const plotHeight = height - margin.top - margin.bottom;
