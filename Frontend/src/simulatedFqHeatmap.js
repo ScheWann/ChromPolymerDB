@@ -29,7 +29,8 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     };
 
     const changeSimulatedColorScale = (value) => {
-        setSimulatedColorScaleRange(value);
+        console.log(value);
+        setSimulatedColorScaleRange([value[0],value[1]]);
     };
 
     useEffect(() => {
@@ -90,7 +91,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
 
         const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
-            .domain([simulatedColorScaleRange[0], simulatedColorScaleRange[1]]);
+            .domain(simulatedColorScaleRange);
         const cells = chromosomefqData.map((row, rowIndex) =>
             row.map((value, colIndex) => ({
                 x: colIndex * cellSize,
@@ -182,7 +183,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         }
 
         const legendColorScale = d3.scaleSequential(d3.interpolateReds)
-            .domain([simulatedColorScaleRange[0], simulatedColorScaleRange[1]]);
+            .domain(simulatedColorScaleRange);
 
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
