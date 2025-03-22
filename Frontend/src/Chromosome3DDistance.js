@@ -12,6 +12,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const rendererRef = useRef();
     const [openDistrubutionModal, setOpenDistrubutionModal] = useState(false);
     const [distributionData, setDistributionData] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const spheresData = useMemo(() => {
         return Object.entries(selectedSphereList).map(([key, { position, color }]) => {
@@ -118,6 +119,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     const openDistribution = () => {
         setOpenDistrubutionModal(true);
+        setLoading(true);
         const beadsArray = Object.keys(selectedSphereList);
 
         fetch('/getBeadDistribution', {
@@ -135,6 +137,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             .then(res => res.json())
             .then(data => {
                 setDistributionData(data);
+                setLoading(false);
             });
     };
 
@@ -254,7 +257,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
                 <Modal
                     title="Distribution of the selected beads"
-                    width={"40vw"}
+                    width={"45vw"}
                     height={"40vh"}
                     open={openDistrubutionModal}
                     onCancel={() => setOpenDistrubutionModal(false)}
@@ -267,6 +270,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     <BeadDistributionPlot
                         selectedSphereList={selectedSphereList}
                         distributionData={distributionData}
+                        loading={loading}
                     />
                 </Modal>
 

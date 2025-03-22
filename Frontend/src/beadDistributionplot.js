@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Spin } from 'antd';
 import * as d3 from 'd3';
 
 export const BeadDistributionPlot = ({
     distributionData,
     selectedSphereList,
+    loading,
     margin = { top: 20, right: 30, bottom: 40, left: 40 }
 }) => {
     const containerRef = useRef(null);
@@ -27,6 +29,8 @@ export const BeadDistributionPlot = ({
 
     useEffect(() => {
         d3.select(svgRef.current).selectAll('*').remove();
+
+        if(loading) return;
 
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
@@ -215,11 +219,13 @@ export const BeadDistributionPlot = ({
                 .attr('fill', '#000')
                 .text(key);
         });
-    }, [distributionData, selectedSphereList, dimensions, margin]);
+    }, [distributionData, selectedSphereList, dimensions, margin, loading]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '450px' }}>
-            <svg ref={svgRef}></svg>
-        </div>
+        loading ? <Spin spinning={true} style={{ width: '100%', height: '450px' }}/> : (
+            <div ref={containerRef} style={{ width: '100%', height: '450px' }}>
+                <svg ref={svgRef}></svg>
+            </div>
+        )
     );
 };
