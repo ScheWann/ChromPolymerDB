@@ -741,7 +741,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         // Apply rotation transformation
         context.scale(1, -1)
-        context.translate(canvas.width / 2, -canvas.height * 2);
+        context.translate(canvas.width / 2, -canvas.height * 2 - 10);
         context.rotate(Math.PI / 4);
 
         const { start, end } = currentChromosomeSequence;
@@ -851,7 +851,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const clickableArea = [
             [canvas.width / 2, margin.top],
-            [0, canvas.height - margin.bottom],
+            [0, canvas.height],
             [canvas.width, canvas.height - margin.bottom],
         ];
 
