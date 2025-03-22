@@ -7,7 +7,7 @@ import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, colorScaleRange, changeColorScale, igvMountStatus }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -810,9 +810,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 rectHeight = Math.round(rectHeight);
 
                 if (!fullTriangleVisible) {
-                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
+                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 } else {
-                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(rawc);
+                    context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 }
                 context.fillRect(x, y, rectWidth, rectHeight);
             });
@@ -908,7 +908,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .style("text-anchor", "middle")
             .attr("dx", "0em")
             .attr("dy", "1em");
-    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange]);
+    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange, fqRawcMode]);
 
     return (
         <div ref={containerRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: '100%', height: '100%' }}>
@@ -926,7 +926,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
-                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={200} onChange={changeColorScale} value={colorScaleRange} />
+                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={fqRawcMode ? 1 : 200} step={fqRawcMode ? 0.1: 1} onChange={changeColorScale} value={colorScaleRange} />
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch

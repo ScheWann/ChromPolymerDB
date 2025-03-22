@@ -651,6 +651,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     currentChromosomeData={currentChromosomeData}
                                     currentChromosomeSequence={currentChromosomeSequence}
                                     geneName={geneName}
+                                    fqRawcMode={fqRawcMode}
                                     colorScaleRange={colorScaleRange}
                                     igvMountStatus={igvMountStatus}
                                     changeColorByInput={changeColorByInput}
