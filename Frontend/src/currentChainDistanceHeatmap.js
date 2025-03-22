@@ -59,9 +59,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
             .attr('y', d => yScale(String(d.i)) || 0)
             .attr('width', xScale.bandwidth())
             .attr('height', yScale.bandwidth())
-            .attr('fill', d => colorScale(d.value))
-            .attr('rx', 2)
-            .attr('ry', 2);
+            .attr('fill', d => colorScale(d.value));
 
     }, [chromosomeCurrentSampleDistanceVector, dimensions]);
 
