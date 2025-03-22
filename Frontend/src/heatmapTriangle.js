@@ -745,6 +745,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         context.rotate(Math.PI / 4);
 
         const { start, end } = currentChromosomeSequence;
+        const maxRectSize = 10;
         const step = 5000;
         const adjustedStart = Math.floor(start / step) * step;
         const adjustedEnd = Math.ceil(end / step) * step;
@@ -794,8 +795,19 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
-                const rectWidth = xScale(ibp + step) - xScale(ibp);
-                const rectHeight = yScale(jbp) - yScale(jbp + step);
+                let rectWidth = xScale(ibp + step) - xScale(ibp);
+                let rectHeight = yScale(jbp) - yScale(jbp + step);
+
+                if (rectWidth > maxRectSize || rectHeight > maxRectSize) {
+                    const scaleFactor = Math.min(maxRectSize / rectWidth, maxRectSize / rectHeight);
+                    const adjustedStep = step * scaleFactor;
+                
+                    rectWidth = xScale(ibp + adjustedStep) - xScale(ibp);
+                    rectHeight = yScale(jbp) - yScale(jbp + adjustedStep);
+                }
+
+                rectWidth = Math.round(rectWidth);
+                rectHeight = Math.round(rectHeight);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(rawc);
