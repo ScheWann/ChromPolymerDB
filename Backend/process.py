@@ -405,12 +405,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
         rows = cur.fetchall()
         first_vector = np.array(rows[0]["distance_vector"], dtype=float)
-        binary_vector = np.where(first_vector > 80, 1, 0) 
+        binary_vector = np.where(first_vector <= 80, 1, 0) 
         sum_vector = binary_vector.copy()
 
         for row in rows[1:]:
             vector = np.array(row["distance_vector"], dtype=float)
-            binary_vector = np.where(vector > 80, 1, 0)
+            binary_vector = np.where(vector <= 80, 1, 0)
             sum_vector += binary_vector
         
         count = len(rows)

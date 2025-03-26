@@ -89,7 +89,7 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
         const totalSvgHeight = heatmapHeight + margin.top + margin.bottom;
         setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
 
-        const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
+        const colorScale = d3.scaleSequential(t => d3.interpolateReds(t))
             .domain(simulatedColorScaleRange);
         const cells = chromosomefqData.map((row, rowIndex) =>
             row.map((value, colIndex) => ({
