@@ -14,7 +14,7 @@ import pyarrow.csv as pv
 from itertools import combinations
 import math
 from scipy.spatial.distance import squareform, pdist
-from scipy.stats import spearmanr
+from scipy.stats import pearsonr
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -341,7 +341,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(distance_exists)
         }
 
-    def get_position_data(conn, chromosome_name, cell_line, sequences):
+    def get_position_data(conn, chromosome_name, cell_line, sequences, sample_id):
         cur = conn.cursor()
         cur.execute(
             """
@@ -351,9 +351,9 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             AND cell_line = %s
             AND start_value = %s
             AND end_value = %s
-            ORDER BY sampleid, pid
+            AND sampleid = %s
         """,
-            (chromosome_name, cell_line, sequences["start"], sequences["end"]),
+            (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
         )
         data = cur.fetchall()
         cur.close()
@@ -377,59 +377,17 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         rows = cur.fetchall()
         cur.close()
 
-        first_vector = np.array(rows[0]["distance_vector"], dtype=float)
-        sum_vector = first_vector.copy()
-        
-        for row in rows:
-            vector = np.array(row["distance_vector"], dtype=float)
-            sum_vector += vector
+        if not rows:
+            return []
 
-        count = len(rows)
-        avg_vector = sum_vector / count
+        # Convert all vectors at once for efficiency
+        vectors = np.array([np.array(row["distance_vector"], dtype=float) for row in rows])
+        avg_vector = np.mean(vectors, axis=0)
         
-        full_distance_matrix = squareform(avg_vector)
-        avg_distance_matrix = full_distance_matrix.tolist()
+        # Convert the upper triangular distance vector to a full matrix
+        avg_distance_matrix = squareform(avg_vector).tolist()
         
         return avg_distance_matrix
-
-    # Get the Hi-C data for the given chromosome, cell line, and sequences(for calculating the correlation)
-    def get_hic_data(conn, chromosome_name, cell_line, sequences):
-        cur = conn.cursor()
-        query = """
-            SELECT *
-            FROM non_random_hic
-            WHERE cell_line = %s
-                AND chrid = %s
-                AND ibp >= %s
-                AND ibp <= %s
-                AND jbp >= %s
-                AND jbp <= %s
-                AND ibp < jbp
-        """
-        cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"], sequences["start"], sequences["end"]))
-        rows = cur.fetchall()
-        cur.close()
-
-        start, end = sequences["start"], sequences["end"]
-        size = (end - start) // 5000
-        if (end - start) % 5000 != 0:
-            size += 1  
-
-        matrix_dict = {}
-        for row in rows:
-            ibp, jbp, fq = row["ibp"], row["jbp"], row["fq"]
-            if (ibp % 5000 == 0) and (jbp % 5000 == 0):
-                i = (ibp - start) // 5000
-                j = (jbp - start) // 5000
-                if i < j:
-                    matrix_dict[(i, j)] = fq
-
-        upper_triangle = []
-        for i in range(size):
-            for j in range(i+1, size):
-                upper_triangle.append(matrix_dict.get((i, j), 0.0))
-        
-        return np.array(upper_triangle)
 
     def get_fq_data(conn, chromosome_name, cell_line, sequences):
         cur = conn.cursor()
@@ -463,33 +421,27 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         
         return avg_distance_matrix
 
-    # Compute the correlation between the sample half-matrix and the hic(fq) half-matrix
-    def compute_correlation(sample_matrix, avg_matrix):
-        corr, _ = spearmanr(sample_matrix, avg_matrix)
-        return corr
-
     # Return the most similar chain
     def get_best_chain_sample():
-        original_fq_data = get_hic_data(conn, chromosome_name, cell_line, sequences)
-        all_position_data = get_position_data(conn, chromosome_name, cell_line, sequences)
+        avg_distance_matrix = get_avg_distance_data(conn, chromosome_name, cell_line, sequences)
+        avg_distance_vector = np.array(avg_distance_matrix).flatten()
 
-        df = pd.DataFrame(all_position_data)
         best_corr = None
-        best_sample = None
+        best_sample_id = None
 
-        for sample_id, group in df.groupby('sampleid'):
-            sorted_group = group.sort_values('start_value')
-
-            coords = sorted_group[['x', 'y', 'z']].values
-            sample_dist_matrix = pdist(coords)
+        for sample_id in range(5000):
+            sample_distance_matrix = get_distance_vector_by_sample(conn, chromosome_name, cell_line, sample_id, sequences)
+            sample_distance_vector = np.array(sample_distance_matrix).flatten()
             
-            corr = compute_correlation(sample_dist_matrix, original_fq_data)
+            corr, _ = pearsonr(sample_distance_vector, avg_distance_vector)
+            print(corr, sample_id, 'corr_value')
             
             if best_corr is None or abs(1 - abs(corr)) < abs(1 - abs(best_corr)):
                 best_corr = corr
-                best_sample = sorted_group.to_dict('records')
+                best_sample_id = sample_id
 
-        return best_sample if best_corr is not None else []
+        print(best_corr, 'best_corr')
+        return best_sample_id if best_corr is not None else None
 
     existing_data_status = checking_existing_data(conn, chromosome_name, cell_line, sequences)
 
@@ -514,15 +466,11 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         return avg_distance_matrix
 
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]:
-        best_sample = get_best_chain_sample()
-        if best_sample and len(best_sample) > 0:
-            sample_id = best_sample[0]["sampleid"]
-            sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, sample_id, sequences)
-        else:
-            sample_distance_vector = None 
+        best_sample_id = get_best_chain_sample()
+        sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, best_sample_id, sequences)
 
         return {
-            "position_data": get_best_chain_sample(),
+            "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, best_sample_id),
             "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences),
             "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences),
             "sample_distance_vector": sample_distance_vector
@@ -596,15 +544,11 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
-            best_sample = get_best_chain_sample()
-            if best_sample and len(best_sample) > 0:
-                sample_id = best_sample[0]["sampleid"]
-                sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, sample_id, sequences)
-            else:
-                sample_distance_vector = None
+            best_sample_id = get_best_chain_sample()
+            sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, best_sample_id, sequences)
 
             return { 
-                "position_data": get_best_chain_sample(),
+                "position_data": get_position_data(conn, chromosome_name, cell_line, sequences, best_sample_id),
                 "avg_distance_data": get_avg_distance_data(conn, chromosome_name, cell_line, sequences),
                 "fq_data": get_fq_data(conn, chromosome_name, cell_line, sequences),
                 "sample_distance_vector": sample_distance_vector
