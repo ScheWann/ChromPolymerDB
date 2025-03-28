@@ -53,13 +53,13 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
     useEffect(() => {
         if (!chromosome3DAvgMatrixData.length) return;
 
+        const { start, end } = selectedChromosomeSequence;
+        const margin = { top: 10, right: 10, bottom: 40, left: 100 };
         const svgWidth = svgDimensions.width;
         const svgHeight = svgDimensions.height;
-        const margin = { top: 10, right: 0, bottom: 20, left: 80 };
 
         const numRows = chromosome3DAvgMatrixData.length;
         const numCols = chromosome3DAvgMatrixData[0].length;
-
 
         const availableWidth = svgWidth - margin.left - margin.right;
         const availableHeight = svgHeight - margin.top - margin.bottom;
@@ -71,6 +71,35 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
         const dataMinLocal = d3.min(allValues);
         const dataMaxLocal = d3.max(allValues);
         const dataMid = (dataMinLocal + dataMaxLocal) / 2;
+
+        let tickCount;
+        const step = 5000;
+        const adjustedStart = Math.floor(start / step) * step;
+        const adjustedEnd = Math.ceil(end / step) * step;
+        const axisValues = Array.from(
+            { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
+            (_, i) => adjustedStart + i * step
+        );
+        const range = end - start;
+        if (range < 1000000) {
+            tickCount = Math.max(Math.floor(range / 20000), 5);
+        } else if (range >= 1000000 && range <= 10000000) {
+            tickCount = Math.max(Math.floor(range / 50000), 5);
+        } else {
+            tickCount = 30;
+        }
+        tickCount = Math.min(tickCount, 30);
+        const tickFormats = d => {
+            if (d >= 1000000) {
+                return `${(d / 1000000).toFixed(3)}M`;
+            }
+            if (d > 10000 && d < 1000000) {
+                return `${(d / 10000).toFixed(3)}W`;
+            }
+            return d;
+        };
+
+        const filteredTicks = axisValues.filter((_, i) => i % tickCount === 0);
 
         const colorScale = d3
             .scaleSequential(t => d3.interpolateReds(1 - t))
@@ -86,7 +115,7 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         const legendWidth = 20;
-        const legendMargin = 30;
+        const legendMargin = 50;
 
         const defs = svg.append("defs");
         const gradient = defs.append("linearGradient")
@@ -109,12 +138,12 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
             .attr("stop-color", d => d.color);
 
         const xScale = d3.scaleBand()
-            .domain(d3.range(numCols))
+            .domain(axisValues)
             .range([0, heatmapWidth])
             .padding(0.01);
 
         const yScale = d3.scaleBand()
-            .domain(d3.range(numRows).reverse())
+            .domain(axisValues)
             .range([0, heatmapHeight])
             .padding(0.01);
 
@@ -129,18 +158,20 @@ export const AvgDistanceHeatmap = ({ chromosome3DAvgMatrixData, selectedChromoso
             .attr("fill", d => colorScale(d));
 
         const xAxis = d3.axisBottom(xScale)
-            .tickValues(xScale.domain().filter((d, i) => i % Math.ceil(numCols / 10) === 0))
-            .tickFormat(d => `${d + 1}`);
+            .tickValues(filteredTicks)
+            .tickFormat(tickFormats);
 
         g.append("g")
             .attr("transform", `translate(0, ${heatmapHeight})`)
             .call(xAxis)
             .selectAll("text")
-            .style("text-anchor", "middle");
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-45)")  
 
         const yAxis = d3.axisLeft(yScale)
-            .tickValues(yScale.domain().filter((d, i) => i % Math.ceil(numRows / 10) === 0))
-            .tickFormat(d => `${d + 1}`);
+            .tickValues(filteredTicks)
+            .tickFormat(tickFormats);
+        
         g.append("g").call(yAxis);
 
         const legendX = margin.left - legendWidth - legendMargin;
