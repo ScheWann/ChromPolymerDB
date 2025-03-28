@@ -592,6 +592,10 @@ function App() {
   // Add 3D Chromosome Comparison
   const handleAddChromosome3D = () => {
     setChromosome3DComparisonShowing(true);
+    setSelectedSphereLists((prev) => ({
+      original: prev.original,
+      comparison: { ...prev.original },
+    }));
   };
 
   // Remove 3D Chromosome Comparison
