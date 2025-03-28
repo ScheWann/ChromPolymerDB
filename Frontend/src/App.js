@@ -944,7 +944,6 @@ function App() {
                           key: sampleId,
                           children: chromosome3DExampleData[cacheKey] ? (
                             <Chromosome3D
-                              instanceId="original"
                               formatNumber={formatNumber}
                               celllineName={cellLineName}
                               chromosomeName={chromosomeName}
@@ -1047,7 +1046,6 @@ function App() {
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D
-                                  instanceId="comparison"
                                   formatNumber={formatNumber}
                                   comparisonCellLine={comparisonCellLine}
                                   chromosomeName={chromosomeName}
