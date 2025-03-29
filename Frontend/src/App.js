@@ -949,6 +949,7 @@ function App() {
                               chromosomeName={chromosomeName}
                               currentChromosomeSequence={currentChromosomeSequence}
                               geneSize={geneSize}
+                              chromosomeData={chromosomeData}
                               chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
                               chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
                               chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
@@ -1051,6 +1052,7 @@ function App() {
                                   chromosomeName={chromosomeName}
                                   currentChromosomeSequence={currentChromosomeSequence}
                                   geneSize={geneSize}
+                                  chromosomeData={chromosomeData}
                                   chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
                                   chromosome3DAvgMatrixData={comparisonCellLine3DData[cacheKey + "_avg_matrix"]}
                                   chromosomefqData={comparisonCellLine3DData[cacheKey + "_fq_data"]}

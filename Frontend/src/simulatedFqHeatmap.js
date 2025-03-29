@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { InputNumber, Slider } from 'antd';
 import * as d3 from 'd3';
 
-export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequence }) => {
+export const SimulatedFqHeatmap = ({
+    chromosomeData,
+    chromosomefqData,
+    selectedChromosomeSequence
+}) => {
     const containerRef = useRef(null);
-    const svgRef = useRef(null);
-    const xAxisRef = useRef(null);
-    const yAxisRef = useRef(null);
-
+    const canvasRef = useRef(null);
+    const svgLegendRef = useRef(null);
+    const axisRef = useRef(null);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
-    const [heatmapData, setHeatmapData] = useState([]);
     const [simulatedColorScaleRange, setSimulatedColorScaleRange] = useState([0, 0.3]);
     const [simulatedDataMin, setSimulatedDataMin] = useState(0);
     const [simulatedDataMax, setSimulatedDataMax] = useState(0);
@@ -46,79 +48,26 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
     }, []);
 
     useEffect(() => {
-        if (chromosomefqData && chromosomefqData.length > 0 && chromosomefqData[0].length > 0) {
-            const flatData = chromosomefqData.flat();
-            const newDataMin = d3.min(flatData);
-            const newDataMax = d3.max(flatData);
-            setSimulatedDataMin(newDataMin);
-            setSimulatedDataMax(newDataMax);
-            setSimulatedColorScaleRange((current) => {
-                let lower = current[0];
-                let upper = current[1];
-                if (lower < newDataMin) lower = newDataMin;
-                if (upper > newDataMax) upper = newDataMax;
-                return [lower, upper];
-            });
-        }
-    }, [chromosomefqData]);
+        const allData = [
+            ...(chromosomefqData?.flat() || []),
+            ...(chromosomeData?.map(d => d.fq) || [])
+        ];
+        if (allData.length === 0) return;
+
+        const newMin = d3.min(allData);
+        const newMax = d3.max(allData);
+        setSimulatedDataMin(newMin);
+        setSimulatedDataMax(newMax);
+        setSimulatedColorScaleRange([newMin, newMax]);
+    }, [chromosomefqData, chromosomeData]);
 
     useEffect(() => {
-        if (
-            !containerSize.width ||
-            !containerSize.height ||
-            !chromosomefqData ||
-            chromosomefqData.length === 0 ||
-            !selectedChromosomeSequence
-        ) {
-            return;
-        }
-        const margin = { top: 10, right: 10, bottom: 56, left: 80 };
-        const legendMargin = 20;
+        if (!containerSize.width || !containerSize.height || !selectedChromosomeSequence) return;
+
+        const margin = { top: 30, right: 0, bottom: 35, left: 120 };
         const legendWidth = 20;
+        const axisPadding = 10;
 
-        const numRows = chromosomefqData.length;
-        const numCols = chromosomefqData[0].length;
-
-        const availableWidth = containerSize.width - margin.left - margin.right - legendMargin - legendWidth;
-        const availableHeight = containerSize.height - margin.top - margin.bottom;
-        const cellSize = Math.min(availableWidth / numCols, availableHeight / numRows);
-        const heatmapWidth = numCols * cellSize;
-        const heatmapHeight = numRows * cellSize;
-
-        const totalSvgWidth = heatmapWidth + margin.left + margin.right + legendMargin + legendWidth;
-        const totalSvgHeight = heatmapHeight + margin.top + margin.bottom;
-        setSvgSize({ width: totalSvgWidth, height: totalSvgHeight });
-
-        const colorScale = d3.scaleSequential(t => d3.interpolateReds(t))
-            .domain(simulatedColorScaleRange);
-        const cells = chromosomefqData.map((row, rowIndex) =>
-            row.map((value, colIndex) => ({
-                x: colIndex * cellSize,
-                y: (numRows - rowIndex - 1) * cellSize,
-                cellSize,
-                fillColor: colorScale(value),
-                value,
-                rowIndex,
-                colIndex,
-            }))
-        );
-        setHeatmapData(cells);
-
-        setLayout({
-            margin,
-            legendMargin,
-            legendWidth,
-            heatmapWidth,
-            heatmapHeight,
-            cellSize,
-            numRows,
-            numCols,
-        });
-    }, [chromosomefqData, containerSize, selectedChromosomeSequence, simulatedColorScaleRange]);
-
-    useEffect(() => {
-        if (!layout || !selectedChromosomeSequence) return;
-        const { margin, legendMargin, legendWidth, heatmapWidth, heatmapHeight } = layout;
         const { start, end } = selectedChromosomeSequence;
         const step = 5000;
         const adjustedStart = Math.floor(start / step) * step;
@@ -128,172 +77,227 @@ export const SimulatedFqHeatmap = ({ chromosomefqData, selectedChromosomeSequenc
             (_, i) => adjustedStart + i * step
         );
 
-        const xScale = d3.scaleBand()
-            .domain(axisValues)
-            .range([0, heatmapWidth])
-            .padding(0.1);
-        const yScale = d3.scaleBand()
-            .domain(axisValues)
-            .range([heatmapHeight, 0])
-            .padding(0.1);
+        const availableWidth = containerSize.width - margin.left - margin.right - legendWidth;
+        const availableHeight = containerSize.height - margin.top - margin.bottom;
+        const maxSize = Math.min(availableWidth, availableHeight);
+        const numCells = axisValues.length;
+        const cellSize = maxSize / numCells;
+        const heatmapSize = cellSize * numCells;
 
-        let tickCount;
-        const range = end - start;
-        if (range < 1000000) {
-            tickCount = Math.max(Math.floor(range / 20000), 5);
-        } else if (range >= 1000000 && range <= 10000000) {
-            tickCount = Math.max(Math.floor(range / 50000), 5);
-        } else {
-            tickCount = 30;
-        }
-        tickCount = Math.min(tickCount, 30);
-        const tickFormats = d => {
-            if (d >= 1000000) {
-                return `${(d / 1000000).toFixed(3)}M`;
-            }
-            if (d > 10000 && d < 1000000) {
-                return `${(d / 10000).toFixed(3)}W`;
-            }
-            return d;
-        };
-        const filteredTicks = axisValues.filter((_, i) => i % tickCount === 0);
+        setSvgSize({
+            width: margin.left + heatmapSize + margin.right + legendWidth,
+            height: margin.top + heatmapSize + margin.bottom
+        });
 
-        const svg = d3.select(svgRef.current);
+        setLayout({
+            margin,
+            legendWidth,
+            heatmapSize,
+            cellSize,
+            numCells,
+            axisValues,
+            step,
+            adjustedStart,
+            axisPadding
+        });
+    }, [containerSize, selectedChromosomeSequence]);
 
-        svg.selectAll("defs").remove();
-        svg.selectAll(".legendGroup").remove();
+    useEffect(() => {
+        if (!layout || !canvasRef.current) return;
 
-        if (xAxisRef.current) {
-            d3.select(xAxisRef.current)
-                .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${heatmapHeight + margin.top})`)
-                .call(d3.axisBottom(xScale)
-                    .tickValues(filteredTicks)
-                    .tickFormat(tickFormats)
-                )
-                .selectAll("text")
-                .attr("transform", "rotate(-45)")
-                .style("text-anchor", "end");  
-        }
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (yAxisRef.current) {
-            d3.select(yAxisRef.current)
-                .attr("transform", `translate(${margin.left + legendMargin + legendWidth}, ${margin.top})`)
-                .call(d3.axisLeft(yScale)
-                    .tickValues(filteredTicks)
-                    .tickFormat(tickFormats)
-                );
-        }
+        const {
+            margin,
+            heatmapSize,
+            cellSize,
+            axisValues,
+            step,
+            adjustedStart,
+            axisPadding
+        } = layout;
 
-        const legendColorScale = d3.scaleSequential(d3.interpolateReds)
+        const colorScale = d3.scaleSequential(d3.interpolateReds)
             .domain(simulatedColorScaleRange);
 
-        const defs = svg.append("defs");
-        const gradient = defs.append("linearGradient")
-            .attr("id", "simulated-legend-gradient")
+        if (chromosomefqData) {
+            ctx.save();
+            ctx.translate(margin.left, margin.top);
+            for (let i = 0; i < chromosomefqData.length; i++) {
+                for (let j = 0; j <= i; j++) {
+                    const value = chromosomefqData[i][j];
+                    ctx.fillStyle = colorScale(value);
+                    ctx.fillRect(
+                        j * cellSize,
+                        (chromosomefqData.length - i - 1) * cellSize,
+                        cellSize,
+                        cellSize
+                    );
+                }
+            }
+            ctx.restore();
+        }
+
+        if (chromosomeData) {
+            ctx.save();
+            ctx.translate(margin.left, margin.top);
+            chromosomeData.forEach(d => {
+                const i = Math.floor((d.ibp - adjustedStart) / step);
+                const j = Math.floor((d.jbp - adjustedStart) / step);
+                if (i < j && i >= 0 && j < axisValues.length) {
+                    ctx.fillStyle = colorScale(d.fq);
+                    ctx.fillRect(
+                        j * cellSize,
+                        (axisValues.length - i - 1) * cellSize,
+                        cellSize,
+                        cellSize
+                    );
+                }
+            });
+            ctx.restore();
+        }
+
+        const axisContainer = d3.select(axisRef.current);
+        axisContainer.selectAll("*").remove();
+
+        const xScale = d3.scaleBand()
+            .domain(axisValues)
+            .range([0, heatmapSize]);
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickValues(xScale.domain().filter((d, i) => i % 10 === 0))
+            .tickFormat(d3.format(".2s"));
+
+        axisContainer.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(${margin.left},${margin.top + heatmapSize})`)
+            .call(xAxis);
+
+        const yScale = d3.scaleBand()
+            .domain([...axisValues].reverse())
+            .range([0, heatmapSize]);
+
+        const yAxis = d3.axisLeft(yScale)
+            .tickValues(yScale.domain().filter((d, i) => i % 10 === 0))
+            .tickFormat(d3.format(".2s"));
+
+        axisContainer.append("g")
+            .attr("class", "y-axis")
+            .attr("transform", `translate(${margin.left},${margin.top})`)
+            .call(yAxis);
+    }, [layout, chromosomefqData, chromosomeData, simulatedColorScaleRange]);
+
+    useEffect(() => {
+        if (!layout || !svgLegendRef.current) return;
+
+        const svg = d3.select(svgLegendRef.current);
+        svg.selectAll("*").remove();
+
+        const { legendWidth, heatmapSize, margin } = layout;
+
+        const gradient = svg.append("defs")
+            .append("linearGradient")
+            .attr("id", "legend-gradient")
             .attr("x1", "0%")
-            .attr("y1", "100%")
             .attr("x2", "0%")
-            .attr("y2", "0%");
+            .attr("y1", "0%")
+            .attr("y2", "100%");
 
-        gradient.selectAll("stop")
-            .data([
-                { offset: "0%", color: legendColorScale(simulatedColorScaleRange[0]) },
-                { offset: "50%", color: legendColorScale((simulatedColorScaleRange[0] + simulatedColorScaleRange[1]) / 2) },
-                { offset: "100%", color: legendColorScale(simulatedColorScaleRange[1]) }
-            ])
-            .enter()
-            .append("stop")
-            .attr("offset", d => d.offset)
-            .attr("stop-color", d => d.color);
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[1]));
 
-        const legendGroup = svg.append("g")
-            .attr("class", "legendGroup")
-            .attr("transform", `translate(${margin.left - legendMargin - legendWidth}, ${margin.top})`);
-        legendGroup.append("rect")
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[0]));
+
+        svg.append("rect")
+            .attr("x", legendWidth)
+            .attr("y", 0)
             .attr("width", legendWidth)
-            .attr("height", heatmapHeight)
-            .style("fill", "url(#simulated-legend-gradient)");
-        const simulatedlegendScale = d3.scaleLinear()
+            .attr("height", heatmapSize)
+            .attr("fill", "url(#legend-gradient)");
+
+        const yScale = d3.scaleLinear()
             .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
-            .range([0, heatmapHeight]);
-        const legendAxis = d3.axisLeft(simulatedlegendScale).ticks(5);
-        legendGroup.append("g")
-            .call(legendAxis);
-    }, [layout, selectedChromosomeSequence, simulatedColorScaleRange]);
+            .range([0, heatmapSize]);
+
+        const yAxis = d3.axisLeft(yScale)
+            .ticks(5)
+            .tickFormat(d3.format(".2f"));
+
+        svg.append("g")
+            .attr("transform", `translate(${legendWidth}, 0)`)
+            .call(yAxis);
+    }, [layout, simulatedColorScaleRange]);
 
     return (
-        <div
-            ref={containerRef}
-            style={{
-                width: '50%',
-                height: '100%',
-                position: 'relative',
-                overflow: 'visible',
+        <div ref={containerRef} style={{ width: '50%', height: '100%', position: 'relative' }}>
+            <canvas
+                ref={canvasRef}
+                width={svgSize.width}
+                height={svgSize.height}
+                style={{ position: 'absolute', left: 0, top: 0 }}
+            />
+            <svg
+                ref={axisRef}
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: svgSize.width,
+                    height: svgSize.height,
+                    pointerEvents: 'none'
+                }}
+            />
+            <svg
+                ref={svgLegendRef}
+                style={{
+                    position: 'absolute',
+                    left: layout?.margin.left - 80,
+                    top: layout?.margin.top,
+                    width: layout?.legendWidth + 40,
+                    height: layout?.heatmapSize
+                }}
+            />
+            <div style={{
+                position: 'absolute',
+                right: 50,
+                top: '50%',
+                transform: 'translateY(-50%)',
                 display: 'flex',
-                justifyContent: 'center',
-            }}
-        >
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div>Simulated fq Heatmap</div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {heatmapData.length > 0 && (
-                        <svg ref={svgRef} width={svgSize.width} height={svgSize.height}>
-                            <g transform={`translate(${80 + 20 + 20}, 10)`}>
-                                {heatmapData.flat().map((cell) => (
-                                    <rect
-                                        key={`cell-${cell.rowIndex}-${cell.colIndex}`}
-                                        x={cell.x}
-                                        y={cell.y}
-                                        width={cell.cellSize}
-                                        height={cell.cellSize}
-                                        fill={cell.fillColor}
-                                    />
-                                ))}
-                            </g>
-                            <g className="axis" ref={xAxisRef} />
-                            <g className="axis" ref={yAxisRef} />
-                        </svg>
-                    )}
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "5px",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginLeft: "10px"
-                        }}
-                    >
-                        <InputNumber
-                            size="small"
-                            style={{ width: 60 }}
-                            controls={false}
-                            value={simulatedColorScaleRange[1]}
-                            min={simulatedColorScaleRange[0]}
-                            max={simulatedDataMax}
-                            onChange={changeSimulatedColorByInput("max")}
-                        />
-                        <Slider
-                            range={{ draggableTrack: true }}
-                            vertical
-                            style={{ height: 200 }}
-                            step={0.1}
-                            min={simulatedDataMin}
-                            max={simulatedDataMax}
-                            onChange={changeSimulatedColorScale}
-                            value={simulatedColorScaleRange}
-                        />
-                        <InputNumber
-                            size="small"
-                            style={{ width: 60 }}
-                            controls={false}
-                            value={simulatedColorScaleRange[0]}
-                            min={simulatedDataMin}
-                            max={simulatedColorScaleRange[1]}
-                            onChange={changeSimulatedColorByInput("min")}
-                        />
-                    </div>
-                </div>
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8
+            }}>
+                <InputNumber
+                    size="small"
+                    controls={false}
+                    value={simulatedColorScaleRange[1]}
+                    onChange={changeSimulatedColorByInput('max')}
+                    step={0.01}
+                    precision={2}
+                    style={{ width: 60 }}
+                />
+                <Slider
+                    vertical
+                    min={simulatedDataMin}
+                    max={simulatedDataMax}
+                    value={simulatedColorScaleRange}
+                    onChange={changeSimulatedColorScale}
+                    style={{ height: 200 }}
+                />
+                <InputNumber
+                    size="small"
+                    controls={false}
+                    value={simulatedColorScaleRange[0]}
+                    onChange={changeSimulatedColorByInput('min')}
+                    step={0.01}
+                    precision={2}
+                    style={{ width: 60 }}
+                />
             </div>
         </div>
     );
