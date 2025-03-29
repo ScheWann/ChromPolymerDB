@@ -58,7 +58,12 @@ export const SimulatedFqHeatmap = ({
         const newMax = d3.max(allData);
         setSimulatedDataMin(newMin);
         setSimulatedDataMax(newMax);
-        setSimulatedColorScaleRange([newMin, newMax]);
+        setSimulatedColorScaleRange(prevRange => {
+            if (prevRange[0] < newMin || prevRange[1] > newMax) {
+                return [newMin, newMax];
+            }
+            return prevRange;
+        });
     }, [chromosomefqData, chromosomeData]);
 
     useEffect(() => {
@@ -311,6 +316,7 @@ export const SimulatedFqHeatmap = ({
                     max={simulatedDataMax}
                     value={simulatedColorScaleRange}
                     onChange={changeSimulatedColorScale}
+                    step={0.1}
                     style={{ height: 200 }}
                 />
                 <InputNumber
