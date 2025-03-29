@@ -241,6 +241,7 @@ export const SimulatedFqHeatmap = ({
             .attr("offset", "100%")
             .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[1]));
 
+        svg.attr("transform", `translate(${-margin.left - margin.right - legendWidth - 60}, ${-margin.top + 10})`);
         svg.append("rect")
             .attr("x", legendWidth + 20)
             .attr("y", margin.top)
@@ -263,18 +264,19 @@ export const SimulatedFqHeatmap = ({
     }, [layout, simulatedColorScaleRange]);
 
     return (
-        <div ref={containerRef} style={{ width: '50%', height: '100%', position: 'relative' }}>
+        <div ref={containerRef} style={{ width: '50%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+            <div style={{ fontWeight: 'bold'}}>Simulated fq Heatmap</div>
             <canvas
                 ref={canvasRef}
                 width={svgSize.width}
                 height={svgSize.height}
-                style={{ position: 'absolute', left: 0, top: 0 }}
+                style={{ position: 'absolute', right: 80, top: 0 }}
             />
             <svg
                 ref={axisRef}
                 style={{
                     position: 'absolute',
-                    left: 0,
+                    right: 80,
                     top: 0,
                     width: svgSize.width,
                     height: svgSize.height,
@@ -284,16 +286,13 @@ export const SimulatedFqHeatmap = ({
             <svg
                 ref={svgLegendRef}
                 style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    width: layout?.legendWidth + 80,
+                    width: layout?.legendWidth + 50,
                     height: svgSize.height
                 }}
             />
             <div style={{
                 position: 'absolute',
-                right: 50,
+                right: 20,
                 top: '50%',
                 transform: 'translateY(-50%)',
                 display: 'flex',

@@ -222,7 +222,7 @@ export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, 
         >
             <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: 'center', alignItems: 'center', width: '50%', height: '100%' }}>
-                    <div>Average Distance Heatmap</div>
+                    <div style={{ fontWeight: 'bold'}}>Average Distance Heatmap</div>
                     <div
                         ref={svgContainerRef}
                         style={{ display: "flex", alignItems: "center", overflow: "hidden", height: '100%' }}
