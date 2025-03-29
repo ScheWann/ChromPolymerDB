@@ -575,16 +575,10 @@ function App() {
   // 3D Comparison Chromosome sample change
   const comparisonSampleChange = (key) => {
     setComparisonCellLine3DSampleID(key);
-
     const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-
-    setComparisonCellLine3DData(prev => {
-      const newData = { ...prev };
-      delete newData[cacheKey];
-      return newData;
-    });
-
-    fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
+    if (!comparisonCellLine3DData[cacheKey]) {
+      fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
+    };
   };
 
   // Add 3D Chromosome Comparison
