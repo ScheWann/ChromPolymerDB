@@ -8,9 +8,7 @@ import { ProjectIntroduction } from './projectIntroduction.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons";
 
 // Random number generator from 0 to 5000
-const getRandomKey = () => Math.floor(Math.random() * 5001);
-// const randomKeys = new Array(3).fill(null).map(() => getRandomKey());
-const randomKeys = [0, 1, 2];
+const randomKeys = [0, 1000, 2000];
 
 function App() {
   const [isCellLineMode, setIsCellLineMode] = useState(true);
@@ -937,10 +935,10 @@ function App() {
                           </Tooltip>
                         </div>
                       }
-                      items={[chromosome3DExampleID].map((sampleId, i) => {
+                      items={randomKeys.map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
-                          label: `Sample ${i + 1}`,
+                          label : i === 0 ? 'Best Sample' : `Sample ${i}`,
                           key: sampleId,
                           children: chromosome3DExampleData[cacheKey] ? (
                             <Chromosome3D
@@ -1036,11 +1034,11 @@ function App() {
                           </div>
                         }
 
-                        items={[chromosome3DExampleID].map((sampleId, i) => {
+                        items={randomKeys.map((sampleId, i) => {
                           const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                           return {
-                            label: `Sample ${i + 1}`,
+                            label : i === 0 ? 'Best Sample' : `Sample ${i}`,
                             key: sampleId,
                             children: (
                               comparisonCellLine3DLoading ? (
