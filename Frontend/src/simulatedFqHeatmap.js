@@ -66,7 +66,6 @@ export const SimulatedFqHeatmap = ({
 
         const margin = { top: 30, right: 0, bottom: 35, left: 120 };
         const legendWidth = 20;
-        const axisPadding = 10;
 
         const { start, end } = selectedChromosomeSequence;
         const step = 5000;
@@ -98,7 +97,6 @@ export const SimulatedFqHeatmap = ({
             axisValues,
             step,
             adjustedStart,
-            axisPadding
         });
     }, [containerSize, selectedChromosomeSequence]);
 
@@ -116,12 +114,34 @@ export const SimulatedFqHeatmap = ({
             axisValues,
             step,
             adjustedStart,
-            axisPadding
         } = layout;
 
         const colorScale = d3.scaleSequential(d3.interpolateReds)
             .domain(simulatedColorScaleRange);
 
+        let tickCount;
+        const { start, end } = selectedChromosomeSequence;
+        const range = end - start;
+
+        if (range < 1000000) {
+            tickCount = Math.max(Math.floor(range / 20000), 5);
+        } else if (range >= 1000000 && range <= 10000000) {
+            tickCount = Math.max(Math.floor(range / 50000), 5);
+        } else {
+            tickCount = 30;
+        }
+        tickCount = Math.min(tickCount, 30);
+        const tickFormats = d => {
+            if (d >= 1000000) {
+                return `${(d / 1000000).toFixed(3)}M`;
+            }
+            if (d > 10000 && d < 1000000) {
+                return `${(d / 10000).toFixed(3)}W`;
+            }
+            return d;
+        };
+
+        const filteredTicks = axisValues.filter((_, i) => i % tickCount === 0);
         if (chromosomefqData) {
             ctx.save();
             ctx.translate(margin.left, margin.top);
@@ -167,21 +187,24 @@ export const SimulatedFqHeatmap = ({
             .range([0, heatmapSize]);
 
         const xAxis = d3.axisBottom(xScale)
-            .tickValues(xScale.domain().filter((d, i) => i % 10 === 0))
-            .tickFormat(d3.format(".2s"));
+            .tickValues(filteredTicks)
+            .tickFormat(tickFormats);
 
         axisContainer.append("g")
             .attr("class", "x-axis")
             .attr("transform", `translate(${margin.left},${margin.top + heatmapSize})`)
-            .call(xAxis);
+            .call(xAxis)
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-45)");
 
         const yScale = d3.scaleBand()
             .domain([...axisValues].reverse())
             .range([0, heatmapSize]);
 
         const yAxis = d3.axisLeft(yScale)
-            .tickValues(yScale.domain().filter((d, i) => i % 10 === 0))
-            .tickFormat(d3.format(".2s"));
+            .tickValues(filteredTicks)
+            .tickFormat(tickFormats);
 
         axisContainer.append("g")
             .attr("class", "y-axis")
@@ -207,30 +230,31 @@ export const SimulatedFqHeatmap = ({
 
         gradient.append("stop")
             .attr("offset", "0%")
-            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[1]));
+            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[0]));
 
         gradient.append("stop")
             .attr("offset", "100%")
-            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[0]));
+            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[1]));
 
         svg.append("rect")
-            .attr("x", legendWidth)
-            .attr("y", 0)
+            .attr("x", legendWidth + 20)
+            .attr("y", margin.top)
             .attr("width", legendWidth)
             .attr("height", heatmapSize)
             .attr("fill", "url(#legend-gradient)");
 
         const yScale = d3.scaleLinear()
             .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
-            .range([0, heatmapSize]);
+            .range([heatmapSize, 0]); 
 
         const yAxis = d3.axisLeft(yScale)
             .ticks(5)
-            .tickFormat(d3.format(".2f"));
+            .tickSizeOuter(0);
 
         svg.append("g")
-            .attr("transform", `translate(${legendWidth}, 0)`)
+            .attr("transform", `translate(${legendWidth + 20}, ${margin.top})`)
             .call(yAxis);
+
     }, [layout, simulatedColorScaleRange]);
 
     return (
@@ -256,10 +280,10 @@ export const SimulatedFqHeatmap = ({
                 ref={svgLegendRef}
                 style={{
                     position: 'absolute',
-                    left: layout?.margin.left - 80,
-                    top: layout?.margin.top,
-                    width: layout?.legendWidth + 40,
-                    height: layout?.heatmapSize
+                    left: 0,
+                    top: 0,
+                    width: layout?.legendWidth + 80,
+                    height: svgSize.height
                 }}
             />
             <div style={{
@@ -277,12 +301,12 @@ export const SimulatedFqHeatmap = ({
                     controls={false}
                     value={simulatedColorScaleRange[1]}
                     onChange={changeSimulatedColorByInput('max')}
-                    step={0.01}
-                    precision={2}
+                    step={0.1}
                     style={{ width: 60 }}
                 />
                 <Slider
                     vertical
+                    range={{ draggableTrack: true }}
                     min={simulatedDataMin}
                     max={simulatedDataMax}
                     value={simulatedColorScaleRange}
@@ -294,8 +318,7 @@ export const SimulatedFqHeatmap = ({
                     controls={false}
                     value={simulatedColorScaleRange[0]}
                     onChange={changeSimulatedColorByInput('min')}
-                    step={0.01}
-                    precision={2}
+                    step={0.1}
                     style={{ width: 60 }}
                 />
             </div>
