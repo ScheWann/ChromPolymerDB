@@ -6,6 +6,7 @@ import * as d3 from "d3";
 export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, selectedChromosomeSequence, chromosomefqData }) => {
     const containerRef = useRef(null);
     const svgContainerRef = useRef(null);
+    const canvasRef = useRef(null);
     const [svgDimensions, setSvgDimensions] = useState({ width: 600, height: 650 });
     const [colorScaleRange, setColorScaleRange] = useState([0, 0]);
     const [dataMin, setDataMin] = useState(0);
@@ -147,15 +148,32 @@ export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, 
             .range([0, heatmapHeight])
             .padding(0.01);
 
-        g.selectAll("rect")
-            .data(allValues)
-            .enter()
-            .append("rect")
-            .attr("x", (d, i) => (i % numCols) * cellSize)
-            .attr("y", (d, i) => (numRows - 1 - Math.floor(i / numCols)) * cellSize)
-            .attr("width", cellSize)
-            .attr("height", cellSize)
-            .attr("fill", d => colorScale(d));
+        // Canvas绘制逻辑
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = heatmapWidth * dpr;
+            canvas.height = heatmapHeight * dpr;
+            canvas.style.width = `${heatmapWidth}px`;
+            canvas.style.height = `${heatmapHeight}px`;
+            canvas.style.position = 'absolute';
+            canvas.style.left = `${margin.left}px`;
+            canvas.style.top = `${margin.top}px`;
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, heatmapWidth, heatmapHeight);
+
+            for (let i = 0; i < numRows; i++) {
+                for (let j = 0; j < numCols; j++) {
+                    const value = chromosome3DAvgMatrixData[i][j];
+                    const x = j * cellSize;
+                    const y = (numRows - 1 - i) * cellSize;
+                    ctx.fillStyle = colorScale(value);
+                    ctx.fillRect(x, y, cellSize, cellSize);
+                }
+            }
+        }
 
         const xAxis = d3.axisBottom(xScale)
             .tickValues(filteredTicks)
@@ -166,12 +184,12 @@ export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, 
             .call(xAxis)
             .selectAll("text")
             .style("text-anchor", "end")
-            .attr("transform", "rotate(-45)")  
+            .attr("transform", "rotate(-45)");
 
         const yAxis = d3.axisLeft(yScale)
             .tickValues(filteredTicks)
             .tickFormat(tickFormats);
-        
+
         g.append("g").call(yAxis);
 
         const legendX = margin.left - legendWidth - legendMargin;
@@ -222,14 +240,15 @@ export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, 
         >
             <div style={{ display: "flex", width: "100%", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: 'center', alignItems: 'center', width: '50%', height: '100%' }}>
-                    <div style={{ fontWeight: 'bold'}}>Average Distance Heatmap</div>
+                    <div style={{ fontWeight: 'bold' }}>Average Distance Heatmap</div>
                     <div
                         ref={svgContainerRef}
-                        style={{ display: "flex", alignItems: "center", overflow: "hidden", height: '100%' }}
+                        style={{ display: "flex", alignItems: "center", overflow: "hidden", height: '100%', position: 'relative' }}
                     >
                         <svg
                             id="distance-heatmap-svg"
                         ></svg>
+                        <canvas ref={canvasRef} />
                         <div
                             style={{
                                 display: "flex",
