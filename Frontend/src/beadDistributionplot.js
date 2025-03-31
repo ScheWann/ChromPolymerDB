@@ -32,7 +32,6 @@ export const BeadDistributionPlot = ({
 
         if (loading) return;
 
-        console.log(dimensions, '????')
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
             .attr('width', width)
