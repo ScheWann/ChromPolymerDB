@@ -32,6 +32,7 @@ export const BeadDistributionPlot = ({
 
         if (loading) return;
 
+        console.log(dimensions, '????')
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
             .attr('width', width)
@@ -228,8 +229,8 @@ export const BeadDistributionPlot = ({
 
     return (
         Object.keys(selectedSphereList).length > 0 ? (
-            loading ? <Spin spinning={true} style={{ width: '50%', height: '100%' }} /> : (
-                <div ref={containerRef} style={{ width: '50%', height: '100%' }}>
+            loading ? <Spin spinning={true} style={{ width: '100%', height: '100%' }} /> : (
+                <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
                     <svg ref={svgRef}></svg>
                 </div>
             )

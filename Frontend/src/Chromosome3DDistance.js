@@ -204,11 +204,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     return (
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-            <BeadDistributionPlot
-                selectedSphereList={selectedSphereList}
-                distributionData={distributionData}
-                loading={loading}
-            />
+            <div style={{ width: '50%', height: '100%'}}>
+                <BeadDistributionPlot
+                    selectedSphereList={selectedSphereList}
+                    distributionData={distributionData}
+                    loading={loading}
+                />
+            </div>
             <div style={{ width: '50%', height: '100%', position: 'relative' }}>
                 <div style={{
                     position: 'absolute',
@@ -283,25 +285,6 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         />
                     </Tooltip>
                 </div>
-
-                {/* <Modal
-                    title="Distribution of the selected beads"
-                    width={"45vw"}
-                    height={"40vh"}
-                    open={openDistrubutionModal}
-                    onCancel={() => setOpenDistrubutionModal(false)}
-                    footer={[
-                        <Button key="back" onClick={() => setOpenDistrubutionModal(false)}>
-                            Close
-                        </Button>
-                    ]}
-                >
-                    <BeadDistributionPlot
-                        selectedSphereList={selectedSphereList}
-                        distributionData={distributionData}
-                        loading={loading}
-                    />
-                </Modal> */}
 
                 <Canvas
                     shadows
