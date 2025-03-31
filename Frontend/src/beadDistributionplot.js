@@ -30,7 +30,7 @@ export const BeadDistributionPlot = ({
     useEffect(() => {
         d3.select(svgRef.current).selectAll('*').remove();
 
-        if (loading) return;
+        if (loading || Object.keys(selectedSphereList) < 2) return;
 
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
@@ -47,7 +47,7 @@ export const BeadDistributionPlot = ({
         const allValues = Object.values(distributionData).flat();
         const globalExtent = d3.extent(allValues);
 
-        const numberOfBins = 8;
+        const numberOfBins = 15;
         const thresholds = d3.ticks(globalExtent[0], globalExtent[1], numberOfBins);
 
         const binGenerator = d3.histogram()
@@ -154,14 +154,14 @@ export const BeadDistributionPlot = ({
                     const posA = selectedSphereList[sphereA].position;
                     const posB = selectedSphereList[sphereB].position;
                     const normA = {
-                        x: posA.x / 0.15,
-                        y: posA.y / 0.15,
-                        z: posA.z / 0.15
+                        x: posA.x,
+                        y: posA.y,
+                        z: posA.z
                     };
                     const normB = {
-                        x: posB.x / 0.15,
-                        y: posB.y / 0.15,
-                        z: posB.z / 0.15
+                        x: posB.x,
+                        y: posB.y,
+                        z: posB.z
                     };
 
                     const distance = Math.sqrt(
@@ -227,7 +227,7 @@ export const BeadDistributionPlot = ({
     }, [distributionData, selectedSphereList, dimensions, margin, loading]);
 
     return (
-        Object.keys(selectedSphereList).length > 0 ? (
+        Object.keys(selectedSphereList).length > 1 ? (
             loading ? <Spin spinning={true} style={{ width: '100%', height: '100%' }} /> : (
                 <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
                     <svg ref={svgRef}></svg>
@@ -237,7 +237,7 @@ export const BeadDistributionPlot = ({
             <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="No beads found"
-                style={{ width: '50%', height: '100%' }}
+                style={{ width: '100%', height: '100%' }}
             />
         )
     );
