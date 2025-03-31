@@ -80,7 +80,7 @@ export const BeadDistributionPlot = ({
         g.append('text')
             .attr('text-anchor', 'middle')
             .attr('x', plotWidth - margin.left / 4 - margin.right)
-            .attr('y', plotHeight + margin.bottom - 10)
+            .attr('y', plotHeight + margin.bottom - 50)
             .style('font-size', '12px')
             .text('Distance');
 
