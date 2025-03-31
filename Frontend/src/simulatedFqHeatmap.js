@@ -241,7 +241,6 @@ export const SimulatedFqHeatmap = ({
             .attr("offset", "100%")
             .attr("stop-color", d3.interpolateReds(1));
 
-        // svg.attr("transform", `translate(${-margin.left - margin.right - legendWidth - 50}, ${-margin.top + 10})`);
         svg.append("rect")
             .attr("x", legendWidth + 20)
             .attr("y", margin.top)
@@ -264,42 +263,33 @@ export const SimulatedFqHeatmap = ({
     }, [layout, simulatedColorScaleRange]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+        <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <div style={{ fontWeight: 'bold' }}>Simulated fq Heatmap</div>
-            <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '100%', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', height: '100%' }}>
+                <svg
+                    ref={svgLegendRef}
+                    style={{
+                        transform: 'translateX(80%)',
+                        width: layout?.legendWidth + 50,
+                        height: svgSize.height
+                    }}
+                />
                 <canvas
                     ref={canvasRef}
                     width={svgSize.width}
                     height={svgSize.height}
-                    style={{ position: 'absolute', transform: 'translateX(25%)',top: 0 }}
                 />
                 <svg
                     ref={axisRef}
                     style={{
                         position: 'absolute',
-                        // right: '50%',
-                        transform: 'translateX(25%)',
                         top: 0,
                         width: svgSize.width,
                         height: svgSize.height,
                         pointerEvents: 'none'
                     }}
                 />
-                <svg
-                    ref={svgLegendRef}
-                    style={{
-                        transform: 'translateX(100%)',
-                        width: layout?.legendWidth + 50,
-                        height: svgSize.height
-                    }}
-                />
                 <div style={{
-                    position: 'absolute',
-                    // right: '10%',
-                    left: '80%',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    // transform: 'translateX(105%)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
