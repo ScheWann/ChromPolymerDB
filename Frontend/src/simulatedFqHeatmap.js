@@ -138,10 +138,10 @@ export const SimulatedFqHeatmap = ({
         tickCount = Math.min(tickCount, 30);
         const tickFormats = d => {
             if (d >= 1000000) {
-                return `${(d / 1000000).toFixed(3)}M`;
+                return `${(d / 1000000).toFixed(2)}M`;
             }
             if (d > 10000 && d < 1000000) {
-                return `${(d / 10000).toFixed(3)}W`;
+                return `${(d / 10000).toFixed(2)}W`;
             }
             return d;
         };
@@ -227,7 +227,7 @@ export const SimulatedFqHeatmap = ({
 
         const gradient = svg.append("defs")
             .append("linearGradient")
-            .attr("id", "legend-gradient")
+            .attr("id", "legend-gradient-simulated-fq")
             .attr("x1", "0%")
             .attr("x2", "0%")
             .attr("y1", "0%")
@@ -239,19 +239,19 @@ export const SimulatedFqHeatmap = ({
 
         gradient.append("stop")
             .attr("offset", "100%")
-            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[1]));
+            .attr("stop-color", d3.interpolateReds(1));
 
-        svg.attr("transform", `translate(${-margin.left - margin.right - legendWidth - 60}, ${-margin.top + 10})`);
+        // svg.attr("transform", `translate(${-margin.left - margin.right - legendWidth - 50}, ${-margin.top + 10})`);
         svg.append("rect")
             .attr("x", legendWidth + 20)
             .attr("y", margin.top)
             .attr("width", legendWidth)
             .attr("height", heatmapSize)
-            .attr("fill", "url(#legend-gradient)");
+            .attr("fill", "url(#legend-gradient-simulated-fq)");
 
         const yScale = d3.scaleLinear()
             .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
-            .range([heatmapSize, 0]); 
+            .range([heatmapSize, 0]);
 
         const yAxis = d3.axisLeft(yScale)
             .ticks(5)
@@ -264,68 +264,75 @@ export const SimulatedFqHeatmap = ({
     }, [layout, simulatedColorScaleRange]);
 
     return (
-        <div ref={containerRef} style={{ width: '50%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <div style={{ fontWeight: 'bold'}}>Simulated fq Heatmap</div>
-            <canvas
-                ref={canvasRef}
-                width={svgSize.width}
-                height={svgSize.height}
-                style={{ position: 'absolute', right: 80, top: 0 }}
-            />
-            <svg
-                ref={axisRef}
-                style={{
+        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+            <div style={{ fontWeight: 'bold' }}>Simulated fq Heatmap</div>
+            <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '100%', height: '100%' }}>
+                <canvas
+                    ref={canvasRef}
+                    width={svgSize.width}
+                    height={svgSize.height}
+                    style={{ position: 'absolute', transform: 'translateX(25%)',top: 0 }}
+                />
+                <svg
+                    ref={axisRef}
+                    style={{
+                        position: 'absolute',
+                        // right: '50%',
+                        transform: 'translateX(25%)',
+                        top: 0,
+                        width: svgSize.width,
+                        height: svgSize.height,
+                        pointerEvents: 'none'
+                    }}
+                />
+                <svg
+                    ref={svgLegendRef}
+                    style={{
+                        transform: 'translateX(100%)',
+                        width: layout?.legendWidth + 50,
+                        height: svgSize.height
+                    }}
+                />
+                <div style={{
                     position: 'absolute',
-                    right: 80,
-                    top: 0,
-                    width: svgSize.width,
-                    height: svgSize.height,
-                    pointerEvents: 'none'
-                }}
-            />
-            <svg
-                ref={svgLegendRef}
-                style={{
-                    width: layout?.legendWidth + 50,
-                    height: svgSize.height
-                }}
-            />
-            <div style={{
-                position: 'absolute',
-                right: 20,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 8
-            }}>
-                <InputNumber
-                    size="small"
-                    controls={false}
-                    value={simulatedColorScaleRange[1]}
-                    onChange={changeSimulatedColorByInput('max')}
-                    step={0.1}
-                    style={{ width: 60 }}
-                />
-                <Slider
-                    vertical
-                    range={{ draggableTrack: true }}
-                    min={simulatedDataMin}
-                    max={simulatedDataMax}
-                    value={simulatedColorScaleRange}
-                    onChange={changeSimulatedColorScale}
-                    step={0.1}
-                    style={{ height: 200 }}
-                />
-                <InputNumber
-                    size="small"
-                    controls={false}
-                    value={simulatedColorScaleRange[0]}
-                    onChange={changeSimulatedColorByInput('min')}
-                    step={0.1}
-                    style={{ width: 60 }}
-                />
+                    // right: '10%',
+                    left: '80%',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    // transform: 'translateX(105%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 8
+                }}>
+                    <InputNumber
+                        size="small"
+                        controls={false}
+                        value={simulatedColorScaleRange[1]}
+                        onChange={changeSimulatedColorByInput('max')}
+                        step={0.1}
+                        style={{ width: 60 }}
+                    />
+                    <Slider
+                        vertical
+                        range={{ draggableTrack: true }}
+                        min={simulatedDataMin}
+                        max={simulatedDataMax}
+                        value={simulatedColorScaleRange}
+                        onChange={changeSimulatedColorScale}
+                        step={0.1}
+                        style={{ height: 200 }}
+                    />
+                    <InputNumber
+                        size="small"
+                        controls={false}
+                        value={simulatedColorScaleRange[0]}
+                        onChange={changeSimulatedColorByInput('min')}
+                        step={0.1}
+                        style={{ width: 60 }}
+                    />
+                </div>
             </div>
         </div>
     );

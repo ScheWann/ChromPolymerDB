@@ -80,7 +80,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
 
         const gradient = legend.append("defs")
             .append("linearGradient")
-            .attr("id", "legend-gradient")
+            .attr("id", "legend-gradient-current-distance")
             .attr("x1", "0%").attr("x2", "100%");
 
         gradient.selectAll("stop")
@@ -94,7 +94,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
         legend.append("rect")
             .attr("width", size)
             .attr("height", 10)
-            .style("fill", "url(#legend-gradient)");
+            .style("fill", "url(#legend-gradient-current-distance)");
 
         legend.append("text")
             .attr("y", 20)

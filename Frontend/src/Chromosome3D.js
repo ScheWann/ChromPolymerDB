@@ -6,7 +6,8 @@ import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal } from 'antd';
 import { RollbackOutlined, ClearOutlined, FileImageOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './Chromosome3DDistance';
-import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
+import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
+// import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
 export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, chromosomeData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange }) => {
@@ -322,7 +323,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         />
                         <Modal
                             destroyOnClose
-                            width={"65vw"}
+                            width={"45vw"}
                             styles={modalStyles}
                             open={openAvgMatrixModal}
                             onCancel={() => setOpenAvgMatrixModal(false)}
@@ -332,11 +333,16 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                 </Button>
                             ]}
                         >
-                            <AvgDistanceHeatmap
+                            {/* <AvgDistanceHeatmap
                                 chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
                                 selectedChromosomeSequence={selectedChromosomeSequence}
                                 chromosomefqData={chromosomefqData}
                                 chromosomeData={chromosomeData}
+                            /> */}
+                            <SimulatedFqHeatmap
+                                chromosomeData={chromosomeData}
+                                chromosomefqData={chromosomefqData}
+                                selectedChromosomeSequence={selectedChromosomeSequence}
                             />
                         </Modal>
                     </Tooltip>
