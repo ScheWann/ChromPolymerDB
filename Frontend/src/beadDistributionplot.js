@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { Spin } from 'antd';
+import { Spin, Empty } from 'antd';
 import * as d3 from 'd3';
 
 export const BeadDistributionPlot = ({
@@ -30,7 +30,7 @@ export const BeadDistributionPlot = ({
     useEffect(() => {
         d3.select(svgRef.current).selectAll('*').remove();
 
-        if(loading) return;
+        if (loading) return;
 
         const { width, height } = dimensions;
         const svg = d3.select(svgRef.current)
@@ -49,7 +49,7 @@ export const BeadDistributionPlot = ({
 
         const numberOfBins = 8;
         const thresholds = d3.ticks(globalExtent[0], globalExtent[1], numberOfBins);
-        
+
         const binGenerator = d3.histogram()
             .domain(globalExtent)
             .thresholds(thresholds);
@@ -227,10 +227,18 @@ export const BeadDistributionPlot = ({
     }, [distributionData, selectedSphereList, dimensions, margin, loading]);
 
     return (
-        loading ? <Spin spinning={true} style={{ width: '50%', height: '100%' }}/> : (
-            <div ref={containerRef} style={{ width: '50%', height: '100%' }}>
-                <svg ref={svgRef}></svg>
-            </div>
+        Object.keys(selectedSphereList).length > 0 ? (
+            loading ? <Spin spinning={true} style={{ width: '50%', height: '100%' }} /> : (
+                <div ref={containerRef} style={{ width: '50%', height: '100%' }}>
+                    <svg ref={svgRef}></svg>
+                </div>
+            )
+        ) : (
+            <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No beads found"
+                style={{ width: '50%', height: '100%' }}
+            />
         )
     );
 };
