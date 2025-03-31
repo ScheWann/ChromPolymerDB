@@ -6,11 +6,11 @@ export const BeadDistributionPlot = ({
     distributionData,
     selectedSphereList,
     loading,
-    margin = { top: 20, right: 30, bottom: 40, left: 40 }
+    margin = { top: 20, right: 10, bottom: 40, left: 40 }
 }) => {
     const containerRef = useRef(null);
     const svgRef = useRef(null);
-    const [dimensions, setDimensions] = useState({ width: 750, height: 450 });
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -77,16 +77,16 @@ export const BeadDistributionPlot = ({
 
         g.append('text')
             .attr('text-anchor', 'middle')
-            .attr('x', plotWidth)
-            .attr('y', plotHeight + margin.bottom - 5)
-            .style('font-size', '14px')
+            .attr('x', plotWidth - margin.left / 4 - margin.right)
+            .attr('y', plotHeight + margin.bottom - 10)
+            .style('font-size', '12px')
             .text('Distance');
 
         g.append('text')
             .attr('text-anchor', 'middle')
-            .attr('x', -15)
+            .attr('x', 20)
             .attr('y', -5)
-            .style('font-size', '14px')
+            .style('font-size', '12px')
             .text('Counts');
 
         const keys = Object.keys(distributionData);
@@ -186,12 +186,13 @@ export const BeadDistributionPlot = ({
 
         const legendItemSize = 10;
         const legendSpacing = 4;
-        const legendOffset = 20;
+        const legendOffset = 10;
 
         keys.forEach((key, i) => {
             const legendRow = legend.append('g')
                 .attr('transform', `translate(${i * legendOffset * 5}, 0)`)
                 .attr('data-key', key)
+                .attr('cursor', 'pointer')
                 .on('mouseover', function () {
                     d3.selectAll('[data-key]')
                         .transition().duration(200)
@@ -211,21 +212,21 @@ export const BeadDistributionPlot = ({
                 .attr('width', legendItemSize)
                 .attr('height', legendItemSize)
                 .attr('fill', colorScale(key))
-                .attr('y', 10);
+                .attr('y', 5);
 
             legendRow.append('text')
                 .attr('data-key', key)
                 .attr('x', legendItemSize + legendSpacing)
-                .attr('y', legendItemSize + 10)
-                .attr('font-size', '12px')
+                .attr('y', legendItemSize + 4)
+                .attr('font-size', '10px')
                 .attr('fill', '#000')
                 .text(key);
         });
     }, [distributionData, selectedSphereList, dimensions, margin, loading]);
 
     return (
-        loading ? <Spin spinning={true} style={{ width: '100%', height: '450px' }}/> : (
-            <div ref={containerRef} style={{ width: '100%', height: '450px' }}>
+        loading ? <Spin spinning={true} style={{ width: '50%', height: '100%' }}/> : (
+            <div ref={containerRef} style={{ width: '50%', height: '100%' }}>
                 <svg ref={svgRef}></svg>
             </div>
         )

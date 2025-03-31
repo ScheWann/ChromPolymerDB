@@ -1040,7 +1040,7 @@ function App() {
                               ) : (
                                 <Chromosome3D
                                   formatNumber={formatNumber}
-                                  comparisonCellLine={comparisonCellLine}
+                                  celllineName={comparisonCellLine}
                                   chromosomeName={chromosomeName}
                                   currentChromosomeSequence={currentChromosomeSequence}
                                   geneSize={geneSize}

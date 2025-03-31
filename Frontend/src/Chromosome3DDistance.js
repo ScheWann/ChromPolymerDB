@@ -142,6 +142,29 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     };
 
     useEffect(() => {
+        setLoading(true);
+        const beadsArray = Object.keys(selectedSphereList);
+
+        fetch('/getBeadDistribution', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cell_line: celllineName,
+                chromosome_name: chromosomeName,
+                sequences: currentChromosomeSequence,
+                indices: beadsArray
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setDistributionData(data);
+                setLoading(false);
+            });
+    }, [selectedSphereList]);
+
+    useEffect(() => {
         if (controlsRef.current && center) {
             controlsRef.current.target.copy(center);
             controlsRef.current.update();
@@ -179,8 +202,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     };
 
     return (
-        <>
-            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex' }}>
+            <BeadDistributionPlot
+                selectedSphereList={selectedSphereList}
+                distributionData={distributionData}
+                loading={loading}
+            />
+            <div style={{ width: '50%', height: '100%', position: 'relative' }}>
                 <div style={{
                     position: 'absolute',
                     top: 10,
@@ -255,7 +283,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     </Tooltip>
                 </div>
 
-                <Modal
+                {/* <Modal
                     title="Distribution of the selected beads"
                     width={"45vw"}
                     height={"40vh"}
@@ -272,7 +300,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         distributionData={distributionData}
                         loading={loading}
                     />
-                </Modal>
+                </Modal> */}
 
                 <Canvas
                     shadows
@@ -371,6 +399,6 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     ))}
                 </Canvas>
             </div>
-        </>
+        </div>
     );
 };
