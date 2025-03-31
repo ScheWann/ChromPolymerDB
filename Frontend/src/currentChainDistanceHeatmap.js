@@ -9,8 +9,13 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
     useEffect(() => {
         const resizeObserver = new ResizeObserver(entries => {
             if (entries[0]) {
-                const { width, height } = entries[0].contentRect;
-                setDimensions({ width, height });
+                const { width } = entries[0].contentRect;
+                const legendHeight = 30;
+                const size = Math.max(width, 100);
+                setDimensions({
+                    width: size,
+                    height: size + legendHeight
+                });
             }
         });
 
@@ -22,7 +27,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
     }, []);
 
     useEffect(() => {
-        if (!dimensions.width || !dimensions.height || !chromosomeCurrentSampleDistanceVector) return;
+        if (!dimensions.width || !chromosomeCurrentSampleDistanceVector) return;
 
         const svg = d3.select(svgRef.current);
         svg.selectAll('*').remove();
@@ -31,40 +36,84 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
         const maxValue = d3.max(flattened) || 1;
         const minValue = d3.min(flattened) || 0;
 
-        const xScale = d3
-            .scaleBand()
-            .domain(d3.range(chromosomeCurrentSampleDistanceVector[0].length).map(String))
-            .range([0, dimensions.width])
+        const size = dimensions.width;
+        const legendHeight = 30;
+        const [numRows, numCols] = [
+            chromosomeCurrentSampleDistanceVector.length,
+            chromosomeCurrentSampleDistanceVector[0].length
+        ];
+        const maxDim = Math.max(numRows, numCols);
+        const cellSize = size / maxDim;
+
+        const heatmap = svg.append("g")
+            .attr("transform", `translate(
+                ${(size - cellSize * numCols) / 2}, 
+                ${(size - cellSize * numRows) / 2}
+            )`);
+
+        const xScale = d3.scaleBand()
+            .domain(d3.range(numCols).map(String))
+            .range([0, cellSize * numCols])
             .padding(0.05);
 
-        const yScale = d3
-            .scaleBand()
-            .domain(d3.range(chromosomeCurrentSampleDistanceVector.length).map(String))
-            .range([dimensions.height, 0])
+        const yScale = d3.scaleBand()
+            .domain(d3.range(numRows).map(String))
+            .range([cellSize * numRows, 0])
             .padding(0.05);
 
-        const colorScale = d3
-            .scaleSequential(t => d3.interpolateReds(1 - t))
+        const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
             .domain([minValue, maxValue * 0.4]);
 
-        svg
-            .selectAll()
+        heatmap.selectAll()
             .data(chromosomeCurrentSampleDistanceVector)
-            .enter()
-            .selectAll('rect')
-            .data((d, i) => d.map((value, j) => ({ value, i, j })))
-            .enter()
-            .append('rect')
-            .attr('x', d => xScale(String(d.j)) || 0)
-            .attr('y', d => yScale(String(d.i)) || 0)
-            .attr('width', xScale.bandwidth())
-            .attr('height', yScale.bandwidth())
-            .attr('fill', d => colorScale(d.value));
+            .enter().selectAll("rect")
+            .data((row, i) => row.map((value, j) => ({ value, i, j })))
+            .enter().append("rect")
+            .attr("x", d => xScale(String(d.j)))
+            .attr("y", d => yScale(String(d.i)))
+            .attr("width", xScale.bandwidth())
+            .attr("height", yScale.bandwidth())
+            .attr("fill", d => colorScale(d.value));
+
+        const legend = svg.append("g")
+            .attr("transform", `translate(0, ${size + 5})`);
+
+        const gradient = legend.append("defs")
+            .append("linearGradient")
+            .attr("id", "legend-gradient")
+            .attr("x1", "0%").attr("x2", "100%");
+
+        gradient.selectAll("stop")
+            .data([
+                { offset: "0%", color: colorScale(minValue) },
+                { offset: "100%", color: colorScale(maxValue) }
+            ]).enter().append("stop")
+            .attr("offset", d => d.offset)
+            .attr("stop-color", d => d.color);
+
+        legend.append("rect")
+            .attr("width", size)
+            .attr("height", 10)
+            .style("fill", "url(#legend-gradient)");
+
+        legend.append("text")
+            .attr("y", 20)
+            .attr("fill", "white") 
+            .style("font-size", "10px")
+            .text(minValue.toFixed(2));
+
+        legend.append("text")
+            .attr("x", size)
+            .attr("y", 20)
+            .attr("fill", "white") 
+            .style("text-anchor", "end")
+            .style("font-size", "10px")
+            .text(maxValue.toFixed(2));
 
     }, [chromosomeCurrentSampleDistanceVector, dimensions]);
 
     return (
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+        <div ref={containerRef} style={{ width: '100%', height: 'auto' }}>
             <svg
                 ref={svgRef}
                 width={dimensions.width}
