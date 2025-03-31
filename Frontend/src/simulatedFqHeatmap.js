@@ -312,7 +312,7 @@ export const SimulatedFqHeatmap = ({
                         value={simulatedColorScaleRange}
                         onChange={changeSimulatedColorScale}
                         step={0.1}
-                        style={{ height: 200 }}
+                        style={{ height: 150 }}
                     />
                     <InputNumber
                         size="small"
