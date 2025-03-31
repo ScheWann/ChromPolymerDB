@@ -145,6 +145,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         setLoading(true);
         const beadsArray = Object.keys(selectedSphereList);
 
+        if (beadsArray.length === 0 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
         fetch('/getBeadDistribution', {
             method: 'POST',
             headers: {

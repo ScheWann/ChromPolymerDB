@@ -47,14 +47,16 @@ export const BeadDistributionPlot = ({
         const allValues = Object.values(distributionData).flat();
         const globalExtent = d3.extent(allValues);
 
+        const numberOfBins = 8;
+        const thresholds = d3.ticks(globalExtent[0], globalExtent[1], numberOfBins);
+        
         const binGenerator = d3.histogram()
             .domain(globalExtent)
-            .thresholds(8);
+            .thresholds(thresholds);
 
         const binnedData = {};
         Object.keys(distributionData).forEach(key => {
-            const sortedArr = distributionData[key].slice().sort((a, b) => a - b);
-            const bins = binGenerator(sortedArr);
+            const bins = binGenerator(distributionData[key]);
             binnedData[key] = bins;
         });
 
@@ -186,7 +188,7 @@ export const BeadDistributionPlot = ({
 
         const legendItemSize = 10;
         const legendSpacing = 4;
-        const legendOffset = 10;
+        const legendOffset = 15;
 
         keys.forEach((key, i) => {
             const legendRow = legend.append('g')
