@@ -7,6 +7,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+    console.log(distributionData, Object.keys(distributionData).length, '//////')
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
@@ -27,7 +28,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     }, []);
 
     useEffect(() => {
-        if (!dimensions.width || !dimensions.height || Object.keys(selectedSphereList).length < 2 || loading) return;
+        if (!dimensions.width || !dimensions.height || Object.keys(selectedSphereList).length < 2 || Object.keys(distributionData).length < 0 || loading) return;
 
         d3.select(svgRef.current).selectAll("*").remove();
 
@@ -75,7 +76,8 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         categories.forEach(category => {
             densitiesByCategory[category] = {};
             distKeys.forEach(key => {
-                const dataArray = distributionData[key][category];
+                const dataArray = distributionData[key][category] || [];
+                if (!Array.isArray(dataArray) || dataArray.length === 0) return;
                 const localMin = d3.min(dataArray);
                 const localMax = d3.max(dataArray);
                 const xTicks = d3.scaleLinear().domain([localMin, localMax]).nice().ticks(40);
