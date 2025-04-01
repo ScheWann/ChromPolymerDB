@@ -137,10 +137,35 @@ function App() {
     }
   }, [totalChromosomeSequences]);
 
+  // update original part when chromosome3DExampleID changes
   useEffect(() => {
-    const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
-    if (!comparisonCellLine3DData[cacheKey]) return;
-  
+    const originalCacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`;
+    console.log(chromosome3DExampleData, originalCacheKey);
+    if (!chromosome3DExampleData[originalCacheKey]) return;
+
+    const selectedBeads = Object.keys(selectedSphereLists.original);
+    if (selectedBeads.length > 0) {
+      selectedBeads.forEach((index) => {
+        setSelectedSphereLists((prev) => ({
+          ...prev,
+          original: {
+            ...prev.original,
+            [index]: {
+              position: chromosome3DExampleData[originalCacheKey][index],
+              color: prev.original[index].color,
+            },
+          },
+        }));
+      });
+    }
+  }, [chromosome3DExampleID, chromosome3DExampleData]);
+
+  // update comparison part when comparisonCellLine3DSampleID changes
+  useEffect(() => {
+    const comparisonCacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
+    console.log(comparisonCellLine3DData, comparisonCacheKey);
+    if (!comparisonCellLine3DData[comparisonCacheKey]) return;
+
     const selectedBeads = Object.keys(selectedSphereLists.original);
     if (selectedBeads.length > 0) {
       selectedBeads.forEach((index) => {
@@ -149,14 +174,14 @@ function App() {
           comparison: {
             ...prev.comparison,
             [index]: {
-              position: comparisonCellLine3DData[cacheKey][index],
+              position: comparisonCellLine3DData[comparisonCacheKey][index],
               color: prev.original[index].color,
             },
           },
         }));
       });
     }
-  }, [comparisonCellLine3DData]);
+  }, [comparisonCellLine3DSampleID, comparisonCellLine3DData]);
 
   const fetchChromosomeSequences = () => {
     fetch('/getChromosSequence', {
