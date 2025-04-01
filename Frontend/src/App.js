@@ -584,10 +584,6 @@ function App() {
   // Add 3D Chromosome Comparison
   const handleAddChromosome3D = () => {
     setChromosome3DComparisonShowing(true);
-    setSelectedSphereLists((prev) => ({
-      original: prev.original,
-      comparison: { ...prev.original },
-    }));
   };
 
   // Remove 3D Chromosome Comparison
@@ -600,6 +596,24 @@ function App() {
     setComparisonCellLine(value);
     setComparisonCellLine3DLoading(true);
     fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
+
+    const cacheKey = `${value}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
+    const selectedBeads = Object.keys(selectedSphereLists.original);
+    // get the selected beads' info by the selected index
+    if (selectedBeads.length > 0) {
+        selectedBeads.forEach((index) => {
+          setSelectedSphereLists((prev) => ({
+            ...prev,
+            comparison: {
+              ...prev.comparison,
+              [index]: {
+                ...{ position: comparisonCellLine3DData[cacheKey]?.[index] },
+                color: selectedSphereLists.original[index].color,
+              },
+            },
+          }));
+        })
+    }
   };
 
   // Submit button click
