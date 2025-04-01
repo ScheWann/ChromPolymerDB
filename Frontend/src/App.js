@@ -136,6 +136,27 @@ function App() {
     }
   }, [totalChromosomeSequences]);
 
+  useEffect(() => {
+    const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
+    if (!comparisonCellLine3DData[cacheKey]) return;
+  
+    const selectedBeads = Object.keys(selectedSphereLists.original);
+    if (selectedBeads.length > 0) {
+      selectedBeads.forEach((index) => {
+        setSelectedSphereLists((prev) => ({
+          ...prev,
+          comparison: {
+            ...prev.comparison,
+            [index]: {
+              position: comparisonCellLine3DData[cacheKey][index],
+              color: prev.original[index].color,
+            },
+          },
+        }));
+      });
+    }
+  }, [comparisonCellLine3DData]);
+
   const fetchChromosomeSequences = () => {
     fetch('/getChromosSequence', {
       method: 'POST',
@@ -596,24 +617,6 @@ function App() {
     setComparisonCellLine(value);
     setComparisonCellLine3DLoading(true);
     fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
-
-    const cacheKey = `${value}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
-    const selectedBeads = Object.keys(selectedSphereLists.original);
-    // get the selected beads' info by the selected index
-    if (selectedBeads.length > 0) {
-        selectedBeads.forEach((index) => {
-          setSelectedSphereLists((prev) => ({
-            ...prev,
-            comparison: {
-              ...prev.comparison,
-              [index]: {
-                ...{ position: comparisonCellLine3DData[cacheKey]?.[index] },
-                color: selectedSphereLists.original[index].color,
-              },
-            },
-          }));
-        })
-    }
   };
 
   // Submit button click
