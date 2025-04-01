@@ -27,7 +27,14 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     }, []);
 
     useEffect(() => {
-        if (!dimensions.width || !dimensions.height || Object.keys(selectedSphereList).length < 2 || Object.keys(distributionData).length < 0 || loading) return;
+        if (
+            !dimensions.width ||
+            !dimensions.height ||
+            Object.keys(selectedSphereList).length < 2 ||
+            Object.keys(distributionData).length === 0 ||
+            loading
+        )
+            return;
 
         d3.select(svgRef.current).selectAll("*").remove();
 
@@ -42,6 +49,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
+        // distributionData’s keys are cell_lines
         const distKeys = Object.keys(distributionData);
         if (distKeys.length === 0) return;
         const categories = Object.keys(distributionData[distKeys[0]]);
@@ -108,12 +116,39 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", violinWidth)
             .attr("height", height);
 
+        // calculate beadPairs‘ pairKey and distance
+        const beadPairs = [];
+        const beadKeys = Object.keys(selectedSphereList);
+        for (let i = 0; i < beadKeys.length; i++) {
+            for (let j = i + 1; j < beadKeys.length; j++) {
+                const key1 = beadKeys[i];
+                const key2 = beadKeys[j];
+
+                // generate pairKey like "6-36", take the smaller and larger combination
+                const minKey = Math.min(Number(key1), Number(key2));
+                const maxKey = Math.max(Number(key1), Number(key2));
+                const pairKey = `${minKey}-${maxKey}`;
+                const bead1 = selectedSphereList[key1];
+                const bead2 = selectedSphereList[key2];
+
+                const cellLine = bead1.cell_line || (bead1.position && bead1.position.cell_line);
+
+                const distance = Math.sqrt(
+                    Math.pow(bead2.position.x - bead1.position.x, 2) +
+                    Math.pow(bead2.position.y - bead1.position.y, 2) +
+                    Math.pow(bead2.position.z - bead1.position.z, 2)
+                );
+                beadPairs.push({ pairKey, distance, cellLine });
+            }
+        }
+
         // violin plot
         categories.forEach(category => {
             const categoryGroup = g.append("g")
                 .attr("transform", `translate(${xScale(category)},0)`)
                 .attr("clip-path", "url(#clip)");
 
+            // 绘制每个 cell_line 对应的 violin 部分（左右分别显示）
             distKeys.forEach((key, index) => {
                 const density = densitiesByCategory[category][key];
                 if (!density) return;
@@ -130,6 +165,48 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                     .attr("stroke", "none")
                     .attr("opacity", 0.7)
                     .attr("d", area);
+
+                const matchingBeadPairs = beadPairs.filter(bp => bp.pairKey === category && bp.cellLine === key);
+                matchingBeadPairs.forEach(bp => {
+                    // drawing marker(line)
+                    const densityData = densitiesByCategory[category][key];
+                    if (densityData) {
+                        const bisect = d3.bisector(d => d[0]).left;
+                        const i = bisect(densityData, bp.distance);
+                        let markerDensity;
+                        if (i === 0) {
+                            markerDensity = densityData[0][1];
+                        } else if (i >= densityData.length) {
+                            markerDensity = densityData[densityData.length - 1][1];
+                        } else {
+                            const d0 = densityData[i - 1];
+                            const d1 = densityData[i];
+                            const t = (bp.distance - d0[0]) / (d1[0] - d0[0]);
+                            markerDensity = d0[1] + t * (d1[1] - d0[1]);
+                        }
+                        // markerLineHalfLength represents the width of the current bp.distance on the half side of the violin
+                        const markerLineHalfLength = xDensityScale(markerDensity);
+                        let x1, x2;
+
+                        // decide whether to show the marker on the left or right half of the violin
+                        if (distKeys.indexOf(key) === 0) { // left half
+                            x1 = violinWidth / 2 - markerLineHalfLength;
+                            x2 = violinWidth / 2;
+                        } else {  // right half
+                            x1 = violinWidth / 2;
+                            x2 = violinWidth / 2 + markerLineHalfLength;
+                        }
+                        const yPos = yScale(bp.distance);
+                        categoryGroup.append("line")
+                            .attr("x1", x1)
+                            .attr("x2", x2)
+                            .attr("y1", yPos)
+                            .attr("y2", yPos)
+                            // .attr("stroke", colorScale(key))
+                            .attr("stroke", "purple")
+                            .attr("stroke-width", 2);
+                    }
+                });
             });
         });
 
@@ -141,7 +218,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
 
-        // Legend
         const legend = svg.append("g")
             .attr("transform", `translate(${width + margin.left + 10}, ${margin.top})`);
 
@@ -165,19 +241,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-            {/* {loading ? (
-                <Spin style={{ width: "100%", height: "100%"}} />
-            ) : Object.keys(distributionData).length === 0 ? (
-                <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No beads found"
-                    style={{ width: '100%', height: '100%' }}
-                />
-            ) : (
-                <svg ref={svgRef}></svg>
-            )} */}
             {Object.keys(selectedSphereList).length > 1 ? (
-                loading ? (<Spin spinning={true} style={{ width: '100%', height: '100%' }} />) : (
+                loading ? (
+                    <Spin spinning={true} style={{ width: '100%', height: '100%' }} />
+                ) : (
                     <svg ref={svgRef}></svg>
                 )
             ) : (
