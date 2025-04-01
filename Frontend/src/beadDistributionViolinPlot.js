@@ -7,7 +7,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-    console.log(distributionData, 'selectedSphereList');
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
@@ -28,7 +27,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     }, []);
 
     useEffect(() => {
-        if (!dimensions.width || !dimensions.height) return;
+        if (!dimensions.width || !dimensions.height || Object.keys(selectedSphereList).length < 2 || loading) return;
 
         d3.select(svgRef.current).selectAll("*").remove();
 
@@ -36,7 +35,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", dimensions.width)
             .attr("height", dimensions.height);
 
-        const margin = { top: 20, right: 30, bottom: 30, left: 50 },
+        const margin = { top: 20, right: 60, bottom: 25, left: 45 },
             width = dimensions.width - margin.left - margin.right,
             height = dimensions.height - margin.top - margin.bottom;
 
@@ -51,6 +50,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .domain(categories)
             .range([0, width])
             .padding(0.2);
+
+        const colorScale = d3.scaleOrdinal()
+            .domain(distKeys)
+            .range(d3.schemeCategory10);
 
         function kernelDensityEstimator(kernel, X) {
             return function (V) {
@@ -104,6 +107,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", violinWidth)
             .attr("height", height);
 
+        // violin plot
         categories.forEach(category => {
             const categoryGroup = g.append("g")
                 .attr("transform", `translate(${xScale(category)},0)`)
@@ -113,27 +117,15 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 const density = densitiesByCategory[category][key];
                 const area = d3.area()
                     .curve(d3.curveCatmullRom)
-                    .x0(d => {
-                        return index === 0
-                            ? violinWidth / 2 - xDensityScale(d[1])
-                            : violinWidth / 2;
-                    })
-                    .x1(d => {
-                        return index === 0
-                            ? violinWidth / 2
-                            : violinWidth / 2 + xDensityScale(d[1]);
-                    })
+                    .x0(d => (index === 0 ? violinWidth / 2 - xDensityScale(d[1]) : violinWidth / 2))
+                    .x1(d => (index === 0 ? violinWidth / 2 : violinWidth / 2 + xDensityScale(d[1])))
                     .y(d => yScale(d[0]));
-
-                const sphereKeys = Object.keys(selectedSphereList);
-                const fillColor = sphereKeys[index]
-                    ? selectedSphereList[sphereKeys[index]].color
-                    : "#ccc";
 
                 categoryGroup.append("path")
                     .datum(density)
-                    .attr("fill", fillColor)
+                    .attr("fill", colorScale(key))
                     .attr("stroke", "none")
+                    .attr("opacity", 0.7)
                     .attr("d", area);
             });
         });
@@ -146,11 +138,52 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
 
-    }, [dimensions, distributionData, selectedSphereList]);
+        // Legend
+        const legend = svg.append("g")
+            .attr("transform", `translate(${width + margin.left + 10}, ${margin.top})`);
+
+        distKeys.forEach((key, index) => {
+            const legendRow = legend.append("g")
+                .attr("transform", `translate(0, ${index * 20})`);
+
+            legendRow.append("rect")
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("fill", colorScale(key));
+
+            legendRow.append("text")
+                .attr("x", 20)
+                .attr("y", 12)
+                .attr("font-size", "12px")
+                .text(key);
+        });
+
+    }, [dimensions, distributionData, loading]);
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-            <svg ref={svgRef}></svg>
+            {/* {loading ? (
+                <Spin style={{ width: "100%", height: "100%"}} />
+            ) : Object.keys(distributionData).length === 0 ? (
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No beads found"
+                    style={{ width: '100%', height: '100%' }}
+                />
+            ) : (
+                <svg ref={svgRef}></svg>
+            )} */}
+            {Object.keys(selectedSphereList).length > 1 ? (
+                loading ? (<Spin spinning={true} style={{ width: '100%', height: '100%' }} />) : (
+                    <svg ref={svgRef}></svg>
+                )
+            ) : (
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No beads found"
+                    style={{ width: '100%', height: '100%' }}
+                />
+            )}
         </div>
     );
 };
