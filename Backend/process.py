@@ -434,7 +434,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             sample_distance_vector = np.array(sample_distance_matrix).flatten()
             
             corr, _ = pearsonr(sample_distance_vector, avg_distance_vector)
-            print(corr, sample_id, 'corr_value')
             
             if best_corr is None or abs(1 - abs(corr)) < abs(1 - abs(best_corr)):
                 best_corr = corr
