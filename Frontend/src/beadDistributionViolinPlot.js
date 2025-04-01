@@ -7,7 +7,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-    console.log(distributionData, Object.keys(distributionData).length, '//////')
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
@@ -117,6 +116,8 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
             distKeys.forEach((key, index) => {
                 const density = densitiesByCategory[category][key];
+                if (!density) return;
+
                 const area = d3.area()
                     .curve(d3.curveCatmullRom)
                     .x0(d => (index === 0 ? violinWidth / 2 - xDensityScale(d[1]) : violinWidth / 2))
@@ -160,7 +161,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .text(key);
         });
 
-    }, [dimensions, distributionData, loading]);
+    }, [dimensions, distributionData, selectedSphereList, loading]);
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
