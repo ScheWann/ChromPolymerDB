@@ -36,6 +36,7 @@ function App() {
   const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDistanceDownloadSpinner] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedSphereLists, setSelectedSphereLists] = useState({ "original": {}, "comparison": {} });
+  const [distributionData, setDistributionData] = useState({});
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -970,6 +971,8 @@ function App() {
                               selectedSphereList={selectedSphereLists["original"] || {}}
                               setSelectedSphereList={setSelectedSphereLists}
                               handleColorChange={handleColorChange}
+                              distributionData={distributionData}
+                              setDistributionData={setDistributionData}
                             />
                           ) : (
                             <Spin size="large" style={{ margin: '20px 0' }} />
@@ -1073,6 +1076,8 @@ function App() {
                                   selectedSphereList={selectedSphereLists["comparison"] || {}}
                                   setSelectedSphereList={setSelectedSphereLists}
                                   handleColorChange={handleColorChange}
+                                  distributionData={distributionData}
+                                  setDistributionData={setDistributionData}
                                 />
                               )
                             )

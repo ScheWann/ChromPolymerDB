@@ -3,15 +3,14 @@ import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { Button, Tooltip, Modal } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
-import { BeadDistributionPlot } from './beadDistributionplot';
+// import { BeadDistributionPlot } from './beadDistributionplot';
+import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
 
-export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence }) => {
+export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
-    const [openDistrubutionModal, setOpenDistrubutionModal] = useState(false);
-    const [distributionData, setDistributionData] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const spheresData = useMemo(() => {
@@ -117,30 +116,6 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     };
 
-    const openDistribution = () => {
-        setOpenDistrubutionModal(true);
-        setLoading(true);
-        const beadsArray = Object.keys(selectedSphereList);
-
-        fetch('/getBeadDistribution', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                cell_line: celllineName,
-                chromosome_name: chromosomeName,
-                sequences: currentChromosomeSequence,
-                indices: beadsArray
-            })
-        })
-            .then(res => res.json())
-            .then(data => {
-                setDistributionData(data);
-                setLoading(false);
-            });
-    };
-
     useEffect(() => {
         setLoading(true);
         const beadsArray = Object.keys(selectedSphereList);
@@ -160,10 +135,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         })
             .then(res => res.json())
             .then(data => {
-                setDistributionData(data);
+                setDistributionData(prev => ({
+                    ...prev,
+                    [celllineName]: data
+                }));
                 setLoading(false);
             });
-    }, [selectedSphereList]);
+    }, [selectedSphereList, celllineName]);
 
     useEffect(() => {
         if (controlsRef.current && center) {
@@ -204,8 +182,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     return (
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-            <div style={{ width: '50%', height: '100%'}}>
-                <BeadDistributionPlot
+            <div style={{ width: '50%', height: '100%' }}>
+                {/* <BeadDistributionPlot
+                    selectedSphereList={selectedSphereList}
+                    distributionData={distributionData}
+                    loading={loading}
+                /> */}
+                <BeadDistributionViolinPlot
                     selectedSphereList={selectedSphereList}
                     distributionData={distributionData}
                     loading={loading}
@@ -252,7 +235,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             onClick={download}
                         />
                     </Tooltip>
-                    <Tooltip
+                    {/* <Tooltip
                         title="Show distribution of the selected beads"
                         color='white'
                         overlayInnerStyle={{
@@ -267,7 +250,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             icon={<DotChartOutlined />}
                             onClick={openDistribution}
                         />
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip
                         title="Collapse the distance window"
                         color='white'

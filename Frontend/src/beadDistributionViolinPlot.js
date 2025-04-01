@@ -7,6 +7,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+    console.log(distributionData, 'selectedSphereList');
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
