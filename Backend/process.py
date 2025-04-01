@@ -465,7 +465,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         return avg_distance_matrix
 
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]:
-        if sample_id is 0:
+        if sample_id == 0:
             best_sample_id = get_best_chain_sample()
             sample_distance_vector = get_distance_vector_by_sample(conn, chromosome_name, cell_line, best_sample_id, sequences)
 

@@ -950,7 +950,8 @@ function App() {
                       items={randomKeys.map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
-                          label : i === 0 ? 'Best Sample' : `Sample ${i}`,
+                          // label : i === 0 ? 'Best Sample' : `Sample ${i}`,
+                          label: `Sample ${i + 1}`,
                           key: sampleId,
                           children: chromosome3DExampleData[cacheKey] ? (
                             <Chromosome3D
@@ -1052,7 +1053,7 @@ function App() {
                           const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                           return {
-                            label : i === 0 ? 'Best Sample' : `Sample ${i}`,
+                            label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
                               comparisonCellLine3DLoading ? (
