@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 
 export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVector }) => {
@@ -6,6 +6,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
     const svgRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
+    const uniqueGradientId = useMemo(() => `legend-gradient-current-distance-${Math.random().toString(36).substr(2, 9)}`, []);
     useEffect(() => {
         const resizeObserver = new ResizeObserver(entries => {
             if (entries[0]) {
@@ -80,7 +81,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
 
         const gradient = legend.append("defs")
             .append("linearGradient")
-            .attr("id", "legend-gradient-current-distance")
+            .attr("id", uniqueGradientId)
             .attr("x1", "0%").attr("x2", "100%");
 
         gradient.selectAll("stop")
@@ -94,7 +95,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
         legend.append("rect")
             .attr("width", size)
             .attr("height", 10)
-            .style("fill", "url(#legend-gradient-current-distance)");
+            .style("fill", `url(#${uniqueGradientId})`);
 
         legend.append("text")
             .attr("y", 20)
