@@ -49,7 +49,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // distributionData’s keys are cell_lines
+        // distributionData’s keys
         const distKeys = Object.keys(distributionData);
         if (distKeys.length === 0) return;
         const categories = Object.keys(distributionData[distKeys[0]]);
@@ -106,9 +106,11 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .nice();
 
         const violinWidth = xScale.bandwidth();
-        const xDensityScale = d3.scaleLinear()
+        const numKeys = distKeys.length;
+        const segmentWidth = violinWidth / numKeys;
+        const halfWidthScale = d3.scaleLinear()
             .domain([0, maxDensity])
-            .range([0, violinWidth / 2]);
+            .range([0, segmentWidth / 2]);
 
         g.append("clipPath")
             .attr("id", "clip")
@@ -142,21 +144,21 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             }
         }
 
-        // violin plot
         categories.forEach(category => {
             const categoryGroup = g.append("g")
                 .attr("transform", `translate(${xScale(category)},0)`)
                 .attr("clip-path", "url(#clip)");
 
-            // 绘制每个 cell_line 对应的 violin 部分（左右分别显示）
-            distKeys.forEach((key, index) => {
+            distKeys.forEach((key, keyIndex) => {
                 const density = densitiesByCategory[category][key];
                 if (!density) return;
 
+                const center = keyIndex * segmentWidth + segmentWidth / 2;
+
                 const area = d3.area()
                     .curve(d3.curveCatmullRom)
-                    .x0(d => (index === 0 ? violinWidth / 2 - xDensityScale(d[1]) : violinWidth / 2))
-                    .x1(d => (index === 0 ? violinWidth / 2 : violinWidth / 2 + xDensityScale(d[1])))
+                    .x0(d => (center - halfWidthScale(d[1])))
+                    .x1(d => (center + halfWidthScale(d[1])))
                     .y(d => yScale(d[0]));
 
                 categoryGroup.append("path")
@@ -166,9 +168,9 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                     .attr("opacity", 0.7)
                     .attr("d", area);
 
+                // find matching beadPairs(pairKey === category && cellLine === key)
                 const matchingBeadPairs = beadPairs.filter(bp => bp.pairKey === category && bp.cellLine === key);
                 matchingBeadPairs.forEach(bp => {
-                    // drawing marker(line)
                     const densityData = densitiesByCategory[category][key];
                     if (densityData) {
                         const bisect = d3.bisector(d => d[0]).left;
@@ -184,25 +186,16 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             const t = (bp.distance - d0[0]) / (d1[0] - d0[0]);
                             markerDensity = d0[1] + t * (d1[1] - d0[1]);
                         }
-                        // markerLineHalfLength represents the width of the current bp.distance on the half side of the violin
-                        const markerLineHalfLength = xDensityScale(markerDensity);
-                        let x1, x2;
+                        const markerLineHalfLength = halfWidthScale(markerDensity);
 
-                        // decide whether to show the marker on the left or right half of the violin
-                        if (distKeys.indexOf(key) === 0) { // left half
-                            x1 = violinWidth / 2 - markerLineHalfLength;
-                            x2 = violinWidth / 2;
-                        } else {  // right half
-                            x1 = violinWidth / 2;
-                            x2 = violinWidth / 2 + markerLineHalfLength;
-                        }
+                        const x1 = center - markerLineHalfLength;
+                        const x2 = center + markerLineHalfLength;
                         const yPos = yScale(bp.distance);
                         categoryGroup.append("line")
                             .attr("x1", x1)
                             .attr("x2", x2)
                             .attr("y1", yPos)
                             .attr("y2", yPos)
-                            // .attr("stroke", colorScale(key))
                             .attr("stroke", "purple")
                             .attr("stroke-width", 2);
                     }
