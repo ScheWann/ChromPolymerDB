@@ -73,7 +73,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 const marker = newStart + index * step; // Start ibp
                 const isValid = validChromosomeValidIbpData.includes(marker); // Whether the current bead exists
                 const isGeneBead = geneBeadSeq.includes(marker); // Whether the bead in the selected gene sequences
-                const orientation = data.orientation;
+                const orientation = geneSize.orientation;
 
                 return {
                     ...data,

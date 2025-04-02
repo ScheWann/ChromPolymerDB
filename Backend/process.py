@@ -201,7 +201,7 @@ def chromosome_size_by_gene_name(gene_name):
 
     cur.execute(
         """
-        SELECT chromosome, start_location, end_location
+        SELECT chromosome, orientation, start_location, end_location
         FROM gene
         WHERE symbol = %s
     """,

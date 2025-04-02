@@ -21,7 +21,7 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             .then(data => {
                 const displayStart = Math.max(data.start_location, currentChromosomeSequence.start);
                 const displayEnd = Math.min(data.end_location, currentChromosomeSequence.end);
-                setGeneSize({ start: displayStart, end: displayEnd });
+                setGeneSize({ start: displayStart, end: displayEnd, orientation: data.orientation });
             })
     }
 
