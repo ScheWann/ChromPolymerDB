@@ -140,7 +140,7 @@ function App() {
   // update original part when chromosome3DExampleID changes
   useEffect(() => {
     const originalCacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`;
-    console.log(chromosome3DExampleData, originalCacheKey);
+    
     if (!chromosome3DExampleData[originalCacheKey]) return;
 
     const selectedBeads = Object.keys(selectedSphereLists.original);
@@ -163,7 +163,7 @@ function App() {
   // update comparison part when comparisonCellLine3DSampleID changes
   useEffect(() => {
     const comparisonCacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
-    console.log(comparisonCellLine3DData, comparisonCacheKey);
+
     if (!comparisonCellLine3DData[comparisonCacheKey]) return;
 
     const selectedBeads = Object.keys(selectedSphereLists.original);
