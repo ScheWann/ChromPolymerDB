@@ -7,7 +7,7 @@ import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
 
-export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData }) => {
+export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, cellLineDict }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
@@ -192,6 +192,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     selectedSphereList={selectedSphereList}
                     distributionData={distributionData}
                     loading={loading}
+                    cellLineDict={cellLineDict}
                 />
             </div>
             <div style={{ width: '50%', height: '100%', position: 'relative' }}>

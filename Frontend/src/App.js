@@ -999,6 +999,7 @@ function App() {
                               handleColorChange={handleColorChange}
                               distributionData={distributionData}
                               setDistributionData={setDistributionData}
+                              cellLineDict={cellLineDict}
                             />
                           ) : (
                             <Spin size="large" style={{ margin: '20px 0' }} />
@@ -1104,6 +1105,7 @@ function App() {
                                   handleColorChange={handleColorChange}
                                   distributionData={distributionData}
                                   setDistributionData={setDistributionData}
+                                  cellLineDict={cellLineDict}
                                 />
                               )
                             )
