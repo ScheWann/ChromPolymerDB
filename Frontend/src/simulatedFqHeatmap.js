@@ -3,7 +3,8 @@ import { InputNumber, Slider } from 'antd';
 import * as d3 from 'd3';
 
 export const SimulatedFqHeatmap = ({
-    chromosomeData,
+    celllineName,
+    chromosomeName,
     chromosomefqData,
     selectedChromosomeSequence
 }) => {
@@ -16,6 +17,7 @@ export const SimulatedFqHeatmap = ({
     const [simulatedColorScaleRange, setSimulatedColorScaleRange] = useState([0, 0.3]);
     const [simulatedDataMin, setSimulatedDataMin] = useState(0);
     const [simulatedDataMax, setSimulatedDataMax] = useState(0);
+    const [chromosomeData, setChromosomeData] = useState([]);
     const [layout, setLayout] = useState(null);
 
     const changeSimulatedColorByInput = (type) => (value) => {
@@ -33,6 +35,20 @@ export const SimulatedFqHeatmap = ({
     const changeSimulatedColorScale = (value) => {
         setSimulatedColorScaleRange(value);
     };
+
+    useEffect(() => {
+        fetch("/getChromosData", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cell_line: celllineName, chromosome_name: chromosomeName, sequences: selectedChromosomeSequence })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setChromosomeData(data);
+            });
+    }, [celllineName]);
 
     useEffect(() => {
         const container = containerRef.current;

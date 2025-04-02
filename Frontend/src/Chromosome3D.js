@@ -340,7 +340,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                 chromosomeData={chromosomeData}
                             /> */}
                             <SimulatedFqHeatmap
-                                chromosomeData={chromosomeData}
+                                // chromosomeData={chromosomeData}
+                                celllineName={celllineName}
+                                chromosomeName={chromosomeName}
                                 chromosomefqData={chromosomefqData}
                                 selectedChromosomeSequence={selectedChromosomeSequence}
                             />
