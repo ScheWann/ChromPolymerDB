@@ -140,7 +140,7 @@ function App() {
   // update original part when chromosome3DExampleID changes
   useEffect(() => {
     const originalCacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`;
-    
+
     if (!chromosome3DExampleData[originalCacheKey]) return;
 
     const selectedBeads = Object.keys(selectedSphereLists.original);
@@ -842,7 +842,7 @@ function App() {
           <>
             {/* Original Heatmap */}
             {heatmapLoading ? (
-              <Spin spinning={true} size="large" style={{ width: '800px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+              <Spin spinning={true} size="large" style={{ width: '60vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
             ) : (
               chromosomeData.length > 0 && (
                 <Heatmap
@@ -912,11 +912,22 @@ function App() {
 
             {/* Original 3D chromosome */}
             {chromosome3DLoading ? (
-              <Spin spinning={true} size="large" style={{ width: 800, height: '100%', margin: 0 }} />
+              <div style={{ width: '60vw', flexShrink: 0 }}>
+                <Spin
+                  spinning={true}
+                  size="large"
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    margin: 0,
+                  }}
+                />
+              </div>
             ) : (
               Object.keys(chromosome3DExampleData).length > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 800px))` }}>
-                  <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: '60vw', minWidth: '60vw', flexShrink: 0 }}>
+                  <div style={{ width: '100%', marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%', flexShrink: 0 }}>
                     <Tabs
                       size="small"
                       defaultActiveKey={chromosome3DExampleID}
@@ -1010,7 +1021,7 @@ function App() {
 
                   {/* Comparison 3D chromosome */}
                   {chromosome3DComparisonShowing && (
-                    <div style={{ width: "49.9%", minWidth: "800px" }}>
+                    <div style={{ width: "60vw" }}>
                       <Tabs
                         size="small"
                         defaultActiveKey={chromosome3DExampleID}
