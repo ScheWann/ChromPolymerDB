@@ -427,7 +427,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '320px', maxWidth: 720, width: '100%', height: '100%', position: 'relative' }}>
+        <div className='heatmapContainer' style={{ display: 'flex', flexDirection: 'column', minWidth: 800, width: '100%', height: '100%', position: 'relative' }}>
             <div ref={containerRef} style={{
                 width: '100%', height: '72%', borderRight: "1px solid #eaeaea", position: 'relative', display: 'flex',
                 justifyContent: 'center',
@@ -578,7 +578,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                     </div>
                 </div>
                 {independentHeatmapLoading ? (
-                    <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+                    <Spin spinning={true} size="large" style={{ width: '800px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
                 ) : (
                     independentHeatmapData.length > 0 ? (
                         <>
@@ -661,7 +661,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                         </>
                     ) : (
                         <Empty
-                            style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }}
+                            className='heatmapContainer'
+                            style={{ width: '100%', height: '100%', minWidth: 800 ,margin: 0 }}
                             description="No Heatmap Data"
                         />
                     )

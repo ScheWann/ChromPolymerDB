@@ -842,7 +842,7 @@ function App() {
           <>
             {/* Original Heatmap */}
             {heatmapLoading ? (
-              <Spin spinning={true} size="large" style={{ width: '720px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+              <Spin spinning={true} size="large" style={{ width: '800px', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
             ) : (
               chromosomeData.length > 0 && (
                 <Heatmap
@@ -912,10 +912,10 @@ function App() {
 
             {/* Original 3D chromosome */}
             {chromosome3DLoading ? (
-              <Spin spinning={true} size="large" style={{ width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))`, height: '100%', margin: 0 }} />
+              <Spin spinning={true} size="large" style={{ width: 800, height: '100%', margin: 0 }} />
             ) : (
               Object.keys(chromosome3DExampleData).length > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 720px))` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: `calc(max(800px, 100% - ${comparisonHeatmapList.length + 1} * 800px))` }}>
                   <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", minWidth: "800px", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%' }}>
                     <Tabs
                       size="small"
@@ -975,7 +975,6 @@ function App() {
                       items={randomKeys.map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
-                          // label : i === 0 ? 'Best Sample' : `Sample ${i}`,
                           label: `Sample ${i + 1}`,
                           key: sampleId,
                           children: chromosome3DExampleData[cacheKey] ? (
