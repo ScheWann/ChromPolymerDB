@@ -212,7 +212,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .call(xAxis);
 
         const legend = svg.append("g")
-            .attr("transform", `translate(${width}, ${margin.top})`);
+            .attr("transform", `translate(${width - margin.right}, ${margin.top})`);
 
         distKeys.forEach((key, index) => {
             const legendRow = legend.append("g")
