@@ -196,18 +196,28 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             .style('position', 'absolute')
             .style('height', 0)
 
+        let shadowRoot = document.querySelector("#igv-div")?.shadowRoot;
+        let igvContainerHeight = 0;
+
+        if (shadowRoot) {
+            const igvContainer = shadowRoot.querySelector(".igv-container");
+            if (igvContainer) {
+                igvContainerHeight = igvContainer.getBoundingClientRect().height;
+            }
+        }
+
+        setIgvHeight(igvContainerHeight);
+
         if (brushedTriangleRange.start && brushedTriangleRange.end) {
             const { start, end } = brushedTriangleRange;
             const startX = xAxisScale(start);
             const endX = xAxisScale(end);
 
-            const svgHeight = d3.select(igvDivRef.current).node().getBoundingClientRect().height;
             const svgWidth = minCanvasDimension + 100;
-            setIgvHeight(svgHeight);
 
             svg.style('width', svgWidth)
-                .style('height', svgHeight)
-                .style('bottom', -svgHeight / 2)
+                .style('height', igvContainerHeight)
+                .style('bottom', -igvContainerHeight / 2)
                 .style('pointer-events', 'none')
                 .attr('transform', `translate(0, 55)`);
 
@@ -217,7 +227,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .attr("x1", startX)
                 .attr("y1", 0)
                 .attr("x2", startX)
-                .attr("y2", svgHeight)
+                .attr("y2", igvContainerHeight)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3);
 
@@ -227,7 +237,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .attr("x1", endX)
                 .attr("y1", 0)
                 .attr("x2", endX)
-                .attr("y2", svgHeight)
+                .attr("y2", igvContainerHeight)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3);
         }
