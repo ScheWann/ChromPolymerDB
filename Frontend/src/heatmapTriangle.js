@@ -5,6 +5,7 @@ import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
+import * as htmlToImage from 'html-to-image';
 // import { TriangleGeneList } from './triangleGeneList.js';
 
 export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
@@ -550,39 +551,35 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     };
 
     const downloadImage = () => {
-        const canvas = canvasRef.current;
-        const svg = axisSvgRef.current;
+        const container = containerRef.current;
+        if (!container) return;
 
-        const serializer = new XMLSerializer();
-        const svgData = serializer.serializeToString(svg);
+        container.style.overflow = 'visible';
+        const width = container.scrollWidth;
+        const height = container.scrollHeight;
 
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const svgURL = URL.createObjectURL(svgBlob);
-
-        const svgImage = new Image();
-        svgImage.onload = () => {
-            // Create a new canvas to merge canvas and SVG
-            const combinedCanvas = document.createElement("canvas");
-            combinedCanvas.width = canvas.width;
-            combinedCanvas.height = canvas.height + svgImage.height;
-
-            const combinedContext = combinedCanvas.getContext("2d");
-
-            combinedContext.drawImage(canvas, 0, 0);
-
-            combinedContext.drawImage(svgImage, 0, canvas.height);
-
-            // Convert the combined canvas to an image and trigger download
-            const dataURL = combinedCanvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.href = dataURL;
-            link.download = "heatmap_triangle.png";
-            link.click();
-
-            URL.revokeObjectURL(svgURL);
-        };
-
-        svgImage.src = svgURL;
+        htmlToImage.toPng(container, {
+            width,
+            height,
+            filter: (node) => {
+                if (node.id === 'triangle-control-button-group') {
+                    return false;
+                }
+                return true;
+            },
+            style: {
+                backgroundColor: 'white',
+            },
+        })
+            .then((dataUrl) => {
+                const link = document.createElement('a');
+                link.download = 'heatmap-igv.png';
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch((error) => {
+                console.error('oops, something went wrong!', error);
+            });
     };
 
     const switchChange = () => {
@@ -802,7 +799,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 if (rectWidth > maxRectSize || rectHeight > maxRectSize) {
                     const scaleFactor = Math.min(maxRectSize / rectWidth, maxRectSize / rectHeight);
                     const adjustedStep = step * scaleFactor;
-                
+
                     rectWidth = xScale(ibp + adjustedStep) - xScale(ibp);
                     rectHeight = yScale(jbp) - yScale(jbp + adjustedStep);
                 }
@@ -915,21 +912,22 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     return (
         <div ref={containerRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: '100%', height: '100%' }}>
-            <div style={{
-                position: 'absolute',
-                top: 20,
-                zIndex: 10,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                width: '100%',
-            }}>
+            <div id='triangle-control-button-group'
+                style={{
+                    position: 'absolute',
+                    top: 20,
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    width: '100%',
+                }}>
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
-                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={fqRawcMode ? 1 : 200} step={fqRawcMode ? 0.1: 1} onChange={changeColorScale} value={colorScaleRange} />
+                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={fqRawcMode ? 1 : 200} step={fqRawcMode ? 0.1 : 1} onChange={changeColorScale} value={colorScaleRange} />
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch
