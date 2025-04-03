@@ -28,7 +28,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
-    console.log(selectedSphereList, '////')
     const modalStyles = {
         body: {
             height: '40vh'
@@ -425,11 +424,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
             </div>
 
             {showChromosome3DDistance && chromosomeCurrentSampleDistanceVector ? (
-                <div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10 }}>
+                <div style={{ aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10 }}>
                     <CurrentChainDistanceHeatmap
                         chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                     />
-                </div>) : (<div style={{ width: "15%", aspectRatio: "1", position: 'absolute', bottom: 0, right: 10, zIndex: 10 }}>
+                </div>) : (<div style={{ aspectRatio: "1", position: 'absolute', bottom: 0, right: 10, zIndex: 10 }}>
                     <CurrentChainDistanceHeatmap
                         chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                     />
