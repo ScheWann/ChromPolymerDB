@@ -1021,7 +1021,7 @@ function App() {
 
                   {/* Comparison 3D chromosome */}
                   {chromosome3DComparisonShowing && (
-                    <div style={{ width: "60vw" }}>
+                    <div style={{ width: "60vw", minWidth: "60vw", flexShrink: 0 }}>
                       <Tabs
                         size="small"
                         defaultActiveKey={chromosome3DExampleID}
