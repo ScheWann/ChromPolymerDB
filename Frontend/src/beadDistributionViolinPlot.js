@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Spin, Empty } from 'antd';
 import * as d3 from 'd3';
 
-export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading }) => {
+export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, cellLineDict }) => {
     const containerRef = useRef();
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -42,7 +42,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", dimensions.width)
             .attr("height", dimensions.height);
 
-        const margin = { top: 20, right: 60, bottom: 25, left: 45 },
+        const margin = { top: 20, right: 20, bottom: 25, left: 45 },
             width = dimensions.width - margin.left - margin.right,
             height = dimensions.height - margin.top - margin.bottom;
 
@@ -202,7 +202,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
         distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
-                .attr("transform", `translate(0, ${index * 20})`);
+                .attr("transform", `translate(${-margin.left - margin.right}, ${index * 20})`);
 
             legendRow.append("rect")
                 .attr("width", 15)
@@ -213,7 +213,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("x", 20)
                 .attr("y", 12)
                 .attr("font-size", "12px")
-                .text(cellLine);
+                .text(cellLineDict[cellLine]);
         });
 
     }, [dimensions, distributionData, selectedSphereList, loading]);
