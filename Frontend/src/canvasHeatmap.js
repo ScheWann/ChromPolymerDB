@@ -533,7 +533,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                         value={independentHeatmapCellLine}
                                         style={{
                                             minWidth: 100,
-                                            maxWidth: 150,
+                                            maxWidth: 120,
                                         }}
                                         size="small"
                                         onChange={comparisonCellLineChange}
@@ -573,7 +573,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             }}
                         >
                             <Button size='small' color="primary" variant="outlined" onClick={generate3DChromosome} style={{ marginRight: 5, fontSize: 12 }}>
-                                Generate
+                                3D Structure
                             </Button>
                         </Tooltip>
                     </div>
