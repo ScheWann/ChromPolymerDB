@@ -843,7 +843,7 @@ function App() {
           <>
             {/* Original Heatmap */}
             {heatmapLoading ? (
-              <Spin spinning={true} size="large" style={{ width: '60vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+              <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
             ) : (
               chromosomeData.length > 0 && (
                 <Heatmap

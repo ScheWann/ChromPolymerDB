@@ -99,6 +99,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
 
     useEffect(() => {
         let observer = null;
+        let isMounted = true;
 
         if (igvMountStatus) {
             const igvOptions = {
@@ -113,6 +114,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
             };
 
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
+                if (!isMounted) return;
                 browserRef.current = igvBrowser;
             });
 
@@ -143,12 +145,14 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
         }
 
         return () => {
+            isMounted = false;
             if (browserRef.current) {
                 igv.removeAllBrowsers();
                 browserRef.current = null;
             }
             if (observer) {
                 observer.disconnect();
+                observer = null;
             }
         };
     }, [chromosomeName, currentChromosomeSequence, igvMountStatus]);
