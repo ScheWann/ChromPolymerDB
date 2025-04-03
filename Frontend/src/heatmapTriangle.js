@@ -865,26 +865,29 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             brushSvg.selectAll('.triangle').remove();
 
-            if (d3.polygonContains(clickableArea, [mouseX, mouseY])) {
-                const length = canvas.height - mouseY;
-                const offsetlength = (canvasUnitRectSize * Math.sqrt(2)) / 2
-                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height - offsetlength];
-                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height - offsetlength];
+            const snappedX = Math.floor(mouseX / canvasUnitRectSize) * canvasUnitRectSize + canvasUnitRectSize / 2;
+            const snappedY = Math.floor(mouseY / canvasUnitRectSize) * canvasUnitRectSize;
+
+            if (d3.polygonContains(clickableArea, [snappedX, snappedY])) {
+                const offsetlength = (canvasUnitRectSize * Math.sqrt(2)) / 2;
+                const length = canvas.height - snappedY - offsetlength;
+                const pointBottomLeft = [Math.max(snappedX - length, 0), Math.min(snappedY + length, canvas.height - offsetlength)];
+                const pointBottomRight = [Math.min(snappedX + length, canvas.width), Math.min(snappedY + length, canvas.height - offsetlength)];
 
                 const trianglePoints = [
-                    [mouseX, mouseY],
+                    [snappedX, snappedY],
                     pointBottomLeft,
                     pointBottomRight,
                 ];
 
-                const brushedTriangleRangeStart = invertPosition(transformedXScale, mouseX - length);
-                const brushedTriangleRangeEnd = invertPosition(transformedXScale, mouseX + length);
+                const brushedTriangleRangeStart = invertPosition(transformedXScale, snappedX - length);
+                const brushedTriangleRangeEnd = invertPosition(transformedXScale, snappedX + length);
 
                 brushSvg.append('polygon')
                     .attr('class', 'triangle')
                     .attr('points', trianglePoints.map(d => d.join(',')).join(' '))
                     .attr('fill', '#808080')
-                    .attr('opacity', 0.1)
+                    .attr('opacity', 0.5);
 
                 updateAxisWithBrushRange(brushedTriangleRangeStart, brushedTriangleRangeEnd);
                 setBrushedTriangleRange({ start: brushedTriangleRangeStart, end: brushedTriangleRangeEnd });
