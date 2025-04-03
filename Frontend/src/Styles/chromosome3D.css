@@ -1,3 +1,10 @@
+.buttonGroup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
 .custom-button {
     background-color: white;
     color: #333;

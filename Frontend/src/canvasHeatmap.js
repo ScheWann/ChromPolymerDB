@@ -428,7 +428,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
 
     return (
-        <div className='heatmapContainer' style={{ display: 'flex', flexDirection: 'column', width: '40vw', height: '100%', position: 'relative' }}>
+        <div className='heatmapContainer' style={{ display: 'flex', flexDirection: 'column', width: '40vw', minWidth: '40vw', height: '100%', position: 'relative' }}>
             <div ref={containerRef} style={{
                 width: '100%', height: '72%', borderRight: "1px solid #eaeaea", position: 'relative', display: 'flex',
                 justifyContent: 'center',

@@ -28,6 +28,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
 
+    console.log(selectedSphereList, '////')
     const modalStyles = {
         body: {
             height: '40vh'
@@ -198,7 +199,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const resetSelectedBead = () => {
         setHoveredIndex(null);
         setSelectedIndex(null);
-        setSelectedSphereList((prev) => 
+        setSelectedSphereList((prev) =>
             Object.keys(prev).reduce((acc, key) => {
                 acc[key] = {};
                 return acc;
@@ -222,6 +223,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <div style={{
+                width: 'calc(100% - 20px)',
                 position: 'absolute',
                 top: 10,
                 right: 10,
@@ -232,141 +234,148 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 {/* Container for buttons */}
                 <div style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
+                    gap: '5px',
+                    justifyContent: 'flex-end',
+                    flexWrap: 'wrap',
                 }}>
-                    <span style={{ color: 'white' }}>Locations: </span>
-                    <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.start} controls={false} placeholder='start' onChange={value => handleInputLocation(value, 'start')} />
-                    <span style={{ color: 'white' }}>~</span>
-                    <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.end} controls={false} placeholder='end' onChange={value => handleInputLocation(value, 'end')} />
-                    <Switch
-                        checkedChildren="Genes"
-                        unCheckedChildren="Gene Promoter"
-                        disabled={geneBeadSeq.length === 0}
-                        checked={isFullGeneVisible}
-                        style={{
-                            backgroundColor: isFullGeneVisible ? '#DAA520' : '#262626'
-                        }}
-                        onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
-                    />
-                    <Tooltip
-                        title="Change the color of selected bead"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <ColorPicker
-                            value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
-                            disabled={selectedIndex === null}
-                            presets={presetColors}
-                            onChange={handleColorChange}
-                        />
-                    </Tooltip>
-                    <Tooltip
-                        title="Clear the bead selections"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
+                    {/* location selection and gene switch function */}
+                    <div className='buttonGroup'>
+                        <span style={{ color: 'white' }}>Locations: </span>
+                        <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.start} controls={false} placeholder='start' onChange={value => handleInputLocation(value, 'start')} />
+                        <span style={{ color: 'white' }}>~</span>
+                        <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.end} controls={false} placeholder='end' onChange={value => handleInputLocation(value, 'end')} />
+                    </div>
+                    {/* icon control group */}
+                    <div className='buttonGroup'>
+                        <Switch
+                            checkedChildren="Genes"
+                            unCheckedChildren="Promoter"
+                            disabled={geneBeadSeq.length === 0}
+                            checked={isFullGeneVisible}
                             style={{
-                                fontSize: 15,
-                                cursor: "pointer",
+                                backgroundColor: isFullGeneVisible ? '#DAA520' : '#262626'
                             }}
-                            icon={<ClearOutlined />}
-                            onClick={resetSelectedBead}
+                            onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                         />
-                    </Tooltip>
-                    <Tooltip
-                        title="Restore the original view"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
+                        <Tooltip
+                            title="Change the color of selected bead"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
                             }}
-                            icon={<RollbackOutlined />}
-                            onClick={resetView}
-                        />
-                    </Tooltip>
-                    <Tooltip
-                        title="Download the 3D chromosome image"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                            }}
-                            icon={<FileImageOutlined />}
-                            onClick={downloadImage}
-                        />
-                    </Tooltip>
-                    <Tooltip
-                        title="Check the average distance heatmap"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                            }}
-                            icon={<AreaChartOutlined />}
-                            onClick={() => setOpenAvgMatrixModal(true)}
-                        />
-                        <Modal
-                            destroyOnClose
-                            width={"45vw"}
-                            styles={modalStyles}
-                            open={openAvgMatrixModal}
-                            onCancel={() => setOpenAvgMatrixModal(false)}
-                            footer={[
-                                <Button key="back" onClick={() => setOpenAvgMatrixModal(false)}>
-                                    Close
-                                </Button>
-                            ]}
                         >
-                            {/* <AvgDistanceHeatmap
+                            <ColorPicker
+                                value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
+                                disabled={selectedIndex === null}
+                                presets={presetColors}
+                                onChange={handleColorChange}
+                            />
+                        </Tooltip>
+                        <Tooltip
+                            title="Clear the bead selections"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Button
+                                style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                }}
+                                icon={<ClearOutlined />}
+                                onClick={resetSelectedBead}
+                            />
+                        </Tooltip>
+                        <Tooltip
+                            title="Restore the original view"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Button
+                                style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                }}
+                                icon={<RollbackOutlined />}
+                                onClick={resetView}
+                            />
+                        </Tooltip>
+                        <Tooltip
+                            title="Download the 3D chromosome image"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Button
+                                style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                }}
+                                icon={<FileImageOutlined />}
+                                onClick={downloadImage}
+                            />
+                        </Tooltip>
+                        <Tooltip
+                            title="Check the average distance heatmap"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Button
+                                style={{
+                                    fontSize: 10,
+                                    cursor: "pointer",
+                                }}
+                                icon={<AreaChartOutlined />}
+                                onClick={() => setOpenAvgMatrixModal(true)}
+                            />
+                            <Modal
+                                destroyOnClose
+                                width={"45vw"}
+                                styles={modalStyles}
+                                open={openAvgMatrixModal}
+                                onCancel={() => setOpenAvgMatrixModal(false)}
+                                footer={[
+                                    <Button key="back" onClick={() => setOpenAvgMatrixModal(false)}>
+                                        Close
+                                    </Button>
+                                ]}
+                            >
+                                {/* <AvgDistanceHeatmap
                                 chromosome3DAvgMatrixData={chromosome3DAvgMatrixData}
                                 selectedChromosomeSequence={selectedChromosomeSequence}
                                 chromosomefqData={chromosomefqData}
                                 chromosomeData={chromosomeData}
                             /> */}
-                            <SimulatedFqHeatmap
-                                // chromosomeData={chromosomeData}
-                                celllineName={celllineName}
-                                chromosomeName={chromosomeName}
-                                chromosomefqData={chromosomefqData}
-                                selectedChromosomeSequence={selectedChromosomeSequence}
-                            />
-                        </Modal>
-                    </Tooltip>
-                    <Tooltip
-                        title="Generate pairwise distances for selected beads"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
-                            className={`custom-button ${Object.keys(selectedSphereList[celllineName] || {}).length < 2 ? 'disabled' : ''}`}
-                            disabled={Object.keys(selectedSphereList[celllineName] || {}).length < 2}
-                            onClick={() => setShowChromosome3DDistance(true)}>
-                            Generate Distance
-                        </Button>
-                    </Tooltip>
+                                <SimulatedFqHeatmap
+                                    // chromosomeData={chromosomeData}
+                                    celllineName={celllineName}
+                                    chromosomeName={chromosomeName}
+                                    chromosomefqData={chromosomefqData}
+                                    selectedChromosomeSequence={selectedChromosomeSequence}
+                                />
+                            </Modal>
+                        </Tooltip>
+                        <Tooltip
+                            title="Generate pairwise distances for selected beads"
+                            color='white'
+                            overlayInnerStyle={{
+                                color: 'black'
+                            }}
+                        >
+                            <Button
+                                className={`custom-button ${Object.keys(selectedSphereList[celllineName] || {}).length < 2 ? 'disabled' : ''}`}
+                                disabled={Object.keys(selectedSphereList[celllineName] || {}).length < 2}
+                                onClick={() => setShowChromosome3DDistance(true)}>
+                                Generate Distance
+                            </Button>
+                        </Tooltip>
+                    </div>
                 </div>
                 <div style={{
                     border: "1px solid #ccc",
