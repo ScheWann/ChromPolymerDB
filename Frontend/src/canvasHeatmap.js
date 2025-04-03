@@ -643,7 +643,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             </div>
                             <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                             <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
-                            <Modal open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
+                            <Modal destroyOnClose={true} open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
                                 <HeatmapTriangle
                                     geneList={geneList}
                                     cellLineName={independentHeatmapCellLine}
