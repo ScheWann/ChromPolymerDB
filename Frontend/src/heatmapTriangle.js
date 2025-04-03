@@ -22,6 +22,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
     const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "" });
+    const [canvasUnitRectSize, setCanvasUnitRectSize] = useState(0);
 
     // Track table search
     const [searchText, setSearchText] = useState('');
@@ -808,6 +809,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
                 rectWidth = Math.round(rectWidth);
                 rectHeight = Math.round(rectHeight);
+                setCanvasUnitRectSize(rectWidth);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
@@ -868,9 +870,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             if (d3.polygonContains(clickableArea, [mouseX, mouseY])) {
                 const length = canvas.height - mouseY;
-
-                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height];
-                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height];
+                const offsetlength = (canvasUnitRectSize * Math.sqrt(2)) / 2
+                const pointBottomLeft = [Math.max(mouseX - length, 0), canvas.height - offsetlength];
+                const pointBottomRight = [Math.min(mouseX + length, canvas.width), canvas.height - offsetlength];
 
                 const trianglePoints = [
                     [mouseX, mouseY],
@@ -909,7 +911,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .style("text-anchor", "middle")
             .attr("dx", "0em")
             .attr("dy", "1em");
-    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange, fqRawcMode]);
+    }, [currentChromosomeData, fullTriangleVisible, currentChromosomeSequence, containerSize, colorScaleRange, fqRawcMode, canvasUnitRectSize]);
 
     return (
         <div ref={containerRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: '100%', height: '100%' }}>
