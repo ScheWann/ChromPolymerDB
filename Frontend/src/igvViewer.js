@@ -148,7 +148,7 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                     loadedTracks.current.add(track.HREF);
                     const newTrack = {
                         url: `https://www.encodeproject.org${track.HREF}`,
-                        name: track.AssayType,
+                        name: `${track.Biosample} ${track.Target}`,
                         format: track.Format,
                     };
 
