@@ -885,7 +885,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     .attr('class', 'triangle')
                     .attr('points', trianglePoints.map(d => d.join(',')).join(' '))
                     .attr('fill', '#808080')
-                    .attr('opacity', 0.5)
+                    .attr('opacity', 0.3)
 
                 updateAxisWithBrushRange(brushedTriangleRangeStart, brushedTriangleRangeEnd);
                 setBrushedTriangleRange({ start: brushedTriangleRangeStart, end: brushedTriangleRangeEnd });
