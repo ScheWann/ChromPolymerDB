@@ -826,18 +826,18 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr("x1", startX)
+                .attr("x1", startX + margin.left)
                 .attr("y1", 0)
-                .attr("x2", startX)
+                .attr("x2", startX + margin.left)
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3);
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr("x1", endX)
+                .attr("x1", endX + margin.left)
                 .attr("y1", 0)
-                .attr("x2", endX)
+                .attr("x2", endX + margin.left)
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3);
