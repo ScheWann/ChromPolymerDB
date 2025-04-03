@@ -765,7 +765,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([0, canvas.width - margin.right]);
+            .range([0, canvas.width]);
 
         const colorScale = d3.scaleSequential(
             t => d3.interpolateReds(t * 0.8 + 0.2)
@@ -896,12 +896,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         });
 
         const axisSvg = d3.select(axisSvgRef.current)
-            .attr('width', canvas.width)
+            .attr('width', canvas.width + margin.left + margin.right)
 
         axisSvg.selectAll('*').remove();
 
         // X-axis
         axisSvg.append('g')
+            .attr("transform", "translate(2, 0)")
             .call(d3.axisBottom(transformedXScale)
                 .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
             .selectAll("text")
