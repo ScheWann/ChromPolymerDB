@@ -14,7 +14,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const [loading, setLoading] = useState(false);
 
     const spheresData = useMemo(() => {
-        return Object.entries(selectedSphereList).map(([key, { position, color }]) => {
+        return Object.entries(selectedSphereList[celllineName]).map(([key, { position, color }]) => {
             const { x, y, z } = position;
             return {
                 key,
@@ -118,7 +118,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     useEffect(() => {
         setLoading(true);
-        const beadsArray = Object.keys(selectedSphereList);
+        const beadsArray = Object.keys(selectedSphereList[celllineName]);
 
         if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
         fetch('/getBeadDistribution', {

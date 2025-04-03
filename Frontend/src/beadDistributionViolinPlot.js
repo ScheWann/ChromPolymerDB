@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Spin, Empty } from 'antd';
 import * as d3 from 'd3';
 
-export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, cellLineDict }) => {
+export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading }) => {
     const containerRef = useRef();
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -30,7 +30,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         if (
             !dimensions.width ||
             !dimensions.height ||
-            Object.keys(selectedSphereList).length < 2 ||
+            Object.keys(selectedSphereList).length < 1 ||
             Object.keys(distributionData).length === 0 ||
             loading
         )
@@ -42,7 +42,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", dimensions.width)
             .attr("height", dimensions.height);
 
-        const margin = { top: 20, right: 20, bottom: 25, left: 45 },
+        const margin = { top: 20, right: 60, bottom: 25, left: 45 },
             width = dimensions.width - margin.left - margin.right,
             height = dimensions.height - margin.top - margin.bottom;
 
@@ -118,39 +118,14 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", violinWidth)
             .attr("height", height);
 
-        // calculate beadPairs‘ pairKey and distance
-        const beadPairs = [];
-        const beadKeys = Object.keys(selectedSphereList);
-        for (let i = 0; i < beadKeys.length; i++) {
-            for (let j = i + 1; j < beadKeys.length; j++) {
-                const key1 = beadKeys[i];
-                const key2 = beadKeys[j];
-
-                // generate pairKey like "6-36", take the smaller and larger combination
-                const minKey = Math.min(Number(key1), Number(key2));
-                const maxKey = Math.max(Number(key1), Number(key2));
-                const pairKey = `${minKey}-${maxKey}`;
-                const bead1 = selectedSphereList[key1];
-                const bead2 = selectedSphereList[key2];
-
-                const cellLine = bead1.cell_line || (bead1.position && bead1.position.cell_line);
-
-                const distance = Math.sqrt(
-                    Math.pow(bead2.position.x - bead1.position.x, 2) +
-                    Math.pow(bead2.position.y - bead1.position.y, 2) +
-                    Math.pow(bead2.position.z - bead1.position.z, 2)
-                );
-                beadPairs.push({ pairKey, distance, cellLine });
-            }
-        }
-
+        // violin plot
         categories.forEach(category => {
             const categoryGroup = g.append("g")
                 .attr("transform", `translate(${xScale(category)},0)`)
                 .attr("clip-path", "url(#clip)");
 
-            distKeys.forEach((key, keyIndex) => {
-                const density = densitiesByCategory[category][key];
+            distKeys.forEach((cellLine, keyIndex) => {
+                const density = densitiesByCategory[category][cellLine];
                 if (!density) return;
 
                 const center = keyIndex * segmentWidth + segmentWidth / 2;
@@ -163,43 +138,53 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
                 categoryGroup.append("path")
                     .datum(density)
-                    .attr("fill", colorScale(key))
+                    .attr("fill", colorScale(cellLine))
                     .attr("stroke", "none")
                     .attr("opacity", 0.7)
                     .attr("d", area);
 
-                // find matching beadPairs(pairKey === category && cellLine === key)
-                const matchingBeadPairs = beadPairs.filter(bp => bp.pairKey === category && bp.cellLine === key);
-                matchingBeadPairs.forEach(bp => {
-                    const densityData = densitiesByCategory[category][key];
-                    if (densityData) {
+                const parts = category.split('-');
+                if (parts.length === 2) {
+                    const sphereA = parts[0];
+                    const sphereB = parts[1];
+
+                    const beadA = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereA];
+                    const beadB = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereB];
+                    if (beadA && beadB) {
+                        const posA = beadA.position;
+                        const posB = beadB.position;
+                        const markerDistance = Math.sqrt(
+                            Math.pow(posB.x - posA.x, 2) +
+                            Math.pow(posB.y - posA.y, 2) +
+                            Math.pow(posB.z - posA.z, 2)
+                        );
+
                         const bisect = d3.bisector(d => d[0]).left;
-                        const i = bisect(densityData, bp.distance);
+                        const i = bisect(density, markerDistance);
                         let markerDensity;
                         if (i === 0) {
-                            markerDensity = densityData[0][1];
-                        } else if (i >= densityData.length) {
-                            markerDensity = densityData[densityData.length - 1][1];
+                            markerDensity = density[0][1];
+                        } else if (i >= density.length) {
+                            markerDensity = density[density.length - 1][1];
                         } else {
-                            const d0 = densityData[i - 1];
-                            const d1 = densityData[i];
-                            const t = (bp.distance - d0[0]) / (d1[0] - d0[0]);
+                            const d0 = density[i - 1];
+                            const d1 = density[i];
+                            const t = (markerDistance - d0[0]) / (d1[0] - d0[0]);
                             markerDensity = d0[1] + t * (d1[1] - d0[1]);
                         }
                         const markerLineHalfLength = halfWidthScale(markerDensity);
-
                         const x1 = center - markerLineHalfLength;
                         const x2 = center + markerLineHalfLength;
-                        const yPos = yScale(bp.distance);
+                        const yPos = yScale(markerDistance);
                         categoryGroup.append("line")
                             .attr("x1", x1)
                             .attr("x2", x2)
                             .attr("y1", yPos)
                             .attr("y2", yPos)
-                            .attr("stroke", "purple")
+                            .attr("stroke", colorScale(cellLine))
                             .attr("stroke-width", 2);
                     }
-                });
+                }
             });
         });
 
@@ -211,30 +196,31 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
 
+        // legend
         const legend = svg.append("g")
-            .attr("transform", `translate(${width - margin.right}, ${margin.top})`);
+            .attr("transform", `translate(${width + margin.left + 10}, ${margin.top})`);
 
-        distKeys.forEach((key, index) => {
+        distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
                 .attr("transform", `translate(0, ${index * 20})`);
 
             legendRow.append("rect")
                 .attr("width", 15)
                 .attr("height", 15)
-                .attr("fill", colorScale(key));
+                .attr("fill", colorScale(cellLine));
 
             legendRow.append("text")
                 .attr("x", 20)
                 .attr("y", 12)
                 .attr("font-size", "12px")
-                .text(cellLineDict[key]);
+                .text(cellLine);
         });
 
     }, [dimensions, distributionData, selectedSphereList, loading]);
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-            {Object.keys(selectedSphereList).length > 1 ? (
+            {Object.keys(selectedSphereList).length > 0 ? (
                 loading ? (
                     <Spin spinning={true} style={{ width: '100%', height: '100%' }} />
                 ) : (

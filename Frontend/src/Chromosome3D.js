@@ -198,11 +198,16 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const resetSelectedBead = () => {
         setHoveredIndex(null);
         setSelectedIndex(null);
-        setSelectedSphereList({ "original": {}, "comparison": {} });
+        setSelectedSphereList((prev) => 
+            Object.keys(prev).reduce((acc, key) => {
+                acc[key] = {};
+                return acc;
+            }, {})
+        );
     };
 
     const handleResetSelect = (index) => {
-        if (selectedSphereList[index]?.color) {
+        if (selectedSphereList[celllineName]?.[index]?.color) {
             // Reset the sphere's color
             setSelectedSphereList((prev) => {
                 const updatedList = { ...prev };
@@ -252,7 +257,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         }}
                     >
                         <ColorPicker
-                            value={selectedSphereList[selectedIndex]?.color || '#00BFFF'}
+                            value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
                             disabled={selectedIndex === null}
                             presets={presetColors}
                             onChange={handleColorChange}
@@ -356,8 +361,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         }}
                     >
                         <Button
-                            className={`custom-button ${Object.keys(selectedSphereList).length < 2 ? 'disabled' : ''}`}
-                            disabled={Object.keys(selectedSphereList).length < 2}
+                            className={`custom-button ${Object.keys(selectedSphereList[celllineName] || {}).length < 2 ? 'disabled' : ''}`}
+                            disabled={Object.keys(selectedSphereList[celllineName] || {}).length < 2}
                             onClick={() => setShowChromosome3DDistance(true)}>
                             Generate Distance
                         </Button>
@@ -486,7 +491,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         //             ? blendIfInvalid('#0000FF') // mix blue and white
                         //             : blendIfInvalid('#FFD700'); // mix gold and white
 
-                        const baseColor = selectedSphereList[index]?.color ||
+                        const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
                             (hoveredIndex === index || selectedIndex === index
                                 ? '#E25822'
                                 : isFirst || isLast

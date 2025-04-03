@@ -35,7 +35,7 @@ function App() {
   const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
   const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDistanceDownloadSpinner] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const [selectedSphereLists, setSelectedSphereLists] = useState({ "original": {}, "comparison": {} });
+  const [selectedSphereLists, setSelectedSphereLists] = useState({});
   const [distributionData, setDistributionData] = useState({});
 
   // Heatmap Comparison settings
@@ -143,16 +143,16 @@ function App() {
 
     if (!chromosome3DExampleData[originalCacheKey]) return;
 
-    const selectedBeads = Object.keys(selectedSphereLists.original);
+    const selectedBeads = Object.keys(selectedSphereLists[cellLineName] || {});
     if (selectedBeads.length > 0) {
       selectedBeads.forEach((index) => {
         setSelectedSphereLists((prev) => ({
           ...prev,
-          original: {
-            ...prev.original,
+          [cellLineName]: {
+            ...(prev[cellLineName] || {}),
             [index]: {
               position: chromosome3DExampleData[originalCacheKey][index],
-              color: prev.original[index].color,
+              color: prev[cellLineName][index].color,
             },
           },
         }));
@@ -166,16 +166,16 @@ function App() {
 
     if (!comparisonCellLine3DData[comparisonCacheKey]) return;
 
-    const selectedBeads = Object.keys(selectedSphereLists.original);
+    const selectedBeads = Object.keys(selectedSphereLists[cellLineName] || {});
     if (selectedBeads.length > 0) {
       selectedBeads.forEach((index) => {
         setSelectedSphereLists((prev) => ({
           ...prev,
-          comparison: {
-            ...prev.comparison,
+          [comparisonCellLine]: {
+            ...(prev[comparisonCellLine] || {}),
             [index]: {
               position: comparisonCellLine3DData[comparisonCacheKey][index],
-              color: prev.original[index].color,
+              color: prev[cellLineName][index].color,
             },
           },
         }));
@@ -468,27 +468,28 @@ function App() {
 
       setSelectedSphereLists((prev) => {
         const updatedOriginal = {
-          ...prev.original,
+          ...prev[cellLineName],
           [selectedIndex]: {
-            ...(prev.original[selectedIndex] || { position: originalCoordinates?.[selectedIndex] }),
+            ...(prev[cellLineName]?.[selectedIndex] || { position: originalCoordinates?.[selectedIndex] }),
             color: color.toHexString(),
           },
         };
 
         const updatedComparison = comparisonCoordinates
           ? {
-            ...prev.comparison,
+            ...prev[comparisonCellLine],
             [selectedIndex]: {
-              ...(prev.comparison[selectedIndex] || { position: comparisonCoordinates?.[selectedIndex] }),
+              ...(prev[comparisonCellLine]?.[selectedIndex] || { position: comparisonCoordinates?.[selectedIndex] }),
               color: color.toHexString(),
             },
           }
-          : prev.comparison;
+          : prev[comparisonCellLine];
 
-        return {
-          original: updatedOriginal,
-          comparison: updatedComparison,
-        };
+          return {
+            ...prev,
+            ...(cellLineName ? { [cellLineName]: updatedOriginal } : {}),
+            ...(comparisonCellLine ? { [comparisonCellLine]: updatedComparison } : {}),
+          };
       });
     }
   };
@@ -869,6 +870,7 @@ function App() {
                   setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
                   setGeneName={setGeneName}
                   setGeneSize={setGeneSize}
+                  setSelectedSphereLists={setSelectedSphereLists}
                   comparisonHeatmapList={comparisonHeatmapList}
                   removeComparisonHeatmap={removeComparisonHeatmap}
                   setChromosome3DCellLineName={setChromosome3DCellLineName}
@@ -904,6 +906,7 @@ function App() {
                 setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
                 setGeneName={setGeneName}
                 setGeneSize={setGeneSize}
+                setSelectedSphereLists={setSelectedSphereLists}
                 comparisonHeatmapList={comparisonHeatmapList}
                 removeComparisonHeatmap={removeComparisonHeatmap}
                 setChromosome3DCellLineName={setChromosome3DCellLineName}
@@ -1004,7 +1007,7 @@ function App() {
                               selectedChromosomeSequence={selectedChromosomeSequence}
                               selectedIndex={selectedIndex}
                               setSelectedIndex={setSelectedIndex}
-                              selectedSphereList={selectedSphereLists["original"] || {}}
+                              selectedSphereList={selectedSphereLists}
                               setSelectedSphereList={setSelectedSphereLists}
                               handleColorChange={handleColorChange}
                               distributionData={distributionData}
@@ -1110,7 +1113,7 @@ function App() {
                                   selectedChromosomeSequence={selectedChromosomeSequence}
                                   selectedIndex={selectedIndex}
                                   setSelectedIndex={setSelectedIndex}
-                                  selectedSphereList={selectedSphereLists["comparison"] || {}}
+                                  selectedSphereList={selectedSphereLists}
                                   setSelectedSphereList={setSelectedSphereLists}
                                   handleColorChange={handleColorChange}
                                   distributionData={distributionData}
