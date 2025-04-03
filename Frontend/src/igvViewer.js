@@ -18,21 +18,25 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
                 format: "bigwig",
+                color: "blue",
             },
             {
                 name: "H3K4me3",
                 url: "https://www.encodeproject.org/files/ENCFF975ARJ/@@download/ENCFF975ARJ.bigWig",
                 format: "bigwig",
+                color: "green"
             },
             {
                 name: "H3K27ac",
                 url: "https://www.encodeproject.org/files/ENCFF087YCU/@@download/ENCFF087YCU.bigWig",
                 format: "bigwig",
+                color: "#008788"
             },
             {
                 name: "H3K27me3",
                 url: "https://www.encodeproject.org/files/ENCFF211VQW/@@download/ENCFF211VQW.bigWig",
                 format: "bigwig",
+                color: "brown"
             }
         ],
         'K': [
@@ -40,21 +44,25 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF137KFY/@@download/ENCFF137KFY.bigWig",
                 format: "bigwig",
+                color: "blue",
             },
             {
                 name: "H3K4me3",
                 url: "https://www.encodeproject.org/files/ENCFF071GML/@@download/ENCFF071GML.bigWig",
                 format: "bigwig",
+                color: "green"
             },
             {
                 name: "H3K27ac",
                 url: "https://www.encodeproject.org/files/ENCFF094XCU/@@download/ENCFF094XCU.bigWig",
                 format: "bigwig",
+                color: "#008788"
             },
             {
                 name: "H3K27me3",
                 url: "https://www.encodeproject.org/files/ENCFF366NNJ/@@download/ENCFF366NNJ.bigWig",
                 format: "bigwig",
+                color: "brown"
             }
         ],
         'IMR': [
@@ -62,21 +70,25 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF770EAV/@@download/ENCFF770EAV.bigWig",
                 format: "bigwig",
+                color: "blue",
             },
             {
                 name: "H3K4me3",
                 url: "https://www.encodeproject.org/files/ENCFF811ZFE/@@download/ENCFF811ZFE.bigWig",
                 format: "bigwig",
+                color: "green"
             },
             {
                 name: "H3K27ac",
                 url: "https://www.encodeproject.org/files/ENCFF803HKN/@@download/ENCFF803HKN.bigWig",
                 format: "bigwig",
+                color: "#008788"
             },
             {
                 name: "H3K27me3",
                 url: "https://www.encodeproject.org/files/ENCFF525KFC/@@download/ENCFF525KFC.bigWig",
                 format: "bigwig",
+                color: "brown"
             }
         ]
     }
