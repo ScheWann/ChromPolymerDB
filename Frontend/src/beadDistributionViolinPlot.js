@@ -49,7 +49,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // distributionData’s keys
+        // distributionData 的 keys
         const distKeys = Object.keys(distributionData);
         if (distKeys.length === 0) return;
         const categories = Object.keys(distributionData[distKeys[0]]);
@@ -125,6 +125,9 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("clip-path", "url(#clip)");
 
             distKeys.forEach((cellLine, keyIndex) => {
+                const dataArray = distributionData[cellLine][category] || [];
+                if (!Array.isArray(dataArray) || dataArray.length === 0) return;
+
                 const density = densitiesByCategory[category][cellLine];
                 if (!density) return;
 
@@ -142,6 +145,35 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                     .attr("stroke", "none")
                     .attr("opacity", 0.7)
                     .attr("d", area);
+
+                // median line
+                const median = d3.median(dataArray);
+                if (median !== undefined) {
+                    const bisect = d3.bisector(d => d[0]).left;
+                    const i = bisect(density, median);
+                    let medianDensity;
+                    if (i === 0) {
+                        medianDensity = density[0][1];
+                    } else if (i >= density.length) {
+                        medianDensity = density[density.length - 1][1];
+                    } else {
+                        const d0 = density[i - 1];
+                        const d1 = density[i];
+                        const t = (median - d0[0]) / (d1[0] - d0[0]);
+                        medianDensity = d0[1] + t * (d1[1] - d0[1]);
+                    }
+                    const lineHalfLength = halfWidthScale(medianDensity);
+                    const x1 = center - lineHalfLength;
+                    const x2 = center + lineHalfLength;
+                    const yMedian = yScale(median);
+                    categoryGroup.append("line")
+                        .attr("x1", x1)
+                        .attr("x2", x2)
+                        .attr("y1", yMedian)
+                        .attr("y2", yMedian)
+                        .attr("stroke", "green")
+                        .attr("stroke-width", 2);
+                }
 
                 const parts = category.split('-');
                 if (parts.length === 2) {
@@ -189,18 +221,20 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         });
 
         const xAxis = d3.axisBottom(xScale);
-            g.append("g")
+
+        g.append("g")
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
 
         const yAxis = d3.axisLeft(yScale).ticks(5);
-            g.append("g").call(yAxis);
+        
+        g.append("g").call(yAxis);
 
         svg.append("text")
-            .attr("transform", `translate(${margin.left / 2 + width }, ${margin.top + height + margin.bottom - 5})`)
+            .attr("transform", `translate(${margin.left + width}, ${margin.top + height + margin.bottom - 5})`)
             .attr("text-anchor", "middle")
             .attr("font-size", "12px")
-            .text("Sphere Pair");
+            .text("Beads");
 
         svg.append("text")
             .attr("transform", `translate(${margin.left / 3}, ${margin.top + height / 2})rotate(-90)`)
