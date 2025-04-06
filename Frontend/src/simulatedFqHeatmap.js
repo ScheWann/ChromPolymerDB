@@ -283,6 +283,12 @@ export const SimulatedFqHeatmap = ({
         <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <div style={{ fontWeight: 'bold' }}>Simulated fq Heatmap</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', height: '100%' }}>
+                {layout && svgSize && (
+                    <>
+                        <ExperimentOutlined style={{ fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, position: 'absolute', transform: `translateX(-${(svgSize.width / 2) - layout.margin.left - 25}px)`, bottom: layout.heatmapSize + 8 }}/>
+                        <LaptopOutlined style={{ fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, position: 'absolute', transform: `translateX(${(svgSize.width / 2) - 30}px)`, top: layout.heatmapSize }}/>
+                    </>
+                )}
                 <svg
                     ref={svgLegendRef}
                     style={{
