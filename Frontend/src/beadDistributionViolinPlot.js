@@ -188,13 +188,25 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             });
         });
 
-        const yAxis = d3.axisLeft(yScale).ticks(5);
-        g.append("g").call(yAxis);
-
         const xAxis = d3.axisBottom(xScale);
-        g.append("g")
+            g.append("g")
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
+
+        const yAxis = d3.axisLeft(yScale).ticks(5);
+            g.append("g").call(yAxis);
+
+        svg.append("text")
+            .attr("transform", `translate(${margin.left / 2 + width }, ${margin.top + height + margin.bottom - 5})`)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .text("Sphere Pair");
+
+        svg.append("text")
+            .attr("transform", `translate(${margin.left / 3}, ${margin.top + height / 2})rotate(-90)`)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .text("Distance");
 
         // legend
         const legend = svg.append("g")
