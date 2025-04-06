@@ -85,7 +85,7 @@ export const SimulatedFqHeatmap = ({
     useEffect(() => {
         if (!containerSize.width || !containerSize.height || !selectedChromosomeSequence) return;
 
-        const margin = { top: 30, right: 0, bottom: 35, left: 120 };
+        const margin = { top: 30, right: 0, bottom: 40, left: 120 };
         const legendWidth = 20;
 
         const { start, end } = selectedChromosomeSequence;
