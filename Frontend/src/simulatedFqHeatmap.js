@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { InputNumber, Slider } from 'antd';
+import { ExperimentOutlined, LaptopOutlined } from '@ant-design/icons';
 import * as d3 from 'd3';
 
 export const SimulatedFqHeatmap = ({
@@ -300,6 +301,7 @@ export const SimulatedFqHeatmap = ({
                     style={{
                         position: 'absolute',
                         top: 0,
+                        transform: 'translateX(5px)',
                         width: svgSize.width,
                         height: svgSize.height,
                         pointerEvents: 'none'
