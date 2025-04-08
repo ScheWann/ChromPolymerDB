@@ -836,7 +836,9 @@ function App() {
         {!heatmapLoading &&
           chromosomeData.length === 0 &&
           Object.keys(chromosome3DExampleData).length === 0 && (
-            <ProjectIntroduction />
+            <div style={{ width: '100%', height: '100%', overflowY: 'scroll' }}>
+              <ProjectIntroduction />
+            </div>
           )}
 
         {!(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0) && (
