@@ -37,6 +37,12 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 url: "https://www.encodeproject.org/files/ENCFF211VQW/@@download/ENCFF211VQW.bigWig",
                 format: "bigwig",
                 color: "brown"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF836XOQ/@@download/ENCFF836XOQ.bigWig",
+                format: "bigwig",
+                color: "green"
             }
         ],
         'K': [
@@ -63,6 +69,12 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 url: "https://www.encodeproject.org/files/ENCFF366NNJ/@@download/ENCFF366NNJ.bigWig",
                 format: "bigwig",
                 color: "brown"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF100FDI/@@download/ENCFF100FDI.bigWig",
+                format: "bigwig",
+                color: "green"
             }
         ],
         'IMR': [
@@ -89,6 +101,12 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 url: "https://www.encodeproject.org/files/ENCFF525KFC/@@download/ENCFF525KFC.bigWig",
                 format: "bigwig",
                 color: "brown"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF756VSW/@@download/ENCFF756VSW.bigWig",
+                format: "bigwig",
+                color: "green"
             }
         ]
     }
