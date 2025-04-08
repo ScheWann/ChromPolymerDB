@@ -6,6 +6,7 @@ import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 import * as htmlToImage from 'html-to-image';
+import { jsPDF } from "jspdf";
 // import { TriangleGeneList } from './triangleGeneList.js';
 
 export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
@@ -29,6 +30,18 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
+
+    // Download fucction dropdown menu items
+    const downloadItems = [
+        {
+            key: '1',
+            label: 'Download PNG',
+        },
+        {
+            key: '2',
+            label: 'Download PDF',
+        }
+    ]
 
     // Tracks dropdown menu items
     const trackItems = [
@@ -582,6 +595,38 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             });
     };
 
+    const downloadPdf = () => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        container.style.overflow = 'visible';
+        const width = container.scrollWidth;
+        const height = container.scrollHeight;
+
+        htmlToImage.toPng(container, {
+            width,
+            height,
+            filter: (node) => {
+                if (node.id === 'triangle-control-button-group') {
+                    return false;
+                }
+                return true;
+            },
+            style: {
+                backgroundColor: 'white',
+            },
+        })
+            .then((dataUrl) => {
+                const pdf = new jsPDF('l', 'pt', [width, height]);
+                pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+                pdf.save('heatmap-igv.pdf');
+            })
+            .catch((error) => {
+                console.error('Wrong', error);
+            });
+    };
+
+
     const switchChange = () => {
         setFullTriangleVisible(!fullTriangleVisible);
         setBrushedTriangleRange({ start: 0, end: 0 });
@@ -634,7 +679,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         fixed: 'left',
     };
 
-    const onClick = ({ key }) => {
+    const onClickTrackItem = ({ key }) => {
         setTrackTableModalVisible(true);
         setTrackKey(key);
         setTrackDataSource([]);
@@ -693,6 +738,18 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 });
         }
     };
+
+    const onClickDownloadItem = ({ key }) => {
+        if (key === '1') {
+            console.log("download png");
+            downloadImage();
+        }
+
+        if (key === '2') {
+            console.log("download pdf");
+            downloadPdf();
+        }
+    }
 
     const confirmTrackSelection = () => {
         setTrackTableModalVisible(false);
@@ -945,7 +1002,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 <Dropdown
                     menu={{
                         items: trackItems,
-                        onClick,
+                        onClick: onClickTrackItem,
                     }}
                     placement="bottom"
                 >
@@ -1007,16 +1064,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     )}
                 </Modal>
                 <Tooltip title="Download non-random interaction data">
-                    <Button
-                        size='small'
-                        style={{
-                            fontSize: 15,
-                            cursor: "pointer",
-                            marginRight: 20
+                    <Dropdown
+                        menu={{
+                            items: downloadItems,
+                            onClick: onClickDownloadItem,
                         }}
-                        icon={<DownloadOutlined />}
-                        onClick={downloadImage}
-                    />
+                        placement="bottom"
+                    >
+                        <Button
+                            size='small'
+                            style={{
+                                fontSize: 15,
+                                cursor: "pointer",
+                                marginRight: 20
+                            }}
+                            icon={<DownloadOutlined />}
+                        />
+                    </Dropdown>
                 </Tooltip>
             </div>
             <canvas ref={canvasRef} style={{ marginTop: 65 }} />
