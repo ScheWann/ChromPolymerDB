@@ -171,52 +171,52 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                         .attr("x2", x2)
                         .attr("y1", yMedian)
                         .attr("y2", yMedian)
-                        .attr("stroke", "green")
+                        .attr("stroke", "#333")
                         .attr("stroke-width", 2);
                 }
 
-                const parts = category.split('-');
-                if (parts.length === 2) {
-                    const sphereA = parts[0];
-                    const sphereB = parts[1];
+                // const parts = category.split('-');
+                // if (parts.length === 2) {
+                //     const sphereA = parts[0];
+                //     const sphereB = parts[1];
 
-                    const beadA = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereA];
-                    const beadB = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereB];
-                    if (beadA && beadB) {
-                        const posA = beadA.position;
-                        const posB = beadB.position;
-                        const markerDistance = Math.sqrt(
-                            Math.pow(posB.x - posA.x, 2) +
-                            Math.pow(posB.y - posA.y, 2) +
-                            Math.pow(posB.z - posA.z, 2)
-                        );
+                //     const beadA = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereA];
+                //     const beadB = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereB];
+                //     if (beadA && beadB) {
+                //         const posA = beadA.position;
+                //         const posB = beadB.position;
+                //         const markerDistance = Math.sqrt(
+                //             Math.pow(posB.x - posA.x, 2) +
+                //             Math.pow(posB.y - posA.y, 2) +
+                //             Math.pow(posB.z - posA.z, 2)
+                //         );
 
-                        const bisect = d3.bisector(d => d[0]).left;
-                        const i = bisect(density, markerDistance);
-                        let markerDensity;
-                        if (i === 0) {
-                            markerDensity = density[0][1];
-                        } else if (i >= density.length) {
-                            markerDensity = density[density.length - 1][1];
-                        } else {
-                            const d0 = density[i - 1];
-                            const d1 = density[i];
-                            const t = (markerDistance - d0[0]) / (d1[0] - d0[0]);
-                            markerDensity = d0[1] + t * (d1[1] - d0[1]);
-                        }
-                        const markerLineHalfLength = halfWidthScale(markerDensity);
-                        const x1 = center - markerLineHalfLength;
-                        const x2 = center + markerLineHalfLength;
-                        const yPos = yScale(markerDistance);
-                        categoryGroup.append("line")
-                            .attr("x1", x1)
-                            .attr("x2", x2)
-                            .attr("y1", yPos)
-                            .attr("y2", yPos)
-                            .attr("stroke", colorScale(cellLine))
-                            .attr("stroke-width", 2);
-                    }
-                }
+                //         const bisect = d3.bisector(d => d[0]).left;
+                //         const i = bisect(density, markerDistance);
+                //         let markerDensity;
+                //         if (i === 0) {
+                //             markerDensity = density[0][1];
+                //         } else if (i >= density.length) {
+                //             markerDensity = density[density.length - 1][1];
+                //         } else {
+                //             const d0 = density[i - 1];
+                //             const d1 = density[i];
+                //             const t = (markerDistance - d0[0]) / (d1[0] - d0[0]);
+                //             markerDensity = d0[1] + t * (d1[1] - d0[1]);
+                //         }
+                //         const markerLineHalfLength = halfWidthScale(markerDensity);
+                //         const x1 = center - markerLineHalfLength;
+                //         const x2 = center + markerLineHalfLength;
+                //         const yPos = yScale(markerDistance);
+                //         categoryGroup.append("line")
+                //             .attr("x1", x1)
+                //             .attr("x2", x2)
+                //             .attr("y1", yPos)
+                //             .attr("y2", yPos)
+                //             .attr("stroke", colorScale(cellLine))
+                //             .attr("stroke-width", 2);
+                //     }
+                // }
             });
         });
 
