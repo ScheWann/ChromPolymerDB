@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
-import { RollbackOutlined, ClearOutlined, FileImageOutlined, AreaChartOutlined } from "@ant-design/icons";
+import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
@@ -415,7 +415,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
-                                    icon={<FileImageOutlined />}
+                                    icon={<DownloadOutlined />}
                                 />
                             </Dropdown>
                         </Tooltip>
