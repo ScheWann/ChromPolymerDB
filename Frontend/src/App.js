@@ -593,7 +593,7 @@ function App() {
       a.style.display = "none";
       a.href = url;
       if (isComparison) {
-        a.download = `${comparisonCellLine}_${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
+        a.download = `${comparisonCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
       } else {
         a.download = `${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
       }
