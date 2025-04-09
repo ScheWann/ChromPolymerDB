@@ -1,7 +1,9 @@
 services:
   db:
-    image: postgres:17.0-bookworm
-    container_name: db
+    build:
+      context: ./DB
+      dockerfile: Dockerfile
+    container_name: DB
     command: postgres -c max_wal_size=4GB
     restart: on-failure
     environment:
@@ -22,8 +24,8 @@ services:
 
   data-importer:
     build:
-      context: ./backend
-    container_name: data-importer
+      context: ./Backend
+    container_name: Data-Importer
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
@@ -51,7 +53,7 @@ services:
     restart: 'no'  
 
   backend:
-    container_name: backend
+    container_name: Backend
     restart: on-failure
     environment:
       DB_HOST: ${DB_HOST}
@@ -59,9 +61,9 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./backend:/chromosome/backend
+      - ./Backend:/chromosome/backend
     build:
-      context: ./backend
+      context: ./Backend
       dockerfile: Dockerfile
     depends_on:
       db:
@@ -77,10 +79,10 @@ services:
     container_name: frontend
     restart: on-failure
     volumes:
-      - ./frontend:/chromosome/frontend:cached
+      - ./Frontend:/chromosome/frontend:cached
       - frontend_module:/chromosome/frontend/node_modules
     build:
-      context: ./frontend
+      context: ./Frontend
       dockerfile: Dockerfile
     depends_on:
       - backend
@@ -107,7 +109,7 @@ services:
 
   db-cron:
     build:
-      context: ./cron
+      context: ./Cron
       dockerfile: Dockerfile
     container_name: db-cron
     environment:
