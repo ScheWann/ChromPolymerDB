@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
+import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
-import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal } from 'antd';
+import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
 import { RollbackOutlined, ClearOutlined, FileImageOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './Chromosome3DDistance';
@@ -27,6 +28,17 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
+
+    const downloadItems = [
+        {
+            key: '1',
+            label: 'Download PNG',
+        },
+        {
+            key: '2',
+            label: 'Download PDF',
+        }
+    ]
 
     const modalStyles = {
         body: {
@@ -106,6 +118,18 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
         return blendedColor;
     }
 
+    const onClickDownloadItem = ({ key }) => {
+        if (key === '1') {
+            console.log("download png");
+            downloadImage();
+        }
+
+        if (key === '2') {
+            console.log("download pdf");
+            downloadPDF();
+        }
+    }
+
     const downloadImage = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
@@ -161,6 +185,74 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                 link.href = URL.createObjectURL(blob);
                 link.download = `chromosome_3d_${Date.now()}.png`;
                 link.click();
+            });
+
+            renderTarget.dispose();
+        }
+    };
+
+    const downloadPDF = () => {
+        if (rendererRef.current && rendererRef.current.gl) {
+            const { gl, scene, camera } = rendererRef.current;
+            const scale = 4;
+            const width = window.innerWidth * scale;
+            const height = window.innerHeight * scale;
+
+            const exportCamera = camera.clone();
+            exportCamera.aspect = width / height;
+            exportCamera.updateProjectionMatrix();
+
+            const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBAFormat,
+                samples: 8,
+                stencilBuffer: false
+            });
+            renderTarget.texture.colorSpace = THREE.SRGBColorSpace;
+
+            const originalRenderTarget = gl.getRenderTarget();
+            const originalSize = gl.getSize(new THREE.Vector2());
+            const originalPixelRatio = gl.getPixelRatio();
+
+            gl.setRenderTarget(renderTarget);
+            gl.setSize(width, height);
+            gl.setPixelRatio(1);
+            gl.clear();
+
+            gl.render(scene, exportCamera);
+
+            const buffer = new Uint8ClampedArray(width * height * 4);
+            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, buffer);
+
+            flipY(buffer, width, height);
+
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = width;
+            exportCanvas.height = height;
+            const ctx = exportCanvas.getContext('2d');
+            const imageData = new ImageData(buffer, width, height);
+            ctx.putImageData(imageData, 0, 0);
+
+            gl.setRenderTarget(originalRenderTarget);
+            gl.setSize(originalSize.x, originalSize.y);
+            gl.setPixelRatio(originalPixelRatio);
+
+            exportCanvas.toBlob((blob) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const imgData = reader.result;
+
+                    const pdf = new jsPDF({
+                        orientation: width > height ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [width, height]
+                    });
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+                    pdf.save(`chromosome_3d_${Date.now()}.pdf`);
+                };
+                reader.readAsDataURL(blob);
             });
 
             renderTarget.dispose();
@@ -309,14 +401,21 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                 color: 'black'
                             }}
                         >
-                            <Button
-                                style={{
-                                    fontSize: 15,
-                                    cursor: "pointer",
+                            <Dropdown
+                                menu={{
+                                    items: downloadItems,
+                                    onClick: onClickDownloadItem,
                                 }}
-                                icon={<FileImageOutlined />}
-                                onClick={downloadImage}
-                            />
+                                placement="bottom"
+                            >
+                                <Button
+                                    style={{
+                                        fontSize: 15,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<FileImageOutlined />}
+                                />
+                            </Dropdown>
                         </Tooltip>
                         <Tooltip
                             title="Check the simulated Hi-C heatmap"
