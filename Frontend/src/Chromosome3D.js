@@ -319,7 +319,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Check the average distance heatmap"
+                            title="Check the simulated Hi-C heatmap"
                             color='white'
                             overlayInnerStyle={{
                                 color: 'black'
