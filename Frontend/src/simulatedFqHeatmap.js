@@ -281,7 +281,7 @@ export const SimulatedFqHeatmap = ({
 
     return (
         <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-            <div style={{ fontWeight: 'bold' }}>Simulated fq Heatmap</div>
+            <div style={{ fontWeight: 'bold' }}>Simulated Hi-C Heatmap</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', width: '100%', height: '100%' }}>
                 {layout && svgSize && (
                     <>
