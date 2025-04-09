@@ -1,11 +1,108 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Spin, Empty } from 'antd';
+import { Spin, Empty, Dropdown, Tooltip, Button } from 'antd';
+import { DownloadOutlined } from "@ant-design/icons";
+import jsPDF from 'jspdf';
 import * as d3 from 'd3';
 
 export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, cellLineDict }) => {
     const containerRef = useRef();
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    const downloadItems = [
+        {
+            key: '1',
+            label: 'Download PNG',
+        },
+        {
+            key: '2',
+            label: 'Download PDF',
+        }
+    ]
+
+    const onClickDownloadItem = ({ key }) => {
+        if (key === '1') {
+            downloadImage();
+        }
+
+        if (key === '2') {
+            downloadPDF();
+        }
+    }
+
+    const downloadImage = () => {
+        const svgElement = svgRef.current;
+        if (!svgElement) return;
+
+        const scaleFactor = 4
+        const width = svgElement.clientWidth;
+        const height = svgElement.clientHeight;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width * scaleFactor;
+            canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+            ctx.drawImage(image, 0, 0);
+
+            canvas.toBlob(blob => {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "violin_plot.png";
+                a.click();
+                URL.revokeObjectURL(url);
+            }, "image/png");
+        };
+        image.src = url;
+    };
+
+
+    const downloadPDF = () => {
+        const svgElement = svgRef.current;
+        if (!svgElement) return;
+
+        const scaleFactor = 4;
+        const width = svgElement.clientWidth;
+        const height = svgElement.clientHeight;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width * scaleFactor;
+            canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+            ctx.drawImage(image, 0, 0);
+
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height]
+            });
+            pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+            pdf.save("violin_plot.pdf");
+            URL.revokeObjectURL(url);
+        };
+        image.src = url;
+    };
+
 
     useEffect(() => {
         const observer = new ResizeObserver(entries => {
@@ -227,7 +324,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .call(xAxis);
 
         const yAxis = d3.axisLeft(yScale).ticks(5);
-        
+
         g.append("g").call(yAxis);
 
         svg.append("text")
@@ -244,11 +341,11 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
         // legend
         const legend = svg.append("g")
-            .attr("transform", `translate(${width + margin.left + 10}, ${margin.top})`);
+            .attr("transform", `translate(${margin.left + margin.right}, ${margin.top})`);
 
         distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
-                .attr("transform", `translate(${-margin.left - margin.right}, ${index * 20})`);
+                .attr("transform", `translate(0, ${index * 20})`);
 
             legendRow.append("rect")
                 .attr("width", 15)
@@ -265,12 +362,39 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     }, [dimensions, distributionData, selectedSphereList, loading]);
 
     return (
-        <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+        <div ref={containerRef} style={{ width: "100%", height: "100%", position: "relative" }}>
             {Object.keys(selectedSphereList).length > 0 ? (
                 loading ? (
                     <Spin spinning={true} style={{ width: '100%', height: '100%' }} />
                 ) : (
-                    <svg ref={svgRef}></svg>
+                    <>
+                        <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}>
+                            <Tooltip
+                                title="Download the violin plot"
+                                color='white'
+                                overlayInnerStyle={{
+                                    color: 'black'
+                                }}
+                            >
+                                <Dropdown
+                                    menu={{
+                                        items: downloadItems,
+                                        onClick: onClickDownloadItem,
+                                    }}
+                                    placement="bottom"
+                                >
+                                    <Button
+                                        style={{
+                                            fontSize: 15,
+                                            cursor: "pointer",
+                                        }}
+                                        icon={<DownloadOutlined />}
+                                    />
+                                </Dropdown>
+                            </Tooltip>
+                        </div>
+                        <svg ref={svgRef}></svg>
+                    </>
                 )
             ) : (
                 <Empty
