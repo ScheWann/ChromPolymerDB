@@ -25,28 +25,28 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             })
     }
 
-    async function fetchepigeneticTrackData() {
-        if (cellLineName && chromosomeName && currentChromosomeSequence) {
-            const response = await fetch("/getepigeneticTrackData", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    cell_line: cellLineName,
-                    chromosome_name: chromosomeName,
-                    sequences: currentChromosomeSequence
-                })
-            });
-            if (response.ok) {
-                return await response.json();
-            } else {
-                console.error('Failed to fetch epigenetic track data');
-                return null;
-            }
-        }
-        return null;
-    }
+    // async function fetchepigeneticTrackData() {
+    //     if (cellLineName && chromosomeName && currentChromosomeSequence) {
+    //         const response = await fetch("/getepigeneticTrackData", {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 cell_line: cellLineName,
+    //                 chromosome_name: chromosomeName,
+    //                 sequences: currentChromosomeSequence
+    //             })
+    //         });
+    //         if (response.ok) {
+    //             return await response.json();
+    //         } else {
+    //             console.error('Failed to fetch epigenetic track data');
+    //             return null;
+    //         }
+    //     }
+    //     return null;
+    // }
 
 
     useEffect(() => {
@@ -70,12 +70,12 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
         if (!containerSize.width && !containerSize.height) return;
 
         async function fetchDataAndRender() {
-            const epigeneticTrackData = await fetchepigeneticTrackData();
+            // const epigeneticTrackData = await fetchepigeneticTrackData();
 
-            if (!epigeneticTrackData) {
-                console.warn("Epigenetic track data is null or undefined");
-                return;
-            }
+            // if (!epigeneticTrackData) {
+            //     console.warn("Epigenetic track data is null or undefined");
+            //     return;
+            // }
 
             const margin = { top: 20, right: 0, bottom: 0, left: 60 };
 
@@ -142,9 +142,11 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             }
 
             const geneListHeight = (layers.length - 1) * layerHeight + (layerHeight - 4) + margin.top;
-            const epigeneticTrackHeight = Object.keys(epigeneticTrackData).length * (layerHeight + 10) + (Object.keys(epigeneticTrackData).length - 1) * 4;
+            // const epigeneticTrackHeight = Object.keys(epigeneticTrackData).length * (layerHeight + 10) + (Object.keys(epigeneticTrackData).length - 1) * 4;
+            
             // Check if scrolling is needed based on total height
-            const totalHeight = geneListHeight + epigeneticTrackHeight + 20;
+            // const totalHeight = geneListHeight + epigeneticTrackHeight + 20;
+            const totalHeight = geneListHeight + 20;
 
             if (totalHeight > initialHeightRef.current) {
                 setScrollEnabled(true);
@@ -243,88 +245,88 @@ export const GeneList = ({ cellLineName, chromosomeName, geneList, currentChromo
             });
 
             // Epigenetic tracks
-            Object.keys(epigeneticTrackData).forEach((key, keyIndex) => {
-                const maxValue = Math.max(...epigeneticTrackData[key].map(obj => obj.signal_value));
+            // Object.keys(epigeneticTrackData).forEach((key, keyIndex) => {
+            //     const maxValue = Math.max(...epigeneticTrackData[key].map(obj => obj.signal_value));
 
-                // get the range of the current histogram
-                const startRange = xScaleLinear(currentChromosomeSequence.start);
-                const endRange = xScaleLinear(currentChromosomeSequence.end);
+            //     // get the range of the current histogram
+            //     const startRange = xScaleLinear(currentChromosomeSequence.start);
+            //     const endRange = xScaleLinear(currentChromosomeSequence.end);
 
-                let previousEndX = startRange;
+            //     let previousEndX = startRange;
 
-                const yScale = d3.scaleLinear().domain([0, maxValue]).range([layerHeight - 1, 0]);
+            //     const yScale = d3.scaleLinear().domain([0, maxValue]).range([layerHeight - 1, 0]);
 
-                const yAxis = d3.axisLeft(yScale).tickValues([0, maxValue]).tickFormat(d3.format(".1f"));
+            //     const yAxis = d3.axisLeft(yScale).tickValues([0, maxValue]).tickFormat(d3.format(".1f"));
 
-                svg.append("g")
-                    .attr("transform", `translate(${startRange + (width - minDimension) / 2}, ${margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - layerHeight})`)
-                    .call(yAxis)
-                    .call(g => g.selectAll(".domain")
-                        .style("stroke", "#999")
-                        .style("stroke-width", "1px")
-                    )
-                    .call(g => g.selectAll("line").remove())
-                    .call(g => g.selectAll("text")
-                        .attr("x", -8)
-                        .style("font-size", "8px")
-                        .style("fill", "#333")
-                        .style('text-anchor', 'end')
-                    );
+            //     svg.append("g")
+            //         .attr("transform", `translate(${startRange + (width - minDimension) / 2}, ${margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - layerHeight})`)
+            //         .call(yAxis)
+            //         .call(g => g.selectAll(".domain")
+            //             .style("stroke", "#999")
+            //             .style("stroke-width", "1px")
+            //         )
+            //         .call(g => g.selectAll("line").remove())
+            //         .call(g => g.selectAll("text")
+            //             .attr("x", -8)
+            //             .style("font-size", "8px")
+            //             .style("fill", "#333")
+            //             .style('text-anchor', 'end')
+            //         );
 
-                svg.append("text")
-                    .attr("x", (width - minDimension) / 2 + 5)
-                    .attr("y", margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - layerHeight + 15)
-                    .attr("text-anchor", "middle")
-                    .style("font-size", "10px")
-                    .text(epigeneticTrackData[key][0].epigenetic)
-                    .style("fill", "black");
+            //     svg.append("text")
+            //         .attr("x", (width - minDimension) / 2 + 5)
+            //         .attr("y", margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - layerHeight + 15)
+            //         .attr("text-anchor", "middle")
+            //         .style("font-size", "10px")
+            //         .text(epigeneticTrackData[key][0].epigenetic)
+            //         .style("fill", "black");
 
-                epigeneticTrackData[key].forEach((track, trackIndex) => {
-                    const { start_value, end_value, peak, signal_value } = track;
+            //     epigeneticTrackData[key].forEach((track, trackIndex) => {
+            //         const { start_value, end_value, peak, signal_value } = track;
 
-                    const startX = xScaleLinear(start_value);
-                    const endX = xScaleLinear(end_value);
-                    const peakX = xScaleLinear(start_value + peak);
+            //         const startX = xScaleLinear(start_value);
+            //         const endX = xScaleLinear(end_value);
+            //         const peakX = xScaleLinear(start_value + peak);
 
-                    const clampedStartX = Math.max(startX, startRange);
-                    const clampedEndX = Math.min(endX, endRange);
+            //         const clampedStartX = Math.max(startX, startRange);
+            //         const clampedEndX = Math.min(endX, endRange);
 
-                    const signalScale = d3.scaleLinear().domain([0, maxValue]).range([0.5, layerHeight - 4]);
-                    const yPos = margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10);
+            //         const signalScale = d3.scaleLinear().domain([0, maxValue]).range([0.5, layerHeight - 4]);
+            //         const yPos = margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10);
 
-                    if (clampedStartX > previousEndX) {
-                        svg.append("rect")
-                            .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
-                            .attr("x", previousEndX)
-                            .attr("y", yPos - signalScale(0))
-                            .attr("width", clampedStartX - previousEndX)
-                            .attr("height", signalScale(0))
-                            .attr("fill", "#333");
-                    }
+            //         if (clampedStartX > previousEndX) {
+            //             svg.append("rect")
+            //                 .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
+            //                 .attr("x", previousEndX)
+            //                 .attr("y", yPos - signalScale(0))
+            //                 .attr("width", clampedStartX - previousEndX)
+            //                 .attr("height", signalScale(0))
+            //                 .attr("fill", "#333");
+            //         }
 
-                    svg.append("rect")
-                        .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
-                        .attr("x", clampedStartX)
-                        .attr("y", yPos - signalScale(signal_value))
-                        .attr("width", clampedEndX - clampedStartX)
-                        .attr("height", signalScale(signal_value))
-                        .attr("fill", "#FF6347");
+            //         svg.append("rect")
+            //             .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
+            //             .attr("x", clampedStartX)
+            //             .attr("y", yPos - signalScale(signal_value))
+            //             .attr("width", clampedEndX - clampedStartX)
+            //             .attr("height", signalScale(signal_value))
+            //             .attr("fill", "#FF6347");
 
-                    previousEndX = clampedEndX;
-                });
+            //         previousEndX = clampedEndX;
+            //     });
 
-                // if the previous end is less than the end of the range, draw the remaining missing area
-                if (previousEndX < endRange) {
-                    const missingSignalHeight = 0.5;
-                    svg.append("rect")
-                        .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
-                        .attr("x", previousEndX)
-                        .attr("y", margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - 0.5)
-                        .attr("width", endRange - previousEndX)
-                        .attr("height", missingSignalHeight)
-                        .attr("fill", "#333");
-                }
-            });
+            //     // if the previous end is less than the end of the range, draw the remaining missing area
+            //     if (previousEndX < endRange) {
+            //         const missingSignalHeight = 0.5;
+            //         svg.append("rect")
+            //             .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
+            //             .attr("x", previousEndX)
+            //             .attr("y", margin.top + 20 + geneListHeight + 4 + keyIndex * (layerHeight + 10) - 0.5)
+            //             .attr("width", endRange - previousEndX)
+            //             .attr("height", missingSignalHeight)
+            //             .attr("fill", "#333");
+            //     }
+            // });
 
             svg.append("text")
                 .attr("x", (width - minDimension) / 2 + 5)
