@@ -595,7 +595,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             });
     };
 
-    const downloadPdf = () => {
+    const downloadPDF = () => {
         const container = containerRef.current;
         if (!container) return;
 
@@ -745,7 +745,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         }
 
         if (key === '2') {
-            downloadPdf();
+            downloadPDF();
         }
     }
 

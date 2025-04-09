@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
+import jsPDF from 'jspdf';
 import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip, Modal } from 'antd';
+import { Button, Tooltip, Modal, Dropdown } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 // import { BeadDistributionPlot } from './beadDistributionplot';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
@@ -12,6 +13,17 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const cameraRef = useRef();
     const rendererRef = useRef();
     const [loading, setLoading] = useState(false);
+
+    const downloadItems = [
+        {
+            key: '1',
+            label: 'Download PNG',
+        },
+        {
+            key: '2',
+            label: 'Download PDF',
+        }
+    ]
 
     const spheresData = useMemo(() => {
         return Object.entries(selectedSphereList[celllineName]).map(([key, { position, color }]) => {
@@ -56,7 +68,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     }
 
-    const download = () => {
+    const downloadImage = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
             const scale = 4;
@@ -83,6 +95,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             gl.setRenderTarget(renderTarget);
             gl.setSize(width, height);
             gl.setPixelRatio(1);
+            gl.setClearColor(0x202020, 1);
             gl.clear();
 
             gl.render(scene, exportCamera);
@@ -113,6 +126,68 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             renderTarget.dispose();
         } else {
             console.error("Renderer not properly initialized for download.");
+        }
+    };
+
+    const downloadPDF = () => {
+        if (rendererRef.current && rendererRef.current.gl) {
+            const { gl, scene, camera } = rendererRef.current;
+            const scale = 4;
+            const width = window.innerWidth * scale;
+            const height = window.innerHeight * scale;
+
+            const exportCamera = camera.clone();
+            exportCamera.aspect = width / height;
+            exportCamera.updateProjectionMatrix();
+
+            const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBAFormat,
+                samples: 8,
+                stencilBuffer: false,
+            });
+            renderTarget.texture.colorSpace = THREE.SRGBColorSpace;
+
+            const originalRenderTarget = gl.getRenderTarget();
+            const originalSize = gl.getSize(new THREE.Vector2());
+            const originalPixelRatio = gl.getPixelRatio();
+
+            gl.setRenderTarget(renderTarget);
+            gl.setSize(width, height);
+            gl.setPixelRatio(1);
+            gl.setClearColor(0x202020, 1);
+            gl.clear();
+            gl.render(scene, exportCamera);
+
+            const buffer = new Uint8ClampedArray(width * height * 4);
+            gl.readRenderTargetPixels(renderTarget, 0, 0, width, height, buffer);
+
+            flipY(buffer, width, height);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.putImageData(new ImageData(buffer, width, height), 0, 0);
+
+            gl.setRenderTarget(originalRenderTarget);
+            gl.setSize(originalSize.x, originalSize.y);
+            gl.setPixelRatio(originalPixelRatio);
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height],
+            });
+
+            pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+            pdf.save(`chromosome_3d_${Date.now()}.pdf`);
+
+            renderTarget.dispose();
+        } else {
+            console.error("Renderer not properly initialized for PDF download.");
         }
     };
 
@@ -149,6 +224,16 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             controlsRef.current.update();
         }
     }, [center]);
+
+    const onClickDownloadItem = ({ key }) => {
+        if (key === '1') {
+            downloadImage();
+        }
+
+        if (key === '2') {
+            downloadPDF();
+        }
+    }
 
     const resetView = () => {
         if (controlsRef.current) {
@@ -227,14 +312,21 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             color: 'black'
                         }}
                     >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
+                        <Dropdown
+                            menu={{
+                                items: downloadItems,
+                                onClick: onClickDownloadItem,
                             }}
-                            icon={<DownloadOutlined />}
-                            onClick={download}
-                        />
+                            placement="bottom"
+                        >
+                            <Button
+                                style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                }}
+                                icon={<DownloadOutlined />}
+                            />
+                        </Dropdown>
                     </Tooltip>
                     {/* <Tooltip
                         title="Show distribution of the selected beads"

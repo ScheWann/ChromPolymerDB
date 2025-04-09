@@ -157,6 +157,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
             gl.setRenderTarget(renderTarget);
             gl.setSize(width, height);
             gl.setPixelRatio(1);
+            gl.setClearColor(0x202020, 1);
             gl.clear();
 
             gl.render(scene, exportCamera);
@@ -218,6 +219,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
             gl.setRenderTarget(renderTarget);
             gl.setSize(width, height);
             gl.setPixelRatio(1);
+            gl.setClearColor(0x202020, 1);
             gl.clear();
 
             gl.render(scene, exportCamera);
