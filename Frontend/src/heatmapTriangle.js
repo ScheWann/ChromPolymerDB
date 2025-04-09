@@ -741,12 +741,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const onClickDownloadItem = ({ key }) => {
         if (key === '1') {
-            console.log("download png");
             downloadImage();
         }
 
         if (key === '2') {
-            console.log("download pdf");
             downloadPdf();
         }
     }
