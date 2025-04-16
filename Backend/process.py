@@ -765,51 +765,103 @@ def epigenetic_track_data(cell_line, chromosome_name, sequences):
 """
 Return the distribution of selected beads in all samples
 """
+# def bead_distribution(cell_line, chromosome_name, sequences, indices):
+#     indices = [int(idx) for idx in indices]
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+
+#     distributions = {}
+#     for i, j in combinations(indices, 2):
+#         distributions[f"{i}-{j}"] = []
+    
+#     query = """
+#         SELECT sampleid, X, Y, Z
+#         FROM position
+#         WHERE chrid = %s
+#         AND cell_line = %s
+#         AND start_value = %s
+#         AND end_value = %s
+#         ORDER BY sampleid, pid
+#     """
+#     cur.execute(query, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
+#     rows = cur.fetchall()
+
+#     conn.close()
+#     cur.close()
+
+#     sample_dict = {}
+#     for row in rows:
+#         sampleid = row["sampleid"]
+#         x = row["x"]
+#         y = row["y"]
+#         z = row["z"]
+#         if sampleid not in sample_dict:
+#             sample_dict[sampleid] = []
+#         sample_dict[sampleid].append((x, y, z))
+    
+#     for sampleid, beads in sample_dict.items():
+#         if len(beads) <= max(indices):
+#             continue
+
+#         for i, j in combinations(indices, 2):
+#             bead1 = beads[i]
+#             bead2 = beads[j]
+
+#             x1, y1, z1 = float(bead1[0]), float(bead1[1]), float(bead1[2])
+#             x2, y2, z2 = float(bead2[0]), float(bead2[1]), float(bead2[2])
+#             distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+#             distributions[f"{i}-{j}"].append(distance)
+
+#     return distributions
+
+def upper_tri_index(i, j, N):
+    """
+    Maps (i, j) indices in an NxN matrix (i < j) to the index in the
+    flattened upper triangle (excluding diagonal).
+    
+    Parameters:
+        i (int): row index (must be less than j)
+        j (int): column index
+        N (int): total number of rows/columns in the square matrix
+        
+    Returns:
+        int: index in the 1D flattened upper triangle array
+    """
+    if i >= j:
+        raise ValueError("This function assumes i < j (upper triangle only).")
+    return int(i * (N - 1) - (i * (i + 1)) // 2 + (j - i - 1))
+
 def bead_distribution(cell_line, chromosome_name, sequences, indices):
     indices = [int(idx) for idx in indices]
     conn = get_db_connection()
     cur = conn.cursor()
-
+    
     distributions = {}
     for i, j in combinations(indices, 2):
         distributions[f"{i}-{j}"] = []
-    
+
     query = """
-        SELECT sampleid, X, Y, Z
-        FROM position
-        WHERE chrid = %s
-        AND cell_line = %s
-        AND start_value = %s
-        AND end_value = %s
-        ORDER BY sampleid, pid
+        SELECT n_beads, distance_vector
+        FROM distance
+        WHERE cell_line = %s
+            AND chrid = %s
+            AND start_value = %s
+            AND end_value = %s
     """
-    cur.execute(query, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
+    cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
     rows = cur.fetchall()
-
-    conn.close()
     cur.close()
-
-    sample_dict = {}
-    for row in rows:
-        sampleid = row["sampleid"]
-        x = row["x"]
-        y = row["y"]
-        z = row["z"]
-        if sampleid not in sample_dict:
-            sample_dict[sampleid] = []
-        sample_dict[sampleid].append((x, y, z))
+    conn.close()
     
-    for sampleid, beads in sample_dict.items():
-        if len(beads) <= max(indices):
+    for row in rows:
+        distance_vector = row["distance_vector"]
+        N = row["n_beads"]
+        if max(indices) >= N:
             continue
-
+        
         for i, j in combinations(indices, 2):
-            bead1 = beads[i]
-            bead2 = beads[j]
-
-            x1, y1, z1 = float(bead1[0]), float(bead1[1]), float(bead1[2])
-            x2, y2, z2 = float(bead2[0]), float(bead2[1]), float(bead2[2])
-            distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+            idx = upper_tri_index(i, j, N)
+            distance = distance_vector[idx]
             distributions[f"{i}-{j}"].append(distance)
-
+    
     return distributions
