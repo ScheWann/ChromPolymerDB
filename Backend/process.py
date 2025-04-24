@@ -280,6 +280,78 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 
     return ibp_values
 
+"""
+Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
+"""
+def exist_chromosome_3d_data(sample_id):
+    position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
+    distance_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_distance.parquet')
+    best_sample_id = 814
+
+    def get_position_data():
+        position_df_filtered = position_df[position_df['sampleid'] == best_sample_id]
+        return position_df_filtered.to_dict(orient='records')
+    
+    def get_fq_data():
+        # Ensure the distance_vector is a string before applying strip
+        distance_df['distance_vector'] = distance_df['distance_vector'].apply(
+            lambda x: np.fromstring(str(x).strip('{}'), sep=',') if isinstance(x, str) else x
+        )
+
+        # Initialize binary vectors and sum vector
+        first_vector = np.array(distance_df['distance_vector'][0], dtype=float)
+        binary_vector = np.where(first_vector <= 80, 1, 0)
+        sum_vector = binary_vector.copy()
+
+        # Loop through remaining rows and apply the same processing
+        for _, row in distance_df.iloc[1:].iterrows():
+            vector = np.array(row['distance_vector'], dtype=float)
+            binary_vector = np.where(vector <= 80, 1, 0)
+            sum_vector += binary_vector
+        
+        # Calculate the average vector
+        count = len(distance_df)
+        avg_vector = sum_vector / count
+
+        # Convert to distance matrix (assuming this is intended to be a 1D vector)
+        full_distance_matrix = squareform(avg_vector)
+        
+        # Convert to list and return
+        avg_distance_matrix = full_distance_matrix.tolist()
+        
+        return avg_distance_matrix
+
+    def get_avg_distance_data():
+        # Ensure the distance_vector is a string before applying strip
+        distance_df['distance_vector'] = distance_df['distance_vector'].apply(
+            lambda x: np.fromstring(str(x).strip('{}'), sep=',') if isinstance(x, str) else x
+        )
+
+        # Convert all vectors at once for efficiency
+        vectors = np.array([np.array(row['distance_vector'], dtype=float) for _, row in distance_df.iterrows()])
+        
+        # Compute the average vector
+        avg_vector = np.mean(vectors, axis=0)
+        
+        # Convert the upper triangular distance vector to a full matrix
+        avg_distance_matrix = squareform(avg_vector).tolist()
+        
+        return avg_distance_matrix
+
+    def get_distance_vector_by_sample():
+        row = distance_df.iloc[best_sample_id]
+        distance_vector = row['distance_vector']
+        
+        full_distance_matrix = squareform(np.array(distance_vector, dtype=float))
+
+        return full_distance_matrix.tolist()
+
+    return {
+            "position_data": get_position_data(),
+            "avg_distance_data": get_avg_distance_data(),
+            "fq_data": get_fq_data(),
+            "sample_distance_vector": get_distance_vector_by_sample()
+        }
 
 """
 Returns the example 3D chromosome data in the given cell line, chromosome name, start, end

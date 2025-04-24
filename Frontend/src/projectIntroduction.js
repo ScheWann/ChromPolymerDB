@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { Typography, Card, Tag } from 'antd';
-import { GithubOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { Typography, Card, Tag, Button } from 'antd';
+import { GithubOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
 
 const data = [
     { name: 'The 4D Nucleome (4DN) Data Portal', value: 20 },
@@ -22,8 +22,15 @@ const antColors = [
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = () => {
+export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setExampleMode}) => {
     const chartRef = useRef(null);
+
+    const confirmExampleData = () => {
+        setExampleMode(true);
+        // setCellLineName('IMR');
+        // setChromosomeName('chr8');
+        // setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
+    }
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -115,19 +122,9 @@ export const ProjectIntroduction = () => {
                                 transform: 'translateY(-50%)'
                             }}
                         >
-                            <a
-                                href="https://github.com/ScheWann/ChromPolymerDB"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <GithubOutlined
-                                    style={{
-                                        fontSize: '20px',
-                                        color: '#333',
-                                        transition: 'color 0.3s'
-                                    }}
-                                />
-                            </a>
+                            <Button type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" onClick={confirmExampleData}>
+                                Example Data
+                            </Button>
                         </div>
                     </div>
                 }

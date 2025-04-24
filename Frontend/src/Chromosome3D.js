@@ -28,7 +28,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
-
     const downloadItems = [
         {
             key: '1',
