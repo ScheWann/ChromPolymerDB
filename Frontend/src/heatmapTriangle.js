@@ -570,18 +570,20 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         container.style.overflow = 'visible';
         const width = container.scrollWidth;
         const height = container.scrollHeight;
+        const scale = 5;
 
         htmlToImage.toPng(container, {
-            width,
-            height,
-            filter: (node) => {
-                if (node.id === 'triangle-control-button-group') {
-                    return false;
-                }
-                return true;
-            },
+            width: width * scale,
+            height: height * scale,
             style: {
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                width: `${width}px`,
+                height: `${height}px`,
                 backgroundColor: 'white',
+            },
+            filter: (node) => {
+                return node.id !== 'triangle-control-button-group';
             },
         })
             .then((dataUrl) => {
@@ -602,23 +604,25 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         container.style.overflow = 'visible';
         const width = container.scrollWidth;
         const height = container.scrollHeight;
+        const scale = 5;
 
         htmlToImage.toPng(container, {
-            width,
-            height,
-            filter: (node) => {
-                if (node.id === 'triangle-control-button-group') {
-                    return false;
-                }
-                return true;
-            },
+            width: width * scale,
+            height: height * scale,
             style: {
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                width: `${width}px`,
+                height: `${height}px`,
                 backgroundColor: 'white',
+            },
+            filter: (node) => {
+                return node.id !== 'triangle-control-button-group';
             },
         })
             .then((dataUrl) => {
-                const pdf = new jsPDF('l', 'pt', [width, height]);
-                pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+                const pdf = new jsPDF('l', 'pt', [width * scale, height * scale]);
+                pdf.addImage(dataUrl, 'PNG', 0, 0, width * scale, height * scale);
                 pdf.save('heatmap-igv.pdf');
             })
             .catch((error) => {
