@@ -1162,7 +1162,7 @@ function App() {
                             label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
-                              comparisonCellLine3DData[cacheKey].length > 0 ? (
+                                comparisonCellLine3DLoading ? (
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D
