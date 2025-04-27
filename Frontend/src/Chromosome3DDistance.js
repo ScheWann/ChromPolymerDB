@@ -71,7 +71,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const downloadImage = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
-            const scale = 4;
+            const scale = 5;
             const width = window.innerWidth * scale;
             const height = window.innerHeight * scale;
 
@@ -132,7 +132,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const downloadPDF = () => {
         if (rendererRef.current && rendererRef.current.gl) {
             const { gl, scene, camera } = rendererRef.current;
-            const scale = 4;
+            const scale = 5;
             const width = window.innerWidth * scale;
             const height = window.innerHeight * scale;
 

@@ -34,7 +34,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const svgElement = svgRef.current;
         if (!svgElement) return;
 
-        const scaleFactor = 4
+        const scaleFactor = 5
         const width = svgElement.clientWidth;
         const height = svgElement.clientHeight;
 
@@ -70,7 +70,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const svgElement = svgRef.current;
         if (!svgElement) return;
 
-        const scaleFactor = 4;
+        const scaleFactor = 5;
         const width = svgElement.clientWidth;
         const height = svgElement.clientHeight;
 
