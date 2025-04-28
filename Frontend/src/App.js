@@ -124,6 +124,7 @@ function App() {
       setCellLineName('IMR');
       setChromosomeName('chr8');
       setSelectedChromosomeSequence({ start: 127300000, end: 128300000 }); // Set the initial sequence
+      setChromosome3DCellLineName('IMR');
     }
   }, [exampleMode]);
 
@@ -139,7 +140,7 @@ function App() {
       submit();
 
       // Fetch existing 3Dchromosome data
-      fetchExistChromos3DData(814);
+      fetchExistChromos3DData(true, 814);
     }
   }, [selectedChromosomeSequence]);
 
@@ -214,8 +215,10 @@ function App() {
     }
   }, [comparisonCellLine3DSampleID, comparisonCellLine3DData]);
 
-  const fetchExistChromos3DData = (value) => {
-    const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`;
+  const fetchExistChromos3DData = (isBest, value) => {
+    const sampleID = isBest ? 0 : value;
+    const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
+
     setChromosome3DLoading(true);
     fetch('/getExistingChromos3DData', {
       method: 'POST',
@@ -673,7 +676,7 @@ function App() {
       if (!exampleMode) {
         fetchExampleChromos3DData(cellLineName, key, "sampleChange", false);
       } else {
-        fetchExistChromos3DData(key);
+        fetchExistChromos3DData(false, key);
       }
     };
   };

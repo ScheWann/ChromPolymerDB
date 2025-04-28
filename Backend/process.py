@@ -286,7 +286,7 @@ Returns the existing 3D chromosome data in the given cell line, chromosome name,
 def exist_chromosome_3d_data(sample_id):
     position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
     distance_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_distance.parquet')
-    best_sample_id = 814
+    best_sample_id = sample_id
 
     def get_position_data():
         position_df_filtered = position_df[position_df['sampleid'] == best_sample_id]
