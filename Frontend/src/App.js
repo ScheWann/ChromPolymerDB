@@ -6,7 +6,6 @@ import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons";
-import { cache } from 'react';
 
 // Random number generator from 0 to 5000
 const randomKeys = [0, 1000, 2000];
@@ -41,6 +40,7 @@ function App() {
 
   // Example Data Mode settings
   const [exampleMode, setExampleMode] = useState(false); // Example mode
+  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223 }); // Example data best sample ID
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -119,28 +119,29 @@ function App() {
   };
 
   useEffect(() => {
-    if (exampleMode) {
-      // Initial setup (cell line, chromosome, sequence range)
-      setCellLineName('IMR');
-      setChromosomeName('chr8');
-      setSelectedChromosomeSequence({ start: 127300000, end: 128300000 }); // Set the initial sequence
-      setChromosome3DCellLineName('IMR');
+    if ((cellLineName === 'IMR' || cellLineName === 'GM' || comparisonCellLine == 'IMR' || comparisonCellLine == 'GM') &&
+      chromosomeName === 'chr8' &&
+      selectedChromosomeSequence.start === 127300000 &&
+      selectedChromosomeSequence.end === 128300000) {
+      setExampleMode(true);
+    } else {
+      setExampleMode(false);
     }
-  }, [exampleMode]);
+  }, [cellLineName, chromosomeName, selectedChromosomeSequence]);
 
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
     if (exampleMode && selectedChromosomeSequence.start && selectedChromosomeSequence.end) {
       setCurrentChromosomeSequence(selectedChromosomeSequence);
       // Call dependent logic after selectedChromosomeSequence has been updated
-      fetchChromosomeList('IMR');
-      fetchChromosomeSize('chr8');
+      fetchChromosomeList(cellLineName);
+      fetchChromosomeSize(chromosomeName);
 
       // Automatically trigger the submit function
       submit();
-
+      setChromosome3DCellLineName(cellLineName)
       // Fetch existing 3Dchromosome data
-      fetchExistChromos3DData(true, 1223);
+      fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
     }
   }, [selectedChromosomeSequence]);
 
@@ -215,28 +216,53 @@ function App() {
     }
   }, [comparisonCellLine3DSampleID, comparisonCellLine3DData]);
 
-  const fetchExistChromos3DData = (isBest, value) => {
+  const fetchExistChromos3DData = (isBest, value, cellLineName, isComparison) => {
     const sampleID = isBest ? 0 : value;
-    const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
+    const keyPrefix = isComparison ? `${cellLineName}-COMPARISON` : cellLineName;
+    const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
 
-    setChromosome3DLoading(true);
+    const cachedData = isComparison ?
+      comparisonCellLine3DData[cacheKey] :
+      chromosome3DExampleData[cacheKey];
+
+    if (!cachedData) {
+      if (isComparison) {
+        setComparisonCellLine3DLoading(true);
+      } else {
+        setChromosome3DLoading(true);
+      }
+    } else {
+      return;
+    }
+
     fetch('/getExistingChromos3DData', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ sample_id: value })
+      body: JSON.stringify({ cell_line: cellLineName, sample_id: value })
     })
       .then(res => res.json())
       .then(data => {
-        setChromosome3DExampleData(prev => ({
-          ...prev,
-          [cacheKey]: data["position_data"],
-          [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-          [cacheKey + "_fq_data"]: data["fq_data"],
-          [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-        }));
-        setChromosome3DLoading(false);
+        if (isComparison) {
+          setComparisonCellLine3DData(prev => ({
+            ...prev,
+            [cacheKey]: data["position_data"],
+            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+            [cacheKey + "_fq_data"]: data["fq_data"],
+            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+          }));
+          setComparisonCellLine3DLoading(false);
+        } else {
+          setChromosome3DExampleData(prev => ({
+            ...prev,
+            [cacheKey]: data["position_data"],
+            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+            [cacheKey + "_fq_data"]: data["fq_data"],
+            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+          }));
+          setChromosome3DLoading(false);
+        }
       });
   }
 
@@ -364,6 +390,8 @@ function App() {
       if (!cachedData) {
         if (isComparison) {
           setComparisonCellLine3DLoading(true);
+        } else {
+          setChromosome3DLoading(true);
         }
       } else {
         return;
@@ -676,7 +704,7 @@ function App() {
       if (!exampleMode) {
         fetchExampleChromos3DData(cellLineName, key, "sampleChange", false);
       } else {
-        fetchExistChromos3DData(false, key);
+        fetchExistChromos3DData(false, key, cellLineName, false);
       }
     };
   };
@@ -686,7 +714,11 @@ function App() {
     setComparisonCellLine3DSampleID(key);
     const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!comparisonCellLine3DData[cacheKey]) {
-      fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
+      if (!exampleMode) {
+        fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
+      } else {
+        fetchExistChromos3DData(false, key, comparisonCellLine, true);
+      }
     };
   };
 
@@ -704,7 +736,11 @@ function App() {
   const comparisonCellLineChange = (value) => {
     setComparisonCellLine(value);
     setComparisonCellLine3DLoading(true);
-    fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
+    if (!exampleMode) {
+      fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
+    } else {
+      fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, value, true);
+    }
   };
 
   // Submit button click
@@ -927,6 +963,9 @@ function App() {
                   cellLineName={cellLineName}
                   chromosomeName={chromosomeName}
                   chromosomeData={chromosomeData}
+                  exampleDataBestSampleID={exampleDataBestSampleID}
+                  exampleMode={exampleMode}
+                  fetchExistChromos3DData={fetchExistChromos3DData}
                   currentChromosomeSequence={currentChromosomeSequence}
                   setCurrentChromosomeSequence={setCurrentChromosomeSequence}
                   geneSize={geneSize}
@@ -962,6 +1001,9 @@ function App() {
                 cellLineName={cellLineName}
                 chromosomeName={chromosomeName}
                 chromosomeData={[]}
+                exampleDataBestSampleID={exampleDataBestSampleID}
+                exampleMode={exampleMode}
+                fetchExistChromos3DData={fetchExistChromos3DData}
                 currentChromosomeSequence={currentChromosomeSequence}
                 setCurrentChromosomeSequence={setCurrentChromosomeSequence}
                 setChromosomeData={setChromosomeData}
@@ -1165,7 +1207,7 @@ function App() {
                             label: `Sample ${i + 1}`,
                             key: sampleId,
                             children: (
-                                comparisonCellLine3DLoading ? (
+                              comparisonCellLine3DLoading ? (
                                 <Spin size="large" style={{ margin: '20px 0' }} />
                               ) : (
                                 <Chromosome3D

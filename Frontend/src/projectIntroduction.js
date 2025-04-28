@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { Typography, Card, Tag, Button } from 'antd';
+import { Typography, Card, Tag, Button, Dropdown } from 'antd';
 import { GithubOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
 
 const data = [
@@ -19,18 +19,22 @@ const antColors = [
     '#eb2f96'  // pink
 ];
 
+const exampleDataItems = [
+    {
+        key: 'GM',
+        label: 'GM12878-Chr8-127300000-128300000',
+    },
+    {
+        key: 'IMR',
+        label: 'IMR90-Chr8-127300000-128300000',
+    }
+]
+
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setExampleMode}) => {
+export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setExampleMode }) => {
     const chartRef = useRef(null);
-
-    const confirmExampleData = () => {
-        setExampleMode(true);
-        // setCellLineName('IMR');
-        // setChromosomeName('chr8');
-        // setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
-    }
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -99,6 +103,19 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
         };
     }, []);
 
+    const onClickExampleDataItem = ({ key }) => {
+        setExampleMode(true);
+        if (key === 'GM') {
+            setCellLineName('GM');
+        }
+
+        if (key === 'IMR') {
+            setCellLineName('IMR');
+        }
+        setChromosomeName('chr8');
+        setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
+    }
+
     return (
         <div style={{ width: 1200, margin: '0 auto', padding: '24px' }}>
             <Title
@@ -114,7 +131,7 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                         <Title level={4} style={{ margin: 0 }}>
                             Introduction
                         </Title>
-                        <div
+                        {/* <div
                             style={{
                                 position: 'absolute',
                                 right: 0,
@@ -125,7 +142,7 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                             <Button type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" onClick={confirmExampleData}>
                                 Example Data
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 }
                 style={{ width: '100%', marginBottom: 16 }}
@@ -137,6 +154,13 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                         The spatial organization of the genome plays a fundamental role in gene regulation, replication, and other biological processes. High-throughput chromosome conformation capture (Hi-C) techniques have advanced our understanding of genome architecture, but they primarily produce 2D, population-averaged data, limiting insights into individual cell chromatin structures. To bridge this gap, this project introduces a computational method and web-based platform designed for <Text mark>high-resolution visualization and analysis of single-cell 3D chromatin conformations.</Text>
                     </Text>
                 </div>
+
+                {/* example data showing button */}
+                <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
+                    <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
+                        Example Data
+                    </Button>
+                </Dropdown>
 
                 <Title level={5}>Key Features</Title>
 

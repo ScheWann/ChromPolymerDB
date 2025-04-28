@@ -64,8 +64,9 @@ def get_ChromosValidIBPData():
 
 @app.route('/getExistingChromos3DData', methods=['POST'])
 def get_ExistingChromos3DData():
+    cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
-    return jsonify(exist_chromosome_3d_data(sample_id))
+    return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
 
 
 @app.route('/getExampleChromos3DData', methods=['POST'])

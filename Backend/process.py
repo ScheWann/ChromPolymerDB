@@ -283,9 +283,13 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
-def exist_chromosome_3d_data(sample_id):
-    position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
-    distance_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_distance.csv')
+def exist_chromosome_3d_data(cell_line, sample_id):
+    if cell_line == "IMR":
+        position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
+        distance_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_distance.csv')
+    if cell_line == "GM":
+        position_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_position.csv')
+        distance_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_distance.csv')
     best_sample_id = sample_id
 
     def get_position_data():
