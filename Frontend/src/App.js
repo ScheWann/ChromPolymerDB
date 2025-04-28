@@ -123,13 +123,13 @@ function App() {
     const isComparisonCellLineOK = comparisonCellLine === null || comparisonCellLine === 'IMR' || comparisonCellLine === 'GM';
     const isChromosomeOK = chromosomeName === 'chr8';
     const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
-  
+
     if (isMainCellLineOK && isComparisonCellLineOK && isChromosomeOK && isSequenceOK) {
       setExampleMode(true);
     } else {
       setExampleMode(false);
     }
-  }, [cellLineName, chromosomeName, selectedChromosomeSequence, comparisonCellLine]);  
+  }, [cellLineName, chromosomeName, selectedChromosomeSequence, comparisonCellLine]);
 
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
@@ -741,13 +741,11 @@ function App() {
 
     const validCellLines = ['IMR', 'GM'];
     const isExample = validCellLines.includes(cellLineName) &&
-                      (value === null || validCellLines.includes(value)) &&
-                      chromosomeName === 'chr8' &&
-                      selectedChromosomeSequence.start === 127300000 &&
-                      selectedChromosomeSequence.end === 128300000;
-  
-    console.log(isExample, value, 'new exampleMode');
-  
+      (value === null || validCellLines.includes(value)) &&
+      chromosomeName === 'chr8' &&
+      selectedChromosomeSequence.start === 127300000 &&
+      selectedChromosomeSequence.end === 128300000;
+
     if (!isExample) {
       fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
     } else {
