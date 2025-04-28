@@ -140,7 +140,7 @@ function App() {
       submit();
 
       // Fetch existing 3Dchromosome data
-      fetchExistChromos3DData(true, 814);
+      fetchExistChromos3DData(true, 1223);
     }
   }, [selectedChromosomeSequence]);
 
