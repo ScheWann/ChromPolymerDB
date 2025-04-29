@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
-import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined } from "@ant-design/icons";
+import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined, SendOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './Chromosome3DDistance';
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
@@ -25,6 +25,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
     const [showBeadInfo, setShowBeadInfo] = useState(false)
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
     const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
+    const [chromosome3DBackgroundColor, setChromosome3DBackgroundColor] = useState('#333333');
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -75,6 +76,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
             setGeneBeadSeq([]);
         }
     }, [geneSize]);
+
+    useEffect(() => {
+        if (rendererRef.current && rendererRef.current.gl) {
+            const { gl } = rendererRef.current;
+            gl.setClearColor(new THREE.Color(chromosome3DBackgroundColor), 1);
+        }
+    }, [chromosome3DBackgroundColor]);
 
     const processedChromosomeData = useMemo(() => {
         return chromosome3DExampleData
@@ -408,6 +416,22 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                     onClick: onClickDownloadItem,
                                 }}
                                 placement="bottom"
+                                dropdownRender={(menu) => (
+                                    <div style={{backgroundColor: 'white', borderRadius: 4 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
+                                            <span>Color: </span>
+                                            <ColorPicker
+                                                size="small"
+                                                trigger='hover'
+                                                value={chromosome3DBackgroundColor}
+                                                onChange={(color) => {
+                                                    setChromosome3DBackgroundColor(color.toHexString());
+                                                }}
+                                            />
+                                        </div>
+                                        {React.cloneElement(menu, {style: { boxShadow: 'none' }})}
+                                    </div>
+                                )}
                             >
                                 <Button
                                     style={{
