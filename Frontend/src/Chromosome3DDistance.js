@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import jsPDF from 'jspdf';
 import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip, Modal, Dropdown } from 'antd';
+import { Button, Tooltip, ColorPicker, Dropdown } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 // import { BeadDistributionPlot } from './beadDistributionplot';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
@@ -12,6 +12,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
+    const [chromosome3DDistanceBackgroundColor, setChromosome3DDistanceBackgroundColor] = useState('#333333');
     const [loading, setLoading] = useState(false);
 
     const downloadItems = [
@@ -95,7 +96,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             gl.setRenderTarget(renderTarget);
             gl.setSize(width, height);
             gl.setPixelRatio(1);
-            gl.setClearColor(0x202020, 1);
+            gl.setClearColor(new THREE.Color(chromosome3DDistanceBackgroundColor), 1);
             gl.clear();
 
             gl.render(scene, exportCamera);
@@ -156,7 +157,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             gl.setRenderTarget(renderTarget);
             gl.setSize(width, height);
             gl.setPixelRatio(1);
-            gl.setClearColor(0x202020, 1);
+            gl.setClearColor(new THREE.Color(chromosome3DDistanceBackgroundColor), 1);
             gl.clear();
             gl.render(scene, exportCamera);
 
@@ -190,6 +191,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             console.error("Renderer not properly initialized for PDF download.");
         }
     };
+
+    useEffect(() => {
+        if (rendererRef.current && rendererRef.current.gl) {
+            const { gl } = rendererRef.current;
+            gl.setClearColor(new THREE.Color(chromosome3DDistanceBackgroundColor), 1);
+        }
+    }, [chromosome3DDistanceBackgroundColor]);
 
     useEffect(() => {
         setLoading(true);
@@ -318,6 +326,22 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                 onClick: onClickDownloadItem,
                             }}
                             placement="bottom"
+                            dropdownRender={(menu) => (
+                                <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
+                                        <span>Color: </span>
+                                        <ColorPicker
+                                            size="small"
+                                            trigger='hover'
+                                            value={chromosome3DDistanceBackgroundColor}
+                                            onChange={(color) => {
+                                                setChromosome3DDistanceBackgroundColor(color.toHexString());
+                                            }}
+                                        />
+                                    </div>
+                                    {React.cloneElement(menu, { style: { boxShadow: 'none' } })}
+                                </div>
+                            )}
                         >
                             <Button
                                 style={{
