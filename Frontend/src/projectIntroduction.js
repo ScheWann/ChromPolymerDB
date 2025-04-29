@@ -104,7 +104,6 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
     }, []);
 
     const onClickExampleDataItem = ({ key }) => {
-        setExampleMode(true);
         if (key === 'GM') {
             setCellLineName('GM');
         }

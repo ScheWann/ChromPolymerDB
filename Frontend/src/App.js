@@ -38,8 +38,6 @@ function App() {
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
   const [distributionData, setDistributionData] = useState({});
 
-  // Example Data Mode settings
-  const [exampleMode, setExampleMode] = useState(false); // Example mode
   const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223 }); // Example data best sample ID
 
   // Heatmap Comparison settings
@@ -111,29 +109,26 @@ function App() {
     },
   ];
 
-
   // Add "," to the number by every 3 digits
   const formatNumber = (value) => {
     if (!value) return '';
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  useEffect(() => {
-    const isMainCellLineOK = cellLineName === 'IMR' || cellLineName === 'GM';
-    const isComparisonCellLineOK = comparisonCellLine === null || comparisonCellLine === 'IMR' || comparisonCellLine === 'GM';
+  // varify if in example mode
+  const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
+    const validCellLines = ['IMR', 'GM'];
+    const isMainCellLineOK = validCellLines.includes(cellLineName);
     const isChromosomeOK = chromosomeName === 'chr8';
     const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
 
-    if (isMainCellLineOK && isComparisonCellLineOK && isChromosomeOK && isSequenceOK) {
-      setExampleMode(true);
-    } else {
-      setExampleMode(false);
-    }
-  }, [cellLineName, chromosomeName, selectedChromosomeSequence, comparisonCellLine]);
+    return isMainCellLineOK && isChromosomeOK && isSequenceOK;
+  }
 
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
-    if (exampleMode && selectedChromosomeSequence.start && selectedChromosomeSequence.end) {
+    // if (exampleMode && selectedChromosomeSequence.start && selectedChromosomeSequence.end) {
+    if (isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
       setCurrentChromosomeSequence(selectedChromosomeSequence);
       // Call dependent logic after selectedChromosomeSequence has been updated
       fetchChromosomeList(cellLineName);
@@ -162,7 +157,7 @@ function App() {
 
   useEffect(() => {
     if (totalChromosomeSequences.length > 0) {
-      if (!exampleMode) {
+      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         if (isCellLineMode) {
           setSelectedChromosomeSequence({ start: totalChromosomeSequences[0].start, end: totalChromosomeSequences[0].end });
         } else {
@@ -703,7 +698,7 @@ function App() {
     setChromosome3DExampleID(key);
     const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!chromosome3DExampleData[cacheKey]) {
-      if (!exampleMode) {
+      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(cellLineName, key, "sampleChange", false);
       } else {
         fetchExistChromos3DData(false, key, cellLineName, false);
@@ -716,7 +711,7 @@ function App() {
     setComparisonCellLine3DSampleID(key);
     const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!comparisonCellLine3DData[cacheKey]) {
-      if (!exampleMode) {
+      if (!isExampleMode(comparisonCellLine, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
       } else {
         fetchExistChromos3DData(false, key, comparisonCellLine, true);
@@ -739,13 +734,7 @@ function App() {
     setComparisonCellLine(value);
     setComparisonCellLine3DLoading(true);
 
-    const validCellLines = ['IMR', 'GM'];
-    const isExample = validCellLines.includes(cellLineName) &&
-      (value === null || validCellLines.includes(value)) &&
-      chromosomeName === 'chr8' &&
-      selectedChromosomeSequence.start === 127300000 &&
-      selectedChromosomeSequence.end === 128300000;
-
+    const isExample = isExampleMode(value, chromosomeName, selectedChromosomeSequence);
     if (!isExample) {
       fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
     } else {
@@ -763,7 +752,7 @@ function App() {
       warning('noData');
     } else {
       setHeatmapLoading(true);
-      if (!exampleMode) {
+      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         setCurrentChromosomeSequence(selectedChromosomeSequence);
       }
 
@@ -950,7 +939,7 @@ function App() {
                 setCellLineName={setCellLineName}
                 setChromosomeName={setChromosomeName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
-                setExampleMode={setExampleMode}
+                // setExampleMode={setExampleMode}
               />
             </div>
           )}
@@ -974,7 +963,7 @@ function App() {
                   chromosomeName={chromosomeName}
                   chromosomeData={chromosomeData}
                   exampleDataBestSampleID={exampleDataBestSampleID}
-                  exampleMode={exampleMode}
+                  isExampleMode={isExampleMode}
                   fetchExistChromos3DData={fetchExistChromos3DData}
                   currentChromosomeSequence={currentChromosomeSequence}
                   setCurrentChromosomeSequence={setCurrentChromosomeSequence}
@@ -1012,7 +1001,7 @@ function App() {
                 chromosomeName={chromosomeName}
                 chromosomeData={[]}
                 exampleDataBestSampleID={exampleDataBestSampleID}
-                exampleMode={exampleMode}
+                isExampleMode={isExampleMode}
                 fetchExistChromos3DData={fetchExistChromos3DData}
                 currentChromosomeSequence={currentChromosomeSequence}
                 setCurrentChromosomeSequence={setCurrentChromosomeSequence}
