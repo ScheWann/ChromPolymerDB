@@ -143,7 +143,7 @@ function App() {
       submit();
       setChromosome3DCellLineName(cellLineName)
       // Fetch existing 3Dchromosome data
-      fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
+      // fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
     }
   }, [selectedChromosomeSequence]);
 
