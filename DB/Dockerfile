@@ -1,6 +1,11 @@
 FROM postgres:17.0-bookworm
 
-RUN apt-get update && apt-get install -y postgresql-17-cron
+RUN apt-get update && apt-get install -y tzdata postgresql-17-cron
+
+# Set the timezone to America/Chicago
+ENV TZ=America/Chicago
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Set shared_preload_libraries and configure pg_cron to use your database (chromosome_db)
 RUN echo "shared_preload_libraries = 'pg_cron'" >> /usr/share/postgresql/postgresql.conf.sample && \
