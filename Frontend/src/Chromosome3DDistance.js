@@ -329,7 +329,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             dropdownRender={(menu) => (
                                 <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
-                                        <span>Color: </span>
+                                        <span>Background Color: </span>
                                         <ColorPicker
                                             size="small"
                                             trigger='hover'
