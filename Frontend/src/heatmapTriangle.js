@@ -995,7 +995,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch
-                    checkedChildren="Non Random Interaction"
+                    checkedChildren="FoldRec interactions"
                     unCheckedChildren="All HiC"
                     checked={!fullTriangleVisible}
                     onChange={switchChange}
