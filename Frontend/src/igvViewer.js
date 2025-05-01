@@ -245,7 +245,8 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .attr("x2", startX)
                 .attr("y2", igvContainerHeight)
                 .attr("stroke", "#C0C0C0")
-                .attr("stroke-width", 3);
+                .attr("stroke-width", 3)
+                .style("opacity", 0.5);
 
             svg.append("line")
                 .attr("class", "brushed-triangle-range")
@@ -255,7 +256,8 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 .attr("x2", endX)
                 .attr("y2", igvContainerHeight)
                 .attr("stroke", "#C0C0C0")
-                .attr("stroke-width", 3);
+                .attr("stroke-width", 3)
+                .style("opacity", 0.5);
         }
     }, [brushedTriangleRange, currentChromosomeSequence]);
 

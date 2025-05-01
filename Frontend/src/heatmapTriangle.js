@@ -889,7 +889,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 .attr("x2", startX + margin.left)
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
-                .attr("stroke-width", 3);
+                .attr("stroke-width", 3)
+                .style("opacity", 0.5);
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
@@ -898,7 +899,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 .attr("x2", endX + margin.left)
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
-                .attr("stroke-width", 3);
+                .attr("stroke-width", 3)
+                .style("opacity", 0.5);
         };
 
         const brushSvg = d3.select(brushSvgRef.current)
