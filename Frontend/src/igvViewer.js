@@ -193,8 +193,13 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
     }, [selectedTrackData, trackKey]);
 
     useEffect(() => {
-        if (browserRef.current && trackKey === '4' && uploadTrackData.name && uploadTrackData.trackUrl) {
-            const format = uploadTrackData.trackUrl.split('.').pop().split('?')[0].toLowerCase();
+        if ((browserRef.current && trackKey === '4' || browserRef.current && trackKey === '5') && uploadTrackData.name && uploadTrackData.trackUrl) {
+            let format;
+            if (trackKey === '4') {
+                format = uploadTrackData.trackUrl.split('.').pop().split('?')[0].toLowerCase();
+            } else {
+                format = uploadTrackData.format
+            }
             const newTrack = {
                 url: uploadTrackData.trackUrl,
                 name: uploadTrackData.name,

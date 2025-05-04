@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input } from 'antd';
+import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input, Upload } from 'antd';
 import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
@@ -23,7 +23,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [trackDataSource, setTrackDataSource] = useState([]);
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
-    const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "" });
+    const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "", format: "" });
     const [canvasUnitRectSize, setCanvasUnitRectSize] = useState(0);
 
     // Track table search
@@ -31,6 +31,20 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
 
+    const detectIgvFormat = (filename) => {
+        const name = filename.toLowerCase();
+    
+        if (name.endsWith('.bed') || name.endsWith('.bed.gz')) {
+            return 'bed';
+        }
+    
+        if (name.endsWith('.bigwig') || name.endsWith('.bw')) {
+            return 'bigwig';
+        }
+
+        return '';
+    }
+    
     // Download fucction dropdown menu items
     const downloadItems = [
         {
@@ -60,6 +74,28 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         {
             key: '4',
             label: 'URLs'
+        },
+        {
+            key: '5',
+            label: (
+                <Upload
+                    accept=".bed,.bigWig,.gz"
+                    showUploadList={false}
+                    beforeUpload={(file) => {
+                        const fileURL = URL.createObjectURL(file);
+                        const format = detectIgvFormat(file.name);
+                        setUploadTrackData({
+                            name: file.name,
+                            trackUrl: fileURL,
+                            format: format
+                        });
+                        setTrackKey('5');
+                        return false;
+                    }}
+                >
+                    <span>Local File</span>
+                </Upload>
+            )
         }
         // {
         //     key: '4',
@@ -638,7 +674,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const closeTrackTableModal = () => {
         setTrackTableModalVisible(false);
-        setUploadTrackData({ name: "", trackUrl: "" });
+        setUploadTrackData({ name: "", trackUrl: "", format: "" });
         setSearchedColumn('');
         setSearchText('');
     };
@@ -684,7 +720,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     };
 
     const onClickTrackItem = ({ key }) => {
-        setTrackTableModalVisible(true);
         setTrackKey(key);
         setTrackDataSource([]);
 
@@ -755,7 +790,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const confirmTrackSelection = () => {
         setTrackTableModalVisible(false);
-        setUploadTrackData({ name: "", trackUrl: "" });
+        setUploadTrackData({ name: "", trackUrl: "", format: "" });
     };
 
     useEffect(() => {
