@@ -130,7 +130,7 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                         <Title level={4} style={{ margin: 0 }}>
                             Introduction
                         </Title>
-                        {/* <div
+                        <div
                             style={{
                                 position: 'absolute',
                                 right: 0,
@@ -138,10 +138,20 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                                 transform: 'translateY(-50%)'
                             }}
                         >
-                            <Button type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" onClick={confirmExampleData}>
-                                Example Data
-                            </Button>
-                        </div> */}
+                            <a
+                                href="https://github.com/ldu3/ChromPolymerDB_tutorial"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <GithubOutlined
+                                    style={{
+                                        fontSize: '20px',
+                                        color: '#333',
+                                        transition: 'color 0.3s'
+                                    }}
+                                />
+                            </a>
+                        </div>
                     </div>
                 }
                 style={{ width: '100%', marginBottom: 16 }}
