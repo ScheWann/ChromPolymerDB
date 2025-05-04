@@ -130,29 +130,22 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
                         <Title level={4} style={{ margin: 0 }}>
                             Introduction
                         </Title>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                right: 0,
-                                top: '50%',
-                                transform: 'translateY(-50%)'
-                            }}
-                        >
-                            <a
-                                href="https://github.com/ldu3/ChromPolymerDB_tutorial"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <GithubOutlined
-                                    style={{
-                                        fontSize: '20px',
-                                        color: '#333',
-                                        transition: 'color 0.3s'
-                                    }}
-                                />
-                            </a>
-                        </div>
                     </div>
+                }
+                extra={
+                    <a
+                        href="https://github.com/ldu3/ChromPolymerDB_tutorial"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <GithubOutlined
+                            style={{
+                                fontSize: '20px',
+                                color: '#333',
+                                transition: 'color 0.3s'
+                            }}
+                        />
+                    </a>
                 }
                 style={{ width: '100%', marginBottom: 16 }}
                 header={{ padding: '0 24px', background: '#fff' }}
