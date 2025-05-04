@@ -127,7 +127,6 @@ function App() {
 
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
-    // if (exampleMode && selectedChromosomeSequence.start && selectedChromosomeSequence.end) {
     if (isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
       setCurrentChromosomeSequence(selectedChromosomeSequence);
       // Call dependent logic after selectedChromosomeSequence has been updated
@@ -939,7 +938,6 @@ function App() {
                 setCellLineName={setCellLineName}
                 setChromosomeName={setChromosomeName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
-                // setExampleMode={setExampleMode}
               />
             </div>
           )}

@@ -33,7 +33,7 @@ const exampleDataItems = [
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setExampleMode }) => {
+export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence }) => {
     const chartRef = useRef(null);
 
     useEffect(() => {
