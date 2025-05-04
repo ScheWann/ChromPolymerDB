@@ -23,6 +23,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [trackDataSource, setTrackDataSource] = useState([]);
     const [selectedTrackData, setSelectedTrackData] = useState([]);
     const [trackKey, setTrackKey] = useState(null);
+    const [inputTrackData, setInputTrackData] = useState({ name: "", trackUrl: "" });
     const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "", format: "" });
     const [canvasUnitRectSize, setCanvasUnitRectSize] = useState(0);
 
@@ -90,6 +91,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                             format: format
                         });
                         setTrackKey('5');
+                        setInputTrackData({ name: "", trackUrl: "" });
                         return false;
                     }}
                 >
@@ -776,6 +778,11 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     console.error('Error fetching data:', error);
                 });
         }
+
+        if (key === '4') { 
+            setInputTrackData({ name: '', trackUrl: '' }); 
+            setTrackTableModalVisible(true);
+        }
     };
 
     const onClickDownloadItem = ({ key }) => {
@@ -789,8 +796,14 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     }
 
     const confirmTrackSelection = () => {
+        setUploadTrackData(prev => ({
+            ...prev,
+            name: inputTrackData.name,
+            trackUrl: inputTrackData.trackUrl,
+            format: detectIgvFormat(inputTrackData.trackUrl)
+        }));
         setTrackTableModalVisible(false);
-        setUploadTrackData({ name: "", trackUrl: "", format: "" });
+        setInputTrackData({ name: "", trackUrl: "" });
     };
 
     useEffect(() => {
@@ -1068,13 +1081,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                                 <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
                                     Name
                                 </span>
-                                <Input name="name" value={uploadTrackData.name} onChange={uploadTrackChange} />
+                                <Input name="name" value={inputTrackData?.name || ''} onChange={e => setInputTrackData(prev => ({ ...prev, name: e.target.value }))} />
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                                 <span style={{ marginRight: '8px', fontWeight: 'bold', width: '100px' }}>
                                     Track URL:
                                 </span>
-                                <Input name="trackUrl" value={uploadTrackData.trackUrl} onChange={uploadTrackChange} />
+                                <Input name="trackUrl" value={inputTrackData?.trackUrl || ''} onChange={e => setInputTrackData(prev => ({ ...prev, trackUrl: e.target.value }))} />
                             </div>
                         </div>
                     ) : trackDataSource.length === 0 ? (
