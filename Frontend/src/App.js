@@ -161,7 +161,7 @@ function App() {
         if (isCellLineMode) {
           setSelectedChromosomeSequence({ start: totalChromosomeSequences[0].start, end: totalChromosomeSequences[0].end });
         } else {
-          setSelectedChromosomeSequence({ start: geneSize.start - 1500000, end: geneSize.end + 1500000 });
+          setSelectedChromosomeSequence({ start: geneSize.start - 1000000, end: geneSize.end + 1000000 });
         }
       }
     }
@@ -334,7 +334,7 @@ function App() {
         const chromosomeName = `chr${data.chromosome}`;
         setChromosomeName(chromosomeName);
         fetchChromosomeSize(chromosomeName);
-        setSelectedChromosomeSequence({ start: data.start_location - 1500000, end: data.end_location + 1500000 });
+        setSelectedChromosomeSequence({ start: data.start_location - 1000000, end: data.end_location + 1000000 });
         setGeneSize({ start: data.start_location, end: data.end_location });
       })
   }
