@@ -59,7 +59,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         },
         {
             key: '4',
-            label: 'Local Tracks'
+            label: 'URLs'
         }
         // {
         //     key: '4',
