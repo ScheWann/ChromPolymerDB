@@ -4,7 +4,7 @@ BEGIN
     DELETE FROM position
     WHERE NOT (
         cell_line IN ('IMR', 'GM') AND
-        chrid = 8 AND
+        chrid = 'chr8' AND
         start_value = 127300000 AND
         end_value = 128300000
     );
@@ -12,7 +12,7 @@ BEGIN
     DELETE FROM distance
     WHERE NOT (
         cell_line IN ('IMR', 'GM') AND
-        chrid = 8 AND
+        chrid = 'chr8' AND
         start_value = 127300000 AND
         end_value = 128300000
     );
