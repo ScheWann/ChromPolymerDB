@@ -634,11 +634,11 @@ function App() {
   const downloadItems = [
     {
       key: '1',
-      label: 'distance data',
+      label: 'Distance data',
     },
     {
       key: '2',
-      label: 'position data'
+      label: 'Position data'
     },
   ]
 
