@@ -444,11 +444,11 @@ def process_example_distance_data(cur):
     """Insert all example distance data files into the database."""
     pattern = os.path.join(EXAMPLE_DIR, "*distance*.csv")
     file_list = glob.glob(pattern)
-
+    
     if not file_list:
         print(f"No distance files found in {EXAMPLE_DIR}")
         return
-
+    
     query = """
     INSERT INTO distance (cell_line, chrid, sampleid, start_value, end_value, n_beads, distance_vector)
     VALUES (%s, %s, %s, %s, %s, %s, %s);
@@ -457,8 +457,18 @@ def process_example_distance_data(cur):
     for example_file_path in file_list:
         print(f"Processing distance file: {example_file_path}")
         df = pd.read_csv(example_file_path)
-        df = df[["cell_line", "chrid", "sampleid", "start_value", "end_value", "n_beads", "distance_vector"]]
 
+        # Convert 'distance_vector' to a list of floats
+        def convert_to_float_list(x):
+            if isinstance(x, str):
+                # Strip the curly braces, split by commas, and convert each value to float
+                return list(map(float, x.strip('{}').split(',')))
+            return []
+
+        df['distance_vector'] = df['distance_vector'].apply(convert_to_float_list)
+        
+        df = df[["cell_line", "chrid", "sampleid", "start_value", "end_value", "n_beads", "distance_vector"]]
+        
         data_to_insert = df.to_records(index=False).tolist()
         psycopg2.extras.execute_batch(cur, query, data_to_insert)
 
