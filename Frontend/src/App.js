@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown } from 'antd';
+import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown, InputNumber } from 'antd';
 import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
@@ -7,8 +7,6 @@ import { Chromosome3D } from './Chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons";
 
-// Random number generator from 0 to 5000
-const randomKeys = [0, 1000, 2000];
 
 function App() {
   const [isCellLineMode, setIsCellLineMode] = useState(true);
@@ -37,6 +35,8 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
   const [distributionData, setDistributionData] = useState({});
+  const [tempSampleId, setTempSampleId] = useState(null);
+  const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
 
   const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223 }); // Example data best sample ID
 
@@ -784,6 +784,16 @@ function App() {
     }
   }
 
+  // add custom sample id by users and fetch data
+  const addCustomKey = () => {
+      setSampleKeys((prev) => [...prev, tempSampleId]);
+      setChromosome3DExampleID(tempSampleId);
+      const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
+      if (!chromosome3DExampleData[cacheKey]) {
+        fetchExampleChromos3DData(cellLineName, tempSampleId, "sampleChange", false);
+      }
+  }
+
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
     setChromosome3DExampleID(key);
@@ -1139,9 +1149,13 @@ function App() {
                       onChange={originalSampleChange}
                       tabBarExtraContent={
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                          <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10 }}>
-                            <span style={{ marginRight: 5 }}>Cell Line:</span>
-                            <span>{cellLineDict[chromosome3DCellLineName]}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', marginRight: 10 }}>
+                            <span style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, lineHeight: 'normal' }}>New Sample: </span>
+                            <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 5, lineHeight: 'normal' }}>Cell Line:</span>
+                            <span style={{ lineHeight: 'normal' }}>{cellLineDict[chromosome3DCellLineName]}</span>
                           </div>
                           <Tooltip
                             title={
@@ -1165,19 +1179,8 @@ function App() {
                                 }}
                                 size="small"
                                 icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
-                              // onClick={() => downloadDistance(false)}
                               />
                             </Dropdown>
-                            {/* <Button
-                              style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                                marginRight: 5,
-                              }}
-                              size="small"
-                              icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
-                              onClick={() => downloadDistance(false)}
-                            /> */}
                           </Tooltip>
                           <Tooltip
                             title="Add a second cell line to compare"
@@ -1199,7 +1202,7 @@ function App() {
                           </Tooltip>
                         </div>
                       }
-                      items={randomKeys.map((sampleId, i) => {
+                      items={sampleKeys.map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
                           label: `Sample ${i + 1}`,
@@ -1279,20 +1282,8 @@ function App() {
                                   disabled={Object.keys(comparisonCellLine3DData).length === 0}
                                   size="small"
                                   icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
-                                // onClick={() => downloadDistance(false)}
                                 />
                               </Dropdown>
-                              {/* <Button
-                                style={{
-                                  fontSize: 15,
-                                  cursor: "pointer",
-                                  marginRight: 5,
-                                }}
-                                size="small"
-                                disabled={Object.keys(comparisonCellLine3DData).length === 0}
-                                icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
-                                onClick={() => downloadDistance(true)}
-                              /> */}
                             </Tooltip>
                             <Tooltip
                               title="Collapse the second cell line window"
@@ -1314,7 +1305,7 @@ function App() {
                           </div>
                         }
 
-                        items={randomKeys.map((sampleId, i) => {
+                        items={sampleKeys.map((sampleId, i) => {
                           const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                           return {

@@ -113,3 +113,9 @@ body {
   display: flex;
   justify-content: flex-end;
 }
+
+.ant-input-number-group-addon {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  line-height: normal !important;
+}
