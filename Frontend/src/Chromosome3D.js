@@ -424,6 +424,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                                                 size="small"
                                                 trigger='hover'
                                                 value={chromosome3DBackgroundColor}
+                                                style={{ marginRight: 15 }}
                                                 onChange={(color) => {
                                                     setChromosome3DBackgroundColor(color.toHexString());
                                                 }}

@@ -334,6 +334,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                             size="small"
                                             trigger='hover'
                                             value={chromosome3DDistanceBackgroundColor}
+                                            style={{ marginRight: 15 }}
                                             onChange={(color) => {
                                                 setChromosome3DDistanceBackgroundColor(color.toHexString());
                                             }}
