@@ -729,6 +729,43 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         return None, None
 
 """
+Download the full 3D chromosome samples position data in the given cell line, chromosome name
+"""
+def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences):
+    query = """
+        SELECT *
+        FROM position
+        WHERE cell_line = %s
+            AND chrid = %s
+            AND start_value = %s
+            AND end_value = %s
+        ORDER BY sampleid, pid
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
+    rows = cur.fetchall()
+
+    if not rows:
+        return None, None
+
+    # Convert to DataFrame
+    df = pd.DataFrame(rows)
+
+    # Save to a temporary CSV file
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp_file:
+        df.to_csv(tmp_file.name, index=False)
+        csv_file_path = tmp_file.name
+
+    conn.close()
+
+    return csv_file_path, send_file(
+        csv_file_path,
+        as_attachment=True,
+        download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
+    )
+
+"""
 Returns currently existing other cell line list in given chromosome name and sequences
 """
 def comparison_cell_line_list(cell_line):

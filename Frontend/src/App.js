@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography } from 'antd';
+import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown } from 'antd';
 import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
@@ -33,7 +33,7 @@ function App() {
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
   const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
-  const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDistanceDownloadSpinner] = useState(false);
+  const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDownloadSpinner] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
   const [distributionData, setDistributionData] = useState({});
@@ -50,7 +50,7 @@ function App() {
   const [comparisonCellLine3DData, setComparisonCellLine3DData] = useState({});
   const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
   const [comparisonCellLine3DLoading, setComparisonCellLine3DLoading] = useState(false);
-  const [comparisonChromosomeDistanceDownloadSpinner, setComparisonChromosomeDistanceDownloadSpinner] = useState(false);
+  const [comparisonChromosomeDistanceDownloadSpinner, setComparisonChromosomeDownloadSpinner] = useState(false);
 
 
   // Tour visibility state
@@ -630,12 +630,42 @@ function App() {
     setComparisonHeatmapList((prev) => prev.filter((i) => i !== index));
   };
 
+
+  const downloadItems = [
+    {
+      key: '1',
+      label: 'distance data',
+    },
+    {
+      key: '2',
+      label: 'position data'
+    },
+  ]
+
+  const onClickOriginalDownloadItems = ({ key }) => {
+    if (key === '1') {
+      downloadDistance(false);
+    }
+    if (key === '2') {
+      downloadPositionData(false);
+    }
+  }
+
+  const onClickComparisonDownloadItems = ({ key }) => {
+    if (key === '1') {
+      downloadDistance(true);
+    }
+    if (key === '2') {
+      downloadPositionData(true);
+    }
+  }
+
   // Download 5000 samples of beads' distance data
   const downloadDistance = async (isComparison) => {
     if (isComparison) {
-      setComparisonChromosomeDistanceDownloadSpinner(true);
+      setComparisonChromosomeDownloadSpinner(true);
     } else {
-      setOriginalChromosomeDistanceDownloadSpinner(true);
+      setOriginalChromosomeDownloadSpinner(true);
     }
 
     try {
@@ -685,12 +715,74 @@ function App() {
       console.error("Download error:", error);
     } finally {
       if (isComparison) {
-        setComparisonChromosomeDistanceDownloadSpinner(false);
+        setComparisonChromosomeDownloadSpinner(false);
       } else {
-        setOriginalChromosomeDistanceDownloadSpinner(false);
+        setOriginalChromosomeDownloadSpinner(false);
       }
     }
   };
+
+  // Download 5000 samples of beads' position data (.csv)
+  const downloadPositionData = async (isComparison) => {
+    if (isComparison) {
+      setComparisonChromosomeDownloadSpinner(true);
+    } else {
+      setOriginalChromosomeDownloadSpinner(true);
+    }
+
+    try {
+      const response = await fetch("downloadFullChromosome3dPositionData", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
+          chromosome_name: chromosomeName,
+          sequences: selectedChromosomeSequence,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const reader = response.body.getReader();
+      const stream = new ReadableStream({
+        start(controller) {
+          function push() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                controller.close();
+                return;
+              }
+              controller.enqueue(value);
+              push();
+            });
+          }
+          push();
+        },
+      });
+
+      const blob = await new Response(stream).blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      if (isComparison) {
+        a.download = `${comparisonCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.csv`;
+      } else {
+        a.download = `${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.csv`;
+      }
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      if (isComparison) {
+        setComparisonChromosomeDownloadSpinner(false);
+      } else {
+        setOriginalChromosomeDownloadSpinner(false);
+      }
+    }
+  }
 
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
@@ -1064,7 +1156,19 @@ function App() {
                               color: 'black'
                             }}
                           >
-                            <Button
+                            <Dropdown menu={{ items: downloadItems, onClick: onClickOriginalDownloadItems }} placement="bottomRight" arrow>
+                              <Button
+                                style={{
+                                  fontSize: 15,
+                                  cursor: "pointer",
+                                  marginRight: 5,
+                                }}
+                                size="small"
+                                icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                              // onClick={() => downloadDistance(false)}
+                              />
+                            </Dropdown>
+                            {/* <Button
                               style={{
                                 fontSize: 15,
                                 cursor: "pointer",
@@ -1073,7 +1177,7 @@ function App() {
                               size="small"
                               icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                               onClick={() => downloadDistance(false)}
-                            />
+                            /> */}
                           </Tooltip>
                           <Tooltip
                             title="Add a second cell line to compare"
@@ -1165,7 +1269,20 @@ function App() {
                                 color: 'black'
                               }}
                             >
-                              <Button
+                              <Dropdown menu={{ items: downloadItems, onClick: onClickComparisonDownloadItems }} placement="bottomRight" arrow>
+                                <Button
+                                  style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                    marginRight: 5,
+                                  }}
+                                  disabled={Object.keys(comparisonCellLine3DData).length === 0}
+                                  size="small"
+                                  icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                                // onClick={() => downloadDistance(false)}
+                                />
+                              </Dropdown>
+                              {/* <Button
                                 style={{
                                   fontSize: 15,
                                   cursor: "pointer",
@@ -1175,7 +1292,7 @@ function App() {
                                 disabled={Object.keys(comparisonCellLine3DData).length === 0}
                                 icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                                 onClick={() => downloadDistance(true)}
-                              />
+                              /> */}
                             </Tooltip>
                             <Tooltip
                               title="Collapse the second cell line window"

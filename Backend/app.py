@@ -1,6 +1,24 @@
 import os
 from flask import Flask, jsonify, request, after_this_request
-from process import gene_names_list, cell_lines_list, chromosome_size, chromosomes_list, chromosome_sequences, chromosome_data, example_chromosome_3d_data, comparison_cell_line_list, gene_list, gene_names_list_search, chromosome_size_by_gene_name, chromosome_valid_ibp_data, epigenetic_track_data, download_full_chromosome_3d_distance_data, bead_distribution, exist_chromosome_3d_data
+from process import (
+    gene_names_list, 
+    cell_lines_list, 
+    chromosome_size, 
+    chromosomes_list, 
+    chromosome_sequences, 
+    chromosome_data, 
+    example_chromosome_3d_data, 
+    comparison_cell_line_list, 
+    gene_list, 
+    gene_names_list_search, 
+    chromosome_size_by_gene_name, 
+    chromosome_valid_ibp_data, 
+    epigenetic_track_data, 
+    download_full_chromosome_3d_distance_data, 
+    download_full_chromosome_3d_position_data,
+    bead_distribution, 
+    exist_chromosome_3d_data
+    )
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -122,6 +140,22 @@ def downloadFullChromosome3dDistanceData():
         return response
     return npz_file
 
+@app.route('/downloadFullChromosome3dPositionData', methods=['POST'])
+def downloadFullChromosome3dPositionData():
+    cell_line = request.json['cell_line']
+    chromosome_name = request.json['chromosome_name']
+    sequences = request.json['sequences']
+    file_path, csv_file = download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences)
+
+    @after_this_request
+    def remove_file(response):
+        try:
+            os.remove(file_path)
+            app.logger.info("Deleted temporary csv file: %s", file_path)
+        except Exception as error:
+            app.logger.error("Failed to delete csv file: %s", error)
+        return response
+    return csv_file
 
 @app.route('/getBeadDistribution', methods=['POST'])
 def getBeadDistribution():
