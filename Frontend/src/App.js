@@ -1193,8 +1193,25 @@ function App() {
                     }
                     items={sampleKeys.map((sampleId, i) => {
                       const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
+                      const label = sampleId === 0
+                        ? (
+                          <Tooltip
+                            title={
+                              <span>
+                                Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
+                              </span>
+                            }
+                            color='white'
+                            overlayInnerStyle={{
+                              color: 'black'
+                            }}
+                          >
+                            <span>Sample {sampleId} (Ens.Rep.)</span>
+                          </Tooltip>
+                        )
+                        : `Sample ${sampleId}`;
                       return {
-                        label: sampleId === 0 ? `Sample ${sampleId} (Ens.Rep.)` : `Sample ${sampleId}`,
+                        label: label,
                         key: sampleId,
                         disabled: chromosome3DLoading,
                         children: (
@@ -1299,9 +1316,25 @@ function App() {
 
                       items={sampleKeys.map((sampleId, i) => {
                         const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
-
+                        const label = sampleId === 0
+                          ? (
+                            <Tooltip
+                              title={
+                                <span>
+                                  Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
+                                </span>
+                              }
+                              color='white'
+                              overlayInnerStyle={{
+                                color: 'black'
+                              }}
+                            >
+                              <span>Sample {sampleId} (Ens.Rep.)</span>
+                            </Tooltip>
+                          )
+                          : `Sample ${sampleId}`;
                         return {
-                          label: sampleId === 0 ? `Sample ${sampleId} (Ens.Rep.)` : `Sample ${sampleId}`,
+                          label: label,
                           key: sampleId,
                           children: (
                             comparisonCellLine3DLoading ? (
