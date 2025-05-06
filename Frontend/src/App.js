@@ -373,7 +373,7 @@ function App() {
 
   const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
     if (cell_line && chromosomeName && selectedChromosomeSequence) {
-      const keyPrefix = isComparison ? `${cell_line}-COMPARISON` : cellLineName;
+      const keyPrefix = isComparison ? `${cell_line}-COMPARISON` : chromosome3DCellLineName;
 
       const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sample_id}`;
 
@@ -784,9 +784,9 @@ function App() {
   const addCustomKey = () => {
     setSampleKeys((prev) => [...prev, tempSampleId]);
     setChromosome3DExampleID(tempSampleId);
-    const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
+    const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
     if (!chromosome3DExampleData[cacheKey]) {
-      fetchExampleChromos3DData(cellLineName, tempSampleId, "sampleChange", false);
+      fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", false);
     }
   }
 
@@ -1129,14 +1129,22 @@ function App() {
                     style={{ width: '100%', height: '100%' }}
                     onChange={originalSampleChange}
                     tabBarExtraContent={
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                        <div style={{ fontSize: 12, fontWeight: 'bold', marginRight: 10, display: 'flex', alignItems: 'center' }}>
-                          <span style={{ marginRight: 5, lineHeight: 'normal' }}>Cell Line:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <div style={{ fontSize: 11, fontWeight: 'bold', marginRight: 5, display: 'flex', alignItems: 'center' }}>
+                          {/* <span style={{ marginRight: 5, lineHeight: 'normal' }}>Cell Line:</span> */}
                           <span style={{ lineHeight: 'normal' }}>{cellLineDict[chromosome3DCellLineName]}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 10 }}>
-                          <span style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, lineHeight: 'normal' }}>New Sample: </span>
-                          <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
+                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
+                          {/* <span style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, lineHeight: 'normal' }}>New Sample: </span> */}
+                          <Tooltip
+                            title="Add a new sample ID"
+                            color='white'
+                            overlayInnerStyle={{
+                              color: 'black'
+                            }}
+                          >
+                            <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
+                          </Tooltip>
                         </div>
                         <Tooltip
                           title={
@@ -1186,7 +1194,7 @@ function App() {
                     items={sampleKeys.map((sampleId, i) => {
                       const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                       return {
-                        label: `Sample ${sampleId}`,
+                        label: sampleId === 0 ? `Sample ${sampleId} (Best)` : `Sample ${sampleId}`,
                         key: sampleId,
                         disabled: chromosome3DLoading,
                         children: (
@@ -1238,7 +1246,7 @@ function App() {
                             style={{
                               minWidth: 150,
                               maxWidth: 400,
-                              marginRight: 10,
+                              marginRight: 5,
                             }}
                             size="small"
                             onChange={comparisonCellLineChange}
@@ -1294,7 +1302,7 @@ function App() {
                         const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                         return {
-                          label: `Sample ${sampleId}`,
+                          label: sampleId === 0 ? `Sample ${sampleId} (Best)` : `Sample ${sampleId}`,
                           key: sampleId,
                           children: (
                             comparisonCellLine3DLoading ? (
@@ -1331,7 +1339,6 @@ function App() {
                 )}
               </div>
             )
-              // )
             }
           </>
         )}
