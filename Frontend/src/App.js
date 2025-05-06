@@ -136,8 +136,6 @@ function App() {
       // Automatically trigger the submit function
       submit();
       setChromosome3DCellLineName(cellLineName)
-      // Fetch existing 3Dchromosome data
-      // fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
     }
   }, [selectedChromosomeSequence]);
 
@@ -1186,7 +1184,7 @@ function App() {
                       </div>
                     }
                     items={sampleKeys.map((sampleId, i) => {
-                      const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
+                      const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                       return {
                         label: `Sample ${sampleId}`,
                         key: sampleId,
@@ -1197,7 +1195,7 @@ function App() {
                           ) : (
                             <Chromosome3D
                               formatNumber={formatNumber}
-                              celllineName={cellLineName}
+                              celllineName={chromosome3DCellLineName}
                               chromosomeName={chromosomeName}
                               currentChromosomeSequence={currentChromosomeSequence}
                               geneSize={geneSize}

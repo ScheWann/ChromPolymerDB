@@ -83,7 +83,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
             });
     };
 
-    const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
+    const fetchExampleChromos3DData = (cell_line, sample_id) => {
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             const cacheKey = `${cell_line}-${chromosomeName}-${currentChromosomeSequence.start}-${currentChromosomeSequence.end}-${sample_id}`;
 
@@ -101,25 +101,14 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
             })
                 .then(res => res.json())
                 .then(data => {
-                    if (isComparison) {
-                        setComparisonCellLine3DData(prev => ({
-                            ...prev,
-                            [cacheKey]: data["position_data"],
-                            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-                            [cacheKey + "_fq_data"]: data["fq_data"],
-                            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-                        }));
-                        setComparisonCellLine3DLoading(false);
-                    } else {
-                        setChromosome3DExampleData(prev => ({
-                            ...prev,
-                            [cacheKey]: data["position_data"],
-                            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-                            [cacheKey + "_fq_data"]: data["fq_data"],
-                            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-                        }));
-                        setChromosome3DLoading(false);
-                    }
+                    setChromosome3DExampleData(prev => ({
+                        ...prev,
+                        [cacheKey]: data["position_data"],
+                        [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                        [cacheKey + "_fq_data"]: data["fq_data"],
+                        [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                    }));
+                    setChromosome3DLoading(false);
                 });
         }
     };
@@ -129,7 +118,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         setChromosome3DLoading(true);
         setSelectedSphereLists({ [cellLineName]: {} });
         if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
-            fetchExampleChromos3DData(independentHeatmapCellLine, chromosome3DExampleID, "submit", false);
+            fetchExampleChromos3DData(independentHeatmapCellLine, chromosome3DExampleID);
         } else {
             fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
         }
@@ -629,7 +618,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     style={{ height: 200 }}
                                     min={0}
                                     max={fqRawcMode ? 1 : 200}
-                                    step={fqRawcMode ? 0.1: 1}
+                                    step={fqRawcMode ? 0.1 : 1}
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
                                 />
