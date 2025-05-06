@@ -118,9 +118,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             [cacheKey + "_fq_data"]: data["fq_data"],
                             [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
                         }));
-                        if (sampleChange === "submit") {
-                            setChromosome3DLoading(false);
-                        }
+                        setChromosome3DLoading(false);
                     }
                 });
         }

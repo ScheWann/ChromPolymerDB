@@ -424,9 +424,7 @@ function App() {
               [cacheKey + "_fq_data"]: data["fq_data"],
               [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
             }));
-            if (sampleChange === "submit") {
               setChromosome3DLoading(false);
-            }
           }
         });
     }
@@ -786,12 +784,12 @@ function App() {
 
   // add custom sample id by users and fetch data
   const addCustomKey = () => {
-      setSampleKeys((prev) => [...prev, tempSampleId]);
-      setChromosome3DExampleID(tempSampleId);
-      const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
-      if (!chromosome3DExampleData[cacheKey]) {
-        fetchExampleChromos3DData(cellLineName, tempSampleId, "sampleChange", false);
-      }
+    setSampleKeys((prev) => [...prev, tempSampleId]);
+    setChromosome3DExampleID(tempSampleId);
+    const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
+    if (!chromosome3DExampleData[cacheKey]) {
+      fetchExampleChromos3DData(cellLineName, tempSampleId, "sampleChange", false);
+    }
   }
 
   // 3D Original Chromosome sample change
@@ -1125,25 +1123,12 @@ function App() {
             ))}
 
             {/* Original 3D chromosome */}
-            {chromosome3DLoading ? (
-              <div style={{ width: 'calc(100% - 40vw)', flexShrink: 0 }}>
-                <Spin
-                  spinning={true}
-                  size="large"
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    height: '100%',
-                    margin: 0,
-                  }}
-                />
-              </div>
-            ) : (
-              Object.keys(chromosome3DExampleData).length > 0 && (
+            {(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DLoading)  && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: 'calc(100% - 40vw)', flexShrink: 0 }}>
                   <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%', flexShrink: 0 }}>
                     <Tabs
                       size="small"
+                      activeKey={chromosome3DExampleID}
                       defaultActiveKey={chromosome3DExampleID}
                       style={{ width: '100%', height: '100%' }}
                       onChange={originalSampleChange}
@@ -1205,33 +1190,36 @@ function App() {
                       items={sampleKeys.map((sampleId, i) => {
                         const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         return {
-                          label: `Sample ${i + 1}`,
+                          label: `Sample ${sampleId}`,
                           key: sampleId,
-                          children: chromosome3DExampleData[cacheKey] ? (
-                            <Chromosome3D
-                              formatNumber={formatNumber}
-                              celllineName={cellLineName}
-                              chromosomeName={chromosomeName}
-                              currentChromosomeSequence={currentChromosomeSequence}
-                              geneSize={geneSize}
-                              chromosomeData={chromosomeData}
-                              chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
-                              chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
-                              chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
-                              chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
-                              validChromosomeValidIbpData={validChromosomeValidIbpData}
-                              selectedChromosomeSequence={selectedChromosomeSequence}
-                              selectedIndex={selectedIndex}
-                              setSelectedIndex={setSelectedIndex}
-                              selectedSphereList={selectedSphereLists}
-                              setSelectedSphereList={setSelectedSphereLists}
-                              handleColorChange={handleColorChange}
-                              distributionData={distributionData}
-                              setDistributionData={setDistributionData}
-                              cellLineDict={cellLineDict}
-                            />
-                          ) : (
-                            <Spin size="large" style={{ margin: '20px 0' }} />
+                          disabled: chromosome3DLoading,
+                          children: (
+                            chromosome3DLoading ? (
+                              <Spin size="large" style={{ margin: '20px 0' }} />
+                            ) : (
+                              <Chromosome3D
+                                formatNumber={formatNumber}
+                                celllineName={cellLineName}
+                                chromosomeName={chromosomeName}
+                                currentChromosomeSequence={currentChromosomeSequence}
+                                geneSize={geneSize}
+                                chromosomeData={chromosomeData}
+                                chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
+                                chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
+                                chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
+                                chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
+                                validChromosomeValidIbpData={validChromosomeValidIbpData}
+                                selectedChromosomeSequence={selectedChromosomeSequence}
+                                selectedIndex={selectedIndex}
+                                setSelectedIndex={setSelectedIndex}
+                                selectedSphereList={selectedSphereLists}
+                                setSelectedSphereList={setSelectedSphereLists}
+                                handleColorChange={handleColorChange}
+                                distributionData={distributionData}
+                                setDistributionData={setDistributionData}
+                                cellLineDict={cellLineDict}
+                              />
+                            )
                           )
                         };
                       })}
@@ -1243,7 +1231,8 @@ function App() {
                     <div style={{ width: "49.9%", flexShrink: 0 }}>
                       <Tabs
                         size="small"
-                        defaultActiveKey={chromosome3DExampleID}
+                        activeKey={comparisonCellLine3DSampleID}
+                        defaultActiveKey={comparisonCellLine3DSampleID}
                         style={{ width: '100%', height: '100%' }}
                         onChange={comparisonSampleChange}
                         tabBarExtraContent={
@@ -1309,7 +1298,7 @@ function App() {
                           const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
 
                           return {
-                            label: `Sample ${i + 1}`,
+                            label: `Sample ${sampleId}`,
                             key: sampleId,
                             children: (
                               comparisonCellLine3DLoading ? (
@@ -1346,7 +1335,8 @@ function App() {
                   )}
                 </div>
               )
-            )}
+            // )
+            }
           </>
         )}
       </div>
