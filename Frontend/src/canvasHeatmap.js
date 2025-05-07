@@ -490,6 +490,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     fontSize: 12,
                                     cursor: "pointer",
                                 }}
+                                disabled={independentHeatmapData.length === 0}
                                 icon={<FullscreenOutlined />}
                                 onClick={openHalfHeatMapModal}
                             />
