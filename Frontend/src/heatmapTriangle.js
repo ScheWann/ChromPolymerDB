@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input, Upload } from 'antd';
-import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
+import { DownloadOutlined, SearchOutlined, RedoOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
@@ -26,6 +26,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
     const [inputTrackData, setInputTrackData] = useState({ name: "", trackUrl: "" });
     const [uploadTrackData, setUploadTrackData] = useState({ name: "", trackUrl: "", format: "" });
     const [canvasUnitRectSize, setCanvasUnitRectSize] = useState(0);
+    const [refreshIGV, setRefreshIGV] = useState(false);
 
     // Track table search
     const [searchText, setSearchText] = useState('');
@@ -34,18 +35,18 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
     const detectIgvFormat = (filename) => {
         const name = filename.toLowerCase();
-    
+
         if (name.endsWith('.bed') || name.endsWith('.bed.gz')) {
             return 'bed';
         }
-    
+
         if (name.endsWith('.bigwig') || name.endsWith('.bw')) {
             return 'bigwig';
         }
 
         return '';
     }
-    
+
     // Download fucction dropdown menu items
     const downloadItems = [
         {
@@ -779,8 +780,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 });
         }
 
-        if (key === '4') { 
-            setInputTrackData({ name: '', trackUrl: '' }); 
+        if (key === '4') {
+            setInputTrackData({ name: '', trackUrl: '' });
             setTrackTableModalVisible(true);
         }
     };
@@ -1060,6 +1061,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 >
                     <Button size='small'>Tracks</Button>
                 </Dropdown>
+                <Tooltip
+                    title="Refresh IGV.js"
+                    color='white'
+                    overlayInnerStyle={{
+                        color: 'black'
+                    }}
+                >
+                    <Button
+                        size='small'
+                        style={{
+                            fontSize: 15,
+                            cursor: "pointer",
+                        }}
+                        onClick={() => setRefreshIGV(prev => !prev)}
+                        icon={<RedoOutlined />}
+                    />
+                </Tooltip>
                 <Modal
                     width={"50vw"}
                     height={trackKey === '4' ? "20vh" : "20vh"}
@@ -1115,7 +1133,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         />
                     )}
                 </Modal>
-                <Tooltip title="Download non-random interaction data">
+                <Tooltip 
+                    title="Download non-random interaction data"
+                    color='white'
+                    overlayInnerStyle={{
+                        color: 'black'
+                    }}
+                >
                     <Dropdown
                         menu={{
                             items: downloadItems,
@@ -1151,6 +1175,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             )} */}
             {minCanvasDimension > 0 && (
                 <IgvViewer
+                    refreshIGV={refreshIGV}
+                    setRefreshIGV={setRefreshIGV}
                     uploadTrackData={uploadTrackData}
                     trackKey={trackKey}
                     selectedTrackData={selectedTrackData}

@@ -3,7 +3,7 @@ import igv from "../node_modules/igv/dist/igv.esm.js";
 import * as d3 from "d3";
 
 
-export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension, igvMountStatus, uploadTrackData }) => {
+export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackData, cellLineName, chromosomeName, currentChromosomeSequence, brushedTriangleRange, minCanvasDimension, igvMountStatus, uploadTrackData }) => {
     const containerRef = useRef(null);
     const igvDivRef = useRef(null);
     const browserRef = useRef(null);
@@ -172,8 +172,11 @@ export const IgvViewer = ({ trackKey, selectedTrackData, cellLineName, chromosom
                 observer.disconnect();
                 observer = null;
             }
+            if (refreshIGV) {
+                setRefreshIGV(false); // reset trigger
+            }
         };
-    }, [chromosomeName, currentChromosomeSequence, igvMountStatus]);
+    }, [chromosomeName, currentChromosomeSequence, igvMountStatus, refreshIGV]);
 
     useEffect(() => {
         if (browserRef.current && selectedTrackData && trackKey) {
