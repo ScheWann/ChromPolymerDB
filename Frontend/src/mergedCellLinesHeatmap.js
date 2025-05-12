@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as d3 from 'd3';
-import { Select, Switch } from "antd";
+import { Select, Switch, InputNumber, Slider } from "antd";
 
-export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChromosomeSequences, currentChromosomeSequence, independentHeatmapData, fqRawcMode, cellLineList, setFqRawcMode }) => {
+export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChromosomeSequences, currentChromosomeSequence, independentHeatmapData, fqRawcMode, cellLineList, setFqRawcMode, colorScaleRange, setColorScaleRange, changeColorByInput, changeColorScale }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -11,7 +11,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [mergeCompareCellLine, setMergeCompareCellLine] = useState(null);
     const [mergeCompareChromosomeData, setMergeCompareChromosomeData] = useState([]);
-    const [colorScaleRange, setColorScaleRange] = useState([0, 0.8]);
+    const [mergeCompareToalSequences, setMergeCompareTotalSequences] = useState([]);
 
     const changeFqRawcMode = () => {
         setFqRawcMode(!fqRawcMode);
@@ -37,6 +37,18 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
     }, []);
 
     useEffect(() => {
+        fetch('/getChromosSequence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setMergeCompareTotalSequences(data);
+            });
+
         fetch("/getChromosData", {
             method: 'POST',
             headers: {
@@ -95,33 +107,60 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
         const fqMap = new Map();
 
         independentHeatmapData.forEach(d => {
-            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
+            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
         });
 
-        mergeCompareChromosomeData.forEach(d => {
-            fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
-        });
+        if (mergeCompareCellLine) {
+            mergeCompareChromosomeData.forEach(d => {
+                fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
+            });
+        }
 
-        const hasData = (ibp, jbp) => {
-            const inRange = totalChromosomeSequences.some(seq =>
-                ibp >= seq.start && ibp <= seq.end &&
-                jbp >= seq.start && jbp <= seq.end
-            );
-
+        const hasData = (ibp, jbp, cellline) => {
+            let inRange = false;
+            if (cellline === cellLineName) {
+                inRange = totalChromosomeSequences.some(seq =>
+                    ibp >= seq.start && ibp <= seq.end &&
+                    jbp >= seq.start && jbp <= seq.end
+                );
+            } else {
+                inRange = mergeCompareToalSequences.some(seq =>
+                    ibp >= seq.start && ibp <= seq.end &&
+                    jbp >= seq.start && jbp <= seq.end
+                );
+            }
             return inRange;
         };
 
         // Draw heatmap using Canvas
+        // axisValues.forEach(ibp => {
+        //     axisValues.forEach(jbp => {
+        //         const { fq, fdr, rawc, cell_line } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1, cell_line: null };
+
+        //         const x = margin.left + xScale(jbp);
+        //         const y = margin.top + yScale(ibp);
+        //         const width = xScale.bandwidth();
+        //         const height = yScale.bandwidth();
+
+        //         context.fillStyle = !hasData(ibp, jbp, cell_line) ? 'white' : ((fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+        //         context.fillRect(x, y, width, height);
+        //     });
+        // });
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
-                const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
-
+                // 当没有合并比较数据时，只绘制下三角部分（包括对角线）
+                if (mergeCompareChromosomeData.length === 0 && jbp > ibp) {
+                    return;
+                }
+        
+                const { fq, fdr, rawc, cell_line } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1, cell_line: null };
+        
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
                 const width = xScale.bandwidth();
                 const height = yScale.bandwidth();
-
-                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+        
+                context.fillStyle = !hasData(ibp, jbp, cell_line) ? 'white' : ((fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 context.fillRect(x, y, width, height);
             });
         });
@@ -229,11 +268,11 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
             .attr('fill', '#333')
             .text(colorScaleRange[1]);
 
-    }, [colorScaleRange, containerSize, independentHeatmapData, currentChromosomeSequence, fqRawcMode]);
+    }, [colorScaleRange, containerSize, independentHeatmapData, currentChromosomeSequence, fqRawcMode, mergeCompareChromosomeData]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-            <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
                 <Switch
                     size='small'
                     checkedChildren="fq"
@@ -255,7 +294,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                     options={cellLineList}
                 />
             </div>
-            <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                 <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
                 <svg
@@ -268,6 +307,49 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                         zIndex: 0,
                         pointerEvents: 'none'
                     }}
+                />
+            </div>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                    width: `calc((100% - ${minDimension}px) / 2)`,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'absolute',
+                    right: `calc((100% - ${minDimension}px) / 4)`,
+                    top: '50%',
+                    transform: 'translate(50%, -50%)',
+                }}
+            >
+                <InputNumber
+                    size='small'
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[1]}
+                    min={0}
+                    max={fqRawcMode ? 1 : 200}
+                    onChange={changeColorByInput("max")}
+                />
+                <Slider
+                    range={{ draggableTrack: true }}
+                    vertical
+                    style={{ height: 200 }}
+                    min={0}
+                    max={fqRawcMode ? 1 : 200}
+                    step={fqRawcMode ? 0.1 : 1}
+                    onChange={changeColorScale}
+                    value={colorScaleRange}
+                />
+                <InputNumber
+                    size='small'
+                    style={{ width: 60 }}
+                    controls={false}
+                    value={colorScaleRange[0]}
+                    min={0}
+                    max={fqRawcMode ? 1 : 200}
+                    onChange={changeColorByInput("min")}
                 />
             </div>
         </div>

@@ -686,6 +686,10 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     fqRawcMode={fqRawcMode}
                                     setFqRawcMode={setFqRawcMode}
                                     cellLineList={cellLineList}
+                                    colorScaleRange={colorScaleRange}
+                                    setColorScaleRange={setColorScaleRange}
+                                    changeColorByInput={changeColorByInput}
+                                    changeColorScale={changeColorScale}
                                 />
                             </Modal>
                         </>
