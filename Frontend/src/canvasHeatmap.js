@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
+import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
@@ -15,6 +16,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
+    const [mergedCellLinesHeatmapModalVisible, setMergedCellLinesHeatmapModalVisible] = useState(false);
     const [colorScaleRange, setColorScaleRange] = useState([0, 0.8]);
     const [igvMountStatus, setIgvMountStatus] = useState(false);
     const [independentHeatmapCellLine, setIndependentHeatmapCellLine] = useState(cellLineName)
@@ -460,6 +462,25 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                 onChange={changeFqRawcMode}
                             />
                         </Tooltip>
+                        {!comparisonHeatmapId && (
+                            <Tooltip
+                                title="Merge the heatmap with the two selected cell lines"
+                                color='white'
+                                overlayInnerStyle={{
+                                    color: 'black'
+                                }}
+                            >
+                                <Button
+                                    size='small'
+                                    style={{
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<MergeOutlined />}
+                                    onClick={() => setMergedCellLinesHeatmapModalVisible(true)}
+                                />
+                            </Tooltip>
+                        )}
                         <Tooltip
                             title="Restore the original heatmap"
                             color='white'
@@ -635,6 +656,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             </div>
                             <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                             <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+
+                            {/* half triangle heatmap Modal */}
                             <Modal destroyOnClose={true} open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
                                 <HeatmapTriangle
                                     geneList={geneList}
@@ -649,6 +672,20 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                     igvMountStatus={igvMountStatus}
                                     changeColorByInput={changeColorByInput}
                                     changeColorScale={changeColorScale}
+                                />
+                            </Modal>
+
+                            {/* Merged two heatmaps into one Modal */}
+                            <Modal destroyOnClose={true} open={mergedCellLinesHeatmapModalVisible} onCancel={() => setMergedCellLinesHeatmapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles}  style={{ minWidth: "1000px" }} >
+                                <MergedCellLinesHeatmap 
+                                    cellLineName={independentHeatmapCellLine}
+                                    chromosomeName={chromosomeName}
+                                    totalChromosomeSequences={totalChromosomeSequences}
+                                    currentChromosomeSequence={currentChromosomeSequence}
+                                    independentHeatmapData={independentHeatmapData}
+                                    fqRawcMode={fqRawcMode}
+                                    setFqRawcMode={setFqRawcMode}
+                                    cellLineList={cellLineList}
                                 />
                             </Modal>
                         </>
