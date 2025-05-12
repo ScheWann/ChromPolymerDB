@@ -228,6 +228,25 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                     return d;
                 }));
 
+        axisSvg.append('text')
+            .attr('transform', `rotate(-90)`)
+            .attr('x', -margin.top - height / 2)
+            .attr('y', 15)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px')
+            .attr('fill', '#333')
+            .style('font-weight', 'bold')
+            .text(cellLineName);
+        
+        axisSvg.append('text')
+            .attr('x', margin.left + width / 2)
+            .attr('y', margin.top + height + 40)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px')
+            .attr('fill', '#333')
+            .style('font-weight', 'bold')
+            .text(mergeCompareCellLine || '');
+
         // Color Scale
         const colorScaleSvg = d3.select(colorScaleRef.current)
             .attr('width', (parentWidth - minDimension) / 2)
