@@ -104,17 +104,28 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
             t => d3.interpolateReds(t * 0.8 + 0.2)
         ).domain(colorScaleRange);
 
-        const fqMap = new Map();
+        const independentMap = new Map();
+        const mergeCompareMap = new Map();
 
         independentHeatmapData.forEach(d => {
-            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
+            independentMap.set(`X:${d.ibp},Y:${d.jbp}`, d);
         });
 
         if (mergeCompareCellLine) {
             mergeCompareChromosomeData.forEach(d => {
-                fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
+                mergeCompareMap.set(`X:${d.ibp},Y:${d.jbp}`, d);
             });
         }
+
+        // independentHeatmapData.forEach(d => {
+        //     fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
+        // });
+
+        // if (mergeCompareCellLine) {
+        //     mergeCompareChromosomeData.forEach(d => {
+        //         fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc, cell_line: d.cell_line });
+        //     });
+        // }
 
         const hasData = (ibp, jbp, cellline) => {
             let inRange = false;
@@ -133,34 +144,30 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
         };
 
         // Draw heatmap using Canvas
-        // axisValues.forEach(ibp => {
-        //     axisValues.forEach(jbp => {
-        //         const { fq, fdr, rawc, cell_line } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1, cell_line: null };
-
-        //         const x = margin.left + xScale(jbp);
-        //         const y = margin.top + yScale(ibp);
-        //         const width = xScale.bandwidth();
-        //         const height = yScale.bandwidth();
-
-        //         context.fillStyle = !hasData(ibp, jbp, cell_line) ? 'white' : ((fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
-        //         context.fillRect(x, y, width, height);
-        //     });
-        // });
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
-                // 当没有合并比较数据时，只绘制下三角部分（包括对角线）
-                if (mergeCompareChromosomeData.length === 0 && jbp > ibp) {
-                    return;
+                let dataPoint = null;
+
+                if (jbp <= ibp) {
+                    dataPoint = independentMap.get(`X:${ibp},Y:${jbp}`) || independentMap.get(`X:${jbp},Y:${ibp}`);
                 }
-        
-                const { fq, fdr, rawc, cell_line } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1, cell_line: null };
-        
+
+                if (mergeCompareChromosomeData.length > 0 && jbp > ibp) {
+                    dataPoint = mergeCompareMap.get(`X:${ibp},Y:${jbp}`) || mergeCompareMap.get(`X:${jbp},Y:${ibp}`);
+                }
+
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
                 const width = xScale.bandwidth();
                 const height = yScale.bandwidth();
-        
-                context.fillStyle = !hasData(ibp, jbp, cell_line) ? 'white' : ((fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+
+                if (dataPoint) {
+                    const { fq, fdr, rawc } = dataPoint;
+                    context.fillStyle = (fdr > 0.05 || (fdr === -1 && rawc === -1)) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+                } else {
+                    context.fillStyle = 'white';
+                }
+
                 context.fillRect(x, y, width, height);
             });
         });
