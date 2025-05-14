@@ -464,7 +464,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                         </Tooltip>
                         {!comparisonHeatmapId && (
                             <Tooltip
-                                title="Merge the heatmap with the two selected cell lines"
+                                title="FoldRec interactions pairwise comparison"
                                 color='white'
                                 overlayInnerStyle={{
                                     color: 'black'
