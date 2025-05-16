@@ -67,7 +67,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
 
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 0, bottom: 45, left: 60 };
+        const margin = { top: 45, right: 0, bottom: 60, left: 70 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
@@ -240,7 +240,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
         
         axisSvg.append('text')
             .attr('x', margin.left + width / 2)
-            .attr('y', margin.top + height + 40)
+            .attr('y', margin.top + height + 50)
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
