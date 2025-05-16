@@ -1131,11 +1131,9 @@ function App() {
                     tabBarExtraContent={
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                         <div style={{ fontSize: 11, fontWeight: 'bold', marginRight: 5, display: 'flex', alignItems: 'center' }}>
-                          {/* <span style={{ marginRight: 5, lineHeight: 'normal' }}>Cell Line:</span> */}
                           <span style={{ lineHeight: 'normal' }}>{cellLineDict[chromosome3DCellLineName]}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
-                          {/* <span style={{ fontSize: 12, fontWeight: 'bold', marginRight: 5, lineHeight: 'normal' }}>New Sample: </span> */}
                           <Tooltip
                             title="Add a new sample ID"
                             color='white'
@@ -1261,6 +1259,7 @@ function App() {
                           <Select
                             value={comparisonCellLine}
                             style={{
+                              minWidth: 150,
                               maxWidth: 150,
                               marginRight: 5,
                             }}
