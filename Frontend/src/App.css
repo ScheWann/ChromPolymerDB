@@ -27,6 +27,7 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
+  position: relative;
 }
 
 .controlGroupText {
@@ -39,6 +40,24 @@ body {
   justify-content: center;
   align-items: center;
   gap: 10px;
+}
+
+.inputGroupContentinLargeScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 1800px) {
+  .inputGroupContentinLargeScreen {
+    position: static;
+    transform: none;
+  }
 }
 
 .chromosomeBarColorLegend {

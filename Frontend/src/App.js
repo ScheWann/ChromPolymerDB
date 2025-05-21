@@ -921,14 +921,14 @@ function App() {
         <div className="controlGroup">
           <Title
             level={5}
-            style={{ color: '#1890ff', textAlign: 'center', margin: "0px 0px 0px 10px", cursor: 'pointer' }}
+            style={{ color: '#1890ff', textAlign: 'center', margin: "0px 0px 0px 10px", zIndex: 10, cursor: 'pointer' }}
             onClick={returnIntroPage}
           >
             <ExperimentOutlined /> ChromPolymerDB
           </Title>
           <div
             className="switchWrapper"
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', zIndex: 10, marginLeft: '10px' }}
           >
             <Switch
               checkedChildren="Cell Line"
@@ -955,100 +955,104 @@ function App() {
           </div>
 
           <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow >
-            <Button size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10 }} />
+            <Button size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10, zIndex: 10 }} />
           </Dropdown>
 
           {isCellLineMode ? (
-            <div className='inputGroup'>
-              <span className="controlGroupText">Cell Line:</span>
-              <Select
-                value={cellLineName}
-                size="small"
-                style={{
-                  width: "18%"
-                }}
-                onChange={cellLineChange}
-                options={cellLineList}
-              />
-              <span className="controlGroupText">Chromosome:</span>
-              <Select
-                value={chromosomeName}
-                size="small"
-                style={{
-                  width: "10%"
-                }}
-                onChange={chromosomeChange}
-                options={chromosList}
-              />
-              <span className="controlGroupText">Sequences:</span>
-              <Input size="small" style={{ width: "8%" }} placeholder="Start" onBlur={(e) => chromosomeSequenceChange('start', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
-              <span className="controlGroupText">~</span>
-              <Input size="small" style={{ width: "8%" }} placeholder="End" onBlur={(e) => chromosomeSequenceChange('end', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
-              <Tooltip
-                title="Add a new heatmap"
-                color='white'
-                overlayInnerStyle={{
-                  color: 'black'
-                }}>
-                <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
-              </Tooltip>
-              <Tooltip
-                title="View non-random chromosomal interactions as heatmap"
-                color='white'
-                overlayInnerStyle={{
-                  color: 'black'
-                }}>
-                <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
-              </Tooltip>
+            <div className="inputGroup">
+              <div className="inputGroupContentinLargeScreen">
+                <span className="controlGroupText">Cell Line:</span>
+                <Select
+                  value={cellLineName}
+                  size="small"
+                  style={{
+                    width: "15%"
+                  }}
+                  onChange={cellLineChange}
+                  options={cellLineList}
+                />
+                <span className="controlGroupText">Chromosome:</span>
+                <Select
+                  value={chromosomeName}
+                  size="small"
+                  style={{
+                    width: "10%"
+                  }}
+                  onChange={chromosomeChange}
+                  options={chromosList}
+                />
+                <span className="controlGroupText">Sequences:</span>
+                <Input size="small" style={{ width: "8%" }} placeholder="Start" onBlur={(e) => chromosomeSequenceChange('start', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
+                <span className="controlGroupText">~</span>
+                <Input size="small" style={{ width: "8%" }} placeholder="End" onBlur={(e) => chromosomeSequenceChange('end', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
+                <Tooltip
+                  title="Add a new heatmap"
+                  color='white'
+                  overlayInnerStyle={{
+                    color: 'black'
+                  }}>
+                  <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+                </Tooltip>
+                <Tooltip
+                  title="View non-random chromosomal interactions as heatmap"
+                  color='white'
+                  overlayInnerStyle={{
+                    color: 'black'
+                  }}>
+                  <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
+                </Tooltip>
+              </div>
             </div>
           ) : (
-            <div className='inputGroup'>
-              <span className="controlGroupText">Cell Line:</span>
-              <Select
-                value={cellLineName}
-                size="small"
-                style={{
-                  width: "18%",
-                  marginRight: 20,
-                }}
-                onChange={cellLineChange}
-                options={cellLineList}
-              />
-              <span className="controlGroupText">Gene:</span>
-              <Select
-                showSearch
-                value={geneName}
-                size="small"
-                style={{
-                  width: "10%",
-                  marginRight: 20,
-                }}
-                onChange={geneNameChange}
-                onSearch={geneNameSearch}
-                options={geneNameList}
-              />
-              <Tooltip
-                title="Add a new heatmap"
-                color='white'
-                overlayInnerStyle={{
-                  color: 'black'
-                }}>
-                <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
-              </Tooltip>
-              <Tooltip
-                title="View non-random chromosomal interactions as heatmap"
-                color='white'
-                overlayInnerStyle={{
-                  color: 'black'
-                }}>
-                <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
-              </Tooltip>
+            <div className="inputGroup">
+              <div className="inputGroupContentinLargeScreen">
+                <span className="controlGroupText">Cell Line:</span>
+                <Select
+                  value={cellLineName}
+                  size="small"
+                  style={{
+                    width: "18%",
+                    marginRight: 20,
+                  }}
+                  onChange={cellLineChange}
+                  options={cellLineList}
+                />
+                <span className="controlGroupText">Gene:</span>
+                <Select
+                  showSearch
+                  value={geneName}
+                  size="small"
+                  style={{
+                    width: "10%",
+                    marginRight: 20,
+                  }}
+                  onChange={geneNameChange}
+                  onSearch={geneNameSearch}
+                  options={geneNameList}
+                />
+                <Tooltip
+                  title="Add a new heatmap"
+                  color='white'
+                  overlayInnerStyle={{
+                    color: 'black'
+                  }}>
+                  <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
+                </Tooltip>
+                <Tooltip
+                  title="View non-random chromosomal interactions as heatmap"
+                  color='white'
+                  overlayInnerStyle={{
+                    color: 'black'
+                  }}>
+                  <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
+                </Tooltip>
+              </div>
             </div>
           )}
 
-          <div className='chromosomeBarColorLegend'>
+          <div className="chromosomeBarColorLegend">
             <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-              <div className='chromosomeBarColorRect' style={{ backgroundColor: "#74C365" }}></div>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#74C365" }}></div>
               <span>Available regions</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
@@ -1072,7 +1076,7 @@ function App() {
       </div>
 
       {/* main content part */}
-      <div className='content'>
+      <div className="content">
         {/* project introduction */}
         {!heatmapLoading &&
           chromosomeData.length === 0 &&

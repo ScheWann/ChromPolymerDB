@@ -136,7 +136,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                             >
                                 <GithubOutlined
                                     style={{
-                                        fontSize: '30px',
+                                        fontSize: '28px',
                                         color: '#333',
                                         transition: 'color 0.3s'
                                     }}
