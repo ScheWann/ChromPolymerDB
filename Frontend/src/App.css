@@ -44,9 +44,10 @@ body {
 
 .inputGroupContentinLargeScreen {
   display: flex;
+  flex: 1;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
   width: 100%;
   position: absolute;
   left: 50%;
