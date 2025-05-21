@@ -19,21 +19,10 @@ const antColors = [
     '#eb2f96'  // pink
 ];
 
-const exampleDataItems = [
-    {
-        key: 'GM',
-        label: 'GM12878-Chr8-127300000-128300000',
-    },
-    {
-        key: 'IMR',
-        label: 'IMR90-Chr8-127300000-128300000',
-    }
-]
-
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSelectedChromosomeSequence }) => {
+export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence }) => {
     const chartRef = useRef(null);
 
     useEffect(() => {

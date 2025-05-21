@@ -5,7 +5,7 @@ import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './Chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
-import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined, FolderViewOutlined } from "@ant-design/icons";
 
 
 function App() {
@@ -36,6 +36,16 @@ function App() {
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
   const [distributionData, setDistributionData] = useState({});
   const [tempSampleId, setTempSampleId] = useState(null);
+  const [exampleDataItems, setExampleDataItems] = useState([
+    {
+      key: 'GM',
+      label: 'GM12878-Chr8-127300000-128300000',
+    },
+    {
+      key: 'IMR',
+      label: 'IMR90-Chr8-127300000-128300000',
+    }
+  ])
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
 
   const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223 }); // Example data best sample ID
@@ -657,6 +667,18 @@ function App() {
     },
   ]
 
+  const onClickExampleDataItem = ({ key }) => {
+    if (key === 'GM') {
+      setCellLineName('GM');
+    }
+
+    if (key === 'IMR') {
+      setCellLineName('IMR');
+    }
+    setChromosomeName('chr8');
+    setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
+  }
+
   const onClickOriginalDownloadItems = ({ key }) => {
     if (key === '1') {
       downloadDistance(false);
@@ -897,17 +919,17 @@ function App() {
       {/* Header Section */}
       <div className="controlHeader">
         <div className="controlGroup">
+          <Title
+            level={5}
+            style={{ color: '#1890ff', textAlign: 'center', margin: "0px 0px 0px 10px", cursor: 'pointer' }}
+            onClick={returnIntroPage}
+          >
+            <ExperimentOutlined /> ChromPolymerDB
+          </Title>
           <div
             className="switchWrapper"
             style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px' }}
           >
-            <Title
-              level={5}
-              style={{ color: '#1890ff', textAlign: 'center', margin: "0px 10px 0px 0px", cursor: 'pointer' }}
-              onClick={returnIntroPage}
-            >
-              <ExperimentOutlined /> ChromPolymerDB
-            </Title>
             <Switch
               checkedChildren="Cell Line"
               unCheckedChildren="Gene"
@@ -931,6 +953,10 @@ function App() {
               />
             </Tooltip>
           </div>
+
+          <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow >
+            <Button size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10 }} />
+          </Dropdown>
 
           {isCellLineMode ? (
             <div className='inputGroup'>
@@ -1053,6 +1079,7 @@ function App() {
           Object.keys(chromosome3DExampleData).length === 0 && (
             <div style={{ width: '100%', height: '100%', overflowY: 'scroll' }}>
               <ProjectIntroduction
+                exampleDataItems={exampleDataItems}
                 setCellLineName={setCellLineName}
                 setChromosomeName={setChromosomeName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
