@@ -966,7 +966,7 @@ function App() {
                   value={cellLineName}
                   size="small"
                   style={{
-                    width: "15%"
+                    width: "18%"
                   }}
                   onChange={cellLineChange}
                   options={cellLineList}
@@ -1011,8 +1011,7 @@ function App() {
                   value={cellLineName}
                   size="small"
                   style={{
-                    width: "18%",
-                    marginRight: 20,
+                    width: "18%"
                   }}
                   onChange={cellLineChange}
                   options={cellLineList}
@@ -1023,8 +1022,7 @@ function App() {
                   value={geneName}
                   size="small"
                   style={{
-                    width: "10%",
-                    marginRight: 20,
+                    width: "10%"
                   }}
                   onChange={geneNameChange}
                   onSearch={geneNameSearch}
