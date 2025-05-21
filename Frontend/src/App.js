@@ -626,6 +626,25 @@ function App() {
     setComparisonHeatmapList((prev) => prev.filter((i) => i !== index));
   };
 
+  // return to introduction page
+  const returnIntroPage = () => {
+    setCellLineName(null);
+    setChromosomeName(null);
+    setChromosomeSize({ start: 0, end: 0 });
+    setSelectedChromosomeSequence({ start: 0, end: 0 });
+    setChromosomeData([]);
+    setChromosome3DExampleData({});
+    setComparisonCellLine3DData({});
+    setComparisonCellLine(null);
+    setComparisonCellLine3DSampleID(0);
+    setComparisonCellLine3DLoading(false);
+    setChromosome3DExampleID(0);
+    setChromosome3DLoading(false);
+    setHeatmapLoading(false);
+    setGeneName(null);
+    setGeneSize({ start: 0, end: 0 });
+    setGeneList([]);
+  }
 
   const downloadItems = [
     {
@@ -884,7 +903,8 @@ function App() {
           >
             <Title
               level={5}
-              style={{ color: '#1890ff', textAlign: 'center', margin: "0px 10px 0px 0px" }}
+              style={{ color: '#1890ff', textAlign: 'center', margin: "0px 10px 0px 0px", cursor: 'pointer' }}
+              onClick={returnIntroPage}
             >
               <ExperimentOutlined /> ChromPolymerDB
             </Title>
