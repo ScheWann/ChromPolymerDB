@@ -76,10 +76,9 @@ function App() {
       target: () => document.querySelector(".switchWrapper"),
     },
     {
-      title: "Tooltip Icon",
-      description: "Hover over this icon for more information about the toggle switch.",
-      target: () => document.querySelector("#info-tooltip"),
-      placement: "right",
+      title: "Example Data",
+      description: "Click here to load example data.",
+      target: () => document.querySelector(".exampleData"),
     },
     {
       title: "Cell Line Selector",
@@ -955,7 +954,7 @@ function App() {
           </div>
 
           <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow >
-            <Button size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10, zIndex: 10 }} />
+            <Button className='exampleData' size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10, zIndex: 10 }} />
           </Dropdown>
 
           {isCellLineMode ? (
