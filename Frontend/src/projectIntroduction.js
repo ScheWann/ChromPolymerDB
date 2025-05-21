@@ -126,26 +126,35 @@ export const ProjectIntroduction = ({ setCellLineName, setChromosomeName, setSel
 
             <Card
                 title={
-                    <div style={{ width: '100%', textAlign: 'center', position: 'relative' }}>
-                        <Title level={4} style={{ margin: 0 }}>
+                    <div style={{ width: '100%', textAlign: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <Title
+                            level={4}
+                            style={{
+                                margin: 0,
+                                position: 'absolute',
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translateX(-50%) translateY(-50%)'
+                            }}>
                             Introduction
                         </Title>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                            <span style={{ fontWeight: 'bold' }}>Tutorial: </span>
+                            <a
+                                href="https://github.com/ldu3/ChromPolymerDB_tutorial"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <GithubOutlined
+                                    style={{
+                                        fontSize: '30px',
+                                        color: '#333',
+                                        transition: 'color 0.3s'
+                                    }}
+                                />
+                            </a>
+                        </div>
                     </div>
-                }
-                extra={
-                    <a
-                        href="https://github.com/ldu3/ChromPolymerDB_tutorial"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <GithubOutlined
-                            style={{
-                                fontSize: '20px',
-                                color: '#333',
-                                transition: 'color 0.3s'
-                            }}
-                        />
-                    </a>
                 }
                 style={{ width: '100%', marginBottom: 16 }}
                 header={{ padding: '0 24px', background: '#fff' }}
