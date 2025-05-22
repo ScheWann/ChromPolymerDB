@@ -8,7 +8,7 @@ import re
 import tempfile
 import subprocess
 from psycopg2.extras import RealDictCursor
-from psycopg2 import sql
+from psycopg2 import pool
 import pyarrow.parquet as pq
 import pyarrow.csv as pv
 from itertools import combinations
@@ -27,18 +27,21 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 
+conn_pool = pool.ThreadedConnectionPool(minconn=1, maxconn=20,
+    host=DB_HOST, dbname=DB_NAME, user=DB_USERNAME, password=DB_PASSWORD, cursor_factory=RealDictCursor)
+
+
 """
 Establish a connection to the database.
 """
 def get_db_connection():
-    conn = psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USERNAME,
-        password=DB_PASSWORD,
-        cursor_factory=RealDictCursor,
-    )
-    return conn
+    return conn_pool.getconn()
+
+"""
+Release the database connection back to the pool.
+"""
+def release_db_connection(conn):
+    conn_pool.putconn(conn)
 
 
 """
@@ -285,11 +288,23 @@ Returns the existing 3D chromosome data in the given cell line, chromosome name,
 """
 def exist_chromosome_3d_data(cell_line, sample_id):
     if cell_line == "IMR":
-        position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
-        distance_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_distance.csv')
+        # position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
+        # distance_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_distance.csv')
+
+        # position_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_original_position.parquet')
+        # distance_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_original_distance.parquet')
+
+        position_df = pd.read_feather('./example_data/IMR_chr8_127300000_128300000_original_position.feather')
+        distance_df = pd.read_feather('./example_data/IMR_chr8_127300000_128300000_original_distance.feather')
     if cell_line == "GM":
-        position_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_position.csv')
-        distance_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_distance.csv')
+        # position_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_position.csv')
+        # distance_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_distance.csv')
+
+        # position_df = pd.read_parquet('./example_data/GM_chr8_127300000_128300000_original_position.parquet')
+        # distance_df = pd.read_parquet('./example_data/GM_chr8_127300000_128300000_original_distance.parquet')
+
+        position_df = pd.read_feather('./example_data/GM_chr8_127300000_128300000_original_position.feather')
+        distance_df = pd.read_feather('./example_data/GM_chr8_127300000_128300000_original_distance.feather')
     best_sample_id = sample_id
 
     def get_position_data():
@@ -354,6 +369,7 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             "position_data": get_position_data(),
             "avg_distance_data": get_avg_distance_data(),
             "fq_data": get_fq_data(),
+            # "format": detect_csv_or_parquet('./example_data/GM_chr8_127300000_128300000_original_distance.csv'),
             "sample_distance_vector": get_distance_vector_by_sample()
         }
 
