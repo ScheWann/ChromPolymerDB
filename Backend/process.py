@@ -16,7 +16,11 @@ import math
 from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr
 from dotenv import load_dotenv
+from time import time
+import pyarrow.feather as feather
+from concurrent.futures import ThreadPoolExecutor
 
+# pa.set_cpu_count(4)
 load_dotenv()
 
 DB_NAME = os.getenv("DB_NAME")
@@ -275,95 +279,72 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 
     return ibp_values
 
+
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
 def exist_chromosome_3d_data(cell_line, sample_id):
+    def read_feather_pa(path):
+        return feather.read_table(path, memory_map=True).to_pandas()
+
     if cell_line == "IMR":
-        # position_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_position.csv')
-        # distance_df = pd.read_csv('./example_data/IMR_chr8_127300000_128300000_original_distance.csv')
+        pos_path = "./example_data/IMR_chr8_127300000_128300000_original_position.feather"
+        dist_path = "./example_data/IMR_chr8_127300000_128300000_original_distance.feather"
 
-        # position_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_original_position.parquet')
-        # distance_df = pd.read_parquet('./example_data/IMR_chr8_127300000_128300000_original_distance.parquet')
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            fut_pos  = pool.submit(read_feather_pa, pos_path)
+            fut_dist = pool.submit(read_feather_pa, dist_path)
 
-        position_df = pd.read_feather('./example_data/IMR_chr8_127300000_128300000_original_position.feather')
-        distance_df = pd.read_feather('./example_data/IMR_chr8_127300000_128300000_original_distance.feather')
+        position_df = fut_pos.result()
+        distance_df = fut_dist.result()
+    
     if cell_line == "GM":
-        # position_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_position.csv')
-        # distance_df = pd.read_csv('./example_data/GM_chr8_127300000_128300000_original_distance.csv')
+        pos_path = "./example_data/GM_chr8_127300000_128300000_original_position.feather"
+        dist_path = "./example_data/GM_chr8_127300000_128300000_original_distance.feather"
 
-        # position_df = pd.read_parquet('./example_data/GM_chr8_127300000_128300000_original_position.parquet')
-        # distance_df = pd.read_parquet('./example_data/GM_chr8_127300000_128300000_original_distance.parquet')
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            fut_pos  = pool.submit(read_feather_pa, pos_path)
+            fut_dist = pool.submit(read_feather_pa, dist_path)
 
-        position_df = pd.read_feather('./example_data/GM_chr8_127300000_128300000_original_position.feather')
-        distance_df = pd.read_feather('./example_data/GM_chr8_127300000_128300000_original_distance.feather')
+        position_df = fut_pos.result()
+        distance_df = fut_dist.result()
+
     best_sample_id = sample_id
 
     def get_position_data():
-        position_df_filtered = position_df[position_df['sampleid'] == best_sample_id]
-        return position_df_filtered.to_dict(orient='records')
+        records = position_df[position_df['sampleid'] == best_sample_id].to_dict(orient='records')
+
+        return records
     
     def get_fq_data():
-        # Ensure the distance_vector is a string before applying strip
-        distance_df['distance_vector'] = distance_df['distance_vector'].apply(
-            lambda x: np.fromstring(str(x).strip('{}'), sep=',') if isinstance(x, str) else x
-        )
-
-        # Initialize binary vectors and sum vector
-        first_vector = np.array(distance_df['distance_vector'][0], dtype=float)
-        binary_vector = np.where(first_vector <= 80, 1, 0)
-        sum_vector = binary_vector.copy()
-
-        # Loop through remaining rows and apply the same processing
-        for _, row in distance_df.iloc[1:].iterrows():
-            vector = np.array(row['distance_vector'], dtype=float)
-            binary_vector = np.where(vector <= 80, 1, 0)
-            sum_vector += binary_vector
-        
-        # Calculate the average vector
-        count = len(distance_df)
-        avg_vector = sum_vector / count
-
-        # Convert to distance matrix (assuming this is intended to be a 1D vector)
-        full_distance_matrix = squareform(avg_vector)
-        
-        # Convert to list and return
-        avg_distance_matrix = full_distance_matrix.tolist()
-        
-        return avg_distance_matrix
+        if cell_line == "IMR":
+            full_distance_matrix = np.load("./example_data/IMR_chr8_127300000_128300000_fq_matrix.npy")
+            return full_distance_matrix.tolist()
+        if cell_line == "GM":
+            full_distance_matrix = np.load("./example_data/GM_chr8_127300000_128300000_fq_matrix.npy")
+            return full_distance_matrix.tolist()
 
     def get_avg_distance_data():
-        # Ensure the distance_vector is a string before applying strip
-        distance_df['distance_vector'] = distance_df['distance_vector'].apply(
-            lambda x: np.fromstring(str(x).strip('{}'), sep=',') if isinstance(x, str) else x
-        )
-
-        # Convert all vectors at once for efficiency
-        vectors = np.array([np.array(row['distance_vector'], dtype=float) for _, row in distance_df.iterrows()])
-        
-        # Compute the average vector
-        avg_vector = np.mean(vectors, axis=0)
-        
-        # Convert the upper triangular distance vector to a full matrix
-        avg_distance_matrix = squareform(avg_vector).tolist()
-        
-        return avg_distance_matrix
+        if cell_line == "IMR":
+            full_distance_matrix = np.load("./example_data/IMR_chr8_127300000_128300000_avg_distance_matrix.npy")
+            return full_distance_matrix.tolist()
+        if cell_line == "GM":
+            full_distance_matrix = np.load("./example_data/GM_chr8_127300000_128300000_avg_distance_matrix.npy")
+            return full_distance_matrix.tolist()
 
     def get_distance_vector_by_sample():
-        row = distance_df.iloc[best_sample_id]
-        distance_vector = row['distance_vector']
-        
-        full_distance_matrix = squareform(np.array(distance_vector, dtype=float))
+        vec = np.array(distance_df['distance_vector'].iloc[best_sample_id], dtype=float)
+        mat = squareform(vec).tolist()
 
-        return full_distance_matrix.tolist()
+        return mat
 
     return {
             "position_data": get_position_data(),
             "avg_distance_data": get_avg_distance_data(),
             "fq_data": get_fq_data(),
-            # "format": detect_csv_or_parquet('./example_data/GM_chr8_127300000_128300000_original_distance.csv'),
             "sample_distance_vector": get_distance_vector_by_sample()
         }
+
 
 """
 Returns the example 3D chromosome data in the given cell line, chromosome name, start, end
@@ -389,7 +370,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             SELECT EXISTS (
                 SELECT 1
                 FROM position
-                WHERE chrid       = %s
+                WHERE chrid     = %s
                 AND cell_line   = %s
                 AND start_value = %s
                 AND end_value   = %s
@@ -399,7 +380,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             SELECT EXISTS (
                 SELECT 1
                 FROM distance
-                WHERE cell_line   = %s
+                WHERE cell_line = %s
                 AND chrid       = %s
                 AND start_value = %s
                 AND end_value   = %s
@@ -426,19 +407,41 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(distance_exists)
         }
 
+    def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32):
+        vectors = []
+        with db_conn() as conn:
+            cur = conn.cursor()
+            # cur.itersize = itersize
+            cur.execute(
+                """
+                    SELECT distance_vector
+                    FROM distance
+                    WHERE cell_line = %s
+                    AND chrid       = %s
+                    AND start_value = %s
+                    AND end_value   = %s
+                    ORDER BY sampleid
+                """,
+                (cell_line, chromosome_name, sequences["start"], sequences["end"])
+            )
+            rows = cur.fetchall()
+            vectors = np.array([r["distance_vector"] for r in rows], dtype=dtype)
+        
+        return vectors
+
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         with db_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT *
-                    FROM position
-                    WHERE chrid = %s
-                    AND cell_line = %s
-                    AND start_value = %s
-                    AND end_value = %s
-                    AND sampleid = %s
-                """,
+                        SELECT *
+                        FROM position
+                        WHERE chrid = %s
+                        AND cell_line = %s
+                        AND start_value = %s
+                        AND end_value = %s
+                        AND sampleid = %s
+                    """,
                     (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
                 )
                 data = cur.fetchall()
@@ -446,131 +449,62 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         return data
 
     # Get the average distance data of 5000 chain samples
-    def get_avg_distance_data(chromosome_name, cell_line, sequences):
-        with db_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT distance_vector
-                    FROM distance
-                    WHERE cell_line = %s
-                    AND chrid = %s
-                    AND start_value = %s
-                    AND end_value = %s
-                """,
-                    (cell_line, chromosome_name, sequences["start"], sequences["end"]),
-                )
-
-                rows = cur.fetchall()
-
-        if not rows:
-            return []
-
-        # Convert all vectors at once for efficiency
-        vectors = np.array([np.array(row["distance_vector"], dtype=float) for row in rows])
+    def get_avg_distance_data(vectors):
+        vectors = np.array(vectors)
         avg_vector = np.mean(vectors, axis=0)
-        
-        # Convert the upper triangular distance vector to a full matrix
-        avg_distance_matrix = squareform(avg_vector).tolist()
-        
-        return avg_distance_matrix
+        matrix_list = squareform(avg_vector).tolist()
 
-    def get_fq_data(chromosome_name, cell_line, sequences):
-        with db_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT distance_vector
-                    FROM distance
-                    WHERE cell_line = %s
-                    AND chrid = %s
-                    AND start_value = %s
-                    AND end_value = %s
-                """,
-                    (cell_line, chromosome_name, sequences["start"], sequences["end"]),
-                )
+        return matrix_list
 
-                rows = cur.fetchall()
-
-        first_vector = np.array(rows[0]["distance_vector"], dtype=float)
-        binary_vector = np.where(first_vector <= 80, 1, 0) 
-        sum_vector = binary_vector.copy()
-
-        for row in rows[1:]:
-            vector = np.array(row["distance_vector"], dtype=float)
-            binary_vector = np.where(vector <= 80, 1, 0)
-            sum_vector += binary_vector
-        
-        count = len(rows)
-        avg_vector = sum_vector / count
-
-        full_distance_matrix = squareform(avg_vector)
-        avg_distance_matrix = full_distance_matrix.tolist()
-        
-        return avg_distance_matrix
+    def get_fq_data(vectors):
+        first = vectors[0]
+        sum_vec = (first <= 80).astype(int)
+        for vec in vectors[1:]:
+            sum_vec += (vec <= 80).astype(int)
+        avg = sum_vec / len(vectors)
+        return squareform(avg).tolist()
 
     # Return the most similar chain
-    def get_best_chain_sample():
-        avg_distance_matrix = get_avg_distance_data(chromosome_name, cell_line, sequences)
-        avg_distance_vector = np.array(avg_distance_matrix).flatten()
-
+    def get_best_chain_sample(distance_vectors):
+        """Find the sample whose distance vector best correlates with the average."""
+        avg_mat = get_avg_distance_data(distance_vectors)
+        avg_vec = np.array(avg_mat).flatten()
         best_corr = None
-        best_sample_id = None
-
-        for sample_id in range(5000):
-            sample_distance_matrix = get_distance_vector_by_sample(chromosome_name, cell_line, sample_id, sequences)
-            sample_distance_vector = np.array(sample_distance_matrix).flatten()
-            
-            corr, _ = pearsonr(sample_distance_vector, avg_distance_vector)
-            
+        best_id = None
+        for sid in range(5000):
+            vec = np.array(get_distance_vector_by_sample(distance_vectors, sid)).flatten()
+            corr, _ = pearsonr(vec, avg_vec)
             if best_corr is None or abs(1 - abs(corr)) < abs(1 - abs(best_corr)):
-                best_corr = corr
-                best_sample_id = sample_id
+                best_corr, best_id = corr, sid
+        print(f"[DEBUG] best_corr={best_corr:.4f}")
+        return best_id, avg_mat
 
-        print(best_corr, 'best_corr')
-        return best_sample_id if best_corr is not None else None
+    def get_distance_vector_by_sample(vectors, index):
+        return squareform(vectors[index]).tolist()
 
     existing_data_status = checking_existing_data(chromosome_name, cell_line, sequences)
 
-    def get_distance_vector_by_sample(chromosome_name, cell_line, sampleid, sequences):
-        with db_conn() as conn:
-            with conn.cursor() as cur:
-                query = """
-                    SELECT distance_vector
-                    FROM distance
-                    WHERE cell_line = %s
-                        AND sampleid = %s
-                        AND chrid = %s
-                        AND start_value = %s
-                        AND end_value = %s
-                    LIMIT 1;
-                """
-                cur.execute(query, (cell_line, sampleid, chromosome_name, sequences["start"], sequences["end"]))
-                row = cur.fetchone()
-
-        full_distance_matrix = squareform(row["distance_vector"])
-        avg_distance_matrix = full_distance_matrix.tolist()
-        return avg_distance_matrix
-
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]:
+        distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
+        position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
+        fq_data = get_fq_data(distance_vectors)
+        
         if sample_id == 0:
-            best_sample_id = get_best_chain_sample()
+            best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
             sample_distance_vector = get_distance_vector_by_sample(chromosome_name, cell_line, best_sample_id, sequences)
-
-            return {
-                "position_data": get_position_data(chromosome_name, cell_line, sequences, best_sample_id),
-                "avg_distance_data": get_avg_distance_data(chromosome_name, cell_line, sequences),
-                "fq_data": get_fq_data(chromosome_name, cell_line, sequences),
-                "sample_distance_vector": sample_distance_vector
-            }
+            sid = best_sample_id
         else:
-            sample_distance_vector = get_distance_vector_by_sample(chromosome_name, cell_line, sample_id, sequences)
-            return {
-                "position_data": get_position_data(chromosome_name, cell_line, sequences, sample_id),
-                "avg_distance_data": get_avg_distance_data(chromosome_name, cell_line, sequences),
-                "fq_data": get_fq_data(chromosome_name, cell_line, sequences),
-                "sample_distance_vector": sample_distance_vector
-            }
+            avg_distance_matrix = get_avg_distance_data(distance_vectors)
+            sid = sample_id
+        
+        sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid)
+
+        return {
+            "position_data": position_data,
+            "avg_distance_data": avg_distance_matrix,
+            "fq_data": fq_data,
+            "sample_distance_vector": sample_distance_vector
+        }
     else:
         with db_conn() as conn:
             with conn.cursor() as cur:
@@ -640,26 +574,28 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
             os.remove(custom_file_path)
 
+            distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
+            position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id or 0)
+            fq_data = get_fq_data(distance_vectors)
+            
             if sample_id == 0:
-                best_sample_id = get_best_chain_sample()
-                sample_distance_vector = get_distance_vector_by_sample(chromosome_name, cell_line, best_sample_id, sequences)
-
-                return { 
-                    "position_data": get_position_data(chromosome_name, cell_line, sequences, best_sample_id),
-                    "avg_distance_data": get_avg_distance_data(chromosome_name, cell_line, sequences),
-                    "fq_data": get_fq_data(chromosome_name, cell_line, sequences),
-                    "sample_distance_vector": sample_distance_vector
-                }
+                best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
+                sid = best_sample_id
             else:
-                sample_distance_vector = get_distance_vector_by_sample(chromosome_name, cell_line, sample_id, sequences)
-                return { 
-                    "position_data": get_position_data(chromosome_name, cell_line, sequences, sample_id),
-                    "avg_distance_data": get_avg_distance_data(chromosome_name, cell_line, sequences),
-                    "fq_data": get_fq_data(chromosome_name, cell_line, sequences),
-                    "sample_distance_vector": sample_distance_vector
-                }
+                avg_distance_matrix = get_avg_distance_data(distance_vectors)
+                sid = sample_id
+            
+            sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid)
+
+            return {
+                "position_data": position_data,
+                "avg_distance_data": avg_distance_matrix,
+                "fq_data": fq_data,
+                "sample_distance_vector": sample_distance_vector
+            }
         else:
             return []
+
 
 """
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name

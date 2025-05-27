@@ -25,4 +25,4 @@ RUN chmod +x ./process.py
 RUN chmod +x ./sBIF.sh
 
 EXPOSE 5001
-CMD ["sh", "-c", "python app.py"]
+CMD ["sh", "-c", "python -u app.py"]

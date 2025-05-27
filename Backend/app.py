@@ -1,5 +1,6 @@
 import os
-from flask import Flask, jsonify, request, after_this_request
+import orjson
+from flask import Flask, jsonify, request, after_this_request, Response
 from process import (
     gene_names_list, 
     cell_lines_list, 
@@ -84,7 +85,9 @@ def get_ChromosValidIBPData():
 def get_ExistingChromos3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
-    return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
+    # return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
+    payload = orjson.dumps(exist_chromosome_3d_data(cell_line, sample_id))
+    return Response(payload, content_type='application/json')
 
 
 @app.route('/getExampleChromos3DData', methods=['POST'])
