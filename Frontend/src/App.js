@@ -826,7 +826,11 @@ function App() {
     setChromosome3DExampleID(tempSampleId);
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
     if (!chromosome3DExampleData[cacheKey]) {
-      fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", false);
+      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
+        fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", false);
+      } else {
+        fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, false);
+      }
     }
   }
 
