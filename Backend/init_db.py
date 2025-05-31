@@ -325,6 +325,31 @@ def process_non_random_hic_index(cur):
     print("Index idx_hic_search created successfully.")
 
 
+def process_position_index(cur):
+    """Create indexes on position table for faster search (if they don't exist)."""
+    print("Creating index idx_position_search...")
+    
+    conn = get_db_connection(database=DB_NAME)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT 1 
+        FROM pg_indexes 
+        WHERE indexname = 'idx_position_search' 
+        AND tablename = 'position';
+    """)
+    if cur.fetchone():
+        print("Index idx_position_search already exists. Skipping creation.")
+    else:
+        cur.execute(
+            "CREATE INDEX idx_position_search ON position (cell_line, chrid, start_value, end_value, sampleid);"
+        )
+        print("Index idx_position_search created successfully.")
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 def process_distance_index():
     """Create indexes on distance table for faster search (if they don't exist)."""
     conn = get_db_connection(database=DB_NAME)
@@ -341,7 +366,7 @@ def process_distance_index():
     else:
         print("Creating index idx_distance_search...")
         cur.execute(
-            "CREATE INDEX idx_distance_search ON distance (cell_line, chrid, start_value, end_value);"
+            "CREATE INDEX idx_distance_search ON distance (cell_line, chrid, start_value, end_value, sampleid);"
         )
         print("Index idx_distance_search created successfully.")
     
@@ -474,6 +499,7 @@ def process_example_distance_data(cur):
 
 
 initialize_tables()
+process_position_index()
 process_distance_index()
 insert_data()
 insert_non_random_HiC_data()

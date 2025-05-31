@@ -20,7 +20,6 @@ from time import time
 import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
 
-# pa.set_cpu_count(4)
 load_dotenv()
 
 DB_NAME = os.getenv("DB_NAME")
@@ -29,16 +28,20 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 
-conn_pool = pool.ThreadedConnectionPool(minconn=1, maxconn=20,
-    host=DB_HOST, dbname=DB_NAME, user=DB_USERNAME, password=DB_PASSWORD, cursor_factory=RealDictCursor)
+conn_pool = pool.ThreadedConnectionPool(
+    minconn=1, 
+    maxconn=20, 
+    host=DB_HOST, 
+    dbname=DB_NAME, 
+    user=DB_USERNAME, 
+    password=DB_PASSWORD,
+    cursor_factory=RealDictCursor
+)
 
 
 """
-Establish a connection to the database.
+Establish a connection pool to the database.
 """
-# def get_db_connection():
-#     return conn_pool.getconn()
-
 @contextmanager
 def db_conn():
     conn = conn_pool.getconn()
@@ -46,12 +49,6 @@ def db_conn():
         yield conn
     finally:
         conn_pool.putconn(conn)
-
-"""
-Release the database connection back to the pool.
-"""
-# def release_db_connection(conn):
-#     conn_pool.putconn(conn)
 
 
 """
@@ -366,60 +363,50 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     # Check if the data already exists in the database
     def checking_existing_data(chromosome_name, cell_line, sequences):
-        query_position = """
-            SELECT EXISTS (
-                SELECT 1
-                FROM position
-                WHERE chrid     = %s
-                AND cell_line   = %s
-                AND start_value = %s
-                AND end_value   = %s
-            );
+        sql = """
+            SELECT
+                EXISTS(
+                    SELECT 1 FROM position
+                    WHERE chrid     = %s
+                    AND cell_line   = %s
+                    AND start_value = %s
+                    AND end_value   = %s
+                ) AS position_exists,
+                EXISTS(
+                    SELECT 1 FROM distance
+                    WHERE cell_line = %s
+                    AND chrid       = %s
+                    AND start_value = %s
+                    AND end_value   = %s
+                ) AS distance_exists;
         """
-        query_distance = """
-            SELECT EXISTS (
-                SELECT 1
-                FROM distance
-                WHERE cell_line = %s
-                AND chrid       = %s
-                AND start_value = %s
-                AND end_value   = %s
-                LIMIT 1
-            );
-        """
+        params = (
+            chromosome_name, cell_line, sequences["start"], sequences["end"],
+            cell_line, chromosome_name, sequences["start"], sequences["end"],
+        )
 
         with db_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    query_position,
-                    (chromosome_name, cell_line, sequences["start"], sequences["end"])
-                )
-                position_exists = cur.fetchone()["exists"]
-
-                cur.execute(
-                    query_distance,
-                    (cell_line, chromosome_name, sequences["start"], sequences["end"])
-                )
-                distance_exists = cur.fetchone()["exists"]
+                cur.execute(sql, params)
+                pos_exists, dist_exists = cur.fetchone()
 
         return {
-            "position_exists": bool(position_exists),
-            "distance_exists": bool(distance_exists)
+            "position_exists": bool(pos_exists),
+            "distance_exists": bool(dist_exists)
         }
 
     def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32):
         vectors = []
         with db_conn() as conn:
             cur = conn.cursor()
-            # cur.itersize = itersize
             cur.execute(
                 """
                     SELECT distance_vector
                     FROM distance
                     WHERE cell_line = %s
-                    AND chrid       = %s
-                    AND start_value = %s
-                    AND end_value   = %s
+                        AND chrid = %s
+                        AND start_value = %s
+                        AND end_value = %s
                     ORDER BY sampleid
                 """,
                 (cell_line, chromosome_name, sequences["start"], sequences["end"])
@@ -453,7 +440,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         vectors = np.array(vectors)
         avg_vector = np.mean(vectors, axis=0)
         matrix_list = squareform(avg_vector).tolist()
-
         return matrix_list
 
     def get_fq_data(vectors):
@@ -482,7 +468,10 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     def get_distance_vector_by_sample(vectors, index):
         return squareform(vectors[index]).tolist()
 
+    t1 = time()
     existing_data_status = checking_existing_data(chromosome_name, cell_line, sequences)
+    t2 = time()
+    print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
 
     if existing_data_status["position_exists"] and existing_data_status["distance_exists"]:
         distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
@@ -491,8 +480,8 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         
         if sample_id == 0:
             best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
-            sample_distance_vector = get_distance_vector_by_sample(chromosome_name, cell_line, best_sample_id, sequences)
             sid = best_sample_id
+            sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid)
         else:
             avg_distance_matrix = get_avg_distance_data(distance_vectors)
             sid = sample_id
@@ -506,6 +495,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "sample_distance_vector": sample_distance_vector
         }
     else:
+        t3 = time()
         with db_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -529,8 +519,10 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                     ),
                 )
                 original_data = cur.fetchall()
-
+        t4 = time()
+        print(f"[DEBUG] Fetching original data took {t4 - t3:.4f} seconds")
         if original_data:
+            t5 = time()
             original_df = pd.DataFrame(
                 original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"]
             )
@@ -554,7 +546,9 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             # Write the file to the custom path
             with open(custom_file_path, "w") as temp_file:
                 temp_file.write(txt_data)
-
+            t6 = time()
+            print(f"[DEBUG] Writing folding input file took {t6 - t5:.4f} seconds")
+            t7 = time()
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
@@ -571,15 +565,29 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 text=True,
                 check=True,
             )
-
+            t8 = time()
+            print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             os.remove(custom_file_path)
 
+            t9 = time()
             distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
+            t10 = time()
+            print(f"[DEBUG] Fetching distance vectors took {t10 - t9:.4f} seconds")
+
+            t11 = time()
             position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id or 0)
+            t12 = time()
+            print(f"[DEBUG] Fetching position data took {t12 - t11:.4f} seconds")
+            t13 = time()
             fq_data = get_fq_data(distance_vectors)
+            t14 = time()
+            print(f"[DEBUG] Fetching fq data took {t14 - t13:.4f} seconds")
             
             if sample_id == 0:
+                t15 = time()
                 best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
+                t16 = time()
+                print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
                 sid = best_sample_id
             else:
                 avg_distance_matrix = get_avg_distance_data(distance_vectors)
