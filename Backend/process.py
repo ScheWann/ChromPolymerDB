@@ -7,8 +7,6 @@ import os
 import re
 import tempfile
 import subprocess
-# from psycopg2.extras import RealDictCursor
-# from psycopg2 import pool
 import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
@@ -31,15 +29,6 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 
-# conn_pool = pool.ThreadedConnectionPool(
-#     minconn=1, 
-#     maxconn=20, 
-#     host=DB_HOST, 
-#     dbname=DB_NAME, 
-#     user=DB_USERNAME, 
-#     password=DB_PASSWORD,
-#     cursor_factory=RealDictCursor
-# )
 conn_pool = ConnectionPool(
     conninfo=f"host={DB_HOST} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
     min_size=1,
@@ -50,13 +39,6 @@ conn_pool = ConnectionPool(
 """
 Establish a connection pool to the database.
 """
-# @contextmanager
-# def db_conn():
-#     conn = conn_pool.getconn()
-#     try:
-#         yield conn
-#     finally:
-#         conn_pool.putconn(conn)
 @contextmanager
 def db_conn():
     with conn_pool.connection() as conn:
