@@ -7,8 +7,11 @@ import os
 import re
 import tempfile
 import subprocess
-from psycopg2.extras import RealDictCursor
-from psycopg2 import pool
+# from psycopg2.extras import RealDictCursor
+# from psycopg2 import pool
+import psycopg
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 import pyarrow.parquet as pq
 import pyarrow.csv as pv
 from itertools import combinations
@@ -28,27 +31,36 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 
-conn_pool = pool.ThreadedConnectionPool(
-    minconn=1, 
-    maxconn=20, 
-    host=DB_HOST, 
-    dbname=DB_NAME, 
-    user=DB_USERNAME, 
-    password=DB_PASSWORD,
-    cursor_factory=RealDictCursor
+# conn_pool = pool.ThreadedConnectionPool(
+#     minconn=1, 
+#     maxconn=20, 
+#     host=DB_HOST, 
+#     dbname=DB_NAME, 
+#     user=DB_USERNAME, 
+#     password=DB_PASSWORD,
+#     cursor_factory=RealDictCursor
+# )
+conn_pool = ConnectionPool(
+    conninfo=f"host={DB_HOST} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
+    min_size=1,
+    max_size=20,
 )
 
 
 """
 Establish a connection pool to the database.
 """
+# @contextmanager
+# def db_conn():
+#     conn = conn_pool.getconn()
+#     try:
+#         yield conn
+#     finally:
+#         conn_pool.putconn(conn)
 @contextmanager
 def db_conn():
-    conn = conn_pool.getconn()
-    try:
+    with conn_pool.connection() as conn:
         yield conn
-    finally:
-        conn_pool.putconn(conn)
 
 
 """
@@ -56,7 +68,7 @@ Return the list of genes
 """
 def gene_names_list():
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT symbol
@@ -75,7 +87,7 @@ Return the gene name list in searching specific letters
 """
 def gene_names_list_search(search):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT symbol
@@ -95,7 +107,7 @@ Returns the list of cell line
 """
 def cell_lines_list():
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute("""
                 SELECT DISTINCT cell_line
                 FROM sequence
@@ -123,7 +135,7 @@ Returns the list of chromosomes in the cell line
 """
 def chromosomes_list(cell_line):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT chrid
@@ -154,7 +166,7 @@ Return the chromosome size in the given chromosome name
 """
 def chromosome_size(chromosome_name):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT size
@@ -174,7 +186,7 @@ Returns the all sequences of the chromosome data in the given cell line, chromos
 """
 def chromosome_sequences(cell_line, chromosome_name):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT start_value, end_value
@@ -198,7 +210,7 @@ Return the chromosome size in the given gene name
 """
 def chromosome_size_by_gene_name(gene_name):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT chromosome, orientation, start_location, end_location
@@ -218,7 +230,7 @@ Returns the existing chromosome data in the given cell line, chromosome name, st
 """
 def chromosome_data(cell_line, chromosome_name, sequences):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT cell_line, chrid, fdr, ibp, jbp, fq, rawc
@@ -249,7 +261,7 @@ Returns the existing chromosome data in the given cell line, chromosome name, st
 """
 def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                     SELECT DISTINCT ibp
@@ -398,7 +410,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32):
         vectors = []
         with db_conn() as conn:
-            cur = conn.cursor()
+            cur = conn.cursor(row_factory=dict_row)
             cur.execute(
                 """
                     SELECT distance_vector
@@ -418,7 +430,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         with db_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     """
                         SELECT *
@@ -497,7 +509,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     else:
         t3 = time()
         with db_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     """
                     SELECT *
@@ -611,7 +623,7 @@ Download the full 3D chromosome samples distance data in the given cell line, ch
 def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
     def checking_existing_data():
         with db_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 query = """
                     SELECT EXISTS (
                         SELECT 1 FROM distance
@@ -632,7 +644,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         batch_size = 1000
         
         with db_conn() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor(row_factory=dict_row) as cur:
                 query = """
                     SELECT distance_vector
                     FROM distance
@@ -698,7 +710,7 @@ def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequen
         ORDER BY sampleid, pid
     """
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
             rows = cur.fetchall()
 
@@ -724,7 +736,7 @@ Returns currently existing other cell line list in given chromosome name and seq
 """
 def comparison_cell_line_list(cell_line):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT cell_line
@@ -756,7 +768,7 @@ Return the gene list in the given chromosome_name and sequence
 """
 def gene_list(chromosome_name, sequences):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT *
@@ -789,7 +801,7 @@ Return the epigenetic track data in the given cell_line, chromosome_name and seq
 """
 def epigenetic_track_data(cell_line, chromosome_name, sequences):
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT *
@@ -827,7 +839,7 @@ Return the distribution of selected beads in all samples
 def bead_distribution(cell_line, chromosome_name, sequences, indices):
     indices = [int(idx) for idx in indices]
     with db_conn() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(row_factory=dict_row) as cur:
             distributions = {}
             for i, j in combinations(indices, 2):
                 distributions[f"{i}-{j}"] = []
