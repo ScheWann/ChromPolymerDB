@@ -7,8 +7,9 @@ import os
 import re
 import tempfile
 import subprocess
+from io import BytesIO
 import psycopg
-from psycopg.rows import dict_row
+from psycopg.rows import dict_row, DictRow
 from psycopg_pool import ConnectionPool
 import pyarrow.parquet as pq
 import pyarrow.csv as pv
@@ -389,26 +390,66 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(dist_exists)
         }
 
-    def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32):
+    # def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32):
+    #     vectors = []
+    #     with db_conn() as conn:
+    #         cur = conn.cursor(row_factory=dict_row)
+    #         cur.execute(
+    #             """
+    #                 SELECT distance_vector
+    #                 FROM distance
+    #                 WHERE cell_line = %s
+    #                     AND chrid = %s
+    #                     AND start_value = %s
+    #                     AND end_value = %s
+    #                 ORDER BY sampleid
+    #             """,
+    #             (cell_line, chromosome_name, sequences["start"], sequences["end"])
+    #         )
+    #         rows = cur.fetchall()
+    #         vectors = np.array([r["distance_vector"] for r in rows], dtype=dtype)
+        
+    #     return vectors
+
+    def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32, batch_size=50):
         vectors = []
+
         with db_conn() as conn:
-            cur = conn.cursor(row_factory=dict_row)
+            cur = conn.cursor(name="distance_stream")
             cur.execute(
                 """
                     SELECT distance_vector
                     FROM distance
                     WHERE cell_line = %s
-                        AND chrid = %s
-                        AND start_value = %s
-                        AND end_value = %s
+                    AND chrid     = %s
+                    AND start_value = %s
+                    AND end_value   = %s
                     ORDER BY sampleid
                 """,
                 (cell_line, chromosome_name, sequences["start"], sequences["end"])
             )
-            rows = cur.fetchall()
-            vectors = np.array([r["distance_vector"] for r in rows], dtype=dtype)
-        
-        return vectors
+
+            while True:
+                rows = cur.fetchmany(batch_size)
+                if not rows:
+                    break
+
+                for (arr_bin,) in rows:
+                    if isinstance(arr_bin, memoryview):
+                        tmp = np.frombuffer(arr_bin.tobytes(), dtype=np.float32).astype(dtype)
+                    elif isinstance(arr_bin, (bytes, bytearray)):
+                        tmp = np.frombuffer(arr_bin, dtype=np.float32).astype(dtype)
+                    else:
+                        tmp = np.array(arr_bin, dtype=dtype)
+
+                    vectors.append(tmp)
+
+            cur.close()
+
+        if not vectors:
+            return np.empty((0, 0), dtype=dtype)
+
+        return np.stack(vectors, axis=0)
 
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         with db_conn() as conn:

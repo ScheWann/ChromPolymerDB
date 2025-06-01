@@ -183,7 +183,7 @@ def initialize_tables():
             "start_value BIGINT NOT NULL DEFAULT 0,"
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "n_beads INT NOT NULL,"
-            "distance_vector DOUBLE PRECISION[] NOT NULL,"
+            "distance_vector real[] NOT NULL,"
             "insert_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
             "UNIQUE(cell_line, chrid, sampleid, start_value, end_value, n_beads)"
             ");"
