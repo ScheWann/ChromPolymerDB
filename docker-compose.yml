@@ -52,6 +52,17 @@ services:
       - example
     restart: 'no'  
 
+  redis:
+    image: redis:8.0.2-bookworm
+    container_name: Redis
+    restart: on-failure
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - example
+
   backend:
     container_name: Backend
     restart: on-failure
@@ -60,6 +71,9 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
     volumes:
       - ./Backend:/chromosome/backend
     build:
@@ -69,6 +83,8 @@ services:
       db:
         condition: service_healthy
       data-importer:
+        condition: service_started
+      redis:
         condition: service_started
     ports:
       - "5001:5001"
@@ -147,3 +163,4 @@ volumes:
   pgadmin_data:
   data_import_volume:
   pgdata:
+  redis_data:

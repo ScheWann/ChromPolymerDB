@@ -1,10 +1,8 @@
 import os
 import glob
-import re
-import gzip
 from io import StringIO
-from psycopg2 import sql
-import psycopg2.extras
+import psycopg
+from psycopg import sql
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -20,10 +18,12 @@ ROOT_DIR = "../Data"
 EXAMPLE_DIR = './example_data'
 
 def get_db_connection(database=None):
-    """Create a connection to the database."""
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST, user=DB_USERNAME, password=DB_PASSWORD, database=database
+        conn = psycopg.connect(
+            host=DB_HOST,
+            user=DB_USERNAME,
+            password=DB_PASSWORD,
+            dbname=database
         )
         return conn
     except Exception as e:
@@ -208,7 +208,7 @@ def process_chromosome_data(cur, file_path):
             data = line.strip().split("\t")
             data_to_insert.append((data[0], int(data[1])))
 
-        psycopg2.extras.execute_batch(cur, query, data_to_insert)
+        cur.executemany(query, data_to_insert)
 
 
 def process_gene_data(cur, file_path):
@@ -224,40 +224,51 @@ def process_gene_data(cur, file_path):
         ["Chromosome", "Begin", "End", "Orientation", "Symbol"]
     ].values.tolist()
 
-    psycopg2.extras.execute_batch(cur, query, data_to_insert)
+    cur.executemany(query, data_to_insert)
 
 
 def process_non_random_hic_data(chromosome_dir):
     for file_name in os.listdir(chromosome_dir):
-        if file_name.endswith(".csv.gz"):
-            file_path = os.path.join(chromosome_dir, file_name)
-            print(f"Processing file: {file_name}")
-            
-            for chunk in pd.read_csv(
-                file_path,
-                usecols=["chr", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"],
-                chunksize=100000
-            ):
-                chunk.rename(columns={"chr": "chrid"}, inplace=True)
-                
-                buffer = StringIO()
-                chunk.to_csv(buffer, sep='\t', index=False, header=False)
-                buffer.seek(0)
+        if not file_name.endswith(".csv.gz"):
+            continue
 
-                conn = get_db_connection(database=DB_NAME)
-                cur = conn.cursor()
-                
-                cur.copy_from(
-                    file=buffer,
-                    table='non_random_hic',
-                    columns=("chrid", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"),
-                    sep='\t'
-                )
-                conn.commit()
-                cur.close()
-                conn.close()
-                
-                print(f"Inserted {len(chunk)} records from {file_name}.")
+        file_path = os.path.join(chromosome_dir, file_name)
+        print(f"Processing file: {file_name}")
+
+        for chunk in pd.read_csv(
+            file_path,
+            usecols=["chr", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"],
+            chunksize=100000,
+            compression="gzip"
+        ):
+            chunk.rename(columns={"chr": "chrid"}, inplace=True)
+
+            buffer = StringIO()
+            chunk.to_csv(buffer, sep="\t", index=False, header=False)
+            buffer.seek(0)
+
+            conn = get_db_connection(database=DB_NAME)
+            cur = conn.cursor()
+
+            copy_sql = sql.SQL(
+                "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
+            ).format(
+                sql.Identifier("non_random_hic"),
+                sql.SQL(", ").join([
+                    sql.Identifier(col)
+                    for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line")
+                ])
+            )
+
+            with cur.copy(copy_sql) as copy:
+                data_str = buffer.getvalue()
+                copy.write(data_str.encode("utf-8"))
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            print(f"Inserted {len(chunk)} records from {file_name}.")
 
 
 def process_epigenetic_track_data(cur):
@@ -287,7 +298,7 @@ def process_epigenetic_track_data(cur):
             """
 
             data_to_insert = df.to_records(index=False).tolist()
-            psycopg2.extras.execute_batch(cur, query, data_to_insert)
+            cur.executemany(query, data_to_insert)
 
 
 def process_sequence_data(cur):
@@ -311,7 +322,7 @@ def process_sequence_data(cur):
             """
 
             data_to_insert = df.to_records(index=False).tolist()
-            psycopg2.extras.execute_batch(cur, query, data_to_insert)
+            cur.executemany(query, data_to_insert)
 
 
 def process_non_random_hic_index(cur):
@@ -325,7 +336,7 @@ def process_non_random_hic_index(cur):
     print("Index idx_hic_search created successfully.")
 
 
-def process_position_index(cur):
+def process_position_index():
     """Create indexes on position table for faster search (if they don't exist)."""
     print("Creating index idx_position_search...")
     
@@ -462,7 +473,7 @@ def process_example_position_data(cur):
         df = df[["cell_line", "chrid", "sampleid", "start_value", "end_value", "x", "y", "z"]]
 
         data_to_insert = df.to_records(index=False).tolist()
-        psycopg2.extras.execute_batch(cur, query, data_to_insert)
+        cur.executemany(query, data_to_insert)
 
 
 def process_example_distance_data(cur):
@@ -495,7 +506,7 @@ def process_example_distance_data(cur):
         df = df[["cell_line", "chrid", "sampleid", "start_value", "end_value", "n_beads", "distance_vector"]]
         
         data_to_insert = df.to_records(index=False).tolist()
-        psycopg2.extras.execute_batch(cur, query, data_to_insert)
+        cur.executemany(query, data_to_insert)
 
 
 initialize_tables()
