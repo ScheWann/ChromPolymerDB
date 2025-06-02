@@ -300,63 +300,99 @@ def exist_chromosome_3d_data(cell_line, sample_id):
     def read_feather_pa(path):
         return feather.read_table(path, memory_map=True).to_pandas()
 
-    if cell_line == "IMR":
-        pos_path = "./example_data/IMR_chr8_127300000_128300000_original_position.feather"
-        dist_path = "./example_data/IMR_chr8_127300000_128300000_original_distance.feather"
+    def checking_existing_data(cell_line, sample_id):
+        redis_3d_position_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "3d_example_position_data")
+        redis_avg_distance_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "avg_distance_example_data")
+        redis_fq_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "fq_example_data")
+        redis_sample_distance_vector_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"{sample_id}_example_distance_vector")
 
-        with ThreadPoolExecutor(max_workers=10) as pool:
-            fut_pos  = pool.submit(read_feather_pa, pos_path)
-            fut_dist = pool.submit(read_feather_pa, dist_path)
+        cached_3d_example_position_data = redis_client.get(redis_3d_position_data_key)
+        cached_avg_distance_example_data = redis_client.get(redis_avg_distance_data_key)
+        cached_fq_example_data = redis_client.get(redis_fq_data_key)
+        cached_example_sample_distance_vector = redis_client.get(redis_sample_distance_vector_key)
 
-        position_df = fut_pos.result()
-        distance_df = fut_dist.result()
+        return cached_3d_example_position_data, cached_avg_distance_example_data, cached_fq_example_data, cached_example_sample_distance_vector
     
-    if cell_line == "GM":
-        pos_path = "./example_data/GM_chr8_127300000_128300000_original_position.feather"
-        dist_path = "./example_data/GM_chr8_127300000_128300000_original_distance.feather"
-
-        with ThreadPoolExecutor(max_workers=10) as pool:
-            fut_pos  = pool.submit(read_feather_pa, pos_path)
-            fut_dist = pool.submit(read_feather_pa, dist_path)
-
-        position_df = fut_pos.result()
-        distance_df = fut_dist.result()
-
-    best_sample_id = sample_id
-
-    def get_position_data():
-        records = position_df[position_df['sampleid'] == best_sample_id].to_dict(orient='records')
-
+    def get_position_data(cell_line, sid):
+        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "3d_example_position_data")
+        records = position_df[position_df['sampleid'] == sid].to_dict(orient='records')
+        
+        data_json = json.dumps(records, ensure_ascii=False, default=str)
+        redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
+        
         return records
     
-    def get_fq_data():
-        if cell_line == "IMR":
-            full_distance_matrix = np.load("./example_data/IMR_chr8_127300000_128300000_fq_matrix.npy")
-            return full_distance_matrix.tolist()
-        if cell_line == "GM":
-            full_distance_matrix = np.load("./example_data/GM_chr8_127300000_128300000_fq_matrix.npy")
-            return full_distance_matrix.tolist()
+    def get_fq_data(cell_line):
+        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "fq_example_data")
+        full_distance_matrix = np.load(f"./example_data/{cell_line}_chr8_127300000_128300000_fq_matrix.npy")
+        
+        data_json = json.dumps(full_distance_matrix.tolist(), ensure_ascii=False)
+        redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
+        
+        return full_distance_matrix.tolist()
 
-    def get_avg_distance_data():
-        if cell_line == "IMR":
-            full_distance_matrix = np.load("./example_data/IMR_chr8_127300000_128300000_avg_distance_matrix.npy")
-            return full_distance_matrix.tolist()
-        if cell_line == "GM":
-            full_distance_matrix = np.load("./example_data/GM_chr8_127300000_128300000_avg_distance_matrix.npy")
-            return full_distance_matrix.tolist()
+    def get_avg_distance_data(cell_line):
+        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "avg_distance_example_data")
+        full_distance_matrix = np.load(f"./example_data/{cell_line}_chr8_127300000_128300000_avg_distance_matrix.npy")
+        
+        data_json = json.dumps(full_distance_matrix.tolist(), ensure_ascii=False)
+        redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
 
-    def get_distance_vector_by_sample():
-        vec = np.array(distance_df['distance_vector'].iloc[best_sample_id], dtype=float)
+        return full_distance_matrix.tolist()
+
+    def get_distance_vector_by_sample(cell_line, sid):
+        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"{sid}_example_distance_vector")
+        vec = np.array(distance_df['distance_vector'].iloc[sid], dtype=float)
         mat = squareform(vec).tolist()
 
-        return mat
+        data_json = json.dumps(mat, ensure_ascii=False)
+        redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
 
-    return {
-            "position_data": get_position_data(),
-            "avg_distance_data": get_avg_distance_data(),
-            "fq_data": get_fq_data(),
-            "sample_distance_vector": get_distance_vector_by_sample()
+        return mat
+    
+    cached_3d_example_position_data, cached_avg_distance_example_data, cached_fq_example_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
+    
+    if cached_3d_example_position_data and cached_avg_distance_example_data and cached_fq_example_data and cached_example_sample_distance_vector is not None:
+        position_data = json.loads(cached_3d_example_position_data.decode("utf-8"))
+        avg_distance_matrix = json.loads(cached_avg_distance_example_data.decode("utf-8"))
+        fq_data = json.loads(cached_fq_example_data.decode("utf-8"))
+        sample_distance_vector = json.loads(cached_example_sample_distance_vector.decode("utf-8"))
+
+        return {
+            "position_data": position_data,
+            "avg_distance_data": avg_distance_matrix,
+            "fq_data": fq_data,
+            "sample_distance_vector": sample_distance_vector
         }
+    else:
+        if cell_line == "IMR":
+            pos_path = "./example_data/IMR_chr8_127300000_128300000_original_position.feather"
+            dist_path = "./example_data/IMR_chr8_127300000_128300000_original_distance.feather"
+
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                fut_pos  = pool.submit(read_feather_pa, pos_path)
+                fut_dist = pool.submit(read_feather_pa, dist_path)
+
+            position_df = fut_pos.result()
+            distance_df = fut_dist.result()
+        
+        if cell_line == "GM":
+            pos_path = "./example_data/GM_chr8_127300000_128300000_original_position.feather"
+            dist_path = "./example_data/GM_chr8_127300000_128300000_original_distance.feather"
+
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                fut_pos  = pool.submit(read_feather_pa, pos_path)
+                fut_dist = pool.submit(read_feather_pa, dist_path)
+
+            position_df = fut_pos.result()
+            distance_df = fut_dist.result()
+
+        return {
+                "position_data": get_position_data(cell_line, sample_id),
+                "avg_distance_data": get_avg_distance_data(cell_line),
+                "fq_data": get_fq_data(cell_line),
+                "sample_distance_vector": get_distance_vector_by_sample(cell_line, sample_id)
+            }
 
 
 """
