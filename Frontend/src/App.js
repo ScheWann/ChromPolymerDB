@@ -234,8 +234,6 @@ function App() {
       } else {
         setChromosome3DLoading(true);
       }
-    } else {
-      return;
     }
 
     fetch('/getExistingChromos3DData', {
