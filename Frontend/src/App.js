@@ -1273,7 +1273,7 @@ function App() {
                               currentChromosomeSequence={currentChromosomeSequence}
                               geneSize={geneSize}
                               chromosomeData={chromosomeData}
-                              chromosome3DExampleData={chromosome3DExampleData[cacheKey]}
+                              chromosome3DExampleData={chromosome3DExampleData[cacheKey] || []}
                               chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
                               chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
                               chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
