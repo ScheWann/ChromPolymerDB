@@ -425,8 +425,8 @@ def insert_data():
     else:
         print("epigenetic track data already exists, skipping insertion.")
 
-    # process_example_position_data(cur)
-    # process_example_distance_data(cur)
+    process_example_position_data(cur)
+    process_example_distance_data(cur)
 
     # Commit changes and close connection
     conn.commit()
