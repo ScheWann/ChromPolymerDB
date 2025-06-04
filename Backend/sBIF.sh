@@ -7,7 +7,6 @@ threads=50
 EXE_PATH="../sBIF/bin/sBIF"
 n_samples=$1
 n_samples_per_run=$2
-is_download=$3
 
 count=1
 total_files=$(find ./Folding_input -name "*.txt" | wc -l | xargs)
@@ -24,7 +23,7 @@ for interfile in ./Folding_input/*.txt; do
     job_prefix="$chrom"
 
     ##command
-    cmd="$EXE_PATH -i $interfile -c $chrom -l $chrlensfile -s $start -e $end -ns $n_samples -nr $n_samples_per_run -cl $cell_line -r $res -do $is_download -j $job_prefix -p $threads"
+    cmd="$EXE_PATH -i $interfile -c $chrom -l $chrlensfile -s $start -e $end -ns $n_samples -nr $n_samples_per_run -cl $cell_line -r $res -j $job_prefix -p $threads"
     
     echo "Processing file $count of $total_files: $filename"
     echo "Running command: $cmd"

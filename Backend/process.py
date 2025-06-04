@@ -716,14 +716,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            is_download = 1
             subprocess.run(
                 [
                     "bash",
                     script,
                     str(n_samples),
                     str(n_samples_per_run),
-                    str(is_download),
                 ],
                 capture_output=True,
                 text=True,
