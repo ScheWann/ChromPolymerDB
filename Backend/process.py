@@ -466,69 +466,39 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(dist_exists)
         }
 
-    def fetch_distance_vectors(chromosome_name, cell_line, sequences, dtype=np.float32, batch_size=1000):
-        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "full_distance_vectors")
-        cached = redis_client.get(cache_key)
-        
-        if cached is not None:
-            decompressed = zlib.decompress(cached).decode("utf-8")
-            vectors = json.loads(decompressed)
+    def fetch_distance_vectors(chromosome_name, cell_line, sequences, batch_size=1000):        
+        vectors = []
 
-            vectors = [np.array(vec, dtype=dtype) for vec in vectors]
-            return np.stack(vectors, axis=0)
-        else:
-            vectors = []
+        with db_conn() as conn:
+            cur = conn.cursor(name="distance_stream")
+            cur.execute(
+                """
+                    SELECT distance_vector
+                    FROM distance
+                    WHERE cell_line = %s
+                    AND chrid       = %s
+                    AND start_value = %s
+                    AND end_value   = %s
+                    ORDER BY sampleid
+                """,
+                (cell_line, chromosome_name, sequences["start"], sequences["end"])
+            )
 
-            with db_conn() as conn:
-                cur = conn.cursor(name="distance_stream")
-                cur.execute(
-                    """
-                        SELECT distance_vector
-                        FROM distance
-                        WHERE cell_line = %s
-                        AND chrid     = %s
-                        AND start_value = %s
-                        AND end_value   = %s
-                        ORDER BY sampleid
-                    """,
-                    (cell_line, chromosome_name, sequences["start"], sequences["end"])
-                )
+            while True:
+                rows = cur.fetchmany(batch_size)
+                if not rows:
+                    break
 
-                while True:
-                    rows = cur.fetchmany(batch_size)
-                    if not rows:
-                        break
+                for (blob,) in rows:
+                    vec = np.frombuffer(blob, dtype=np.float32)
+                    vectors.append(vec)
 
-                    for (arr_bin,) in rows:
-                        if isinstance(arr_bin, memoryview):
-                            tmp = np.frombuffer(arr_bin.tobytes(), dtype=np.float32).astype(dtype)
-                        elif isinstance(arr_bin, (bytes, bytearray)):
-                            tmp = np.frombuffer(arr_bin, dtype=np.float32).astype(dtype)
-                        else:
-                            tmp = np.array(arr_bin, dtype=dtype)
+            cur.close()
 
-                        vectors.append(tmp)
-
-                cur.close()
-
-            if not vectors:
-                return np.empty((0, 0), dtype=dtype)
-
-            vector_list = [vec.tolist() for vec in vectors]
-            data_json = json.dumps(vector_list, ensure_ascii=False)
-
-            # Compress the JSON data to save space
-            compressed_data = zlib.compress(data_json.encode("utf-8"))
-            size = len(compressed_data)
-
-            if size > 500 * 1024 * 1024:  # 500 MB
-                print(f"[WARNING] Data size {size / (1024 * 1024):.2f} MB exceeds 500 MB limit, not caching to Redis.")
-            else:
-                print(f"[DEBUG] Caching {len(vectors)} distance vectors to Redis, size: {size / (1024 * 1024):.2f} MB")
-                # Store the compressed data in Redis with a 1-hour expiration
-                redis_client.setex(cache_key, 3600, compressed_data)
+        if not vectors:
+            return np.empty((0, 0), dtype=np.float32)
             
-            return np.stack(vectors, axis=0)
+        return np.stack(vectors, axis=0)
 
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_{sample_id}_position_data")
