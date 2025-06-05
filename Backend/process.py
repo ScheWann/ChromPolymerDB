@@ -351,13 +351,12 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             return vec
         else:
             vec = np.array(distance_df['distance_vector'].iloc[sid], dtype=float)
-            vec_list = vec.tolist()
-            # mat = squareform(vec).tolist()
+            mat = squareform(vec).tolist()
 
-            data_json = json.dumps(vec_list, ensure_ascii=False)
+            data_json = json.dumps(mat, ensure_ascii=False)
             redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
 
-            return vec_list
+            return mat
     
     cached_3d_example_position_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
     
