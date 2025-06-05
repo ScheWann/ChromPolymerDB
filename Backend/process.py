@@ -351,12 +351,13 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             return vec
         else:
             vec = np.array(distance_df['distance_vector'].iloc[sid], dtype=float)
-            mat = squareform(vec).tolist()
+            vec_list = vec.tolist()
+            # mat = squareform(vec).tolist()
 
-            data_json = json.dumps(mat, ensure_ascii=False)
+            data_json = json.dumps(vec_list, ensure_ascii=False)
             redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
 
-            return mat
+            return vec_list
     
     cached_3d_example_position_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
     
@@ -533,12 +534,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         else:
             vectors = np.array(vectors)
             avg_vector = np.mean(vectors, axis=0)
-            matrix_list = squareform(avg_vector).tolist()
+            vec_list = avg_vector.tolist()
 
-            data_json = json.dumps(matrix_list, ensure_ascii=False)
+            data_json = json.dumps(vec_list, ensure_ascii=False)
             redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
 
-            return matrix_list
+            return vec_list
 
     # Get the frequency data of 5000 chain samples
     def get_fq_data(vectors, cell_line, chromosome_name, sequences):
@@ -560,21 +561,40 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             return squareform(avg).tolist()
 
     # Return the most similar chain
-    def get_best_chain_sample(vectors, cell_line, chromosome_name, sequences):
-        avg_mat = get_avg_distance_data(vectors, cell_line, chromosome_name, sequences)
-        avg_vec = np.array(avg_mat).flatten()
-        best_corr = None
-        best_id = None
-        for sid in range(5000):
-            vec = np.array(get_distance_vector_by_sample(vectors, sid, cell_line, chromosome_name, sequences, sample_id)).flatten()
-            corr, _ = pearsonr(vec, avg_vec)
-            if best_corr is None or abs(1 - abs(corr)) < abs(1 - abs(best_corr)):
-                best_corr, best_id = corr, sid
-        print(f"[DEBUG] best_corr={best_corr:.4f}")
-        return best_id, avg_mat
+    def get_best_chain_sample(vectors):
+        X = np.asarray(vectors, dtype=np.float32)
+        n_samples, L = X.shape
+
+        avg_vec = X.mean(axis=0)
+        avg_mean = float(avg_vec.mean())
+        avg_centered = avg_vec - avg_mean
+        avg_norm = float(np.linalg.norm(avg_centered))
+
+        sample_means = X.mean(axis=1, keepdims=True)
+
+        # centering each sample by subtracting its mean
+        X_centered = X - sample_means
+
+        sample_norms = np.linalg.norm(X_centered, axis=1)
+
+        numerators = X_centered @ avg_centered   # (n_samples,)
+
+        # sample_norms * avg_norm
+        denominators = sample_norms * avg_norm   # shape = (n_samples,)
+        zero_mask = denominators == 0.0
+        denominators[zero_mask] = 1.0   # avoid ZeroDivisionError
+        corrs = numerators / denominators  # shape = (n_samples,)
+        corrs[zero_mask] = 0.0  # denom=0 position corresponds to no corr=0
+
+        # find the index of the maximum absolute correlation
+        best_idx = int(np.argmax(np.abs(corrs)))
+        best_corr = float(corrs[best_idx])
+        print(f"[DEBUG] best_corr={best_corr:.4f}", f"best_idx={best_idx}")
+
+        return best_idx, avg_vec.tolist()
 
     def get_distance_vector_by_sample(vectors, index, cell_line, chromosome_name, sequences, sample_id):
-        vectors = squareform(vectors[index]).tolist()
+        vectors = vectors[index].tolist()
         
         if sample_id == 0:
             cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "0_distance_vector")
@@ -614,13 +634,20 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         fq_data = get_fq_data(distance_vectors, cell_line, chromosome_name, sequences)
 
         if sample_id == 0:
-            best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences)
+            best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences, sample_id)
             sid = best_sample_id
-            sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_condensed = np.array(sample_vec_list)
+            sample_distance_vector = squareform(sample_vec_condensed).tolist()
         else:
-            avg_distance_matrix = get_avg_distance_data(distance_vectors, cell_line, chromosome_name, sequences)
+            avg_vec_list = get_avg_distance_data(distance_vectors, cell_line, chromosome_name, sequences)
+            avg_vec_condensed = np.array(avg_vec_list)
+            avg_distance_matrix = squareform(avg_vec_condensed).tolist()
+
             sid = sample_id
-            sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_condensed = np.array(sample_vec_list)
+            sample_distance_vector = squareform(sample_vec_condensed).tolist()
         
         return {
             "position_data": position_data,
@@ -720,15 +747,19 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             
             if sample_id == 0:
                 t15 = time()
-                best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences)
+                best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences, sample_id)
                 t16 = time()
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
                 sid = best_sample_id
             else:
-                avg_distance_matrix = get_avg_distance_data(distance_vectors, cell_line, chromosome_name, sequences)
+                vec_list = get_avg_distance_data(distance_vectors, cell_line, chromosome_name, sequences)
+                condensed = np.array(vec_list)
+                avg_distance_matrix = squareform(condensed).tolist()
                 sid = sample_id
             
-            sample_distance_vector = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_condensed = np.array(sample_vec_list)
+            sample_distance_vector = squareform(sample_vec_condensed).tolist()
 
             return {
                 "position_data": position_data,
