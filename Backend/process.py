@@ -1008,47 +1008,94 @@ def epigenetic_track_data(cell_line, chromosome_name, sequences):
 """
 Return the distribution of selected beads in all samples
 """
+# def bead_distribution(cell_line, chromosome_name, sequences, indices):
+#     indices = [int(idx) for idx in indices]
+#     with db_conn() as conn:
+#         with conn.cursor(row_factory=dict_row) as cur:
+#             distributions = {}
+#             for i, j in combinations(indices, 2):
+#                 distributions[f"{i}-{j}"] = []
+            
+#             query = """
+#                 SELECT sampleid, X, Y, Z
+#                 FROM position
+#                 WHERE chrid = %s
+#                 AND cell_line = %s
+#                 AND start_value = %s
+#                 AND end_value = %s
+#                 ORDER BY sampleid, pid
+#             """
+#             cur.execute(query, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
+#             rows = cur.fetchall()
+
+#     sample_dict = {}
+#     for row in rows:
+#         sampleid = row["sampleid"]
+#         x = row["x"]
+#         y = row["y"]
+#         z = row["z"]
+#         if sampleid not in sample_dict:
+#             sample_dict[sampleid] = []
+#         sample_dict[sampleid].append((x, y, z))
+    
+#     for sampleid, beads in sample_dict.items():
+#         if len(beads) <= max(indices):
+#             continue
+
+#         for i, j in combinations(indices, 2):
+#             bead1 = beads[i]
+#             bead2 = beads[j]
+
+#             x1, y1, z1 = float(bead1[0]), float(bead1[1]), float(bead1[2])
+#             x2, y2, z2 = float(bead2[0]), float(bead2[1]), float(bead2[2])
+#             distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+#             distributions[f"{i}-{j}"].append(distance)
+
+#     return distributions
 def bead_distribution(cell_line, chromosome_name, sequences, indices):
     indices = [int(idx) for idx in indices]
+
+    distributions: dict[str, list[float]] = {
+        f"{i}-{j}": [] for i, j in combinations(indices, 2)
+    }
+
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            distributions = {}
-            for i, j in combinations(indices, 2):
-                distributions[f"{i}-{j}"] = []
-            
-            query = """
-                SELECT sampleid, X, Y, Z
-                FROM position
-                WHERE chrid = %s
-                AND cell_line = %s
-                AND start_value = %s
-                AND end_value = %s
-                ORDER BY sampleid, pid
-            """
-            cur.execute(query, (chromosome_name, cell_line, sequences["start"], sequences["end"]))
+            cur.execute(
+                """
+                SELECT sampleid, distance_vector
+                FROM distance
+                WHERE chrid       = %s
+                  AND cell_line   = %s
+                  AND start_value = %s
+                  AND end_value   = %s
+                ORDER BY sampleid
+                """,
+                (
+                    chromosome_name,
+                    cell_line,
+                    sequences["start"],
+                    sequences["end"],
+                )
+            )
             rows = cur.fetchall()
 
-    sample_dict = {}
     for row in rows:
-        sampleid = row["sampleid"]
-        x = row["x"]
-        y = row["y"]
-        z = row["z"]
-        if sampleid not in sample_dict:
-            sample_dict[sampleid] = []
-        sample_dict[sampleid].append((x, y, z))
-    
-    for sampleid, beads in sample_dict.items():
-        if len(beads) <= max(indices):
-            continue
+        blob = row["distance_vector"]
+        dist_vec = np.frombuffer(blob, dtype=np.float32)  # shape = (L,)
+
+        L = dist_vec.shape[0]
+        N = int((1 + math.isqrt(1 + 8 * L)) // 2)
 
         for i, j in combinations(indices, 2):
-            bead1 = beads[i]
-            bead2 = beads[j]
+            if i < 0 or j < 0 or i >= N or j >= N:
+                continue
 
-            x1, y1, z1 = float(bead1[0]), float(bead1[1]), float(bead1[2])
-            x2, y2, z2 = float(bead2[0]), float(bead2[1]), float(bead2[2])
-            distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
-            distributions[f"{i}-{j}"].append(distance)
+            row_offset = i * N - (i * (i + 1) // 2)
+            in_row_offset = j - i - 1
+            idx = row_offset + in_row_offset
+
+            dist_val = float(dist_vec[idx])
+            distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions
