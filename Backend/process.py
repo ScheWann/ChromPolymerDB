@@ -1,5 +1,6 @@
 from flask import send_file
 import numpy as np
+import io
 from scipy.sparse import csr_matrix, save_npz
 from contextlib import contextmanager
 import pandas as pd
@@ -16,7 +17,6 @@ from itertools import combinations
 from io import BytesIO
 import math
 import json
-import orjson
 from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr
 from dotenv import load_dotenv
@@ -468,8 +468,16 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         }
 
     def fetch_distance_vectors(chromosome_name, cell_line, sequences, batch_size=1000):        
-        vectors = []
+        # cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "full_distance_vectors")
+        # raw_cached = redis_client.get(cache_key)
 
+        # if raw_cached is not None:
+        #     decompressed = zlib.decompress(raw_cached)
+        #     buf = BytesIO(decompressed)
+        #     all_vectors = np.load(buf, allow_pickle=False)
+        #     return all_vectors
+        
+        vectors = []
         with db_conn() as conn:
             cur = conn.cursor(name="distance_stream")
             cur.execute(
@@ -498,8 +506,23 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
         if not vectors:
             return np.empty((0, 0), dtype=np.float32)
-            
-        return np.stack(vectors, axis=0)
+        
+        all_vectors = np.stack(vectors, axis=0).astype(np.float32)
+
+        # buf = io.BytesIO()
+        # np.save(buf, all_vectors, allow_pickle=False)
+        # raw_bytes = buf.getvalue()
+        # compressed = zlib.compress(raw_bytes)
+
+        # size_compressed = len(compressed)
+        # limit = 500 * 1024 * 1024  # 500 MB
+        
+        # if size_compressed > limit:
+        #     print(f"[WARN] compressed data size {size_compressed / (1024**2):.1f} MB, over 500 MB, ""skipping caching")
+        # else:
+        #     redis_client.setex(cache_key, 3600, compressed)
+        
+        return all_vectors
 
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_{sample_id}_position_data")
@@ -634,7 +657,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         fq_data = get_fq_data(distance_vectors, cell_line, chromosome_name, sequences)
 
         if sample_id == 0:
-            best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences, sample_id)
+            best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
             sid = best_sample_id
             sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
             sample_vec_condensed = np.array(sample_vec_list)
@@ -747,7 +770,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             
             if sample_id == 0:
                 t15 = time()
-                best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors, cell_line, chromosome_name, sequences, sample_id)
+                best_sample_id, avg_distance_matrix = get_best_chain_sample(distance_vectors)
                 t16 = time()
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
                 sid = best_sample_id
