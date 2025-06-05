@@ -1214,6 +1214,7 @@ function App() {
                                 cursor: "pointer",
                                 marginRight: 5,
                               }}
+                              disabled={Object.keys(chromosome3DExampleData).length === 0 || chromosome3DLoading}
                               size="small"
                               icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                             />

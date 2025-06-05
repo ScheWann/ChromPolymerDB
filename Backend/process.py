@@ -767,7 +767,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
         batch_size = 1000
         
         with db_conn() as conn:
-            with conn.cursor(row_factory=dict_row) as cur:
+            with conn.cursor(name="distance_download_stream") as cur:
                 query = """
                     SELECT distance_vector
                     FROM distance
@@ -780,24 +780,19 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
                 cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
 
 
-            while True:
-                rows = cur.fetchmany(batch_size)
-                if not rows:
-                    break
-                for row in rows:
-                    vector_str = row["distance_vector"]
-                    try:
-                        vector = np.array(vector_str, dtype=np.float32)
-                        vectors.append(vector)
-                    except Exception as e:
-                        print("Error parsing distance_vector:", e)
-                        continue
+                while True:
+                    rows = cur.fetchmany(batch_size)
+                    if not rows:
+                        break
+                    for (blob,) in rows:
+                        vec = np.frombuffer(blob, dtype=np.float32)
+                        vectors.append(vec)
 
         if not vectors:
             print("No valid distance_vector")
             return None
 
-        matrix = np.array(vectors, dtype=np.float32)
+        matrix = np.stack(vectors, axis=0).astype(np.float32)
         sparse_matrix = csr_matrix(matrix)
 
         with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.npz') as tmp_file:
