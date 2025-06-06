@@ -363,8 +363,8 @@ def exist_chromosome_3d_data(cell_line, sample_id):
     if cached_3d_example_position_data and cached_example_sample_distance_vector is not None:
         position_data = json.loads(cached_3d_example_position_data.decode("utf-8"))
         sample_distance_vector = json.loads(cached_example_sample_distance_vector.decode("utf-8"))
-        avg_distance_matrix = get_fq_data(cell_line)
-        fq_data = get_avg_distance_data(cell_line)
+        avg_distance_matrix = get_avg_distance_data(cell_line)
+        fq_data = get_fq_data(cell_line)
         
 
         return {
