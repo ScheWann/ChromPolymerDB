@@ -122,7 +122,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
             fetchExampleChromos3DData(independentHeatmapCellLine, chromosome3DExampleID);
         } else {
-            fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, cellLineName, false);
+            fetchExistChromos3DData(true, cellLineName === 'GM' ? exampleDataBestSampleID.GM : cellLineName === 'IMR' ? exampleDataBestSampleID.IMR : exampleDataBestSampleID.K, cellLineName, false);
         }
         setChromosome3DCellLineName(independentHeatmapCellLine);
     };

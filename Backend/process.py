@@ -396,6 +396,17 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             position_df = fut_pos.result()
             distance_df = fut_dist.result()
 
+        if cell_line == "K":
+            pos_path = "./example_data/K_chr8_127300000_128300000_original_position.feather"
+            dist_path = "./example_data/K_chr8_127300000_128300000_original_distance.feather"
+
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                fut_pos  = pool.submit(read_feather_pa, pos_path)
+                fut_dist = pool.submit(read_feather_pa, dist_path)
+
+            position_df = fut_pos.result()
+            distance_df = fut_dist.result()
+
         return {
                 "position_data": get_position_data(cell_line, sample_id),
                 "avg_distance_data": get_avg_distance_data(cell_line),

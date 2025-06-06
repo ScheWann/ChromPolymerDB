@@ -44,11 +44,15 @@ function App() {
     {
       key: 'IMR',
       label: 'IMR90-Chr8-127300000-128300000',
+    },
+    {
+      key: 'K',
+      label: 'K562-Chr8-127300000-128300000',
     }
   ])
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
 
-  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223 }); // Example data best sample ID
+  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223, "K": 865 }); // Example data best sample ID
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -126,7 +130,7 @@ function App() {
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
-    const validCellLines = ['IMR', 'GM'];
+    const validCellLines = ['IMR', 'GM', 'K'];
     const isMainCellLineOK = validCellLines.includes(cellLineName);
     const isChromosomeOK = chromosomeName === 'chr8';
     const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
@@ -665,13 +669,7 @@ function App() {
   ]
 
   const onClickExampleDataItem = ({ key }) => {
-    if (key === 'GM') {
-      setCellLineName('GM');
-    }
-
-    if (key === 'IMR') {
-      setCellLineName('IMR');
-    }
+    setCellLineName(key);
     setChromosomeName('chr8');
     setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
   }
@@ -877,7 +875,7 @@ function App() {
     if (!isExample) {
       fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
     } else {
-      fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : exampleDataBestSampleID.IMR, value, true);
+      fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : value === 'IMR' ? exampleDataBestSampleID.IMR : exampleDataBestSampleID.K, value, true);
     }
   };
 
