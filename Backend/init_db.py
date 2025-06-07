@@ -193,6 +193,26 @@ def initialize_tables():
     else:
         print("distance table already exists, skipping creation.")
 
+    if not table_exists(cur, "calc_distance"):
+        print("Creating calc_distance table...")
+        cur.execute(
+            "CREATE TABLE calc_distance ("
+            "cdid           SERIAL PRIMARY KEY,"
+            "cell_line      VARCHAR(50) NOT NULL,"
+            "chrid          VARCHAR(50) NOT NULL,"
+            "start_value    BIGINT NOT NULL,"
+            "end_value      BIGINT NOT NULL,"
+            "avg_distance_vector BYTEA NOT NULL,"
+            "fq_distance_vector BYTEA NOT NULL,"
+            "insert_time    TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+            "UNIQUE(cell_line, chrid, start_value, end_value)"
+            ");"
+        )
+        conn.commit()
+        print("example table created successfully.")
+    else:
+        print("calc_distance table already exists, skipping creation.")
+
     # Close connection
     cur.close()
     conn.close()
