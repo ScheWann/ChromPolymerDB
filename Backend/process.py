@@ -477,63 +477,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "distance_exists": bool(dist_exists)
         }
 
-    def fetch_distance_vectors(chromosome_name, cell_line, sequences, batch_size=1000):        
-        # cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "full_distance_vectors")
-        # raw_cached = redis_client.get(cache_key)
-
-        # if raw_cached is not None:
-        #     decompressed = zlib.decompress(raw_cached)
-        #     buf = BytesIO(decompressed)
-        #     all_vectors = np.load(buf, allow_pickle=False)
-        #     return all_vectors
-        
-        vectors = []
-        with db_conn() as conn:
-            cur = conn.cursor(name="distance_stream")
-            cur.execute(
-                """
-                    SELECT distance_vector
-                    FROM distance
-                    WHERE cell_line = %s
-                    AND chrid       = %s
-                    AND start_value = %s
-                    AND end_value   = %s
-                    ORDER BY sampleid
-                """,
-                (cell_line, chromosome_name, sequences["start"], sequences["end"])
-            )
-
-            while True:
-                rows = cur.fetchmany(batch_size)
-                if not rows:
-                    break
-
-                for (blob,) in rows:
-                    vec = np.frombuffer(blob, dtype=np.float32)
-                    vectors.append(vec)
-
-            cur.close()
-
-        if not vectors:
-            return np.empty((0, 0), dtype=np.float32)
-        
-        all_vectors = np.stack(vectors, axis=0).astype(np.float32)
-
-        # buf = io.BytesIO()
-        # np.save(buf, all_vectors, allow_pickle=False)
-        # raw_bytes = buf.getvalue()
-        # compressed = zlib.compress(raw_bytes)
-
-        # size_compressed = len(compressed)
-        # limit = 500 * 1024 * 1024  # 500 MB
-        
-        # if size_compressed > limit:
-        #     print(f"[WARN] compressed data size {size_compressed / (1024**2):.1f} MB, over 500 MB, ""skipping caching")
-        # else:
-        #     redis_client.setex(cache_key, 3600, compressed)
-        
-        return all_vectors
-
     def get_position_data(chromosome_name, cell_line, sequences, sample_id):
         cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_{sample_id}_position_data")
 
@@ -606,13 +549,27 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 
         return avg_full_mat.tolist(), fq_full_mat.tolist(), best_full_mat.tolist()
 
-    def get_distance_vector_by_sample(vectors, index, cell_line, chromosome_name, sequences, sample_id):
-        vectors = vectors[index].tolist()
-        
-        if sample_id == 0:
-            cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "0_distance_vector")
-        else:
-            cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{index}_distance_vector")
+    def get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id):
+        with db_conn() as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    """
+                        SELECT distance_vector
+                        FROM distance
+                        WHERE cell_line = %s
+                            AND chrid = %s
+                            AND start_value = %s
+                            AND end_value = %s
+                            AND sampleid = %s
+                    """,
+                    (cell_line, chromosome_name, sequences["start"], sequences["end"], sample_id),
+                )
+                row = cur.fetchone()
+                raw_vector = row["distance_vector"]
+
+                vectors = np.frombuffer(raw_vector, dtype=np.float32).tolist()
+
+        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_distance_vector")
         
         data_json = json.dumps(vectors, ensure_ascii=False)
         redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
@@ -642,13 +599,11 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "sample_distance_vector": sample_distance_vector
         }
     elif data_in_db_exist_status["position_exists"] and data_in_db_exist_status["distance_exists"]:
-        distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
         position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
         avg_distance_matrix, fq_data, sample_distance_vector = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
 
         if sample_id != 0:
-            sid = sample_id
-            sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+            sample_vec_list = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
             sample_vec_condensed = np.array(sample_vec_list)
             sample_distance_vector = squareform(sample_vec_condensed).tolist()
         
@@ -734,11 +689,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             t_remove_end = time()
             print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
 
-            t9 = time()
-            distance_vectors = fetch_distance_vectors(chromosome_name, cell_line, sequences)
-            t10 = time()
-            print(f"[DEBUG] Fetching distance vectors took {t10 - t9:.4f} seconds")
-
             t11 = time()
             position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id or 0)
             t12 = time()
@@ -750,8 +700,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             
             if sample_id != 0:
                 t15 = time()
-                sid = sample_id
-                sample_vec_list = get_distance_vector_by_sample(distance_vectors, sid, cell_line, chromosome_name, sequences, sample_id)
+                sample_vec_list = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
                 sample_vec_condensed = np.array(sample_vec_list)
                 sample_distance_vector = squareform(sample_vec_condensed).tolist()
                 t16 = time()
