@@ -204,6 +204,7 @@ def initialize_tables():
             "end_value      BIGINT NOT NULL,"
             "avg_distance_vector BYTEA NOT NULL,"
             "fq_distance_vector BYTEA NOT NULL,"
+            "best_vector BYTEA NOT NULL,"
             "insert_time    TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
             "UNIQUE(cell_line, chrid, start_value, end_value)"
             ");"
