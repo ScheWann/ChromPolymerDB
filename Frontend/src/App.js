@@ -1091,7 +1091,7 @@ function App() {
         {!(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0) && (
           <>
             {/* Original Heatmap */}
-            {(heatmapLoading || chromosomeData.length === 0)? (
+            {(heatmapLoading || chromosomeData.length === 0) ? (
               <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
             ) : (
               chromosomeData.length > 0 && (
