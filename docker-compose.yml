@@ -142,6 +142,7 @@ services:
       context: ./Cron
       dockerfile: Dockerfile
     container_name: DB-Cron
+    restart: on-failure
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
