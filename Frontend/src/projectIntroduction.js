@@ -100,6 +100,10 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
         if (key === 'IMR') {
             setCellLineName('IMR');
         }
+
+        if (key === 'K') {
+            setCellLineName('K');
+        }
         setChromosomeName('chr8');
         setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
     }
