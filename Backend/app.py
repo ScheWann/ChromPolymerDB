@@ -20,10 +20,21 @@ from process import (
     bead_distribution, 
     exist_chromosome_3d_data
     )
+import redis
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+# redis connection settings
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB   = int(os.getenv("REDIS_DB", 0))
+
+# Create a Redis connection pool
+redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+redis_client = redis.Redis(connection_pool=redis_pool)
+
 
 @app.route('/')
 def index():
@@ -143,6 +154,7 @@ def downloadFullChromosome3dDistanceData():
         return response
     return npz_file
 
+
 @app.route('/downloadFullChromosome3dPositionData', methods=['POST'])
 def downloadFullChromosome3dPositionData():
     cell_line = request.json['cell_line']
@@ -160,6 +172,7 @@ def downloadFullChromosome3dPositionData():
         return response
     return csv_file
 
+
 @app.route('/getBeadDistribution', methods=['POST'])
 def getBeadDistribution():
     cell_line = request.json['cell_line']
@@ -167,6 +180,26 @@ def getBeadDistribution():
     sequences = request.json['sequences']
     indices = request.json['indices']
     return jsonify(bead_distribution(cell_line, chromosome_name, sequences, indices))
+
+
+
+@app.route('/getExample3DProgress', methods=['GET'])
+def get_example_3d_progress():
+    cell_line       = request.args['cell_line']
+    chromosome_name = request.args['chromosome_name']
+    start           = request.args['start']
+    end             = request.args['end']
+    sample_id       = request.args['sample_id']
+    is_exist        = request.args['is_exist']
+
+    if is_exist == 'true':
+        key = f"{cell_line}:chr8:127300000:128300000:exist_{sample_id}_progress"
+        val = redis_client.get(key)
+        return jsonify(percent=int(val))
+    else:
+        key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
+        val = redis_client.get(key)
+        return jsonify(percent=int(val))
 
 
 if __name__ == "__main__":

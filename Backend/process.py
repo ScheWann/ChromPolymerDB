@@ -300,6 +300,10 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
 def exist_chromosome_3d_data(cell_line, sample_id):
+    # Establish the progress key for tracking whole progress
+    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{sample_id}_progress")
+    redis_client.setex(progress_key, 3600, 0)
+    
     def read_feather_pa(path):
         return feather.read_table(path, memory_map=True).to_pandas()
 
@@ -359,13 +363,14 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             return mat
     
     cached_3d_example_position_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
-    
+    redis_client.setex(progress_key, 3600, 15)
     if cached_3d_example_position_data and cached_example_sample_distance_vector is not None:
         position_data = json.loads(cached_3d_example_position_data.decode("utf-8"))
         sample_distance_vector = json.loads(cached_example_sample_distance_vector.decode("utf-8"))
+        redis_client.setex(progress_key, 3600, 80)
         avg_distance_matrix = get_avg_distance_data(cell_line)
         fq_data = get_fq_data(cell_line)
-        
+        redis_client.setex(progress_key, 3600, 99)
 
         return {
             "position_data": position_data,
@@ -406,12 +411,24 @@ def exist_chromosome_3d_data(cell_line, sample_id):
 
             position_df = fut_pos.result()
             distance_df = fut_dist.result()
+        
+        redis_client.setex(progress_key, 3600, 20)
+
+        position_data = get_position_data(cell_line, sample_id)
+        redis_client.setex(progress_key, 3600, 50)
+
+        avg_distance_matrix = get_avg_distance_data(cell_line)
+        redis_client.setex(progress_key, 3600, 70)
+        
+        fq_data = get_fq_data(cell_line)
+        sample_distance_vector = get_distance_vector_by_sample(cell_line, sample_id)
+        redis_client.setex(progress_key, 3600, 99)
 
         return {
-                "position_data": get_position_data(cell_line, sample_id),
-                "avg_distance_data": get_avg_distance_data(cell_line),
-                "fq_data": get_fq_data(cell_line),
-                "sample_distance_vector": get_distance_vector_by_sample(cell_line, sample_id)
+                "position_data": position_data,
+                "avg_distance_data": avg_distance_matrix,
+                "fq_data": fq_data,
+                "sample_distance_vector": sample_distance_vector
             }
 
 
@@ -420,6 +437,10 @@ Returns the example 3D chromosome data in the given cell line, chromosome name, 
 """
 def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id):
     temp_folding_input_path = "./Folding_input"
+    
+    # Establish the progress key for tracking whole progress
+    progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_progress")
+    redis_client.setex(progress_key, 3600, 0)
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
@@ -579,6 +600,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
     t1 = time()
     cached_3d_position_data, cached_sample_distance_vector = checking_existing_cache_data(chromosome_name, cell_line, sequences, sample_id)
     data_in_db_exist_status = checking_existing_data(chromosome_name, cell_line, sequences)
+    redis_client.setex(progress_key, 3600, 5)
     t2 = time()
     print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
 
@@ -592,6 +614,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         avg_distance_matrix = json.loads(redis_client.get(avg_distance_data_cache_key).decode("utf-8"))
         fq_data = json.loads(redis_client.get(fq_data_cache_key).decode("utf-8"))
 
+        redis_client.setex(progress_key, 3600, 99)
         return {
             "position_data": position_data,
             "avg_distance_data": avg_distance_matrix,
@@ -607,6 +630,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             sample_vec_condensed = np.array(sample_vec_list)
             sample_distance_vector = squareform(sample_vec_condensed).tolist()
         
+        redis_client.setex(progress_key, 3600, 99)
         return {
             "position_data": position_data,
             "avg_distance_data": avg_distance_matrix,
@@ -639,6 +663,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 )
                 original_data = cur.fetchall()
         t4 = time()
+        redis_client.setex(progress_key, 3600, 10)
         print(f"[DEBUG] Fetching original data took {t4 - t3:.4f} seconds")
         if original_data:
             t5 = time()
@@ -665,6 +690,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             # Write the file to the custom path
             with open(custom_file_path, "w") as temp_file:
                 temp_file.write(txt_data)
+            redis_client.setex(progress_key, 3600, 20)
             t6 = time()
             print(f"[DEBUG] Writing folding input file took {t6 - t5:.4f} seconds")
             t7 = time()
@@ -683,10 +709,12 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 check=True,
             )
             t8 = time()
+            redis_client.setex(progress_key, 3600, 80)
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()
             os.remove(custom_file_path)
             t_remove_end = time()
+            redis_client.setex(progress_key, 3600, 85)
             print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
 
             t11 = time()
@@ -696,6 +724,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             t13 = time()
             avg_distance_matrix, fq_data, sample_distance_vector = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
             t14 = time()
+            redis_client.setex(progress_key, 3600, 90)
             print(f"[DEBUG] Fetching fq data took {t14 - t13:.4f} seconds")
             
             if sample_id != 0:
@@ -704,8 +733,11 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 sample_vec_condensed = np.array(sample_vec_list)
                 sample_distance_vector = squareform(sample_vec_condensed).tolist()
                 t16 = time()
+                redis_client.setex(progress_key, 3600, 99)
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
-
+            
+            redis_client.setex(progress_key, 3600, 99)
+            
             return {
                 "position_data": position_data,
                 "avg_distance_data": avg_distance_matrix,

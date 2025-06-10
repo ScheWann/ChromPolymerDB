@@ -51,8 +51,8 @@ function App() {
     }
   ])
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
-
   const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223, "K": 865 }); // Example data best sample ID
+  const [ChromosomeDataSpinnerProgress, setChromosomeDataSpinnerProgress] = useState(0);
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -65,7 +65,6 @@ function App() {
   const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
   const [comparisonCellLine3DLoading, setComparisonCellLine3DLoading] = useState(false);
   const [comparisonChromosomeDistanceDownloadSpinner, setComparisonChromosomeDownloadSpinner] = useState(false);
-
 
   // Tour visibility state
   const [isTourOpen, setIsTourOpen] = useState(true);
@@ -176,6 +175,28 @@ function App() {
       }
     }
   }, [totalChromosomeSequences]);
+
+  // fetch 3D chromosome data progress
+  const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
+    const iv = setInterval(() => {
+      fetch(
+        `/getExample3DProgress`
+        + `?cell_line=${cellLineName}`
+        + `&chromosome_name=${chromosomeName}`
+        + `&start=${sequence.start}`
+        + `&end=${sequence.end}`
+        + `&sample_id=${sampleId}`
+        + `&is_exist=${isExist}`
+      )
+        .then(res => res.json())
+        .then(({ percent }) => {
+          setChromosomeDataSpinnerProgress(percent);
+          if (percent >= 99) {
+            clearInterval(iv);
+          }
+        })
+    }, 15000);
+  }
 
   // update original part when chromosome3DExampleID changes
   useEffect(() => {
@@ -824,8 +845,10 @@ function App() {
     if (!chromosome3DExampleData[cacheKey]) {
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", false);
+        progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
       } else {
         fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, false);
+        progressPolling(chromosome3DCellLineName, 'chr8', [127300000, 128300000], tempSampleId, true);
       }
     }
   }
@@ -837,8 +860,10 @@ function App() {
     if (!chromosome3DExampleData[cacheKey]) {
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(cellLineName, key, "sampleChange", false);
+        progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
         fetchExistChromos3DData(false, key, cellLineName, false);
+        progressPolling(cellLineName, 'chr8', [127300000, 128300000], key, true);
       }
     };
   };
@@ -850,8 +875,10 @@ function App() {
     if (!comparisonCellLine3DData[cacheKey]) {
       if (!isExampleMode(comparisonCellLine, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
+        progressPolling(comparisonCellLine, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
         fetchExistChromos3DData(false, key, comparisonCellLine, true);
+        progressPolling(comparisonCellLine, 'chr8', [127300000, 128300000], key, true);
       }
     };
   };
@@ -874,8 +901,11 @@ function App() {
     const isExample = isExampleMode(value, chromosomeName, selectedChromosomeSequence);
     if (!isExample) {
       fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
+      progressPolling(value, chromosomeName, selectedChromosomeSequence, comparisonCellLine3DSampleID, false);
     } else {
-      fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : value === 'IMR' ? exampleDataBestSampleID.IMR : exampleDataBestSampleID.K, value, true);
+      // fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : value === 'IMR' ? exampleDataBestSampleID.IMR : exampleDataBestSampleID.K, value, true);
+      fetchExistChromos3DData(true, exampleDataBestSampleID[value], value, true);
+      progressPolling(value, 'chr8', [127300000, 128300000], exampleDataBestSampleID[value], true);
     }
   };
 
@@ -1108,6 +1138,7 @@ function App() {
                   chromosomeData={chromosomeData}
                   exampleDataBestSampleID={exampleDataBestSampleID}
                   isExampleMode={isExampleMode}
+                  progressPolling={progressPolling}
                   fetchExistChromos3DData={fetchExistChromos3DData}
                   currentChromosomeSequence={currentChromosomeSequence}
                   setCurrentChromosomeSequence={setCurrentChromosomeSequence}
@@ -1145,6 +1176,7 @@ function App() {
                 chromosomeData={[]}
                 exampleDataBestSampleID={exampleDataBestSampleID}
                 isExampleMode={isExampleMode}
+                progressPolling={progressPolling}
                 fetchExistChromos3DData={fetchExistChromos3DData}
                 currentChromosomeSequence={currentChromosomeSequence}
                 setCurrentChromosomeSequence={setCurrentChromosomeSequence}
@@ -1263,7 +1295,7 @@ function App() {
                         disabled: chromosome3DLoading,
                         children: (
                           chromosome3DLoading ? (
-                            <Spin size="large" style={{ margin: '20px 0' }} />
+                            <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
                           ) : (
                             <Chromosome3D
                               formatNumber={formatNumber}
@@ -1386,7 +1418,7 @@ function App() {
                           key: sampleId,
                           children: (
                             comparisonCellLine3DLoading ? (
-                              <Spin size="large" style={{ margin: '20px 0' }} />
+                              <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
                             ) : (
                               <Chromosome3D
                                 formatNumber={formatNumber}
