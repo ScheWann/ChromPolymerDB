@@ -697,24 +697,23 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            subprocess.run(
-                [
-                    "bash",
-                    script,
-                    str(n_samples),
-                    str(n_samples_per_run),
-                ],
-                capture_output=True,
+            result = subprocess.Popen(
+                ["bash", script, str(n_samples), str(n_samples_per_run)],
                 text=True,
-                check=True,
+                stdout=subprocess.PIPE,
+                bufsize=1,
             )
+            pattern = re.compile(r'^\[.*DONE\]')
+            progress_values = [50, 90, 91, 92, 93, 94, 95]
+            matches = (line.strip() for line in result.stdout if pattern.match(line))
+            for val, line in zip(progress_values, matches):
+                print(line)
+                redis_client.setex(progress_key, 3600, val)
             t8 = time()
-            redis_client.setex(progress_key, 3600, 80)
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()
             os.remove(custom_file_path)
             t_remove_end = time()
-            redis_client.setex(progress_key, 3600, 85)
             print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
 
             t11 = time()
@@ -724,7 +723,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             t13 = time()
             avg_distance_matrix, fq_data, sample_distance_vector = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
             t14 = time()
-            redis_client.setex(progress_key, 3600, 90)
+            redis_client.setex(progress_key, 3600, 98)
             print(f"[DEBUG] Fetching fq data took {t14 - t13:.4f} seconds")
             
             if sample_id != 0:

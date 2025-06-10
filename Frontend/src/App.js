@@ -178,24 +178,35 @@ function App() {
 
   // fetch 3D chromosome data progress
   const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
-    const iv = setInterval(() => {
-      fetch(
-        `/getExample3DProgress`
-        + `?cell_line=${cellLineName}`
-        + `&chromosome_name=${chromosomeName}`
-        + `&start=${sequence.start}`
-        + `&end=${sequence.end}`
-        + `&sample_id=${sampleId}`
-        + `&is_exist=${isExist}`
-      )
+    setChromosomeDataSpinnerProgress(0);
+    let first = true; 
+
+    const fetchProgress = () => {
+        fetch(
+          `/getExample3DProgress`
+          + `?cell_line=${cellLineName}`
+          + `&chromosome_name=${chromosomeName}`
+          + `&start=${sequence.start}`
+          + `&end=${sequence.end}`
+          + `&sample_id=${sampleId}`
+          + `&is_exist=${isExist}`
+        )
         .then(res => res.json())
         .then(({ percent }) => {
           setChromosomeDataSpinnerProgress(percent);
+
           if (percent >= 99) {
-            clearInterval(iv);
+            return;
           }
+
+          const delay = first ? 100 : 1000;
+          first = false;
+
+          setTimeout(fetchProgress, delay);
         })
-    }, 15000);
+      };
+
+      setTimeout(fetchProgress, 100);
   }
 
   // update original part when chromosome3DExampleID changes
