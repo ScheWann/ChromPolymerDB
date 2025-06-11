@@ -37,7 +37,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
     }, []);
 
     useEffect(() => {
-        fetch('/getChromosSequence', {
+        fetch('/api/getChromosSequence', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                 setMergeCompareTotalSequences(data);
             });
 
-        fetch("/getChromosData", {
+        fetch("/api/getChromosData", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

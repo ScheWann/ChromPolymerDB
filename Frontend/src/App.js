@@ -183,7 +183,7 @@ function App() {
 
     const fetchProgress = () => {
         fetch(
-          `/getExample3DProgress`
+          `/api/getExample3DProgress`
           + `?cell_line=${cellLineName}`
           + `&chromosome_name=${chromosomeName}`
           + `&start=${sequence.start}`
@@ -272,7 +272,7 @@ function App() {
       }
     }
 
-    fetch('/getExistingChromos3DData', {
+    fetch('/api/getExistingChromos3DData', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ function App() {
   }
 
   const fetchChromosomeSequences = () => {
-    fetch('/getChromosSequence', {
+    fetch('/api/getChromosSequence', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -318,7 +318,7 @@ function App() {
   }
 
   const fetchGeneNameList = () => {
-    fetch('/getGeneNameList')
+    fetch('/api/getGeneNameList')
       .then(res => res.json())
       .then(data => {
         setGeneNameList(data);
@@ -326,7 +326,7 @@ function App() {
   }
 
   const fetchCellLineList = () => {
-    fetch('/getCellLines')
+    fetch('/api/getCellLines')
       .then(res => res.json())
       .then(data => {
         setCellLineList(data);
@@ -334,7 +334,7 @@ function App() {
   };
 
   const fetchChromosomeList = (value) => {
-    fetch('/getChromosList', {
+    fetch('/api/getChromosList', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -348,7 +348,7 @@ function App() {
   };
 
   const fetchChromosomeSize = (value) => {
-    fetch("/getChromosSize", {
+    fetch("/api/getChromosSize", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -362,7 +362,7 @@ function App() {
   };
 
   const fetchChromosomeSizeByGeneName = (value) => {
-    fetch("/getChromosSizeByGeneName", {
+    fetch("/api/getChromosSizeByGeneName", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -385,7 +385,7 @@ function App() {
     } else if (!cellLineName || !chromosomeName) {
       warning('noData');
     } else {
-      fetch("/getChromosData", {
+      fetch("/api/getChromosData", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -401,7 +401,7 @@ function App() {
   };
 
   const fetchValidChromosomeValidIbpData = () => {
-    fetch("/getChromosValidIBPData", {
+    fetch("/api/getChromosValidIBPData", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -434,7 +434,7 @@ function App() {
         return;
       }
 
-      fetch("/getExampleChromos3DData", {
+      fetch("/api/getExampleChromos3DData", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -474,7 +474,7 @@ function App() {
   const fetchGeneList = () => {
     if (chromosomeName && selectedChromosomeSequence) {
       let filteredChromosomeName = chromosomeName.slice(3);
-      fetch("/getGeneList", {
+      fetch("/api/getGeneList", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -489,7 +489,7 @@ function App() {
   };
 
   const fetchGeneNameBySearch = (value) => {
-    fetch("/geneListSearch", {
+    fetch("/api/geneListSearch", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -733,7 +733,7 @@ function App() {
     }
 
     try {
-      const response = await fetch("downloadFullChromosome3dDistanceData", {
+      const response = await fetch("/api/downloadFullChromosome3dDistanceData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -795,7 +795,7 @@ function App() {
     }
 
     try {
-      const response = await fetch("downloadFullChromosome3dPositionData", {
+      const response = await fetch("/api/downloadFullChromosome3dPositionData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

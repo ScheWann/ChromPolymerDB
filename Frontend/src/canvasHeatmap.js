@@ -71,7 +71,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
     const fetchComparisonChromosomeData = (compared_cell_line) => {
         setIndependentHeatmapLoading(true);
-        fetch("/getChromosData", {
+        fetch("/api/getChromosData", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             const cacheKey = `${cell_line}-${chromosomeName}-${currentChromosomeSequence.start}-${currentChromosomeSequence.end}-${sample_id}`;
 
-            fetch("/getExampleChromos3DData", {
+            fetch("/api/getExampleChromos3DData", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

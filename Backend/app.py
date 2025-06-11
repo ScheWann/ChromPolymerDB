@@ -1,6 +1,6 @@
 import os
 import orjson
-from flask import Flask, jsonify, request, after_this_request, Response
+from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
 from process import (
     gene_names_list, 
     cell_lines_list, 
@@ -36,47 +36,45 @@ redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 redis_client = redis.Redis(connection_pool=redis_pool)
 
 
-@app.route('/')
-def index():
-    return 'Hello, World!'
+api = Blueprint('api', __name__, url_prefix='/api')
 
 
-@app.route('/getGeneNameList', methods=['GET'])
+@api.route('/getGeneNameList', methods=['GET'])
 def get_GeneNameList():
     return jsonify(gene_names_list())
 
 
-@app.route('/getCellLines', methods=['GET'])
+@api.route('/getCellLines', methods=['GET'])
 def get_CellLines():
     return jsonify(cell_lines_list())
 
 
-@app.route('/getChromosList', methods=['POST'])
+@api.route('/getChromosList', methods=['POST'])
 def get_ChromosList():
     cell_line = request.json['cell_line']
     return jsonify(chromosomes_list(cell_line))
 
 
-@app.route('/getChromosSize', methods=['POST'])
+@api.route('/getChromosSize', methods=['POST'])
 def get_ChromosSize():
     chromosome_name = request.json['chromosome_name']
     return jsonify(chromosome_size(chromosome_name))
 
 
-@app.route('/getChromosSizeByGeneName', methods=['POST'])
+@api.route('/getChromosSizeByGeneName', methods=['POST'])
 def get_ChromosSizeByGeneName():
     gene_name = request.json['gene_name']
     return jsonify(chromosome_size_by_gene_name(gene_name))
 
 
-@app.route('/getChromosSequence', methods=['POST'])
+@api.route('/getChromosSequence', methods=['POST'])
 def get_ChromosSequences():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     return jsonify(chromosome_sequences(cell_line, chromosome_name))
 
 
-@app.route('/getChromosData', methods=['POST'])
+@api.route('/getChromosData', methods=['POST'])
 def get_ChromosData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -84,7 +82,7 @@ def get_ChromosData():
     return jsonify(chromosome_data(cell_line, chromosome_name, sequences))
 
 
-@app.route('/getChromosValidIBPData', methods=['POST'])
+@api.route('/getChromosValidIBPData', methods=['POST'])
 def get_ChromosValidIBPData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -92,7 +90,7 @@ def get_ChromosValidIBPData():
     return jsonify(chromosome_valid_ibp_data(cell_line, chromosome_name, sequences))
 
 
-@app.route('/getExistingChromos3DData', methods=['POST'])
+@api.route('/getExistingChromos3DData', methods=['POST'])
 def get_ExistingChromos3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
@@ -101,7 +99,7 @@ def get_ExistingChromos3DData():
     return Response(payload, content_type='application/json')
 
 
-@app.route('/getExampleChromos3DData', methods=['POST'])
+@api.route('/getExampleChromos3DData', methods=['POST'])
 def get_ExampleChromos3DData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -110,20 +108,20 @@ def get_ExampleChromos3DData():
     return jsonify(example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id))
 
 
-@app.route('/getComparisonCellLineList', methods=['POST'])
+@api.route('/getComparisonCellLineList', methods=['POST'])
 def get_ComparisonCellLines():
     cell_line = request.json['cell_line']
     return jsonify(comparison_cell_line_list(cell_line))
 
 
-@app.route('/getGeneList', methods=['POST'])
+@api.route('/getGeneList', methods=['POST'])
 def get_GeneList():
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     return jsonify(gene_list(chromosome_name, sequences))
 
 
-@app.route('/getepigeneticTrackData', methods=['POST'])
+@api.route('/getepigeneticTrackData', methods=['POST'])
 def get_epigeneticTrackData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -131,13 +129,13 @@ def get_epigeneticTrackData():
     return jsonify(epigenetic_track_data(cell_line, chromosome_name, sequences))
 
 
-@app.route('/geneListSearch', methods=['POST'])
+@api.route('/geneListSearch', methods=['POST'])
 def geneListSearch():
     search = request.json['search']
     return jsonify(gene_names_list_search(search))
 
 
-@app.route('/downloadFullChromosome3dDistanceData', methods=['POST'])
+@api.route('/downloadFullChromosome3dDistanceData', methods=['POST'])
 def downloadFullChromosome3dDistanceData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -155,7 +153,7 @@ def downloadFullChromosome3dDistanceData():
     return npz_file
 
 
-@app.route('/downloadFullChromosome3dPositionData', methods=['POST'])
+@api.route('/downloadFullChromosome3dPositionData', methods=['POST'])
 def downloadFullChromosome3dPositionData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -173,7 +171,7 @@ def downloadFullChromosome3dPositionData():
     return csv_file
 
 
-@app.route('/getBeadDistribution', methods=['POST'])
+@api.route('/getBeadDistribution', methods=['POST'])
 def getBeadDistribution():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
@@ -183,7 +181,7 @@ def getBeadDistribution():
 
 
 
-@app.route('/getExample3DProgress', methods=['GET'])
+@api.route('/getExample3DProgress', methods=['GET'])
 def get_example_3d_progress():
     cell_line       = request.args['cell_line']
     chromosome_name = request.args['chromosome_name']
@@ -200,6 +198,14 @@ def get_example_3d_progress():
         key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
         val = redis_client.get(key)
         return jsonify(percent=int(val))
+
+
+app.register_blueprint(api)
+
+
+@app.route('/')
+def index():
+    return 'Hello, World!'
 
 
 if __name__ == "__main__":

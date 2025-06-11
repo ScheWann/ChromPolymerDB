@@ -10,7 +10,7 @@ export const TriangleGeneList = ({ cellLineName, chromosomeName, geneList, minCa
 
     async function fetchepigeneticTrackData() {
         if (cellLineName && chromosomeName && currentChromosomeSequence) {
-            const response = await fetch("/getepigeneticTrackData", {
+            const response = await fetch("/api/getepigeneticTrackData", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

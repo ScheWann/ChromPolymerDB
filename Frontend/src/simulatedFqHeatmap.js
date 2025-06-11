@@ -38,7 +38,7 @@ export const SimulatedFqHeatmap = ({
     };
 
     useEffect(() => {
-        fetch("/getChromosData", {
+        fetch("/api/getChromosData", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
