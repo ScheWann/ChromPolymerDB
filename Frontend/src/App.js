@@ -94,8 +94,8 @@ function App() {
       target: () => document.querySelector(".controlGroupText:nth-of-type(2) + .ant-select"),
     },
     {
-      title: "Sequences Input",
-      description: "Specify the sequence range using the start and end inputs.",
+      title: "Genomic Locations Input",
+      description: "Specify the genomic location using the start and end inputs.",
       target: () => document.querySelector(".controlGroupText:nth-of-type(3) + .ant-input"),
     },
     {
