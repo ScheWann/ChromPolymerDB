@@ -1329,6 +1329,7 @@ function App() {
                               distributionData={distributionData}
                               setDistributionData={setDistributionData}
                               cellLineDict={cellLineDict}
+                              isExampleMode={isExampleMode}
                             />
                           )
                         )
@@ -1452,6 +1453,7 @@ function App() {
                                 distributionData={distributionData}
                                 setDistributionData={setDistributionData}
                                 cellLineDict={cellLineDict}
+                                isExampleMode={isExampleMode}
                               />
                             )
                           )

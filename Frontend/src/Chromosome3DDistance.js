@@ -8,7 +8,7 @@ import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
 
-export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, cellLineDict }) => {
+export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, cellLineDict, isExampleMode }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
@@ -203,19 +203,17 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         setLoading(true);
         const beadsArray = Object.keys(selectedSphereList[celllineName]);
 
-        if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
-        fetch('/api/getBeadDistribution', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                cell_line: celllineName,
-                chromosome_name: chromosomeName,
-                sequences: currentChromosomeSequence,
-                indices: beadsArray
+        if (isExampleMode) {
+            fetch('/api/getExistBeadDistribution', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cell_line: celllineName,
+                    indices: beadsArray
+                })
             })
-        })
             .then(res => res.json())
             .then(data => {
                 setDistributionData(prev => ({
@@ -224,6 +222,29 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                 }));
                 setLoading(false);
             });
+        } else {
+            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
+            fetch('/api/getBeadDistribution', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cell_line: celllineName,
+                    chromosome_name: chromosomeName,
+                    sequences: currentChromosomeSequence,
+                    indices: beadsArray
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                setDistributionData(prev => ({
+                    ...prev,
+                    [celllineName]: data
+                }));
+                setLoading(false);
+            });
+        }
     }, [selectedSphereList, celllineName]);
 
     useEffect(() => {

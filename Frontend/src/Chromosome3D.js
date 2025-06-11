@@ -11,7 +11,7 @@ import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
 // import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, chromosomeData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, cellLineDict }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, chromosomeData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, cellLineDict, isExampleMode }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -710,6 +710,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         distributionData={distributionData}
                         setDistributionData={setDistributionData}
                         cellLineDict={cellLineDict}
+                        isExampleMode={isExampleMode}
                     />
                 </div>
             )}

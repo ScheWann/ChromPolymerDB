@@ -17,7 +17,8 @@ from process import (
     epigenetic_track_data, 
     download_full_chromosome_3d_distance_data, 
     download_full_chromosome_3d_position_data,
-    bead_distribution, 
+    bead_distribution,
+    exist_bead_distribution, 
     exist_chromosome_3d_data
     )
 import redis
@@ -179,6 +180,12 @@ def getBeadDistribution():
     indices = request.json['indices']
     return jsonify(bead_distribution(cell_line, chromosome_name, sequences, indices))
 
+
+@api.route('/getExistBeadDistribution', methods=['POST'])
+def getExistBeadDistribution():
+    cell_line = request.json['cell_line']
+    indices = request.json['indices']
+    return jsonify(exist_bead_distribution(cell_line, indices))
 
 
 @api.route('/getExample3DProgress', methods=['GET'])

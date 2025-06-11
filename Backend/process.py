@@ -52,6 +52,13 @@ redis_client = redis.Redis(connection_pool=redis_pool)
 
 
 """
+Read feather file using pandas
+"""
+def read_feather_pa(path):
+    return feather.read_table(path, memory_map=True).to_pandas()
+
+
+"""
 Establish redis cache key
 """
 def make_redis_cache_key(cell_line, chromosome_name, start, end, custom_name):
@@ -303,9 +310,6 @@ def exist_chromosome_3d_data(cell_line, sample_id):
     # Establish the progress key for tracking whole progress
     progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{sample_id}_progress")
     redis_client.setex(progress_key, 3600, 0)
-    
-    def read_feather_pa(path):
-        return feather.read_table(path, memory_map=True).to_pandas()
 
     def checking_existing_data(cell_line, sample_id):
         redis_3d_position_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"3d_example_{sample_id}_position_data")
@@ -974,7 +978,7 @@ def bead_distribution(cell_line, chromosome_name, sequences, indices):
                 """
                 SELECT sampleid, distance_vector
                 FROM distance
-                WHERE chrid       = %s
+                WHERE chrid         = %s
                     AND cell_line   = %s
                     AND start_value = %s
                     AND end_value   = %s
@@ -992,6 +996,42 @@ def bead_distribution(cell_line, chromosome_name, sequences, indices):
     for row in rows:
         blob = row["distance_vector"]
         dist_vec = np.frombuffer(blob, dtype=np.float32)  # shape = (L,)
+
+        L = dist_vec.shape[0]
+        N = int((1 + math.isqrt(1 + 8 * L)) // 2)
+
+        for i, j in combinations(indices, 2):
+            if i < 0 or j < 0 or i >= N or j >= N:
+                continue
+
+            row_offset = i * N - (i * (i + 1) // 2)
+            in_row_offset = j - i - 1
+            idx = row_offset + in_row_offset
+
+            dist_val = float(dist_vec[idx])
+            distributions[f"{i}-{j}"].append(dist_val)
+
+    return distributions
+
+
+"""
+Return the distribution of selected beads from existing 3D chromosome data
+"""
+def exist_bead_distribution(cell_line, indices):
+    indices = [int(idx) for idx in indices]
+
+    distributions: dict[str, list[float]] = {
+        f"{i}-{j}": [] for i, j in combinations(indices, 2)
+    }
+
+    distance_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_distance.feather"
+
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        fut_dist = pool.submit(read_feather_pa, distance_path)
+    
+    distance_df = fut_dist.result()
+    for _, row in distance_df.iterrows():
+        dist_vec = np.array(row['distance_vector'], dtype=float)  # shape = (L,)
 
         L = dist_vec.shape[0]
         N = int((1 + math.isqrt(1 + 8 * L)) // 2)
