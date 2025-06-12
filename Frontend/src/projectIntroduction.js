@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { Typography, Card, Tag, Button, Dropdown } from 'antd';
-import { GithubOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
+import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
 
 const data = [
     { name: 'The 4D Nucleome (4DN) Data Portal', value: 20 },
@@ -138,7 +138,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                <GithubOutlined
+                                <ProfileOutlined
                                     style={{
                                         fontSize: '28px',
                                         color: '#333',
@@ -155,16 +155,29 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
             >
                 <div style={{ width: "100%", textAlign: 'left', marginBottom: '10px' }}>
                     <Text style={{ fontSize: '1rem', lineHeight: 1.5 }}>
-                    The three-dimensional (3D) organization of chromatin is well known to play an essential role in a wide range of biological functions. A deeper understanding of chromatin structures is crucial for decoding critical biology processes. To support the exploration of chromatin architecture, we developed ChromPolymerDB, a publicly accessible, high-resolution database of single-cell 3D chromatin structures reconstructed using polymer physics-based modeling of Hi-C data. This database covers a substantial number of single-cell chromatin structures at 5 kb resolution across 50 diverse human cell types and experimental conditions. It provides an interactive web interface with integrated spatial and structural analysis tools, enables multi-omics integration with gene expression, epigenetic marks, and other regulatory elements, and allows comparative analysis to identify structural rewiring events—such as enhancer hub emergence or loop remodeling—across conditions, developmental stages, or disease states. These innovations make ChromPolymerDB a powerful tool for researchers investigating the interplay between chromatin architecture and gene regulation and performing comparative 3D genomics.
+                        The three-dimensional (3D) organization of chromatin is well known to play an essential role in a wide range of biological functions. A deeper understanding of chromatin structures is crucial for decoding critical biology processes. To support the exploration of chromatin architecture, we developed ChromPolymerDB, a publicly accessible, high-resolution database of single-cell 3D chromatin structures reconstructed using polymer physics-based modeling of Hi-C data. This database covers a substantial number of single-cell chromatin structures at 5 kb resolution across 50 diverse human cell types and experimental conditions. It provides an interactive web interface with integrated spatial and structural analysis tools, enables multi-omics integration with gene expression, epigenetic marks, and other regulatory elements, and allows comparative analysis to identify structural rewiring events—such as enhancer hub emergence or loop remodeling—across conditions, developmental stages, or disease states. These innovations make ChromPolymerDB a powerful tool for researchers investigating the interplay between chromatin architecture and gene regulation and performing comparative 3D genomics.
                     </Text>
                 </div>
 
-                {/* example data showing button */}
-                <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
-                    <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
-                        Example Data
-                    </Button>
-                </Dropdown>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                    <a
+                        href="https://github.com/ldu3/ChromPolymerDB_tutorial"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ width: "100%"}}
+                    >
+                        <Button style={{ width: "30%", color: 'white', backgroundColor: '#FF7F50', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end"  >
+                            Tutorial
+                        </Button>
+                    </a>
+
+                    {/* example data showing button */}
+                    <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
+                        <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
+                            Example Data
+                        </Button>
+                    </Dropdown>
+                </div>
 
                 <Title level={5}>Key Features</Title>
 
@@ -180,7 +193,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>3D physical distance</Tag>
                 </Card>
 
-                <img src='abstract_horizental.png' style={{ width: '100%', marginTop: 30 }}></img>
+                <img src='abstract_vertical.png' style={{ width: '100%', marginTop: 30 }}></img>
                 {/* <Title level={5}>Data Coverage</Title> */}
 
                 {/* <div
