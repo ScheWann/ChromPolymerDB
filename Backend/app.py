@@ -144,14 +144,15 @@ def downloadFullChromosome3dDistanceData():
     is_example = request.json['is_example']
     file_path, npz_file = download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences, is_example)
 
-    @after_this_request
-    def remove_file(response):
-        try:
-            os.remove(file_path)
-            app.logger.info("Deleted temporary npz file: %s", file_path)
-        except Exception as error:
-            app.logger.error("Failed to delete npz file: %s", error)
-        return response
+    if not is_example:
+        @after_this_request
+        def remove_file(response):
+            try:
+                os.remove(file_path)
+                app.logger.info("Deleted temporary npz file: %s", file_path)
+            except Exception as error:
+                app.logger.error("Failed to delete npz file: %s", error)
+            return response
     return npz_file
 
 
@@ -163,14 +164,15 @@ def downloadFullChromosome3dPositionData():
     is_example = request.json['is_example']
     file_path, csv_file = download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences, is_example)
 
-    @after_this_request
-    def remove_file(response):
-        try:
-            os.remove(file_path)
-            app.logger.info("Deleted temporary csv file: %s", file_path)
-        except Exception as error:
-            app.logger.error("Failed to delete csv file: %s", error)
-        return response
+    if not is_example:
+        @after_this_request
+        def remove_file(response):
+            try:
+                os.remove(file_path)
+                app.logger.info("Deleted temporary csv file: %s", file_path)
+            except Exception as error:
+                app.logger.error("Failed to delete csv file: %s", error)
+            return response
     return csv_file
 
 
