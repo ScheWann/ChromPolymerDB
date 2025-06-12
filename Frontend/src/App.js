@@ -707,11 +707,20 @@ function App() {
   }
 
   const onClickOriginalDownloadItems = ({ key }) => {
-    if (key === '1') {
-      downloadDistance(false);
-    }
-    if (key === '2') {
-      downloadPositionData(false);
+    if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
+      if (key === '1') {
+        downloadDistance(false, false);
+      }
+      if (key === '2') {
+        downloadPositionData(false, false);
+      }
+    } else {
+      if (key === '1') {
+        downloadDistance(false, true);
+      }
+      if (key === '2') {
+        downloadPositionData(false, true);
+      }
     }
   }
 
@@ -725,7 +734,7 @@ function App() {
   }
 
   // Download 5000 samples of beads' distance data
-  const downloadDistance = async (isComparison) => {
+  const downloadDistance = async (isComparison, isExample) => {
     if (isComparison) {
       setComparisonChromosomeDownloadSpinner(true);
     } else {
@@ -740,6 +749,7 @@ function App() {
           cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
           chromosome_name: chromosomeName,
           sequences: selectedChromosomeSequence,
+          is_example: isExample
         }),
       });
 
@@ -787,7 +797,7 @@ function App() {
   };
 
   // Download 5000 samples of beads' position data (.csv)
-  const downloadPositionData = async (isComparison) => {
+  const downloadPositionData = async (isComparison, is_example) => {
     if (isComparison) {
       setComparisonChromosomeDownloadSpinner(true);
     } else {
@@ -802,6 +812,7 @@ function App() {
           cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
           chromosome_name: chromosomeName,
           sequences: selectedChromosomeSequence,
+          is_example: is_example
         }),
       });
 

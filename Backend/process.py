@@ -754,7 +754,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 """
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences):
+def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences, is_example):
     def checking_existing_data():
         with db_conn() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -814,21 +814,33 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 
     existing_data_status = checking_existing_data()
 
-    if existing_data_status['exists']:
-        parquet_file_path = get_distance_data()
-        print(f"Existing data found: {parquet_file_path}")
-        return parquet_file_path, send_file(
-            parquet_file_path,
-            as_attachment=True,
-            download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
-        )
+    if not is_example:
+        if existing_data_status['exists']:
+            parquet_file_path = get_distance_data()
+            print(f"Existing data found: {parquet_file_path}")
+            return parquet_file_path, send_file(
+                parquet_file_path,
+                as_attachment=True,
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+            )
+        else:
+            return None, None
     else:
-        return None, None
+        # For example data, we can directly return the path to the example file
+        example_file_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_distance.npz"
+        if os.path.exists(example_file_path):
+            return example_file_path, send_file(
+                example_file_path,
+                as_attachment=True,
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+            )
+        else:
+            return None, None
 
 """
 Download the full 3D chromosome samples position data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences):
+def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences, is_example):
     query = """
         SELECT *
         FROM position
@@ -838,27 +850,39 @@ def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequen
             AND end_value = %s
         ORDER BY sampleid, pid
     """
-    with db_conn() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
-            rows = cur.fetchall()
+    if not is_example:
+        with db_conn() as conn:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(query, (cell_line, chromosome_name, sequences["start"], sequences["end"]))
+                rows = cur.fetchall()
 
-    if not rows:
-        return None, None
+        if not rows:
+            return None, None
 
-    # Convert to DataFrame
-    df = pd.DataFrame(rows)
+        # Convert to DataFrame
+        df = pd.DataFrame(rows)
 
-    # Save to a temporary CSV file
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp_file:
-        df.to_csv(tmp_file.name, index=False)
-        csv_file_path = tmp_file.name
+        # Save to a temporary CSV file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as tmp_file:
+            df.to_csv(tmp_file.name, index=False)
+            csv_file_path = tmp_file.name
 
-    return csv_file_path, send_file(
-        csv_file_path,
-        as_attachment=True,
-        download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
-    )
+        return csv_file_path, send_file(
+            csv_file_path,
+            as_attachment=True,
+            download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
+        )
+    else:
+        # For example data, we can directly return the path to the example file
+        example_file_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_position.csv"
+        if os.path.exists(example_file_path):
+            return example_file_path, send_file(
+                example_file_path,
+                as_attachment=True,
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
+            )
+        else:
+            return None, None
 
 """
 Returns currently existing other cell line list in given chromosome name and sequences

@@ -141,7 +141,8 @@ def downloadFullChromosome3dDistanceData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
-    file_path, npz_file = download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences)
+    is_example = request.json['is_example']
+    file_path, npz_file = download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences, is_example)
 
     @after_this_request
     def remove_file(response):
@@ -159,7 +160,8 @@ def downloadFullChromosome3dPositionData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
-    file_path, csv_file = download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences)
+    is_example = request.json['is_example']
+    file_path, csv_file = download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences, is_example)
 
     @after_this_request
     def remove_file(response):
