@@ -180,9 +180,10 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>3D physical distance</Tag>
                 </Card>
 
-                <Title level={5}>Data Coverage</Title>
+                <img src='abstract_horizental.png' style={{ width: '100%', marginTop: 30 }}></img>
+                {/* <Title level={5}>Data Coverage</Title> */}
 
-                <div
+                {/* <div
                     ref={chartRef}
                     style={{
                         display: 'flex',
@@ -190,7 +191,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         alignItems: 'center',
                         marginTop: 30
                     }}
-                />
+                /> */}
             </Card>
         </div>
     );
