@@ -166,7 +166,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         rel="noopener noreferrer"
                         style={{ width: "100%"}}
                     >
-                        <Button style={{ width: "30%", color: 'white', backgroundColor: '#FF7F50', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end"  >
+                        <Button style={{ width: "30%", color: 'white', backgroundColor: '#9d4edd', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end"  >
                             Tutorial
                         </Button>
                     </a>
