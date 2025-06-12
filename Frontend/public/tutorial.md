@@ -2,24 +2,22 @@
 
 The three-dimensional (3D) organization of chromatin is well known to play an essential role in a wide range of biological functions. A deeper understanding of chromatin structures is crucial for decoding critical biology processes. To support the exploration of chromatin architecture, we developed ChromPolymerDB, a publicly accessible, high-resolution database of single-cell 3D chromatin structures reconstructed using polymer physics-based modeling of Hi-C data. This database covers a substantial number of single-cell chromatin structures at 5 kb resolution across 50 diverse human cell types and experimental conditions. It provides an interactive web interface with integrated spatial and structural analysis tools, enables multi-omics integration with gene expression, epigenetic marks, and other regulatory elements, and allows comparative analysis to identify structural rewiring events—such as enhancer hub emergence or loop remodeling—across conditions, developmental stages, or disease states. These innovations make ChromPolymerDB a powerful tool for researchers investigating the interplay between chromatin architecture and gene regulation and performing comparative 3D genomics.
 
-![Main Page](./tutorial_images/home_page.png)
-
 
 ## Querying the Data
 
 - There are two ways to query the Hi-C data and corresponding single-cell chromatin structures:
   1. Based on the cell line name and genomic location.
-     ![data query](./tutorial_images/data_query_short.png)
+     ![full](./tutorial_images/data_query_short.png)
 
   2. Based on the cell line name and gene name.
-     ![data query](./tutorial_images/data_query_gene_short.png)
+     ![full](./tutorial_images/data_query_gene_short.png)
 
 After entering all the information, click ![small](./tutorial_images/show_heatmap.png)
 
 ## Examine the FoldRec interactions
 
 Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
-![FoldRec_full_1](./tutorial_images/FoldRec_full_1.png)
+![large](./tutorial_images/FoldRec_full_1.png)
 
 - The upper panel shows the contact information within the corresponding region of the selected cell sample. 
    - The tool buttons on the top-right are:
@@ -36,7 +34,7 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 
 #### By clicking ![small](./tutorial_images/expand_button.png) (Expand the heatmap view), users can check the FoldRec interactions in details with epigenetic tracks from the ENCODE Portal or their own custom tracks
 
-![foldrec 2](./tutorial_images/FoldRec_2_full.png)
+![large](./tutorial_images/FoldRec_2_full.png)
 
 - The upper panel shows the tool buttons:
    - Scale bar to change the heatmap color scale. 
@@ -49,13 +47,13 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 
 ![medium](./tutorial_images/tracks.png)
 
-![tracks](./tutorial_images/tracks_details.png)
+![large](./tutorial_images/tracks_details.png)
 
 
 ## Exploring the 3D single-cell chromatin structures
 After examining the 2D contact information, users can click ![small](./tutorial_images/3D_Structure.png) to generate the 3D single-cell chromatin structures of the corresponding locus.
 
-![single cell conformation](./tutorial_images/single_cell_conformation.png)
+![large](./tutorial_images/single_cell_conformation.png)
 
 - The Sample 0 (Ens.Rep.) shows the most representative single-cell structure (highest correlation with average), and users can switch among all available structures or examine specific samples by entering a sample ID.
 - Download 5,000 single-cell 3D chromatin chains, including positional coordinates and beads-to-beads distance matrices.
@@ -75,8 +73,8 @@ After examining the 2D contact information, users can click ![small](./tutorial_
 #### After selecting beads and clicking ![small](./tutorial_images/generate_distance_logo.png), the pairwise 3D distance and the distribution among 5,000 simulated structures of selected beads will show up.
 - We disabled this button until minimum number of beads selection is made. 
 
-![generate_distance](./tutorial_images/generate_distance.png)
-![3D distance](./tutorial_images/3D_distance.png)
+![large](./tutorial_images/generate_distance.png)
+![large](./tutorial_images/3D_distance.png)
 
 - The tool buttons:
    - Restore the original view.
@@ -90,22 +88,22 @@ After examining the 2D contact information, users can click ![small](./tutorial_
 
 By clicking the + on the right of the data query bar. Users can select other cell samples to do the FoldRec interactions comparision.
 
-![foldrec comparison data query](./tutorial_images/FoldRec_comparision_data_query.png)
+![large-pro](./tutorial_images/FoldRec_comparision_data_query.png)
 
-![FoldRec_comparison](./tutorial_images/FoldRec_comparision.png)
+![large-pro](./tutorial_images/FoldRec_comparision.png)
 
 ### 3D chromatin structures comparision 
 
 By clicking the + on the right of the chromatin structure window. Users can select other cell samples to do the chromatin struction comparision.
 
-![chromatin structure comparision](./tutorial_images/chromatin_structure_comparision.png)
+![large-pro](./tutorial_images/chromatin_structure_comparision.png)
 
 
 ## Structure data analysis
 
 Both bead structure data (position data) and bead distance data of the selected region can be downloaded and used for downstream analysis. Please check the following codes for more details.
 
-![download data](./tutorial_images/data_download.png)
+![large-pro](./tutorial_images/data_download.png)
 
 - [Distance data clustering](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/scr/clustering.ipynb)
 

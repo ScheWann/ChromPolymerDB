@@ -26,31 +26,62 @@ export const TutorialDrawer = ({ visible, onClose }) => {
             closable={{ 'aria-label': 'Close Button' }}
             onClose={onClose}
             open={visible}
-        >
-            <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                skipHtml={false}
-                components={{
-                    img: ({ node, src, alt, title, ...props }) => {
-                        if (alt === 'small') {
-                            return <img src={src} alt={alt} title={title} {...props} />;
-                        }
-                        if (alt === 'medium') {
+        >   
+            <div className="tutorial-drawer-content">
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    skipHtml={false}
+                    components={{
+                        img: ({ node, src, alt, title, ...props }) => {
+                            if (alt === 'small') {
+                                return <img src={src} alt={alt} title={title} {...props} />;
+                            }
+                            if (alt === 'medium') {
+                                return (
+                                    <img
+                                        src={src}
+                                        alt={alt}
+                                        title={title}
+                                        {...props}
+                                        style={{
+                                            display: 'block',
+                                            width: '20%',
+                                            margin: '0 auto',
+                                        }}
+                                    />
+                                );
+                            }
+                            if (alt === 'large') {
+                                return (
+                                    <img
+                                        src={src}
+                                        alt={alt}
+                                        title={title}
+                                        {...props}
+                                        style={{
+                                            display: 'block',
+                                            width: '50%',
+                                            margin: '0 auto',
+                                        }}
+                                    />
+                                );
+                            }
+                            if (alt === 'large-pro') {
+                                return (
+                                    <img
+                                        src={src}
+                                        alt={alt}
+                                        title={title}
+                                        {...props}
+                                        style={{
+                                            display: 'block',
+                                            width: '60%',
+                                            margin: '0 auto',
+                                        }}
+                                    />
+                                );
+                            }
                             return (
-                                <img
-                                    src={src}
-                                    alt={alt}
-                                    title={title}
-                                    {...props}
-                                    style={{ 
-                                        display: 'block',
-                                        width: '20%',
-                                        margin: '0 auto',
-                                    }}
-                                />
-                            );
-                        }
-                        return (
                                 <img
                                     src={src}
                                     alt={alt}
@@ -59,14 +90,73 @@ export const TutorialDrawer = ({ visible, onClose }) => {
                                     style={{
                                         display: 'block',
                                         margin: '16px auto',
-                                        width: '50%',
+                                        width: '90%',
                                     }}
                                 />
                             );
-                    }
-                }}>
-                {content}
-            </ReactMarkdown>
+                        },
+                        p: ({ node, children, ...props }) => (
+                            <p
+                                {...props}
+                                style={{
+                                    fontSize: '16px',
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                {children}
+                            </p>
+                        ),
+                        ul: ({ node, children, ...props }) => (
+                            <ul
+                                {...props}
+                                style={{
+                                    fontSize: '16px',
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                {children}
+                            </ul>
+                        ),
+                        ol: ({ node, children, ...props }) => (
+                            <ol
+                                {...props}
+                                style={{
+                                    fontSize: '16px',
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                {children}
+                            </ol>
+                        ),
+                        h1: ({ node, children, ...props }) => (
+                            <h1
+                                {...props}
+                                style={{
+                                    borderBottom: '2px solid #F0F0F0',
+                                    paddingBottom: '8px',
+                                    paddingTop: '30px',
+                                    marginTop: 0,
+                                }}
+                            >
+                                {children}
+                            </h1>
+                        ),
+                        h2: ({ node, children, ...props }) => (
+                            <h2
+                                {...props}
+                                style={{
+                                    borderBottom: '2px solid #F0F0F0',
+                                    paddingBottom: '8px',
+                                    marginTop: '20px',
+                                }}
+                            >
+                                {children}
+                            </h2>
+                        ),
+                    }}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </Drawer>
     );
 }

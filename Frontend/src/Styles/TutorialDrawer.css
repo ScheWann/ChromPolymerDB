@@ -1,3 +1,15 @@
 .ant-drawer-content-wrapper {
     width: 100% !important;
 }
+
+.ant-drawer-body {
+    padding-top: 0 !important;
+}
+
+.tutorial-drawer-content {
+    margin: 0 auto;
+    width: 65%;
+    padding: 0 50px 0 50px;
+    border-left: 1px solid #F0F0F0;
+    border-right: 1px solid #F0F0F0;
+}
