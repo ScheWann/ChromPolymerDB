@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Drawer } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import "./Styles/TutorialDrawer.css";
 
 export const TutorialDrawer = ({ visible, onClose }) => {
     const [content, setContent] = useState('');
@@ -43,7 +44,7 @@ export const TutorialDrawer = ({ visible, onClose }) => {
                                     {...props}
                                     style={{ 
                                         display: 'block',
-                                        width: '40%',
+                                        width: '20%',
                                         margin: '0 auto',
                                     }}
                                 />
@@ -58,8 +59,7 @@ export const TutorialDrawer = ({ visible, onClose }) => {
                                     style={{
                                         display: 'block',
                                         margin: '16px auto',
-                                        width: '600px',
-                                        maxWidth: '100%',
+                                        width: '50%',
                                     }}
                                 />
                             );

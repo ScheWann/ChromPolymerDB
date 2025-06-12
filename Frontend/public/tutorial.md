@@ -36,7 +36,7 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 
 #### By clicking ![small](./tutorial_images/expand_button.png) (Expand the heatmap view), users can check the FoldRec interactions in details with epigenetic tracks from the ENCODE Portal or their own custom tracks
 
-![foldrec 2](./tutorial_images/FoldRec2_full.png)
+![foldrec 2](./tutorial_images/FoldRec_2_full.png)
 
 - The upper panel shows the tool buttons:
    - Scale bar to change the heatmap color scale. 
