@@ -579,7 +579,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                 <span>
                                     Generate 3D chromosome structure based on in view.<br />
                                     <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> The chromosome structure generated within
-                                    <span style={{ color: '#3457D5', fontWeight: 'bold' }}> 10 minutes </span> is the same.
+                                    <span style={{ color: '#3457D5', fontWeight: 'bold' }}> 8 minutes </span> is the same.
                                 </span>
                             }
                             color='white'
