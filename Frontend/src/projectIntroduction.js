@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Typography, Card, Tag, Button, Dropdown } from 'antd';
+import { Typography, Card, Tag, Button, Dropdown, Drawer } from 'antd';
 import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
+import { TutorialDrawer } from './TutorialDrawer.js';
 
 const data = [
     { name: 'The 4D Nucleome (4DN) Data Portal', value: 20 },
@@ -24,6 +25,7 @@ const { Title, Text } = Typography;
 
 export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence }) => {
     const chartRef = useRef(null);
+    const [drawerVisible, setDrawerVisible] = useState(false);
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -133,19 +135,14 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         </Title>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                             <span style={{ fontWeight: 'bold' }}>Tutorial: </span>
-                            <a
-                                href="https://github.com/ldu3/ChromPolymerDB_tutorial"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
                                 <ProfileOutlined
                                     style={{
                                         fontSize: '28px',
                                         color: '#333',
                                         transition: 'color 0.3s'
                                     }}
+                                    onClick={() => setDrawerVisible(true)}
                                 />
-                            </a>
                         </div>
                     </div>
                 }
@@ -160,16 +157,14 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                    <a
-                        href="https://github.com/ldu3/ChromPolymerDB_tutorial"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ width: "100%"}}
-                    >
-                        <Button style={{ width: "30%", color: 'white', backgroundColor: '#9d4edd', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end"  >
-                            Tutorial
-                        </Button>
-                    </a>
+                    <Button style={{ width: "30%", color: 'white', backgroundColor: '#9d4edd', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end" onClick={() => setDrawerVisible(true)} >
+                        Tutorial
+                    </Button>
+
+                    <TutorialDrawer
+                        visible={drawerVisible}
+                        onClose={() => setDrawerVisible(false)}
+                    />
 
                     {/* example data showing button */}
                     <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
