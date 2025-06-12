@@ -821,7 +821,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             return parquet_file_path, send_file(
                 parquet_file_path,
                 as_attachment=True,
-                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_distance_data.npz",
             )
         else:
             return None, None
@@ -832,7 +832,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             return example_file_path, send_file(
                 example_file_path,
                 as_attachment=True,
-                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.npz",
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_distance_data.npz",
             )
         else:
             return None, None
@@ -870,7 +870,7 @@ def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequen
         return csv_file_path, send_file(
             csv_file_path,
             as_attachment=True,
-            download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
+            download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_position_data.csv",
         )
     else:
         # For example data, we can directly return the path to the example file
@@ -879,7 +879,7 @@ def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequen
             return example_file_path, send_file(
                 example_file_path,
                 as_attachment=True,
-                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}.csv",
+                download_name=f"{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_position_data.csv",
             )
         else:
             return None, None
