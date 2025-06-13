@@ -74,8 +74,8 @@ function App() {
   // Define Tour steps
   const steps = [
     {
-      title: "Project Tutorial",
-      description: "Check out the project tutorial to understand the purpose and features of this tool.",
+      title: "Tutorial",
+      description: "Tutorial for a quick overview of this database’s purpose and key features.",
       target: () => document.querySelector(".projectTutorial"),
     },
     {
