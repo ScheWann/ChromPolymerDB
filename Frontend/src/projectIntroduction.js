@@ -136,6 +136,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                             <span style={{ fontWeight: 'bold' }}>Tutorial: </span>
                                 <ProfileOutlined
+                                    className='projectTutorial'
                                     style={{
                                         fontSize: '28px',
                                         color: '#333',

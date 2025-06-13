@@ -74,6 +74,11 @@ function App() {
   // Define Tour steps
   const steps = [
     {
+      title: "Project Tutorial",
+      description: "Check out the project tutorial to understand the purpose and features of this tool.",
+      target: () => document.querySelector(".projectTutorial"),
+    },
+    {
       title: "Toggle Mode",
       description: "Switch between Cell Line and Gene fields using this toggle.",
       target: () => document.querySelector(".switchWrapper"),
