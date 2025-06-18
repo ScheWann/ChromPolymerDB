@@ -851,7 +851,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         context.rotate(Math.PI / 4);
 
         const { start, end } = currentChromosomeSequence;
-        const maxRectSize = 10;
+        // const maxRectSize = 10;
         const step = 5000;
         const adjustedStart = Math.floor(start / step) * step;
         const adjustedEnd = Math.ceil(end / step) * step;
@@ -904,13 +904,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 let rectWidth = xScale(ibp + step) - xScale(ibp);
                 let rectHeight = yScale(jbp) - yScale(jbp + step);
 
-                if (rectWidth > maxRectSize || rectHeight > maxRectSize) {
-                    const scaleFactor = Math.min(maxRectSize / rectWidth, maxRectSize / rectHeight);
-                    const adjustedStep = step * scaleFactor;
+                // if (rectWidth > maxRectSize || rectHeight > maxRectSize) {
+                //     const scaleFactor = Math.min(maxRectSize / rectWidth, maxRectSize / rectHeight);
+                //     const adjustedStep = step * scaleFactor;
 
-                    rectWidth = xScale(ibp + adjustedStep) - xScale(ibp);
-                    rectHeight = yScale(jbp) - yScale(jbp + adjustedStep);
-                }
+                //     rectWidth = xScale(ibp + adjustedStep) - xScale(ibp);
+                //     rectHeight = yScale(jbp) - yScale(jbp + adjustedStep);
+                // }
 
                 rectWidth = Math.round(rectWidth);
                 rectHeight = Math.round(rectHeight);
