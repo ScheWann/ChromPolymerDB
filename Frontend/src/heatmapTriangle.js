@@ -862,11 +862,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         );
 
         const xScale = d3.scaleLinear()
-            .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            // .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([0, width - margin.left - margin.right]);
 
         const yScale = d3.scaleLinear()
-            .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            // .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
+            .domain([d3.min(axisValues), d3.max(axisValues)])
             .range([height - margin.top - margin.bottom, 0]);
 
         const transformedXScale = d3.scaleLinear()
@@ -953,20 +955,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         };
 
         const brushSvg = d3.select(brushSvgRef.current)
+            .attr("transform", "translate(-2, 0)")
             .attr('width', canvas.width)
             .attr('height', canvas.height);
 
         brushSvg.selectAll('*').remove();
 
         const clickableArea = [
-            [canvas.width / 2, margin.top],
-            [0, canvas.height],
-            [canvas.width, canvas.height - margin.bottom],
+            [canvas.width / 2, -margin.top - canvasUnitRectSize * Math.sqrt(2) / 2],
+            [-margin.left, canvas.height - canvasUnitRectSize * Math.sqrt(2) / 2],
+            [canvas.width+ margin.right, canvas.height - canvasUnitRectSize * Math.sqrt(2) / 2],
         ];
 
         // Limit the clickable area to the triangle
         brushSvg.append('polygon')
             .attr('points', clickableArea.map(d => d.join(',')).join(' '))
+            // .attr('fill', 'green')
+            // .attr('opacity', 0.3)
             .attr('fill', 'transparent')
 
         // Draw a brushed triangle area on click
@@ -1133,7 +1138,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                         />
                     )}
                 </Modal>
-                <Tooltip 
+                <Tooltip
                     title="Download non-random interaction data"
                     color='white'
                     overlayInnerStyle={{
@@ -1159,7 +1164,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     </Dropdown>
                 </Tooltip>
             </div>
-            <canvas ref={canvasRef} style={{ marginTop: 65 }} />
+            <canvas ref={canvasRef} style={{ marginTop: 65, transform: 'translate(-2px, 0)' }} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 65 }} />
             <svg ref={axisSvgRef} style={{ height: '50px', flexShrink: 0 }} />
             {/* {minCanvasDimension > 0 && (
