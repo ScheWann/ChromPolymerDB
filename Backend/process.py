@@ -87,7 +87,6 @@ def gene_names_list():
                 """
                 SELECT DISTINCT symbol
                 FROM gene
-                WHERE chromosome = '12' OR chromosome = '17'
             """
             )
             rows = cur.fetchall()
