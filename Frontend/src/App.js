@@ -883,14 +883,14 @@ function App() {
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
     setChromosome3DExampleID(key);
-    const cacheKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
+    const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!chromosome3DExampleData[cacheKey]) {
-      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-        fetchExampleChromos3DData(cellLineName, key, "sampleChange", false);
-        progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, key, false);
+      if (!isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)) {
+        fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", false);
+        progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
-        fetchExistChromos3DData(false, key, cellLineName, false);
-        progressPolling(cellLineName, 'chr8', [127300000, 128300000], key, true);
+        fetchExistChromos3DData(false, key, chromosome3DCellLineName, false);
+        progressPolling(chromosome3DCellLineName, 'chr8', [127300000, 128300000], key, true);
       }
     };
   };
@@ -930,7 +930,6 @@ function App() {
       fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
       progressPolling(value, chromosomeName, selectedChromosomeSequence, comparisonCellLine3DSampleID, false);
     } else {
-      // fetchExistChromos3DData(true, value === 'GM' ? exampleDataBestSampleID.GM : value === 'IMR' ? exampleDataBestSampleID.IMR : exampleDataBestSampleID.K, value, true);
       fetchExistChromos3DData(true, exampleDataBestSampleID[value], value, true);
       progressPolling(value, 'chr8', [127300000, 128300000], exampleDataBestSampleID[value], true);
     }
@@ -1172,7 +1171,7 @@ function App() {
                   geneSize={geneSize}
                   totalChromosomeSequences={totalChromosomeSequences}
                   selectedChromosomeSequence={selectedChromosomeSequence}
-                  chromosome3DExampleID={chromosome3DExampleID}
+                  setChromosome3DExampleID={setChromosome3DExampleID}
                   geneName={geneName}
                   setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                   setChromosome3DLoading={setChromosome3DLoading}
@@ -1211,7 +1210,7 @@ function App() {
                 geneSize={geneSize}
                 totalChromosomeSequences={totalChromosomeSequences}
                 selectedChromosomeSequence={selectedChromosomeSequence}
-                chromosome3DExampleID={chromosome3DExampleID}
+                setChromosome3DExampleID={setChromosome3DExampleID}
                 geneName={geneName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                 setChromosome3DLoading={setChromosome3DLoading}

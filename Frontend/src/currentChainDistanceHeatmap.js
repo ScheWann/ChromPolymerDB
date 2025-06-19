@@ -38,7 +38,7 @@ export const CurrentChainDistanceHeatmap = ({ chromosomeCurrentSampleDistanceVec
         const minValue = d3.min(flattened) || 0;
 
         const size = dimensions.width;
-        const legendHeight = 30;
+
         const [numRows, numCols] = [
             chromosomeCurrentSampleDistanceVector.length,
             chromosomeCurrentSampleDistanceVector[0].length

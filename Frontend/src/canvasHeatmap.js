@@ -7,7 +7,7 @@ import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, chromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataBestSampleID, progressPolling }) => {
+export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setComparisonCellLine3DLoading, setComparisonCellLine3DData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataBestSampleID, progressPolling }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -110,6 +110,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                         [cacheKey + "_fq_data"]: data["fq_data"],
                         [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
                     }));
+                    setChromosome3DExampleID(sample_id);
                     setChromosome3DLoading(false);
                 });
         }
@@ -120,8 +121,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
         setChromosome3DLoading(true);
         setSelectedSphereLists({ [cellLineName]: {} });
         if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
-            fetchExampleChromos3DData(independentHeatmapCellLine, chromosome3DExampleID);
-            progressPolling(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence, chromosome3DExampleID, false);
+            fetchExampleChromos3DData(independentHeatmapCellLine, 0);
+            progressPolling(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence, 0, false);
         } else {
             fetchExistChromos3DData(true, exampleDataBestSampleID[cellLineName], cellLineName, false);
             progressPolling(cellLineName, 'chr8', [127300000, 128300000], exampleDataBestSampleID[cellLineName], true);
