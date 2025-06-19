@@ -345,17 +345,17 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
         distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
-                .attr("transform", `translate(0, ${index * 20})`);
+                .attr("transform", `translate(-15, ${index * 15})`);
 
             legendRow.append("rect")
-                .attr("width", 15)
-                .attr("height", 15)
+                .attr("width", 12)
+                .attr("height", 12)
                 .attr("fill", colorScale(cellLine));
 
             legendRow.append("text")
-                .attr("x", 20)
-                .attr("y", 12)
-                .attr("font-size", "12px")
+                .attr("x", 15)
+                .attr("y", 9)
+                .attr("font-size", "10px")
                 .text(cellLineDict[cellLine]);
         });
 
