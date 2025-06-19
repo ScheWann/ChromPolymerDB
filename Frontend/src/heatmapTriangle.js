@@ -836,8 +836,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
 
-        const width = (Math.min(parentWidth, parentHeight) - margin.left - margin.right);
-        const height = (Math.min(parentWidth, parentHeight) - margin.top - margin.bottom);
+        const width = Math.min(parentWidth, parentHeight);
+        const height = Math.min(parentWidth, parentHeight);
 
         canvas.width = width * Math.sqrt(2);
         canvas.height = height / Math.sqrt(2);
@@ -849,6 +849,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         context.scale(1, -1)
         context.translate(canvas.width / 2, -canvas.height * 2);
         context.rotate(Math.PI / 4);
+
+        const dx = Math.sin(Math.PI / 4) * 10;
+        const dy = Math.cos(Math.PI / 4) * 10;
+        context.translate(-dx, -dy);
 
         const { start, end } = currentChromosomeSequence;
         // const maxRectSize = 10;
@@ -862,14 +866,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         );
 
         const xScale = d3.scaleLinear()
-            // .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
             .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([0, width - margin.left - margin.right]);
+            .range([0, width]);
 
         const yScale = d3.scaleLinear()
-            // .domain([currentChromosomeSequence.start, currentChromosomeSequence.end])
             .domain([d3.min(axisValues), d3.max(axisValues)])
-            .range([height - margin.top - margin.bottom, 0]);
+            .range([height, 0]);
 
         const transformedXScale = d3.scaleLinear()
             .domain([d3.min(axisValues), d3.max(axisValues)])
@@ -962,17 +964,17 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         brushSvg.selectAll('*').remove();
 
         const clickableArea = [
-            [canvas.width / 2, -margin.top - canvasUnitRectSize * Math.sqrt(2) / 2],
-            [-margin.left, canvas.height - canvasUnitRectSize * Math.sqrt(2) / 2],
-            [canvas.width+ margin.right, canvas.height - canvasUnitRectSize * Math.sqrt(2) / 2],
+            [canvas.width / 2, -canvasUnitRectSize * Math.sqrt(2)],
+            [0 - canvasUnitRectSize * Math.sqrt(2), canvas.height],
+            [canvas.width + canvasUnitRectSize * Math.sqrt(2), canvas.height],
         ];
 
         // Limit the clickable area to the triangle
         brushSvg.append('polygon')
             .attr('points', clickableArea.map(d => d.join(',')).join(' '))
-            // .attr('fill', 'green')
-            // .attr('opacity', 0.3)
-            .attr('fill', 'transparent')
+            .attr('fill', 'green')
+            .attr('opacity', 0.2)
+            // .attr('fill', 'transparent')
 
         // Draw a brushed triangle area on click
         brushSvg.on('click', (e) => {
@@ -1164,7 +1166,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     </Dropdown>
                 </Tooltip>
             </div>
-            <canvas ref={canvasRef} style={{ marginTop: 65, transform: 'translate(-2px, 0)' }} />
+            <canvas ref={canvasRef} style={{ marginTop: 65, transform: 'translate(-2px, 0px)' }} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 65 }} />
             <svg ref={axisSvgRef} style={{ height: '50px', flexShrink: 0 }} />
             {/* {minCanvasDimension > 0 && (
