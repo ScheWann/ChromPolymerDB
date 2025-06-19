@@ -854,6 +854,12 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const dy = Math.cos(Math.PI / 4) * 10;
         context.translate(-dx, -dy);
 
+        let matrix = new DOMMatrix();
+        matrix = matrix.scale(1, -1);
+        matrix = matrix.translate(canvas.width / 2, -canvas.height * 2);
+        matrix = matrix.rotate(45); 
+        matrix = matrix.translate(-dx, -dy);
+
         const { start, end } = currentChromosomeSequence;
         // const maxRectSize = 10;
         const step = 5000;
@@ -899,6 +905,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             return inRange;
         };
 
+        const cellTable = [];
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
                 const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || { fq: -1, fdr: -1, rawc: -1 };
@@ -926,6 +933,22 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 }
                 context.fillRect(x, y, rectWidth, rectHeight);
+
+                const centerX = x + rectWidth / 2;
+                const centerY = y + rectHeight / 2;
+
+                const angle = Math.PI / 4;
+                const offset = (rectWidth / Math.sqrt(2));
+
+                const topVertexX = centerX + Math.sin(angle) * offset;
+                const topVertexY = centerY + Math.cos(angle) * offset;
+
+                const isValid = jbp > ibp;
+                cellTable.push({
+                    valid: isValid,
+                    center: [centerX, centerY],
+                    topVertex: [topVertexX, topVertexY]
+                });
             });
         });
 
@@ -937,9 +960,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr("x1", startX + margin.left)
+                .attr("x1", Math.max(startX + margin.left - 2, 5))
                 .attr("y1", 0)
-                .attr("x2", startX + margin.left)
+                .attr("x2", Math.max(startX + margin.left - 2, 5))
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3)
@@ -947,9 +970,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
             axisSvg.append("line")
                 .attr('class', 'range-line')
-                .attr("x1", endX + margin.left)
+                .attr("x1", Math.min(endX + margin.left - 2, canvas.width + 1))
                 .attr("y1", 0)
-                .attr("x2", endX + margin.left)
+                .attr("x2", Math.min(endX + margin.left - 2, canvas.width + 1))
                 .attr("y2", 50)
                 .attr("stroke", "#C0C0C0")
                 .attr("stroke-width", 3)
@@ -974,43 +997,86 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             .attr('points', clickableArea.map(d => d.join(',')).join(' '))
             .attr('fill', 'green')
             .attr('opacity', 0.2)
-            // .attr('fill', 'transparent')
+        // .attr('fill', 'transparent')
 
         // Draw a brushed triangle area on click
         brushSvg.on('click', (e) => {
             const [mouseX, mouseY] = d3.pointer(e);
 
             brushSvg.selectAll('.triangle').remove();
+            brushSvg.selectAll('.triangle-line').remove();
 
-            const snappedX = Math.floor(mouseX / canvasUnitRectSize) * canvasUnitRectSize + canvasUnitRectSize / 2;
-            const snappedY = Math.floor(mouseY / canvasUnitRectSize) * canvasUnitRectSize;
+            const inverse = matrix.inverse();
+            const transformed = new DOMPoint(mouseX, mouseY).matrixTransform(inverse);
+            const [canvasX, canvasY] = [transformed.x, transformed.y];
 
-            if (d3.polygonContains(clickableArea, [snappedX, snappedY])) {
-                const offsetlength = (canvasUnitRectSize * Math.sqrt(2)) / 2;
-                const length = canvas.height - snappedY - offsetlength;
-                const pointBottomLeft = [Math.max(snappedX - length, 0), Math.min(snappedY + length, canvas.height - offsetlength)];
-                const pointBottomRight = [Math.min(snappedX + length, canvas.width), Math.min(snappedY + length, canvas.height - offsetlength)];
+            let closest = null;
+            let minDist = Infinity;
+            for (const cell of cellTable) {
+                if (!cell.valid) continue;
 
-                const trianglePoints = [
-                    [snappedX, snappedY],
-                    pointBottomLeft,
-                    pointBottomRight,
-                ];
+                const dx = canvasX - cell.center[0];
+                const dy = canvasY - cell.center[1];
+                const dist = dx * dx + dy * dy;
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = cell;
+                }
+            }
+            if (closest) {
+                const topVertexCanvas = closest.topVertex;
+                const topInOriginal = new DOMPoint(...topVertexCanvas).matrixTransform(matrix);
+                const snappedX = topInOriginal.x;
+                const snappedY = topInOriginal.y;
 
-                const brushedTriangleRangeStart = invertPosition(transformedXScale, snappedX - length);
-                const brushedTriangleRangeEnd = invertPosition(transformedXScale, snappedX + length);
+                if (d3.polygonContains(clickableArea, [snappedX, snappedY])) {
+                    const offsetlength = (canvasUnitRectSize * Math.sqrt(2)) / 2;
+                    const length = canvas.height - snappedY - offsetlength;
 
-                brushSvg.append('polygon')
-                    .attr('class', 'triangle')
-                    .attr('points', trianglePoints.map(d => d.join(',')).join(' '))
-                    .attr('fill', '#808080')
-                    .attr('opacity', 0.5);
+                    const pointBottomLeft = [snappedX - length - 2, canvas.height - offsetlength + 2];
+                    const pointBottomRight = [snappedX + length + 2, canvas.height - offsetlength + 2];
 
-                updateAxisWithBrushRange(brushedTriangleRangeStart, brushedTriangleRangeEnd);
-                setBrushedTriangleRange({ start: brushedTriangleRangeStart, end: brushedTriangleRangeEnd });
-            } else {
-                setBrushedTriangleRange({ start: 0, end: 0 });
-                axisSvg.selectAll('.range-line').remove();
+                    const trianglePoints = [
+                        [snappedX, snappedY],
+                        pointBottomLeft,
+                        pointBottomRight,
+                    ];
+
+                    const brushedTriangleRangeStart = invertPosition(transformedXScale, snappedX - length);
+                    const brushedTriangleRangeEnd = invertPosition(transformedXScale, snappedX + length);
+
+                    brushSvg.append('polygon')
+                        .attr('class', 'triangle')
+                        .attr('points', trianglePoints.map(d => d.join(',')).join(' '))
+                        .attr('fill', '#808080')
+                        .attr('opacity', 0.5);
+
+                    brushSvg.append("line")
+                        .attr('class', 'triangle-line')
+                        .attr("x1", Math.max(snappedX - length, 2))
+                        .attr("y1", canvas.height - offsetlength + 2)
+                        .attr("x2", Math.max(snappedX - length, 2))
+                        .attr("y2", canvas.height)
+                        .attr("stroke", "#C0C0C0")
+                        .attr("stroke-width", 3)
+                        .style("opacity", 0.5);
+
+                    brushSvg.append("line")
+                        .attr('class', 'triangle-line')
+                        .attr("x1", Math.min(snappedX + length, canvas.width - 2))
+                        .attr("y1", canvas.height - offsetlength + 2)
+                        .attr("x2", Math.min(snappedX + length, canvas.width - 2))
+                        .attr("y2", canvas.height)
+                        .attr("stroke", "#C0C0C0")
+                        .attr("stroke-width", 3)
+                        .style("opacity", 0.5);
+
+                    updateAxisWithBrushRange(brushedTriangleRangeStart, brushedTriangleRangeEnd);
+                    setBrushedTriangleRange({ start: brushedTriangleRangeStart, end: brushedTriangleRangeEnd });
+                } else {
+                    setBrushedTriangleRange({ start: 0, end: 0 });
+                    axisSvg.selectAll('.range-line').remove();
+                }
             }
         });
 
