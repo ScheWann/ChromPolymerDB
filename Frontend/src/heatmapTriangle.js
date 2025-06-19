@@ -839,29 +839,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         const width = Math.min(parentWidth, parentHeight);
         const height = Math.min(parentWidth, parentHeight);
 
-        canvas.width = width * Math.sqrt(2);
-        canvas.height = height / Math.sqrt(2);
-
-        setMinCanvasDimension(canvas.width);
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Apply rotation transformation
-        context.scale(1, -1)
-        context.translate(canvas.width / 2, -canvas.height * 2);
-        context.rotate(Math.PI / 4);
-
-        const dx = Math.sin(Math.PI / 4) * 10;
-        const dy = Math.cos(Math.PI / 4) * 10;
-        context.translate(-dx, -dy);
-
-        let matrix = new DOMMatrix();
-        matrix = matrix.scale(1, -1);
-        matrix = matrix.translate(canvas.width / 2, -canvas.height * 2);
-        matrix = matrix.rotate(45); 
-        matrix = matrix.translate(-dx, -dy);
-
         const { start, end } = currentChromosomeSequence;
-        // const maxRectSize = 10;
         const step = 5000;
         const adjustedStart = Math.floor(start / step) * step;
         const adjustedEnd = Math.ceil(end / step) * step;
@@ -887,6 +865,31 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             t => d3.interpolateReds(t * 0.8 + 0.2)
         ).domain(colorScaleRange);
 
+        const rectSize = yScale(axisValues[0]) - yScale(axisValues[0] + step);
+
+        setCanvasUnitRectSize(rectSize);
+
+        canvas.width = width * Math.sqrt(2);
+        canvas.height = canvas.width / 2 + Math.round(rectSize * Math.sqrt(2));
+
+        setMinCanvasDimension(canvas.width);
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Apply rotation transformation
+        context.scale(1, -1)
+        context.translate(canvas.width / 2, -canvas.height * 2 + rectSize * Math.sqrt(2));
+        context.rotate(Math.PI / 4);
+
+        const dx = Math.sin(Math.PI / 4) * 10;
+        const dy = Math.cos(Math.PI / 4) * 10;
+        context.translate(-dx, -dy);
+
+        let matrix = new DOMMatrix();
+        matrix = matrix.scale(1, -1);
+        matrix = matrix.translate(canvas.width / 2, -canvas.height * 2 + rectSize * Math.sqrt(2));
+        matrix = matrix.rotate(45);
+        matrix = matrix.translate(-dx, -dy);
+
         const invertPosition = (scale, value) => {
             return scale.invert(value);
         };
@@ -905,6 +908,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             return inRange;
         };
 
+        // record the cell information for triangle brush
         const cellTable = [];
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
@@ -912,33 +916,20 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
-                let rectWidth = xScale(ibp + step) - xScale(ibp);
-                let rectHeight = yScale(jbp) - yScale(jbp + step);
-
-                // if (rectWidth > maxRectSize || rectHeight > maxRectSize) {
-                //     const scaleFactor = Math.min(maxRectSize / rectWidth, maxRectSize / rectHeight);
-                //     const adjustedStep = step * scaleFactor;
-
-                //     rectWidth = xScale(ibp + adjustedStep) - xScale(ibp);
-                //     rectHeight = yScale(jbp) - yScale(jbp + adjustedStep);
-                // }
-
-                rectWidth = Math.round(rectWidth);
-                rectHeight = Math.round(rectHeight);
-                setCanvasUnitRectSize(rectWidth);
 
                 if (!fullTriangleVisible) {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (fdr > 0.05 || (fdr === -1 && fq === -1 && rawc === -1)) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 } else {
                     context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
                 }
-                context.fillRect(x, y, rectWidth, rectHeight);
 
-                const centerX = x + rectWidth / 2;
-                const centerY = y + rectHeight / 2;
+                context.fillRect(x, y, canvasUnitRectSize, canvasUnitRectSize);
+
+                const centerX = x + canvasUnitRectSize / 2;
+                const centerY = y + canvasUnitRectSize / 2;
 
                 const angle = Math.PI / 4;
-                const offset = (rectWidth / Math.sqrt(2));
+                const offset = (canvasUnitRectSize / Math.sqrt(2));
 
                 const topVertexX = centerX + Math.sin(angle) * offset;
                 const topVertexY = centerY + Math.cos(angle) * offset;
@@ -987,7 +978,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         brushSvg.selectAll('*').remove();
 
         const clickableArea = [
-            [canvas.width / 2, -canvasUnitRectSize * Math.sqrt(2)],
+            [canvas.width / 2, 0],
             [0 - canvasUnitRectSize * Math.sqrt(2), canvas.height],
             [canvas.width + canvasUnitRectSize * Math.sqrt(2), canvas.height],
         ];
@@ -995,9 +986,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         // Limit the clickable area to the triangle
         brushSvg.append('polygon')
             .attr('points', clickableArea.map(d => d.join(',')).join(' '))
-            .attr('fill', 'green')
-            .attr('opacity', 0.2)
-        // .attr('fill', 'transparent')
+            .attr('fill', 'transparent');
 
         // Draw a brushed triangle area on click
         brushSvg.on('click', (e) => {
@@ -1089,7 +1078,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         axisSvg.append('g')
             .attr("transform", "translate(2, 0)")
             .call(d3.axisBottom(transformedXScale)
-                .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
+            .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
             .selectAll("text")
             .style("text-anchor", "middle")
             .attr("dx", "0em")
