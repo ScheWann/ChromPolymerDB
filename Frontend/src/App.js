@@ -30,7 +30,7 @@ function App() {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
-  const [cellLineDict, setCellLineDict] = useState({ "K": "K562", "IMR": "IMR90", "GM": "GM12878" });
+  const [cellLineDict, setCellLineDict] = useState({});
   const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDownloadSpinner] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
@@ -142,6 +142,14 @@ function App() {
     return isMainCellLineOK && isChromosomeOK && isSequenceOK;
   }
 
+  useEffect(() => {
+    fetch('/cellLineDict.json')
+      .then(res => res.json())
+      .then(data => {
+        setCellLineDict(data);
+      })
+  }, []);
+
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
     if (isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
@@ -184,18 +192,18 @@ function App() {
   // fetch 3D chromosome data progress
   const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
     setChromosomeDataSpinnerProgress(0);
-    let first = true; 
+    let first = true;
 
     const fetchProgress = () => {
-        fetch(
-          `/api/getExample3DProgress`
-          + `?cell_line=${cellLineName}`
-          + `&chromosome_name=${chromosomeName}`
-          + `&start=${sequence.start}`
-          + `&end=${sequence.end}`
-          + `&sample_id=${sampleId}`
-          + `&is_exist=${isExist}`
-        )
+      fetch(
+        `/api/getExample3DProgress`
+        + `?cell_line=${cellLineName}`
+        + `&chromosome_name=${chromosomeName}`
+        + `&start=${sequence.start}`
+        + `&end=${sequence.end}`
+        + `&sample_id=${sampleId}`
+        + `&is_exist=${isExist}`
+      )
         .then(res => res.json())
         .then(({ percent }) => {
           setChromosomeDataSpinnerProgress(percent);
@@ -209,9 +217,9 @@ function App() {
 
           setTimeout(fetchProgress, delay);
         })
-      };
+    };
 
-      setTimeout(fetchProgress, 100);
+    setTimeout(fetchProgress, 100);
   }
 
   // update original part when chromosome3DExampleID changes
