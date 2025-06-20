@@ -203,7 +203,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         setLoading(true);
         const beadsArray = Object.keys(selectedSphereList[celllineName]);
 
-        if (isExampleMode) {
+        if (isExampleMode(celllineName, chromosomeName, currentChromosomeSequence)) {
             fetch('/api/getExistBeadDistribution', {
                 method: 'POST',
                 headers: {
