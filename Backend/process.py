@@ -50,6 +50,12 @@ conn_pool = ConnectionPool(
 redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 redis_client = redis.Redis(connection_pool=redis_pool)
 
+# Define a mapping for cell line labels
+label_mapping = {
+    "IMR": "Lung(IMR90)",
+    "K": "Blood Leukemia(K562)",
+    "GM": "Lymphoblastoid Cell Line(GM12878)",
+}
 
 """
 Read feather file using pandas
@@ -127,11 +133,6 @@ def cell_lines_list():
             """)
             rows = cur.fetchall()
 
-    label_mapping = {
-        "IMR": "Lung(IMR90)",
-        "K": "Blood Leukemia(K562)",
-        "GM": "Lymphoblastoid Cell Line(GM12878)",
-    }
     options = [
         {
             "value": row["cell_line"],
@@ -897,12 +898,6 @@ def comparison_cell_line_list(cell_line):
             """
             )
             rows = cur.fetchall()
-
-    label_mapping = {
-        "IMR": "Lung(IMR90)",
-        "K": "Blood Leukemia(K562)",
-        "GM": "Lymphoblastoid Cell Line(GM12878)",
-    }
 
     options = [
         {
