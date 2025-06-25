@@ -150,6 +150,23 @@ def initialize_tables():
         print("sequence table created successfully.")
     else:
         print("sequence table already exists, skipping creation.")
+    
+    if not table_exists(cur, "valid_regions"):
+        print("Creating valid_regions table...")
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS valid_regions ("
+            "vrid serial PRIMARY KEY,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "cell_line VARCHAR(50) NOT NULL,"
+            "start_value BIGINT NOT NULL DEFAULT 0,"
+            "end_value BIGINT NOT NULL DEFAULT 0,"
+            "UNIQUE(chrid, cell_line, start_value, end_value)"
+            ");"
+        )
+        conn.commit()
+        print("valid_regions table created successfully.")
+    else:
+        print("valid_regions table already exists, skipping creation.")
 
     if not table_exists(cur, "position"):
         print("Creating position table...")
@@ -346,6 +363,30 @@ def process_sequence_data(cur):
             cur.executemany(query, data_to_insert)
 
 
+def process_valid_regions_data(cur):
+    """Process and insert valid regions data from all CSV files in the specified folder."""
+    folder_path = os.path.join(ROOT_DIR, "valid_regions")
+    for filename in os.listdir(folder_path):
+        # check if the file is a CSV.gz file
+        if filename.endswith(".csv.gz"):
+            file_path = os.path.join(folder_path, filename)
+
+            df = pd.read_csv(
+                file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
+            )
+
+            df = df[["chrID", "cell_line", "start_value", "end_value"]]
+
+            query = """
+
+            INSERT INTO valid_regions (chrid, cell_line, start_value, end_value)
+            VALUES (%s, %s, %s, %s);
+            """
+
+            data_to_insert = df.to_records(index=False).tolist()
+            cur.executemany(query, data_to_insert)
+
+
 def process_non_random_hic_index(cur):
     """Create index on non_random_hic table for faster search."""
     print("Creating index idx_hic_search...")
@@ -437,6 +478,14 @@ def insert_data():
         print("Sequence data inserted successfully.")
     else:
         print("Sequence data already exists, skipping insertion.")
+    
+    # Insert valid regions data only if the table is empty
+    if not data_exists(cur, "valid_regions"):
+        print("Inserting valid regions data...")
+        process_valid_regions_data(cur)
+        print("valid regions data inserted successfully.")
+    else:
+        print("valid regions data already exists, skipping insertion.")
 
     # Insert epigenetic track data only if the table is empty
     if not data_exists(cur, "epigenetic_track"):

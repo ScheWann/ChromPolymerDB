@@ -94,6 +94,30 @@ def process_sequence_data(cur):
             cur.executemany(query, data_to_insert)
 
 
+def process_valid_regions_data(cur):
+    """Process and insert valid regions data from all CSV files in the specified folder."""
+    folder_path = os.path.join(NEW_DATA_DIR, "valid_regions")
+    for filename in os.listdir(folder_path):
+        # check if the file is a CSV.gz file
+        if filename.endswith(".csv.gz"):
+            file_path = os.path.join(folder_path, filename)
+
+            df = pd.read_csv(
+                file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
+            )
+
+            df = df[["chrID", "cell_line", "start_value", "end_value"]]
+
+            query = """
+
+            INSERT INTO valid_regions (chrid, cell_line, start_value, end_value)
+            VALUES (%s, %s, %s, %s);
+            """
+
+            data_to_insert = df.to_records(index=False).tolist()
+            cur.executemany(query, data_to_insert)
+
+
 def insert_new_cell_line():
     """Insert non random HiC data into the database if not already present.(it is seperated from insert_data() to avoid long running transactions)"""
     conn = get_db_connection(database=DB_NAME)
@@ -104,10 +128,16 @@ def insert_new_cell_line():
     process_non_random_hic_data(chromosome_dir)
     conn.commit()
     print("New cell line Non-random Hi-C data inserted successfully.")
+    
     # Process sequence data
     process_sequence_data(cur)
     conn.commit()
     print("New cell line sequence data inserted successfully.")
+    
+    # Process valid regions data
+    process_valid_regions_data(cur)
+    conn.commit()
+    print("New cell line valid regions data inserted successfully.")
     
     cur.close()
     conn.close()
