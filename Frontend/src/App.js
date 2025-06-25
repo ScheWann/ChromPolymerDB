@@ -947,7 +947,7 @@ function App() {
   const submit = () => {
     if (selectedChromosomeSequence.end - selectedChromosomeSequence.start > 4000000) {
       warning('overrange');
-    } else if (selectedChromosomeSequence.start >= selectedChromosomeSequence.end) {
+    } else if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
       warning('smallend');
     } else if (!cellLineName || !chromosomeName) {
       warning('noData');
