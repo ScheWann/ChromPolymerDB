@@ -183,7 +183,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
 
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 0, bottom: 45, left: 60 };
+        const margin = { top: 45, right: 1, bottom: 45, left: 60 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
