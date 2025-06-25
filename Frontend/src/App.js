@@ -1112,17 +1112,21 @@ function App() {
           )}
 
           <div className="chromosomeBarColorLegend">
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#74C365" }}></div>
-              <span>Available regions</span>
+            <div className='chromosomeBarColorLegendItem'>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#4daf4a" }}></div>
+              <span>Available</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFD700" }}></div>
-              <span>Selected region</span>
+            <div className='chromosomeBarColorLegendItem'>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#377eb8" }}></div>
+              <span>Overlapped</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div className='chromosomeBarColorLegendItem'>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFC107" }}></div>
+              <span>Selected</span>
+            </div>
+            <div className='chromosomeBarColorLegendItem'>
               <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFFFFF" }}></div>
-              <span>Unavailable regions</span>
+              <span>Unavailable</span>
             </div>
           </div>
         </div>
