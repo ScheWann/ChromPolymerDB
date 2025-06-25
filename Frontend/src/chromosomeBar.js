@@ -101,7 +101,9 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .attr('y', backgroundY)
                     .attr('width', xScale(seq.end) - xScale(seq.start))
                     .attr('height', backgroundHeight)
-                    .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start ? '#FFC107' : (seq.is_cross ? '#377eb8' : '#4daf4a'))
+                    .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start
+                        ? (seq.is_cross ? '#E41A1C' : '#FFC107')
+                        : (seq.is_cross ? '#377eb8' : '#4daf4a'))
                     .style('cursor', 'pointer')
                     .style('opacity', 0.8)
                     .on('click', () => {
@@ -114,6 +116,12 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         });
                     })
                     .on('mouseover', (event) => {
+                        d3.select(event.currentTarget)
+                            .transition()
+                            .duration(250)
+                            .attr('stroke', '#333')
+                            .attr('stroke-width', 1)
+                            .style('opacity', 1);
                         if (seq.is_cross) {
                             const popoverWidth = 500;
                             const padding = 10;
@@ -131,13 +139,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             });
                             setSeqPopoverVisible(true);
                         } else {
-                            d3.select(event.currentTarget)
-                                .transition()
-                                .duration(250)
-                                .attr('stroke', '#333')
-                                .attr('stroke-width', 2)
-                                .style('opacity', 1);
-
                             const tooltipWidth = 150;
                             const tooltipX = event.pageX + 5;
 
@@ -155,15 +156,15 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         }
                     })
                     .on('mouseout', (event) => {
+                        d3.select(event.currentTarget)
+                            .transition()
+                            .duration(250)
+                            .attr('stroke', 'none')
+                            .attr('stroke-width', 0)
+                            .style('opacity', 0.8);
                         if (seq.is_cross) {
                             setSeqPopoverVisible(false);
                         } else {
-                            d3.select(event.currentTarget)
-                                .transition()
-                                .duration(250)
-                                .attr('stroke', 'none')
-                                .attr('stroke-width', 0)
-                                .style('opacity', 0.8);
                             setTooltip((prev) => ({ ...prev, visible: false }));
                         }
                     });

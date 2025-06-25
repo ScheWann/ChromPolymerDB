@@ -1125,8 +1125,8 @@ function App() {
               <span>Selected</span>
             </div>
             <div className='chromosomeBarColorLegendItem'>
-              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#FFFFFF" }}></div>
-              <span>Unavailable</span>
+              <div className="chromosomeBarColorRect" style={{ backgroundColor: "#E41A1C" }}></div>
+              <span>Overlapped</span>
             </div>
           </div>
         </div>
