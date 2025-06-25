@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { CrossedRegionChart } from "./CrossedRegionChart";
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
@@ -7,6 +8,29 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
     const [parentSize, setParentSize] = useState({ width: 0, height: 0 });
+    const [seqPopoverVisible, setSeqPopoverVisible] = useState(false);
+    const [currentCrossedSeq, setCurrentCrossedSeq] = useState(null);
+    const [popoverStyle, setPopoverStyle] = useState({ left: 0, top: 0 });
+
+    const popoverRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                seqPopoverVisible &&
+                popoverRef.current &&
+                !popoverRef.current.contains(event.target)
+            ) {
+                setSeqPopoverVisible(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [seqPopoverVisible]);
 
     useEffect(() => {
         const observer = new ResizeObserver((entries) => {
@@ -77,7 +101,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .attr('y', backgroundY)
                     .attr('width', xScale(seq.end) - xScale(seq.start))
                     .attr('height', backgroundHeight)
-                    .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start ? '#FFC107' : '#4CAF50')
+                    .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start ? '#FFC107' : (seq.is_cross ? '#377eb8' : '#4daf4a'))
                     .style('cursor', 'pointer')
                     .style('opacity', 0.8)
                     .on('click', () => {
@@ -90,36 +114,58 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         });
                     })
                     .on('mouseover', (event) => {
-                        d3.select(event.currentTarget)
-                            .transition()
-                            .duration(250)
-                            .attr('stroke', '#333')
-                            .attr('stroke-width', 2)
-                            .style('opacity', 1);
+                        if (seq.is_cross) {
+                            const popoverWidth = 500;
+                            const padding = 10;
 
-                        const tooltipWidth = 150;
-                        const tooltipX = event.pageX + 5;
+                            let left = event.pageX - 15;
+                            const maxLeft = window.innerWidth - popoverWidth - padding;
 
-                        const adjustedLeft = tooltipX + tooltipWidth > window.innerWidth
-                            ? window.innerWidth - tooltipWidth - 10
-                            : tooltipX;
+                            if (left > maxLeft) left = maxLeft;
+                            if (left < padding) left = padding;
 
-                        setTooltip({
-                            visible: true,
-                            minStart: seq.start,
-                            maxEnd: seq.end,
-                            left: adjustedLeft,
-                            top: event.pageY - 28
-                        });
+                            setCurrentCrossedSeq(seq);
+                            setPopoverStyle({
+                                left,
+                                top: event.pageY - 45
+                            });
+                            setSeqPopoverVisible(true);
+                        } else {
+                            d3.select(event.currentTarget)
+                                .transition()
+                                .duration(250)
+                                .attr('stroke', '#333')
+                                .attr('stroke-width', 2)
+                                .style('opacity', 1);
+
+                            const tooltipWidth = 150;
+                            const tooltipX = event.pageX + 5;
+
+                            const adjustedLeft = tooltipX + tooltipWidth > window.innerWidth
+                                ? window.innerWidth - tooltipWidth - 10
+                                : tooltipX;
+
+                            setTooltip({
+                                visible: true,
+                                minStart: seq.start,
+                                maxEnd: seq.end,
+                                left: adjustedLeft,
+                                top: event.pageY - 45
+                            });
+                        }
                     })
                     .on('mouseout', (event) => {
-                        d3.select(event.currentTarget)
-                            .transition()
-                            .duration(250)
-                            .attr('stroke', 'none')
-                            .attr('stroke-width', 0)
-                            .style('opacity', 0.8);
-                        setTooltip((prev) => ({ ...prev, visible: false }));
+                        if (seq.is_cross) {
+                            setSeqPopoverVisible(false);
+                        } else {
+                            d3.select(event.currentTarget)
+                                .transition()
+                                .duration(250)
+                                .attr('stroke', 'none')
+                                .attr('stroke-width', 0)
+                                .style('opacity', 0.8);
+                            setTooltip((prev) => ({ ...prev, visible: false }));
+                        }
                     });
             });
 
@@ -264,6 +310,29 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 <div className="chromosomeBarTooltipText">Start: {formatNumber(tooltip.minStart)}</div>
                 <div className="chromosomeBarTooltipText">End: {formatNumber(tooltip.maxEnd)}</div>
             </div>
+            {seqPopoverVisible && currentCrossedSeq && (
+                <div
+                    ref={popoverRef}
+                    style={{
+                        position: 'absolute',
+                        zIndex: 1000,
+                        background: 'white',
+                        border: '1px solid #ccc',
+                        padding: "2px 10px 10px 10px",
+                        borderRadius: 4,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                        left: popoverStyle.left,
+                        top: popoverStyle.top,
+                        boxSizing: 'border-box',
+                        width: '500px',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <CrossedRegionChart seq={currentCrossedSeq} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

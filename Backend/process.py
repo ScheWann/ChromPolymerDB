@@ -198,9 +198,30 @@ def chromosome_size(chromosome_name):
 """
 Returns the all sequences of the chromosome data in the given cell line, chromosome name
 """
+# def chromosome_sequences(cell_line, chromosome_name):
+#     with db_conn() as conn:
+#         with conn.cursor(row_factory=dict_row) as cur:
+#             cur.execute(
+#                 """
+#                 SELECT start_value, end_value
+#                 FROM sequence
+#                 WHERE cell_line = %s
+#                 AND chrid = %s
+#                 ORDER BY start_value
+#             """,
+#                 (cell_line, chromosome_name),
+#             )
+
+#             ranges = [
+#                 {"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()
+#             ]
+
+#     return ranges
+
 def chromosome_sequences(cell_line, chromosome_name):
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
+            # query sequences
             cur.execute(
                 """
                 SELECT start_value, end_value
@@ -208,15 +229,46 @@ def chromosome_sequences(cell_line, chromosome_name):
                 WHERE cell_line = %s
                 AND chrid = %s
                 ORDER BY start_value
-            """,
+                """,
                 (cell_line, chromosome_name),
             )
+            sequence_ranges = [{"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()]
 
-            ranges = [
-                {"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()
-            ]
+            # query valid_regions
+            cur.execute(
+                """
+                SELECT start_value, end_value
+                FROM valid_regions
+                WHERE cell_line = %s
+                AND chrid = %s
+                ORDER BY start_value
+                """,
+                (cell_line, chromosome_name),
+            )
+            valid_ranges = [{"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()]
 
-    return ranges
+    # find overlapping regions between sequence_ranges and valid_ranges
+    def find_overlaps(seq_start, seq_end, valid_ranges):
+        overlaps = []
+        for vr in valid_ranges:
+            v_start, v_end = vr["start"], vr["end"]
+            if seq_start <= v_end and seq_end >= v_start:
+                overlaps.append({"start": v_start, "end": v_end})
+        return overlaps
+
+    result = []
+    for seq in sequence_ranges:
+        seq_start, seq_end = seq["start"], seq["end"]
+        overlaps = find_overlaps(seq_start, seq_end, valid_ranges)
+        is_cross = True if len(overlaps) >= 2 else False
+        result.append({
+            "start": seq_start,
+            "end": seq_end,
+            "is_cross": is_cross,
+            "crossed_regions": overlaps
+        })
+
+    return result
 
 
 """
