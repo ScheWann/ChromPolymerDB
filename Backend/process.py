@@ -129,7 +129,7 @@ def cell_lines_list():
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute("""
                 SELECT DISTINCT cell_line
-                FROM sequence
+                FROM valid_regions
             """)
             rows = cur.fetchall()
 
@@ -153,7 +153,7 @@ def chromosomes_list(cell_line):
             cur.execute(
                 """
                 SELECT DISTINCT chrid
-                FROM sequence
+                FROM valid_regions
                 WHERE cell_line = %s
             """,
                 (cell_line,),
@@ -943,7 +943,7 @@ def comparison_cell_line_list(cell_line):
             cur.execute(
                 """
                 SELECT DISTINCT cell_line
-                FROM sequence
+                FROM valid_regions
             """
             )
             rows = cur.fetchall()

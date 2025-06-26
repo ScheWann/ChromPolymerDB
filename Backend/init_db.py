@@ -134,22 +134,22 @@ def initialize_tables():
     else:
         print("epigenetic_track table already exists, skipping creation.")
 
-    if not table_exists(cur, "sequence"):
-        print("Creating sequence table...")
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS sequence ("
-            "sid serial PRIMARY KEY,"
-            "chrid VARCHAR(50) NOT NULL,"
-            "cell_line VARCHAR(50) NOT NULL,"
-            "start_value BIGINT NOT NULL DEFAULT 0,"
-            "end_value BIGINT NOT NULL DEFAULT 0,"
-            "UNIQUE(chrid, cell_line, start_value, end_value)"
-            ");"
-        )
-        conn.commit()
-        print("sequence table created successfully.")
-    else:
-        print("sequence table already exists, skipping creation.")
+    # if not table_exists(cur, "sequence"):
+    #     print("Creating sequence table...")
+    #     cur.execute(
+    #         "CREATE TABLE IF NOT EXISTS sequence ("
+    #         "sid serial PRIMARY KEY,"
+    #         "chrid VARCHAR(50) NOT NULL,"
+    #         "cell_line VARCHAR(50) NOT NULL,"
+    #         "start_value BIGINT NOT NULL DEFAULT 0,"
+    #         "end_value BIGINT NOT NULL DEFAULT 0,"
+    #         "UNIQUE(chrid, cell_line, start_value, end_value)"
+    #         ");"
+    #     )
+    #     conn.commit()
+    #     print("sequence table created successfully.")
+    # else:
+    #     print("sequence table already exists, skipping creation.")
     
     if not table_exists(cur, "valid_regions"):
         print("Creating valid_regions table...")
@@ -472,12 +472,12 @@ def insert_data():
         print("Gene data already exists, skipping insertion.")
 
     # Insert sequence data only if the table is empty
-    if not data_exists(cur, "sequence"):
-        print("Inserting sequence data...")
-        process_sequence_data(cur)
-        print("Sequence data inserted successfully.")
-    else:
-        print("Sequence data already exists, skipping insertion.")
+    # if not data_exists(cur, "sequence"):
+    #     print("Inserting sequence data...")
+    #     process_sequence_data(cur)
+    #     print("Sequence data inserted successfully.")
+    # else:
+    #     print("Sequence data already exists, skipping insertion.")
     
     # Insert valid regions data only if the table is empty
     if not data_exists(cur, "valid_regions"):
