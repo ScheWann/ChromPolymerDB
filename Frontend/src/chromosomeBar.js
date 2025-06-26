@@ -106,9 +106,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             }
                         });
 
-                        if (nearest) {
-                            console.log('nearest:', nearest);
-                        }
                         setSelectedChromosomeSequence({
                             start: nearest.start,
                             end: nearest.end
