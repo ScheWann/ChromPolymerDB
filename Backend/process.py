@@ -196,45 +196,61 @@ def chromosome_size(chromosome_name):
 
 
 """
-Returns the all sequences of the chromosome data in the given cell line, chromosome name
+Returns the all valid original sequences of the chromosome data in the given cell line, chromosome name
 """
-# def chromosome_sequences(cell_line, chromosome_name):
-#     with db_conn() as conn:
-#         with conn.cursor(row_factory=dict_row) as cur:
-#             cur.execute(
-#                 """
-#                 SELECT start_value, end_value
-#                 FROM sequence
-#                 WHERE cell_line = %s
-#                 AND chrid = %s
-#                 ORDER BY start_value
-#             """,
-#                 (cell_line, chromosome_name),
-#             )
-
-#             ranges = [
-#                 {"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()
-#             ]
-
-#     return ranges
-
-def chromosome_sequences(cell_line, chromosome_name):
+def chromosome_original_valid_sequences(cell_line, chromosome_name):
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            # query sequences
             cur.execute(
                 """
                 SELECT start_value, end_value
-                FROM sequence
+                FROM valid_regions
                 WHERE cell_line = %s
                 AND chrid = %s
                 ORDER BY start_value
-                """,
+            """,
                 (cell_line, chromosome_name),
             )
-            sequence_ranges = [{"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()]
+            original_sequences = cur.fetchall()
 
-            # query valid_regions
+    formatted_sequences = [
+        {"start": row["start_value"], "end": row["end_value"]}
+        for row in original_sequences
+    ]
+
+    return formatted_sequences
+
+
+"""
+Returns the all valid merged sequences of the chromosome data in the given cell line, chromosome name
+"""
+def chromosome_merged_valid_sequences(cell_line, chromosome_name):
+    def merge_intervals(intervals):
+        if not intervals:
+            return []
+
+        intervals.sort(key=lambda x: x["start_value"])
+
+        merged = []
+        current_start = intervals[0]["start_value"]
+        current_end = intervals[0]["end_value"]
+
+        for interval in intervals[1:]:
+            start = interval["start_value"]
+            end = interval["end_value"]
+
+            if start <= current_end:
+                current_end = max(current_end, end)
+            else:
+                merged.append({"start": current_start, "end": current_end})
+                current_start = start
+                current_end = end
+
+        merged.append({"start": current_start, "end": current_end})
+        return merged
+
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT start_value, end_value
@@ -245,30 +261,11 @@ def chromosome_sequences(cell_line, chromosome_name):
                 """,
                 (cell_line, chromosome_name),
             )
-            valid_ranges = [{"start": row["start_value"], "end": row["end_value"]} for row in cur.fetchall()]
+            valid_regions = cur.fetchall()
 
-    # find overlapping regions between sequence_ranges and valid_ranges
-    def find_overlaps(seq_start, seq_end, valid_ranges):
-        overlaps = []
-        for vr in valid_ranges:
-            v_start, v_end = vr["start"], vr["end"]
-            if seq_start <= v_end and seq_end >= v_start:
-                overlaps.append({"start": v_start, "end": v_end})
-        return overlaps
-
-    result = []
-    for seq in sequence_ranges:
-        seq_start, seq_end = seq["start"], seq["end"]
-        overlaps = find_overlaps(seq_start, seq_end, valid_ranges)
-        is_cross = True if len(overlaps) >= 2 else False
-        result.append({
-            "start": seq_start,
-            "end": seq_end,
-            "is_cross": is_cross,
-            "crossed_regions": overlaps
-        })
-
-    return result
+            merged_valid_regions = merge_intervals(valid_regions)
+    
+    return merged_valid_regions
 
 
 """

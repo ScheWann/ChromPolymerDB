@@ -5,8 +5,9 @@ from process import (
     gene_names_list, 
     cell_lines_list, 
     chromosome_size, 
-    chromosomes_list, 
-    chromosome_sequences, 
+    chromosomes_list,
+    chromosome_original_valid_sequences, 
+    chromosome_merged_valid_sequences, 
     chromosome_data, 
     example_chromosome_3d_data, 
     comparison_cell_line_list, 
@@ -68,11 +69,18 @@ def get_ChromosSizeByGeneName():
     return jsonify(chromosome_size_by_gene_name(gene_name))
 
 
-@api.route('/getChromosSequence', methods=['POST'])
-def get_ChromosSequences():
+@api.route('/getChromosOriginalValidSequence', methods=['POST'])
+def get_ChromosOriginalValidSequences():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
-    return jsonify(chromosome_sequences(cell_line, chromosome_name))
+    return jsonify(chromosome_original_valid_sequences(cell_line, chromosome_name))
+
+
+@api.route('/getChromosMergedValidSequence', methods=['POST'])
+def get_ChromosMergedValidSequences():
+    cell_line = request.json['cell_line']
+    chromosome_name = request.json['chromosome_name']
+    return jsonify(chromosome_merged_valid_sequences(cell_line, chromosome_name))
 
 
 @api.route('/getChromosData', methods=['POST'])

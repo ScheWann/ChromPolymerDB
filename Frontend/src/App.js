@@ -19,7 +19,8 @@ function App() {
   const [chromosomeName, setChromosomeName] = useState(null);
   const [chromosomeSize, setChromosomeSize] = useState({ start: 0, end: 0 });
   const [geneSize, setGeneSize] = useState({ start: 0, end: 0 });
-  const [totalChromosomeSequences, setTotalChromosomeSequences] = useState([]); // First selected cell line ---> chromsome's all sequences
+  const [totalOriginalChromosomeValidSequences, setTotalOriginalChromosomeValidSequences] = useState([]); // chromsome's all original valid sequences
+  const [totalChromosomeSequences, setTotalChromosomeSequences] = useState([]); // First selected sequence ---> chromsome's all merged valid sequences
   const [selectedChromosomeSequence, setSelectedChromosomeSequence] = useState({ start: 0, end: 0 }); // Selected sequence range
   const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence); // Current selected sequence range(used for control heatmap's zoom in/out)
   const [chromosomeData, setChromosomeData] = useState([]);
@@ -173,7 +174,8 @@ function App() {
 
   useEffect(() => {
     if (cellLineName && chromosomeName) {
-      fetchChromosomeSequences();
+      fetchOriginalValidChromosomeSequences();
+      fetchMergedValidChromosomeSequences();
     }
   }, [cellLineName, chromosomeName]);
 
@@ -316,8 +318,8 @@ function App() {
       });
   }
 
-  const fetchChromosomeSequences = () => {
-    fetch('/api/getChromosSequence', {
+  const fetchMergedValidChromosomeSequences = () => {
+    fetch('/api/getChromosMergedValidSequence', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -327,6 +329,20 @@ function App() {
       .then(res => res.json())
       .then(data => {
         setTotalChromosomeSequences(data);
+      });
+  }
+
+  const fetchOriginalValidChromosomeSequences = () => {
+    fetch('/api/getChromosOriginalValidSequence', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTotalOriginalChromosomeValidSequences(data);
       });
   }
 
@@ -1133,6 +1149,7 @@ function App() {
           setSelectedChromosomeSequence={setSelectedChromosomeSequence}
           chromosomeSize={chromosomeSize}
           totalChromosomeSequences={totalChromosomeSequences}
+          totalOriginalChromosomeValidSequences={totalOriginalChromosomeValidSequences}
         />
       </div>
 

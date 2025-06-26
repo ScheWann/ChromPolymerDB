@@ -17,5 +17,7 @@
 }
 
 .chromosomeBarTooltipText {
+    display: flex;
+    justify-content: flex-start;
     font-size: 12px;
 }

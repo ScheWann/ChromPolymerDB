@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
-export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, warning, formatNumber }) => {
+export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, warning, formatNumber, totalOriginalChromosomeValidSequences }) => {
     const svgRef = useRef();
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
@@ -80,13 +80,38 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start ? '#FFC107' : '#4CAF50')
                     .style('cursor', 'pointer')
                     .style('opacity', 0.8)
-                    .on('click', () => {
-                        if (seq.end - seq.start > 4000000) {
-                            warning('overrange');
+                    .on('click', (event) => {
+                        // if (seq.end - seq.start > 4000000) {
+                        //     warning('overrange');
+                        // }
+                        const mouseX = event.offsetX;
+                        const clickedGenomicPos = xScale.invert(mouseX);
+
+                        let nearest = null;
+                        let minDistance = Infinity;
+
+                        totalOriginalChromosomeValidSequences.forEach((range) => {
+                            let distance = 0;
+                            if (clickedGenomicPos < range.start) {
+                                distance = range.start - clickedGenomicPos;
+                            } else if (clickedGenomicPos > range.end) {
+                                distance = clickedGenomicPos - range.end;
+                            } else {
+                                distance = 0;
+                            }
+
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                nearest = range;
+                            }
+                        });
+
+                        if (nearest) {
+                            console.log('nearest:', nearest);
                         }
                         setSelectedChromosomeSequence({
-                            start: seq.start,
-                            end: seq.end
+                            start: nearest.start,
+                            end: nearest.end
                         });
                     })
                     .on('mouseover', (event) => {
@@ -109,7 +134,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             minStart: seq.start,
                             maxEnd: seq.end,
                             left: adjustedLeft,
-                            top: event.pageY - 28
+                            top: event.pageY - 50,
                         });
                     })
                     .on('mouseout', (event) => {
@@ -261,8 +286,8 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     zIndex: 20
                 }}
             >
-                <div className="chromosomeBarTooltipText">Start: {formatNumber(tooltip.minStart)}</div>
-                <div className="chromosomeBarTooltipText">End: {formatNumber(tooltip.maxEnd)}</div>
+                <div className="chromosomeBarTooltipText"><strong>Start:</strong>{formatNumber(tooltip.minStart)}</div>
+                <div className="chromosomeBarTooltipText"><strong>End:</strong>{formatNumber(tooltip.maxEnd)}</div>
             </div>
         </div>
     );
