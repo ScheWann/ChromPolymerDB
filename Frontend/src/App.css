@@ -62,27 +62,25 @@ body {
 }
 
 .chromosomeBarColorLegend {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 0px 5px;
-  font-size: 9px;
-  line-height: 1.2;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 3px 8px;
   margin-right: 10px;
+  display: inline-block;
+  font-size: 9px;
+  line-height: 1.0;
+  border-radius: 5px;
 }
 
 .chromosomeBarColorLegendItem {
   display: flex;
   align-items: center;
-  padding: 3px 3px;
   border-radius: 5px;
   background: #f9f9f9;
 }
 
 .chromosomeBarColorRect {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   margin-right: 6px;
   border: 0.5px solid #000;
   border-radius: 2px;
