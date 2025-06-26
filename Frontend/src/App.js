@@ -680,6 +680,11 @@ function App() {
     const num = Number(value);
     startRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
+    
+    setChromosome3DComparisonShowing(false);
+    setComparisonCellLine(null);
+    setComparisonCellLine3DSampleID(0);
+    setComparisonCellLine3DData({});
   };
 
   const onEndChange = (value) => {
@@ -687,6 +692,11 @@ function App() {
     const num = Number(value);
     endRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
+
+    setChromosome3DComparisonShowing(false);
+    setComparisonCellLine(null);
+    setComparisonCellLine3DSampleID(0);
+    setComparisonCellLine3DData({});
   };
 
   const onStartSearch = (text) => {
@@ -1130,6 +1140,7 @@ function App() {
                   onChange={onStartChange}
                   onSearch={onStartSearch}
                   onFocus={() => {
+                    console.log(startSequencesOptions)
                     if (endRef.current > 0) {
                       onStartSearch(endRef.current.toString());
                     }
