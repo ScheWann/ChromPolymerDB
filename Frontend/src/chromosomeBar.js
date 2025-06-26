@@ -162,31 +162,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .attr('stroke', '#666')
                     .attr('stroke-width', 1.5)
                     .style('z-index', 10)
-                    // .style('cursor', 'pointer')
-                    // .call(d3.drag()
-                    //     .on('start', () => {
-                    //         if (totalChromosomeSequences.length === 0) {
-                    //             warning('noData');
-                    //             return;
-                    //         }
-                    //     })
-                    //     .on('drag', (event) => {
-                    //         const mouseX = d3.pointer(event)[0];
-                    //         const rawValue = xScale.invert(mouseX);
-                    //         const steppedValue = Math.round(rawValue / 5000) * 5000;
-                    //         newStart = Math.min(
-                    //             Math.max(steppedValue, min_start),
-                    //             selectedChromosomeSequence.end
-                    //         );
-
-                    //         setSelectedChromosomeSequence((prev) => ({ ...prev, start: newStart }));
-                    //     })
-                    //     .on('end', () => {
-                    //         // Check the warning condition when drag ends
-                    //         if (newEnd - newStart > 4000000) {
-                    //             warning('overrange');
-                    //         }
-                    //     }));
 
                 svg.append('line')
                     .attr('class', 'line-marker')
@@ -205,30 +180,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .attr('stroke', '#666')
                     .attr('stroke-width', 1.5)
                     .style('z-index', 10)
-                    // .style('cursor', 'pointer')
-                    // .call(d3.drag()
-                    //     .on('start', () => {
-                    //         if (totalChromosomeSequences.length === 0) {
-                    //             warning('noData');
-                    //             return;
-                    //         }
-                    //     })
-                    //     .on('drag', (event) => {
-                    //         const mouseX = d3.pointer(event)[0];
-                    //         const rawValue = xScale.invert(mouseX);
-                    //         const steppedValue = Math.round(rawValue / 5000) * 5000;
-                    //         newEnd = Math.max(
-                    //             Math.min(steppedValue, max_end),
-                    //             selectedChromosomeSequence.start
-                    //         );
-
-                    //         setSelectedChromosomeSequence((prev) => ({ ...prev, end: newEnd }));
-                    //     })
-                    //     .on('end', () => {
-                    //         if (newEnd - newStart > 4000000) {
-                    //             warning('overrange');
-                    //         }
-                    //     }));
 
                 svg.append('line')
                     .attr('class', 'line-marker')
