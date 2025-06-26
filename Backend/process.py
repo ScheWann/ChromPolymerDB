@@ -279,8 +279,10 @@ def chromosome_size_by_gene_name(gene_name):
                 SELECT chromosome, orientation, start_location, end_location
                 FROM gene
                 WHERE symbol = %s
+                AND chromosome >= %s
+                AND chromosome <= %s
             """,
-                (gene_name,),
+                (gene_name, '1', '22'),
             )
 
             gene = cur.fetchone()

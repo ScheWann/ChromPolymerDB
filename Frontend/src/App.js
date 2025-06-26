@@ -188,11 +188,19 @@ function App() {
     if (totalChromosomeSequences.length > 0) {
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         if (!isCellLineMode) {
-          setSelectedChromosomeSequence({ start: geneSize.start - 1000000, end: geneSize.end + 1000000 });
+          const matchedSeq = totalOriginalChromosomeValidSequences.find(seq =>
+            seq.start <= geneSize.start && seq.end >= geneSize.end
+          );
+          if (matchedSeq) {
+            setSelectedChromosomeSequence({ start: matchedSeq.start, end: matchedSeq.end });
+          } else {
+            console.log(1)
+            warning('noCoveredGene');
+          }
         }
       }
     }
-  }, [totalChromosomeSequences]);
+  }, [totalChromosomeSequences, totalOriginalChromosomeValidSequences]);
 
   // fetch 3D chromosome data progress
   const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
@@ -403,18 +411,39 @@ function App() {
     })
       .then(res => res.json())
       .then(data => {
+        if (!data) {
+          warning('noCoveredGene');
+          return;
+        }
+        setGeneName(value);
         const chromosomeName = `chr${data.chromosome}`;
-        setChromosomeName(chromosomeName);
         fetchChromosomeSize(chromosomeName);
-        setSelectedChromosomeSequence({ start: data.start_location - 1000000, end: data.end_location + 1000000 });
-        setGeneSize({ start: data.start_location, end: data.end_location });
+        setChromosomeName(chromosomeName);
+        fetch('/api/getChromosOriginalValidSequence', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName })
+        })
+          .then(res => res.json())
+          .then(totalSeqs => {
+            setTotalOriginalChromosomeValidSequences(totalSeqs);
+            const matchedSeq = totalSeqs.find(seq =>
+              seq.start <= data.start_location && seq.end >= data.end_location
+            );
+            if (matchedSeq) {
+              setSelectedChromosomeSequence({ start: matchedSeq.start, end: matchedSeq.end });
+              setGeneSize({ start: data.start_location, end: data.end_location });
+            } else {
+              warning('noCoveredGene');
+            }
+          });
       })
   }
 
   const fetchChromosomeData = () => {
-    if (selectedChromosomeSequence.end - selectedChromosomeSequence.start > 4000000) {
-      warning('overrange');
-    } else if (!cellLineName || !chromosomeName) {
+    if (!cellLineName || !chromosomeName) {
       warning('noData');
     } else {
       fetch("/api/getChromosData", {
@@ -536,10 +565,10 @@ function App() {
 
   // Warning message
   const warning = (type) => {
-    if (type === 'overrange') {
+    if (type === 'noCoveredGene') {
       messageApi.open({
         type: 'warning',
-        content: 'Please limits the range to 4,000,000',
+        content: 'No valid sequence found for the selected gene',
         duration: 1.5,
       });
     }
@@ -651,7 +680,6 @@ function App() {
     if (!cellLineName) {
       warning('noCellLine');
     } else {
-      setGeneName(value);
       fetchChromosomeSizeByGeneName(value);
     }
   };
@@ -680,7 +708,7 @@ function App() {
     const num = Number(value);
     startRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
-    
+
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
@@ -1032,9 +1060,7 @@ function App() {
 
   // Submit button click
   const submit = () => {
-    if (selectedChromosomeSequence.end - selectedChromosomeSequence.start > 4000000) {
-      warning('overrange');
-    } else if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
+    if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
       warning('smallend');
     } else if (!cellLineName || !chromosomeName) {
       warning('noData');
