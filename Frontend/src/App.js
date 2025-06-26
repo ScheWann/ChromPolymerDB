@@ -565,6 +565,13 @@ function App() {
 
   // Warning message
   const warning = (type) => {
+    if (type === 'overRegion') {
+      messageApi.open({
+        type: 'warning',
+        content: 'Selected region is out of bounds',
+        duration: 1.5,
+      });
+    }
     if (type === 'noCoveredGene') {
       messageApi.open({
         type: 'warning',
@@ -703,10 +710,22 @@ function App() {
   // Chromosome sequence change
   const onlyDigits = (text) => /^\d*$/.test(text);
 
+  const isSequenceInValidRange = (start, end) => {
+    return totalOriginalChromosomeValidSequences.some(seq =>
+      seq.start <= start && seq.end >= end
+    );
+  };
+
   const onStartChange = (value) => {
     if (!onlyDigits(value)) return;
     const num = Number(value);
     startRef.current = num;
+
+    if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
+      warning('overSelectedRange');
+      return;
+    }
+
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
 
     setChromosome3DComparisonShowing(false);
@@ -719,6 +738,11 @@ function App() {
     if (!onlyDigits(value)) return;
     const num = Number(value);
     endRef.current = num;
+
+    if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
+      warning('overSelectedRange');
+      return;
+    }
     setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
 
     setChromosome3DComparisonShowing(false);
@@ -749,9 +773,25 @@ function App() {
         seq.start < currentEnd
       );
     } else {
-      filtered = totalOriginalChromosomeValidSequences.filter(seq =>
+      const greater = totalOriginalChromosomeValidSequences.filter(seq =>
         seq.start > num
       );
+
+      const smallerCandidates = totalOriginalChromosomeValidSequences.filter(seq =>
+        seq.start <= num
+      );
+
+      const closestSmaller = smallerCandidates.length > 0
+        ? smallerCandidates.reduce((prev, curr) => (curr.start > prev.start ? curr : prev))
+        : null;
+
+      filtered = [...greater];
+      if (closestSmaller) {
+        const alreadyInList = filtered.some(seq => seq.start === closestSmaller.start);
+        if (!alreadyInList) {
+          filtered.unshift(closestSmaller);
+        }
+      }
     }
 
     setStartSequencesOptions(filtered.map(seq => ({ value: seq.start.toString() })));
