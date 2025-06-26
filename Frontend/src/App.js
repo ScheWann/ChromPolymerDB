@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Select, Input, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown, InputNumber } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Select, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown, InputNumber, AutoComplete } from 'antd';
 import './App.css';
 import { Heatmap } from './canvasHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
@@ -23,6 +23,8 @@ function App() {
   const [totalChromosomeSequences, setTotalChromosomeSequences] = useState([]); // First selected sequence ---> chromsome's all merged valid sequences
   const [selectedChromosomeSequence, setSelectedChromosomeSequence] = useState({ start: 0, end: 0 }); // Selected sequence range
   const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence); // Current selected sequence range(used for control heatmap's zoom in/out)
+  const [startSequencesOptions, setStartSequencesOptions] = useState([]); // Options for the start sequences input
+  const [endSequencesOptions, setEndSequencesOptions] = useState([]); // Options for the end sequences input
   const [chromosomeData, setChromosomeData] = useState([]);
   const [validChromosomeValidIbpData, setValidChromosomeValidIbpData] = useState([]);
   const [chromosome3DExampleID, setChromosome3DExampleID] = useState(0);
@@ -71,6 +73,9 @@ function App() {
   const [isTourOpen, setIsTourOpen] = useState(true);
 
   const { Title } = Typography;
+
+  const startRef = useRef(0);
+  const endRef = useRef(0);
 
   // Define Tour steps
   const steps = [
@@ -182,9 +187,7 @@ function App() {
   useEffect(() => {
     if (totalChromosomeSequences.length > 0) {
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-        if (isCellLineMode) {
-          setSelectedChromosomeSequence({ start: totalChromosomeSequences[0].start, end: totalChromosomeSequences[0].end });
-        } else {
+        if (!isCellLineMode) {
           setSelectedChromosomeSequence({ start: geneSize.start - 1000000, end: geneSize.end + 1000000 });
         }
       }
@@ -670,22 +673,80 @@ function App() {
   };
 
   // Chromosome sequence change
-  const chromosomeSequenceChange = (position, value, isBlur = false) => {
-    let newValue = value !== "" && !isNaN(value) ? Number(value) : 0;
+  const onlyDigits = (text) => /^\d*$/.test(text);
 
-    if (isBlur) {
-      newValue = Math.round(newValue / 5000) * 5000;
+  const onStartChange = (value) => {
+    if (!onlyDigits(value)) return;
+    const num = Number(value);
+    startRef.current = num;
+    setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
+  };
+
+  const onEndChange = (value) => {
+    if (!onlyDigits(value)) return;
+    const num = Number(value);
+    endRef.current = num;
+    setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
+  };
+
+  const onStartSearch = (text) => {
+    if (!onlyDigits(text)) {
+      return;
     }
 
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
+    let cleanValue = text;
+    if (text.length > 1 && text.startsWith('0')) {
+      cleanValue = String(Number(text));
+    }
 
-    setSelectedChromosomeSequence((prevState) => ({
-      ...prevState,
-      [position]: newValue,
-    }));
+    const num = cleanValue === '' ? 0 : Number(cleanValue);
+    startRef.current = num;
+    const currentEnd = endRef.current;
+
+    let filtered;
+
+    if (currentEnd > 0) {
+      filtered = totalOriginalChromosomeValidSequences.filter(seq =>
+        seq.end === currentEnd &&
+        seq.start < currentEnd
+      );
+    } else {
+      filtered = totalOriginalChromosomeValidSequences.filter(seq =>
+        seq.start > num
+      );
+    }
+
+    setStartSequencesOptions(filtered.map(seq => ({ value: seq.start.toString() })));
+  };
+
+  const onEndSearch = (text) => {
+    if (!onlyDigits(text)) {
+      return;
+    }
+
+    let cleanValue = text;
+    if (text.length > 1 && text.startsWith('0')) {
+      cleanValue = String(Number(text));
+    }
+
+    const num = cleanValue === '' ? 0 : Number(cleanValue);
+    endRef.current = num;
+    const currentStart = startRef.current;
+
+    let filtered;
+
+    if (startRef.current > 0) {
+      filtered = totalOriginalChromosomeValidSequences.filter(seq =>
+        seq.start === currentStart &&
+        seq.end > currentStart
+      );
+    } else {
+      filtered = totalOriginalChromosomeValidSequences.filter(seq =>
+        seq.end > currentStart
+      );
+    }
+
+    setEndSequencesOptions(filtered.map(seq => ({ value: seq.end.toString() })));
   };
 
   // Heatmap Add button click
@@ -1061,9 +1122,35 @@ function App() {
                   options={chromosList}
                 />
                 <span className="controlGroupText">Sequences:</span>
-                <Input size="small" style={{ width: "8%" }} placeholder="Start" onBlur={(e) => chromosomeSequenceChange('start', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('start', e.target.value)} value={selectedChromosomeSequence.start} />
+                <AutoComplete
+                  size="small"
+                  options={startSequencesOptions}
+                  style={{ width: "8%" }}
+                  placeholder="Start"
+                  onChange={onStartChange}
+                  onSearch={onStartSearch}
+                  onFocus={() => {
+                    if (endRef.current > 0) {
+                      onStartSearch(endRef.current.toString());
+                    }
+                  }}
+                  value={selectedChromosomeSequence.start?.toString() || ""}
+                />
                 <span className="controlGroupText">~</span>
-                <Input size="small" style={{ width: "8%" }} placeholder="End" onBlur={(e) => chromosomeSequenceChange('end', e.target.value, true)} onChange={(e) => chromosomeSequenceChange('end', e.target.value)} value={selectedChromosomeSequence.end} />
+                <AutoComplete
+                  size="small"
+                  options={endSequencesOptions}
+                  style={{ width: "8%" }}
+                  placeholder="End"
+                  onChange={onEndChange}
+                  onSearch={onEndSearch}
+                  onFocus={() => {
+                    if (startRef.current > 0) {
+                      onEndSearch(startRef.current.toString());
+                    }
+                  }}
+                  value={selectedChromosomeSequence.end?.toString() || ""}
+                />
                 <Tooltip
                   title="Add a new heatmap"
                   color='white'
