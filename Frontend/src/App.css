@@ -74,8 +74,6 @@ body {
 .chromosomeBarColorLegendItem {
   display: flex;
   align-items: center;
-  border-radius: 5px;
-  background: #f9f9f9;
 }
 
 .chromosomeBarColorRect {
