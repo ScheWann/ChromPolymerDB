@@ -580,10 +580,10 @@ function App() {
         duration: 1.5,
       });
     }
-    if (type === 'overSelectedRange') {
+    if (type === 'invalidRange') {
       messageApi.open({
         type: 'warning',
-        content: 'Please input the range within the selected sequence',
+        content: 'Please input the valid range',
         duration: 1.5,
       });
     }
@@ -743,7 +743,7 @@ function App() {
   const handleStartInputBlur = () => {
     const num = Number(startInputValue);
     if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
-      warning('overSelectedRange');
+      warning('invalidRange');
       setStartInputValue(selectedChromosomeSequence.start.toString());
       return;
     }
@@ -758,7 +758,7 @@ function App() {
   const handleEndInputBlur = () => {
     const num = Number(endInputValue);
     if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
-      warning('overSelectedRange');
+      warning('invalidRange');
       setEndInputValue(selectedChromosomeSequence.end.toString());
       return;
     }
@@ -868,6 +868,29 @@ function App() {
     setComparisonCellLine3DData({});
   }
 
+  const handleConfirm = () => {
+    const startNum = Number(startInputValue);
+    const endNum = Number(endInputValue);
+
+    if (!startNum || !endNum) {
+      warning('invalidRange');
+      return false;
+    }
+    if (startNum >= endNum) {
+      warning('smallend');
+      return false;
+    }
+    if (!isSequenceInValidRange(startNum, endNum)) {
+      warning('overRegion');
+      return false;
+    }
+
+    startRef.current = startNum;
+    endRef.current = endNum;
+
+    setSelectedChromosomeSequence({ start: startNum, end: endNum });
+    return true;
+  };
   // Heatmap Add button click
   const addNewComparisonHeatmap = () => {
     setComparisonHeatmapList((prev) => [...prev, comparisonHeatmapIndex]);
@@ -1141,6 +1164,7 @@ function App() {
 
   // Submit button click
   const submit = () => {
+    if (!handleConfirm()) return;
     if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
       warning('smallend');
     } else if (!cellLineName || !chromosomeName) {
@@ -1245,7 +1269,7 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="Start"
                   onChange={onStartChange}
-                  onBlur={handleStartInputBlur}
+                  // onBlur={handleStartInputBlur}
                   onSearch={onStartSearch}
                   onSelect={handleStartSelect}
                   onFocus={() => {
@@ -1263,7 +1287,7 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="End"
                   onChange={onEndChange}
-                  onBlur={handleEndInputBlur}
+                  // onBlur={handleEndInputBlur}
                   onSearch={onEndSearch}
                   onSelect={handleEndSelect}
                   onFocus={() => {
