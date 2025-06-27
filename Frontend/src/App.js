@@ -735,6 +735,11 @@ function App() {
     setStartInputValue(value);
   };
 
+  const onEndChange = (value) => {
+    if (!onlyDigits(value)) return;
+    setEndInputValue(value);
+  };
+
   const handleStartInputBlur = () => {
     const num = Number(startInputValue);
     if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
@@ -748,11 +753,6 @@ function App() {
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     setComparisonCellLine3DData({});
-  };
-
-  const onEndChange = (value) => {
-    if (!onlyDigits(value)) return;
-    setEndInputValue(value);
   };
 
   const handleEndInputBlur = () => {
@@ -843,6 +843,30 @@ function App() {
 
     setEndSequencesOptions(filtered.map(seq => ({ value: seq.end.toString() })));
   };
+
+  const handleStartSelect = (value) => {
+    const num = Number(value);
+    startRef.current = num;
+    setStartInputValue(num.toString());
+    setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
+
+    setChromosome3DComparisonShowing(false);
+    setComparisonCellLine(null);
+    setComparisonCellLine3DSampleID(0);
+    setComparisonCellLine3DData({});
+  }
+
+  const handleEndSelect = (value) => {
+    const num = Number(value);
+    endRef.current = num;
+    setEndInputValue(num.toString());
+    setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
+
+    setChromosome3DComparisonShowing(false);
+    setComparisonCellLine(null);
+    setComparisonCellLine3DSampleID(0);
+    setComparisonCellLine3DData({});
+  }
 
   // Heatmap Add button click
   const addNewComparisonHeatmap = () => {
@@ -1223,6 +1247,7 @@ function App() {
                   onChange={onStartChange}
                   onBlur={handleStartInputBlur}
                   onSearch={onStartSearch}
+                  onSelect={handleStartSelect}
                   onFocus={() => {
                     if (endRef.current > 0) {
                       onStartSearch(startRef.current.toString());
@@ -1240,6 +1265,7 @@ function App() {
                   onChange={onEndChange}
                   onBlur={handleEndInputBlur}
                   onSearch={onEndSearch}
+                  onSelect={handleEndSelect}
                   onFocus={() => {
                     if (startRef.current > 0) {
                       onEndSearch(endRef.current.toString());

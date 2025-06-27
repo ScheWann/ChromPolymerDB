@@ -179,8 +179,8 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             d3.select(event.currentTarget)
                                 .transition()
                                 .duration(250)
-                                .attr('stroke', '#333')
-                                .attr('stroke-width', 2)
+                                .attr('stroke', '#FFC107')
+                                .attr('stroke-width', 3)
                                 .style('opacity', 1);
                             const tooltipWidth = 150;
                             const tooltipX = event.pageX + 5;
