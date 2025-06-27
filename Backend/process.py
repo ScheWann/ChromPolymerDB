@@ -55,6 +55,9 @@ label_mapping = {
     "IMR": "Lung(IMR90)",
     "K": "Blood Leukemia(K562)",
     "GM": "Lymphoblastoid Cell Line(GM12878)",
+    "GM12878": "GM12878_v2",
+    "IMR90": "IMR90_V2",
+    "Cyt49": "Cyt49",
 }
 
 """
