@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
-export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, warning, formatNumber, totalOriginalChromosomeValidSequences }) => {
+export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences }) => {
     const svgRef = useRef();
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
@@ -95,6 +95,11 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         let nearest = null;
                         let minDistance = Infinity;
 
+                        if (!totalOriginalChromosomeValidSequences || totalOriginalChromosomeValidSequences.length === 0) {
+                            console.warn('No valid sequences to search nearest from.');
+                            return;
+                        }
+
                         totalOriginalChromosomeValidSequences.forEach((range) => {
                             let distance = 0;
                             if (clickedGenomicPos < range.start) {
@@ -111,6 +116,10 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             }
                         });
 
+                        startRef.current = nearest.start;
+                        endRef.current = nearest.end;
+
+                        console.log(startRef.current, endRef.current, 'nearest range clicked');
                         setSelectedChromosomeSequence({
                             start: nearest.start,
                             end: nearest.end

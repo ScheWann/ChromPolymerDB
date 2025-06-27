@@ -194,7 +194,6 @@ function App() {
           if (matchedSeq) {
             setSelectedChromosomeSequence({ start: matchedSeq.start, end: matchedSeq.end });
           } else {
-            console.log(1)
             warning('noCoveredGene');
           }
         }
@@ -711,21 +710,27 @@ function App() {
   const onlyDigits = (text) => /^\d*$/.test(text);
 
   const isSequenceInValidRange = (start, end) => {
-    return totalOriginalChromosomeValidSequences.some(seq =>
-      seq.start <= start && seq.end >= end
-    );
+    if (start > end) return false;
+
+    for (const seq of totalOriginalChromosomeValidSequences) {
+      if (seq.start <= start && seq.end >= end) {
+        return true;
+      }
+    }
+    return false;
   };
 
   const onStartChange = (value) => {
     if (!onlyDigits(value)) return;
     const num = Number(value);
-    startRef.current = num;
 
     if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
+      startRef.current = selectedChromosomeSequence.start; // Reset to previous start value
       warning('overSelectedRange');
       return;
     }
 
+    startRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
 
     setChromosome3DComparisonShowing(false);
@@ -737,12 +742,14 @@ function App() {
   const onEndChange = (value) => {
     if (!onlyDigits(value)) return;
     const num = Number(value);
-    endRef.current = num;
 
-    if (selectedChromosomeSequence.start > 0 && !isSequenceInValidRange(startRef.current, num)) {
+    if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
+      endRef.current = selectedChromosomeSequence.end; // Reset to previous end value
       warning('overSelectedRange');
       return;
     }
+    
+    endRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
 
     setChromosome3DComparisonShowing(false);
@@ -762,7 +769,7 @@ function App() {
     }
 
     const num = cleanValue === '' ? 0 : Number(cleanValue);
-    startRef.current = num;
+    // startRef.current = num;
     const currentEnd = endRef.current;
 
     let filtered;
@@ -808,7 +815,6 @@ function App() {
     }
 
     const num = cleanValue === '' ? 0 : Number(cleanValue);
-    endRef.current = num;
     const currentStart = startRef.current;
 
     let filtered;
@@ -1206,9 +1212,8 @@ function App() {
                   onChange={onStartChange}
                   onSearch={onStartSearch}
                   onFocus={() => {
-                    console.log(startSequencesOptions)
                     if (endRef.current > 0) {
-                      onStartSearch(endRef.current.toString());
+                      onStartSearch(startRef.current.toString());
                     }
                   }}
                   value={selectedChromosomeSequence.start?.toString() || ""}
@@ -1223,7 +1228,7 @@ function App() {
                   onSearch={onEndSearch}
                   onFocus={() => {
                     if (startRef.current > 0) {
-                      onEndSearch(startRef.current.toString());
+                      onEndSearch(endRef.current.toString());
                     }
                   }}
                   value={selectedChromosomeSequence.end?.toString() || ""}
@@ -1309,6 +1314,8 @@ function App() {
         <ChromosomeBar
           warning={warning}
           formatNumber={formatNumber}
+          startRef={startRef}
+          endRef={endRef}
           selectedChromosomeSequence={selectedChromosomeSequence}
           setSelectedChromosomeSequence={setSelectedChromosomeSequence}
           chromosomeSize={chromosomeSize}
