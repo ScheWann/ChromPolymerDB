@@ -130,9 +130,9 @@ def insert_new_cell_line():
     print("New cell line Non-random Hi-C data inserted successfully.")
     
     # Process sequence data
-    process_sequence_data(cur)
-    conn.commit()
-    print("New cell line sequence data inserted successfully.")
+    # process_sequence_data(cur)
+    # conn.commit()
+    # print("New cell line sequence data inserted successfully.")
     
     # Process valid regions data
     process_valid_regions_data(cur)
