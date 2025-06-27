@@ -71,13 +71,21 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
 
             // Seqs rects
             seqs.forEach((seq) => {
+                const seqStart = seq.start;
+                const seqEnd = seq.end;
+                const selectionStart = selectedChromosomeSequence.start;
+                const selectionEnd = selectedChromosomeSequence.end;
+
+                const overlapStart = Math.max(seqStart, selectionStart);
+                const overlapEnd = Math.min(seqEnd, selectionEnd);
+
                 svg.append('rect')
                     .attr('class', 'rect')
                     .attr('x', xScale(seq.start))
                     .attr('y', backgroundY)
                     .attr('width', xScale(seq.end) - xScale(seq.start))
                     .attr('height', backgroundHeight)
-                    .attr('fill', selectedChromosomeSequence.start < seq.end && selectedChromosomeSequence.end > seq.start ? '#FFC107' : '#4CAF50')
+                    .attr('fill', '#4CAF50')
                     .style('cursor', 'pointer')
                     .style('opacity', 0.8)
                     .on('click', (event) => {
@@ -140,6 +148,60 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             .style('opacity', 0.8);
                         setTooltip((prev) => ({ ...prev, visible: false }));
                     });
+                if (overlapStart < overlapEnd) {
+                    const overlapX = xScale(overlapStart);
+                    const overlapWidth = xScale(overlapEnd) - xScale(overlapStart);
+
+                    svg.append('rect')
+                        .attr('class', 'highlight-overlap')
+                        .attr('x', overlapX)
+                        .attr('y', backgroundY)
+                        .attr('width', overlapWidth)
+                        .attr('height', backgroundHeight)
+                        .attr('fill', '#FFC107')
+                        .attr('pointer-events', 'none')
+
+                    svg.append('rect')
+                        .attr('class', 'highlight-hover')
+                        .attr('x', overlapX)
+                        .attr('y', backgroundY)
+                        .attr('width', overlapWidth)
+                        .attr('height', backgroundHeight)
+                        .attr('fill', 'transparent')
+                        .style('cursor', 'pointer')
+                        .on('mouseover', (event) => {
+                            d3.select(event.currentTarget)
+                                .transition()
+                                .duration(250)
+                                .attr('stroke', '#333')
+                                .attr('stroke-width', 2)
+                                .style('opacity', 1);
+                            const tooltipWidth = 150;
+                            const tooltipX = event.pageX + 5;
+
+                            const adjustedLeft = tooltipX + tooltipWidth > window.innerWidth
+                                ? window.innerWidth - tooltipWidth - 10
+                                : tooltipX;
+
+                            setTooltip({
+                                visible: true,
+                                minStart: overlapStart,
+                                maxEnd: overlapEnd,
+                                left: adjustedLeft,
+                                top: event.pageY - 50,
+                                type: 'overlap',
+                            });
+                        })
+                        .on('mouseout', (event) => {
+                            d3.select(event.currentTarget)
+                                .transition()
+                                .duration(250)
+                                .attr('stroke', 'none')
+                                .attr('stroke-width', 0)
+                                .style('opacity', 0.8);
+                            setTooltip((prev) => ({ ...prev, visible: false }));
+                        });
+                }
             });
 
             // Function to draw triangles and vertical lines
