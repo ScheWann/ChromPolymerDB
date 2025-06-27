@@ -739,7 +739,7 @@ function App() {
     const num = Number(value);
     endRef.current = num;
 
-    if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
+    if (selectedChromosomeSequence.start > 0 && !isSequenceInValidRange(startRef.current, num)) {
       warning('overSelectedRange');
       return;
     }
@@ -816,11 +816,11 @@ function App() {
     if (startRef.current > 0) {
       filtered = totalOriginalChromosomeValidSequences.filter(seq =>
         seq.start === currentStart &&
-        seq.end > currentStart
+        seq.end > num
       );
     } else {
       filtered = totalOriginalChromosomeValidSequences.filter(seq =>
-        seq.end > currentStart
+        seq.end > num
       );
     }
 

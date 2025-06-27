@@ -81,9 +81,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                     .style('cursor', 'pointer')
                     .style('opacity', 0.8)
                     .on('click', (event) => {
-                        // if (seq.end - seq.start > 4000000) {
-                        //     warning('overrange');
-                        // }
                         const mouseX = event.offsetX;
                         const clickedGenomicPos = xScale.invert(mouseX);
 
