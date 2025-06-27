@@ -279,12 +279,12 @@ def chromosome_size_by_gene_name(gene_name):
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
-                SELECT chromosome, orientation, start_location, end_location
-                FROM gene
-                WHERE symbol = %s
-                AND chromosome >= %s
-                AND chromosome <= %s
-            """,
+                    SELECT chromosome, orientation, start_location, end_location
+                    FROM gene
+                    WHERE symbol = %s
+                    AND CAST(chromosome AS integer) >= %s
+                    AND CAST(chromosome AS integer) <= %s
+                """,
                 (gene_name, '1', '22'),
             )
 
