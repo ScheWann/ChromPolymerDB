@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
-export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences }) => {
+export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences, setStartInputValue, setEndInputValue }) => {
     const svgRef = useRef();
     const parentRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
@@ -95,11 +95,6 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         let nearest = null;
                         let minDistance = Infinity;
 
-                        if (!totalOriginalChromosomeValidSequences || totalOriginalChromosomeValidSequences.length === 0) {
-                            console.warn('No valid sequences to search nearest from.');
-                            return;
-                        }
-
                         totalOriginalChromosomeValidSequences.forEach((range) => {
                             let distance = 0;
                             if (clickedGenomicPos < range.start) {
@@ -119,7 +114,9 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                         startRef.current = nearest.start;
                         endRef.current = nearest.end;
 
-                        console.log(startRef.current, endRef.current, 'nearest range clicked');
+                        setStartInputValue(nearest.start.toString());
+                        setEndInputValue(nearest.end.toString());
+
                         setSelectedChromosomeSequence({
                             start: nearest.start,
                             end: nearest.end
@@ -289,7 +286,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 .attr('fill', '#333')
                 .text(`${formatNumber(max_end)}`);
         }
-    }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize, parentSize]);
+    }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize, parentSize, totalOriginalChromosomeValidSequences]);
 
     return (
         <div id="chromosome-bar" ref={parentRef} style={{ width: '100%', position: 'relative' }}>

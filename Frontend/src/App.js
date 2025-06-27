@@ -25,6 +25,8 @@ function App() {
   const [currentChromosomeSequence, setCurrentChromosomeSequence] = useState(selectedChromosomeSequence); // Current selected sequence range(used for control heatmap's zoom in/out)
   const [startSequencesOptions, setStartSequencesOptions] = useState([]); // Options for the start sequences input
   const [endSequencesOptions, setEndSequencesOptions] = useState([]); // Options for the end sequences input
+  const [startInputValue, setStartInputValue] = useState(null);
+  const [endInputValue, setEndInputValue] = useState(null);
   const [chromosomeData, setChromosomeData] = useState([]);
   const [validChromosomeValidIbpData, setValidChromosomeValidIbpData] = useState([]);
   const [chromosome3DExampleID, setChromosome3DExampleID] = useState(0);
@@ -622,6 +624,10 @@ function App() {
     setChromosomeName(null);
     setChromosomeSize({ start: 0, end: 0 });
     setSelectedChromosomeSequence({ start: 0, end: 0 });
+    setStartInputValue(null);
+    setEndInputValue(null);
+    setStartSequencesOptions([]);
+    setEndSequencesOptions([]);
     setChromosomeData([]);
     setChromosome3DExampleData({});
     fetchCellLineList();
@@ -636,6 +642,10 @@ function App() {
     setChromosomeName(null);
     setChromosomeSize({ start: 0, end: 0 });
     setSelectedChromosomeSequence({ start: 0, end: 0 });
+    setStartInputValue(null);
+    setEndInputValue(null);
+    setStartSequencesOptions([]);
+    setEndSequencesOptions([]);
     setGeneName(null);
     setChromosomeData([]);
     setChromosome3DExampleData({});
@@ -722,17 +732,18 @@ function App() {
 
   const onStartChange = (value) => {
     if (!onlyDigits(value)) return;
-    const num = Number(value);
+    setStartInputValue(value);
+  };
 
+  const handleStartInputBlur = () => {
+    const num = Number(startInputValue);
     if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
-      startRef.current = selectedChromosomeSequence.start; // Reset to previous start value
       warning('overSelectedRange');
+      setStartInputValue(selectedChromosomeSequence.start.toString());
       return;
     }
-
     startRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
-
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
@@ -741,22 +752,23 @@ function App() {
 
   const onEndChange = (value) => {
     if (!onlyDigits(value)) return;
-    const num = Number(value);
+    setEndInputValue(value);
+  };
 
+  const handleEndInputBlur = () => {
+    const num = Number(endInputValue);
     if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
-      endRef.current = selectedChromosomeSequence.end; // Reset to previous end value
       warning('overSelectedRange');
+      setEndInputValue(selectedChromosomeSequence.end.toString());
       return;
     }
-    
     endRef.current = num;
     setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
-
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     setComparisonCellLine3DData({});
-  };
+  }
 
   const onStartSearch = (text) => {
     if (!onlyDigits(text)) {
@@ -769,7 +781,6 @@ function App() {
     }
 
     const num = cleanValue === '' ? 0 : Number(cleanValue);
-    // startRef.current = num;
     const currentEnd = endRef.current;
 
     let filtered;
@@ -1210,13 +1221,15 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="Start"
                   onChange={onStartChange}
+                  onBlur={handleStartInputBlur}
                   onSearch={onStartSearch}
                   onFocus={() => {
                     if (endRef.current > 0) {
                       onStartSearch(startRef.current.toString());
                     }
                   }}
-                  value={selectedChromosomeSequence.start?.toString() || ""}
+                  // value={selectedChromosomeSequence.start?.toString() || ""}
+                  value={startInputValue}
                 />
                 <span className="controlGroupText">~</span>
                 <AutoComplete
@@ -1225,13 +1238,15 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="End"
                   onChange={onEndChange}
+                  onBlur={handleEndInputBlur}
                   onSearch={onEndSearch}
                   onFocus={() => {
                     if (startRef.current > 0) {
                       onEndSearch(endRef.current.toString());
                     }
                   }}
-                  value={selectedChromosomeSequence.end?.toString() || ""}
+                  // value={selectedChromosomeSequence.end?.toString() || ""}
+                  value={endInputValue}
                 />
                 <Tooltip
                   title="Add a new heatmap"
@@ -1318,6 +1333,8 @@ function App() {
           endRef={endRef}
           selectedChromosomeSequence={selectedChromosomeSequence}
           setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+          setStartInputValue={setStartInputValue}
+          setEndInputValue={setEndInputValue}
           chromosomeSize={chromosomeSize}
           totalChromosomeSequences={totalChromosomeSequences}
           totalOriginalChromosomeValidSequences={totalOriginalChromosomeValidSequences}
