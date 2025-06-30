@@ -56,9 +56,9 @@ label_mapping = {
     "K": "Blood Leukemia(K562)",
     "GM": "Lymphoblastoid Cell Line(GM12878)",
     "GM12878": "GM12878_v2",
-    "IMR90": "Lung (IMR90)",
+    "IMR90": "Lung Fibroblasts Cell Line(IMR90)",
     "Cyt49": "Cyt49",
-    "Calu3": "Lung Adenocarcinoma(Calu3)"
+    "Calu3": "Lung Adenocarcinoma Cell Line(Calu3)"
 }
 
 """
