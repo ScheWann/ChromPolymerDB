@@ -9,6 +9,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     const browserRef = useRef(null);
     const svgRef = useRef(null);
     const loadedTracks = useRef(new Set());
+    const customTracks = useRef([]); // Store custom tracks to reload them
 
     const [igvHeight, setIgvHeight] = useState(0);
 
@@ -134,6 +135,13 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
                 if (!isMounted) return;
                 browserRef.current = igvBrowser;
+                
+                // Reload custom tracks after browser recreation
+                if (customTracks.current.length > 0) {
+                    customTracks.current.forEach(track => {
+                        browserRef.current.loadTrack(track);
+                    });
+                }
             });
 
             observer = new MutationObserver(() => {
@@ -189,11 +197,42 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                         format: track.Format,
                     };
 
+                    // Store the track for potential reload
+                    customTracks.current.push(newTrack);
                     browserRef.current.loadTrack(newTrack);
                 }
             });
         }
     }, [selectedTrackData, trackKey]);
+
+    // Clear custom tracks when chromosome changes
+    useEffect(() => {
+        customTracks.current = [];
+        loadedTracks.current.clear();
+    }, [chromosomeName]);
+
+    // Expose function to clear all custom tracks
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.clearIgvCustomTracks = () => {
+                customTracks.current = [];
+                loadedTracks.current.clear();
+                if (browserRef.current) {
+                    // Remove all tracks except the default ones
+                    const tracks = browserRef.current.trackViews;
+                    if (tracks) {
+                        tracks.forEach(trackView => {
+                            const track = trackView.track;
+                            // Only remove custom tracks, keep default tracks
+                            if (track.name && !defaultTracks[cellLineName].some(defaultTrack => defaultTrack.name === track.name)) {
+                                browserRef.current.removeTrack(track);
+                            }
+                        });
+                    }
+                }
+            };
+        }
+    }, [cellLineName]);
 
     useEffect(() => {
         if ((browserRef.current && trackKey === '4' || browserRef.current && trackKey === '5') && uploadTrackData.name && uploadTrackData.trackUrl) {
@@ -208,6 +247,9 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 name: uploadTrackData.name,
                 format: `${format}`,
             };
+            
+            // Store the track for potential reload
+            customTracks.current.push(newTrack);
             browserRef.current.loadTrack(newTrack);
         }
     }, [uploadTrackData, trackKey]);
