@@ -667,6 +667,8 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                 onCancel={closeHalfHeatMapModal} 
                                 footer={null} 
                                 width="60vw" 
+                                maskClosable={false}
+                                keyboard={false}
                                 style={{ 
                                     top: 0,
                                     padding: 0,
