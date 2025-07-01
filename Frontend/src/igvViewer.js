@@ -10,6 +10,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     const svgRef = useRef(null);
     const loadedTracks = useRef(new Set());
     const customTracks = useRef([]); // Store custom tracks to reload them
+    const isMountedRef = useRef(true); // Track component mounting status
 
     const [igvHeight, setIgvHeight] = useState(0);
 
@@ -118,7 +119,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
 
     useEffect(() => {
         let observer = null;
-        let isMounted = true;
+        isMountedRef.current = true;
 
         if (igvMountStatus) {
             const igvOptions = {
@@ -133,18 +134,30 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             };
 
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
-                if (!isMounted) return;
+                if (!isMountedRef.current) return;
                 browserRef.current = igvBrowser;
                 
                 // Reload custom tracks after browser recreation
                 if (customTracks.current.length > 0) {
                     customTracks.current.forEach(track => {
-                        browserRef.current.loadTrack(track);
+                        try {
+                            if (browserRef.current && browserRef.current.loadTrack && isMountedRef.current) {
+                                browserRef.current.loadTrack(track).catch(error => {
+                                    console.warn('Failed to reload custom track:', error);
+                                });
+                            }
+                        } catch (error) {
+                            console.warn('Error reloading custom track:', error);
+                        }
                     });
                 }
+            }).catch(error => {
+                console.warn('Failed to create IGV browser:', error);
             });
 
             observer = new MutationObserver(() => {
+                if (!isMountedRef.current) return;
+                
                 const shadowHost = document.querySelector("#igv-div");
 
                 if (shadowHost?.shadowRoot) {
@@ -171,7 +184,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
         }
 
         return () => {
-            isMounted = false;
+            isMountedRef.current = false;
             if (browserRef.current) {
                 igv.removeAllBrowsers();
                 browserRef.current = null;
@@ -187,7 +200,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     }, [chromosomeName, currentChromosomeSequence, igvMountStatus, refreshIGV]);
 
     useEffect(() => {
-        if (browserRef.current && selectedTrackData && trackKey) {
+        if (browserRef.current && selectedTrackData && trackKey && isMountedRef.current) {
             selectedTrackData.forEach((track) => {
                 if (!loadedTracks.current.has(track.HREF)) {
                     loadedTracks.current.add(track.HREF);
@@ -199,7 +212,27 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
 
                     // Store the track for potential reload
                     customTracks.current.push(newTrack);
-                    browserRef.current.loadTrack(newTrack);
+                    
+                    // Add error handling for track loading
+                    try {
+                        if (browserRef.current && browserRef.current.loadTrack && isMountedRef.current) {
+                            browserRef.current.loadTrack(newTrack).catch(error => {
+                                console.warn('Failed to load track:', error);
+                                // Remove from custom tracks if loading failed
+                                const index = customTracks.current.findIndex(t => t.url === newTrack.url);
+                                if (index > -1) {
+                                    customTracks.current.splice(index, 1);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('Error loading track:', error);
+                        // Remove from custom tracks if loading failed
+                        const index = customTracks.current.findIndex(t => t.url === newTrack.url);
+                        if (index > -1) {
+                            customTracks.current.splice(index, 1);
+                        }
+                    }
                 }
             });
         }
@@ -235,7 +268,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     }, [cellLineName]);
 
     useEffect(() => {
-        if ((browserRef.current && trackKey === '4' || browserRef.current && trackKey === '5') && uploadTrackData.name && uploadTrackData.trackUrl) {
+        if ((browserRef.current && trackKey === '4' || browserRef.current && trackKey === '5') && uploadTrackData.name && uploadTrackData.trackUrl && isMountedRef.current) {
             let format;
             if (trackKey === '4') {
                 format = uploadTrackData.trackUrl.split('.').pop().split('?')[0].toLowerCase();
@@ -250,7 +283,27 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             
             // Store the track for potential reload
             customTracks.current.push(newTrack);
-            browserRef.current.loadTrack(newTrack);
+            
+            // Add error handling for track loading
+            try {
+                if (browserRef.current && browserRef.current.loadTrack && isMountedRef.current) {
+                    browserRef.current.loadTrack(newTrack).catch(error => {
+                        console.warn('Failed to load uploaded track:', error);
+                        // Remove from custom tracks if loading failed
+                        const index = customTracks.current.findIndex(t => t.url === newTrack.url);
+                        if (index > -1) {
+                            customTracks.current.splice(index, 1);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('Error loading uploaded track:', error);
+                // Remove from custom tracks if loading failed
+                const index = customTracks.current.findIndex(t => t.url === newTrack.url);
+                if (index > -1) {
+                    customTracks.current.splice(index, 1);
+                }
+            }
         }
     }, [uploadTrackData, trackKey]);
 
