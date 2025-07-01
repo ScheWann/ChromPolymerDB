@@ -666,16 +666,16 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                 open={halfHeatMapModalVisible} 
                                 onCancel={closeHalfHeatMapModal} 
                                 footer={null} 
-                                width="100vw" 
+                                width="60vw" 
                                 style={{ 
                                     top: 0,
                                     padding: 0,
-                                    margin: 0,
-                                    maxWidth: '100vw'
+                                    maxWidth: '60vw',
+                                    margin: '0 auto'
                                 }}
                                 styles={{
                                     body: {
-                                        overflow: 'hidden',
+                                        overflow: 'auto',
                                         height: '100vh',
                                         padding: 0,
                                         margin: 0
@@ -684,7 +684,7 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                                         height: '100vh',
                                         padding: 0,
                                         margin: 0,
-                                        maxWidth: '100vw'
+                                        maxWidth: '60vw'
                                     }
                                 }}
                             >

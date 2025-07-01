@@ -834,7 +834,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
 
         const margin = { top: 5, right: 5, bottom: 5, left: 5 };
         const parentWidth = containerSize.width;
-        const parentHeight = containerSize.height;
+        const parentHeight = containerSize.height * 0.5;
 
         const width = Math.min(parentWidth, parentHeight);
         const height = Math.min(parentWidth, parentHeight);
@@ -1092,7 +1092,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
         axisSvg.append('g')
             .attr("transform", "translate(2, 0)")
             .call(d3.axisBottom(transformedXScale)
-            .tickFormat(d => (d / 1e6).toFixed(3) + 'M'))
+            .tickFormat(d => (d / 1e6).toFixed(1) + 'M'))
             .selectAll("text")
             .style("text-anchor", "middle")
             .attr("dx", "0em")
@@ -1235,9 +1235,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     </Dropdown>
                 </Tooltip>
             </div>
-            <canvas ref={canvasRef} style={{ marginTop: 65, transform: 'translate(-2px, 0px)' }} />
+            <canvas ref={canvasRef} style={{ marginTop: 80, transform: 'translate(-2px, 0px)' }} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 65 }} />
-            <svg ref={axisSvgRef} style={{ height: '50px', flexShrink: 0 }} />
+            <svg ref={axisSvgRef} style={{ height: '25px', flexShrink: 0 }} />
             {/* {minCanvasDimension > 0 && (
                 <TriangleGeneList
                     brushedTriangleRange={brushedTriangleRange}
