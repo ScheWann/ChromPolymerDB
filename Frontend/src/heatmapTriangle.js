@@ -983,14 +983,24 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             [canvas.width + canvasUnitRectSize * Math.sqrt(2), canvas.height],
         ];
 
-        // Limit the clickable area to the triangle
+        // Draw the clickable triangle area (for hit testing)
         brushSvg.append('polygon')
             .attr('points', clickableArea.map(d => d.join(',')).join(' '))
             .attr('fill', 'transparent');
 
-        // Draw a brushed triangle area on click
+        // Attach click handler to the SVG
         brushSvg.on('click', (e) => {
             const [mouseX, mouseY] = d3.pointer(e);
+
+            // Always check if the click is inside the triangle polygon (SVG coordinates)
+            if (!d3.polygonContains(clickableArea, [mouseX, mouseY])) {
+                // Clear selection when clicking outside
+                brushSvg.selectAll('.triangle').remove();
+                brushSvg.selectAll('.triangle-line').remove();
+                setBrushedTriangleRange({ start: 0, end: 0 });
+                axisSvg.selectAll('.range-line').remove();
+                return;
+            }
 
             brushSvg.selectAll('.triangle').remove();
             brushSvg.selectAll('.triangle-line').remove();
@@ -1066,6 +1076,10 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                     setBrushedTriangleRange({ start: 0, end: 0 });
                     axisSvg.selectAll('.range-line').remove();
                 }
+            } else {
+                // No valid cell found, clear selection
+                setBrushedTriangleRange({ start: 0, end: 0 });
+                axisSvg.selectAll('.range-line').remove();
             }
         });
 
