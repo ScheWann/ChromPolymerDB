@@ -1090,7 +1090,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             <div id='triangle-control-button-group'
                 style={{
                     position: 'absolute',
-                    top: 20,
+                    top: 45,
                     zIndex: 10,
                     display: 'flex',
                     alignItems: 'center',

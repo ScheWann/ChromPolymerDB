@@ -661,7 +661,33 @@ export const Heatmap = ({ cellLineDict, comparisonHeatmapId, cellLineName, chrom
                             <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
 
                             {/* half triangle heatmap Modal */}
-                            <Modal destroyOnClose={true} open={halfHeatMapModalVisible} onCancel={closeHalfHeatMapModal} footer={null} style={{ minWidth: "1000px" }} width={"60vw"} styles={modalStyles} >
+                            <Modal 
+                                destroyOnClose={true} 
+                                open={halfHeatMapModalVisible} 
+                                onCancel={closeHalfHeatMapModal} 
+                                footer={null} 
+                                width="100vw" 
+                                style={{ 
+                                    top: 0,
+                                    padding: 0,
+                                    margin: 0,
+                                    maxWidth: '100vw'
+                                }}
+                                styles={{
+                                    body: {
+                                        overflow: 'hidden',
+                                        height: '100vh',
+                                        padding: 0,
+                                        margin: 0
+                                    },
+                                    content: {
+                                        height: '100vh',
+                                        padding: 0,
+                                        margin: 0,
+                                        maxWidth: '100vw'
+                                    }
+                                }}
+                            >
                                 <HeatmapTriangle
                                     geneList={geneList}
                                     cellLineName={independentHeatmapCellLine}
