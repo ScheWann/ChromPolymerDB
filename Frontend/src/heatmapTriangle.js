@@ -1236,7 +1236,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
                 </Tooltip>
             </div>
             <canvas ref={canvasRef} style={{ marginTop: 80, transform: 'translate(-2px, 0px)' }} />
-            <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 65 }} />
+            <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 80 }} />
             <svg ref={axisSvgRef} style={{ height: '25px', flexShrink: 0 }} />
             {/* {minCanvasDimension > 0 && (
                 <TriangleGeneList
