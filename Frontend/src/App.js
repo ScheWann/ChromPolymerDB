@@ -869,6 +869,8 @@ function App() {
   }
 
   const handleConfirm = () => {
+    if (!isCellLineMode) return true;
+
     const startNum = Number(startInputValue);
     const endNum = Number(endInputValue);
 
@@ -891,6 +893,7 @@ function App() {
     setSelectedChromosomeSequence({ start: startNum, end: endNum });
     return true;
   };
+
   // Heatmap Add button click
   const addNewComparisonHeatmap = () => {
     setComparisonHeatmapList((prev) => [...prev, comparisonHeatmapIndex]);
