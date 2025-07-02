@@ -1,5 +1,6 @@
 import os
 import orjson
+import shutil
 from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
 from process import (
     gene_names_list, 
@@ -39,6 +40,15 @@ redis_client = redis.Redis(connection_pool=redis_pool)
 
 
 api = Blueprint('api', __name__, url_prefix='/api')
+
+
+@app.route('/api/clear_folding_input', methods=['POST'])
+def clear_folding_input_api():
+    folder = os.path.join(os.path.dirname(__file__), 'Folding_input')
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+    os.makedirs(folder, exist_ok=True)
+    return jsonify({'status': 'cleared'})
 
 
 @api.route('/getGeneNameList', methods=['GET'])

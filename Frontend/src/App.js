@@ -158,6 +158,10 @@ function App() {
       })
   }, []);
 
+  useEffect(() => {
+    fetch('/api/clear_folding_input', { method: 'POST' });
+  }, []);
+
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
     if (isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
@@ -740,36 +744,6 @@ function App() {
     setEndInputValue(value);
   };
 
-  const handleStartInputBlur = () => {
-    const num = Number(startInputValue);
-    if (endRef.current > 0 && !isSequenceInValidRange(num, endRef.current)) {
-      warning('invalidRange');
-      setStartInputValue(selectedChromosomeSequence.start.toString());
-      return;
-    }
-    startRef.current = num;
-    setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
-  };
-
-  const handleEndInputBlur = () => {
-    const num = Number(endInputValue);
-    if (startRef.current > 0 && !isSequenceInValidRange(startRef.current, num)) {
-      warning('invalidRange');
-      setEndInputValue(selectedChromosomeSequence.end.toString());
-      return;
-    }
-    endRef.current = num;
-    setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
-  }
-
   const onStartSearch = (text) => {
     if (!onlyDigits(text)) {
       return;
@@ -1272,7 +1246,6 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="Start"
                   onChange={onStartChange}
-                  // onBlur={handleStartInputBlur}
                   onSearch={onStartSearch}
                   onSelect={handleStartSelect}
                   onFocus={() => {
@@ -1290,7 +1263,6 @@ function App() {
                   style={{ width: "8%" }}
                   placeholder="End"
                   onChange={onEndChange}
-                  // onBlur={handleEndInputBlur}
                   onSearch={onEndSearch}
                   onSelect={handleEndSelect}
                   onFocus={() => {
