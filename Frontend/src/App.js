@@ -843,7 +843,7 @@ function App() {
   }
 
   const handleConfirm = () => {
-    if (!isCellLineMode) return true;
+    if (!isCellLineMode || isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) return true;
 
     const startNum = Number(startInputValue);
     const endNum = Number(endInputValue);
@@ -1142,16 +1142,9 @@ function App() {
   // Submit button click
   const submit = () => {
     if (!handleConfirm()) return;
-    if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
-      warning('smallend');
-    } else if (!cellLineName || !chromosomeName) {
-      warning('noData');
-    } else {
-      setHeatmapLoading(true);
-      if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-        setCurrentChromosomeSequence(selectedChromosomeSequence);
-      }
 
+    if (isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
+      setCurrentChromosomeSequence(selectedChromosomeSequence);
       setChromosome3DComparisonShowing(false);
       setComparisonCellLine3DSampleID(0);
       setComparisonCellLine3DData({});
@@ -1160,6 +1153,21 @@ function App() {
       fetchChromosomeData();
       fetchValidChromosomeValidIbpData();
       fetchGeneList();
+    } else {
+      if (selectedChromosomeSequence.start > selectedChromosomeSequence.end) {
+        warning('smallend');
+      } else if (!cellLineName || !chromosomeName) {
+        warning('noData');
+      } else {
+        setChromosome3DComparisonShowing(false);
+        setComparisonCellLine3DSampleID(0);
+        setComparisonCellLine3DData({});
+        setChromosome3DExampleID(0);
+        setChromosome3DExampleData({});
+        fetchChromosomeData();
+        fetchValidChromosomeValidIbpData();
+        fetchGeneList();
+      }
     }
   };
 
