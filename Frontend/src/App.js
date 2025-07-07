@@ -460,7 +460,6 @@ function App() {
       })
         .then(res => res.json())
         .then(data => {
-          console.log(data, '/////')
           setChromosomeData(data);
           setHeatmapLoading(false);
         });
@@ -918,6 +917,8 @@ function App() {
     setCellLineName(key);
     setChromosomeName('chr8');
     setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
+    setStartInputValue('127300000');
+    setEndInputValue('128300000');
   }
 
   const onClickOriginalDownloadItems = ({ key }) => {
