@@ -70,28 +70,28 @@ def process_non_random_hic_data(chromosome_dir):
             print(f"Inserted {len(chunk)} records from {file_name}.")
 
 
-def process_sequence_data(cur):
-    """Process and insert sequence data from all CSV files in the specified folder."""
-    folder_path = os.path.join(NEW_DATA_DIR, "seqs")
-    for filename in os.listdir(folder_path):
-        # check if the file is a CSV.gz file
-        if filename.endswith(".csv.gz"):
-            file_path = os.path.join(folder_path, filename)
+# def process_sequence_data(cur):
+#     """Process and insert sequence data from all CSV files in the specified folder."""
+#     folder_path = os.path.join(NEW_DATA_DIR, "seqs")
+#     for filename in os.listdir(folder_path):
+#         # check if the file is a CSV.gz file
+#         if filename.endswith(".csv.gz"):
+#             file_path = os.path.join(folder_path, filename)
 
-            df = pd.read_csv(
-                file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
-            )
+#             df = pd.read_csv(
+#                 file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
+#             )
 
-            df = df[["chrID", "cell_line", "start_value", "end_value"]]
+#             df = df[["chrID", "cell_line", "start_value", "end_value"]]
 
-            query = """
+#             query = """
 
-            INSERT INTO sequence (chrid, cell_line, start_value, end_value)
-            VALUES (%s, %s, %s, %s);
-            """
+#             INSERT INTO sequence (chrid, cell_line, start_value, end_value)
+#             VALUES (%s, %s, %s, %s);
+#             """
 
-            data_to_insert = df.to_records(index=False).tolist()
-            cur.executemany(query, data_to_insert)
+#             data_to_insert = df.to_records(index=False).tolist()
+#             cur.executemany(query, data_to_insert)
 
 
 def process_valid_regions_data(cur):
