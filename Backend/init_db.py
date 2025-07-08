@@ -370,21 +370,24 @@ def process_valid_regions_data(cur):
         # check if the file is a CSV.gz file
         if filename.endswith(".csv.gz"):
             file_path = os.path.join(folder_path, filename)
+            try:
+                df = pd.read_csv(
+                    file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
+                )
 
-            df = pd.read_csv(
-                file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
-            )
+                df = df[["chrID", "cell_line", "start_value", "end_value"]]
 
-            df = df[["chrID", "cell_line", "start_value", "end_value"]]
+                query = """
+                    INSERT INTO valid_regions (chrid, cell_line, start_value, end_value)
+                    VALUES (%s, %s, %s, %s);
+                """
 
-            query = """
+                data_to_insert = df.to_records(index=False).tolist()
+                cur.executemany(query, data_to_insert)
 
-            INSERT INTO valid_regions (chrid, cell_line, start_value, end_value)
-            VALUES (%s, %s, %s, %s);
-            """
-
-            data_to_insert = df.to_records(index=False).tolist()
-            cur.executemany(query, data_to_insert)
+                print(f"{filename}, inserted {len(df)} records")
+            except Exception as e:
+                print(f"file {filename} error: {e}")
 
 
 def process_non_random_hic_index(cur):
