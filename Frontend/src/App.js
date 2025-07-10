@@ -50,12 +50,12 @@ function App() {
       label: 'IMR90-Chr8-127300000-128300000',
     },
     {
-      key: 'K562',
-      label: 'K562-Chr8-127300000-128300000',
+      key: 'NHEK',
+      label: 'NHEK-Chr8-127300000-128300000',
     }
   ])
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
-  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223, "K": 865 }); // Example data best sample ID
+  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM": 2166, "IMR": 1223, "NHEK": 865 }); // Example data best sample ID
   const [ChromosomeDataSpinnerProgress, setChromosomeDataSpinnerProgress] = useState(0);
 
   // Heatmap Comparison settings
@@ -438,7 +438,7 @@ function App() {
       })
   }
 
-  const fetchChromosomeData = () => {
+  const fetchChromosomeData = (sequence) => {
     if (!cellLineName || !chromosomeName) {
       warning('noData');
     } else {
@@ -447,7 +447,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName, sequences: selectedChromosomeSequence })
+        body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName, sequences: sequence })
       })
         .then(res => res.json())
         .then(data => {
@@ -457,13 +457,13 @@ function App() {
     }
   };
 
-  const fetchValidChromosomeValidIbpData = () => {
+  const fetchValidChromosomeValidIbpData = (sequence) => {
     fetch("/api/getChromosValidIBPData", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName, sequences: selectedChromosomeSequence })
+      body: JSON.stringify({ cell_line: cellLineName, chromosome_name: chromosomeName, sequences: sequence })
     })
       .then(res => res.json())
       .then(data => {
@@ -528,15 +528,15 @@ function App() {
     }
   };
 
-  const fetchGeneList = () => {
-    if (chromosomeName && selectedChromosomeSequence) {
+const fetchGeneList = (sequence) => {
+    if (chromosomeName && sequence) {
       let filteredChromosomeName = chromosomeName.slice(3);
       fetch("/api/getGeneList", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ chromosome_name: filteredChromosomeName, sequences: selectedChromosomeSequence })
+        body: JSON.stringify({ chromosome_name: filteredChromosomeName, sequences: sequence })
       })
         .then(res => res.json())
         .then(data => {
@@ -860,6 +860,7 @@ function App() {
     endRef.current = endNum;
 
     setSelectedChromosomeSequence({ start: startNum, end: endNum });
+    setCurrentChromosomeSequence({ start: startNum, end: endNum });
     return true;
   };
 
@@ -1139,9 +1140,11 @@ function App() {
   // Submit button click
   const submit = () => {
     if (!handleSubmitExceptions()) return;
-
-    if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-      setCurrentChromosomeSequence(selectedChromosomeSequence);
+    
+    const newSequence = { start: startRef.current, end: endRef.current };
+    
+    if (!isExampleMode(cellLineName, chromosomeName, newSequence)) {
+      setCurrentChromosomeSequence(newSequence);
     }
     setHeatmapLoading(true);
     setChromosome3DComparisonShowing(false);
@@ -1149,9 +1152,9 @@ function App() {
     setComparisonCellLine3DData({});
     setChromosome3DExampleID(0);
     setChromosome3DExampleData({});
-    fetchChromosomeData();
-    fetchValidChromosomeValidIbpData();
-    fetchGeneList();
+    fetchChromosomeData(newSequence);
+    fetchValidChromosomeValidIbpData(newSequence);
+    fetchGeneList(newSequence);
   };
 
   return (
