@@ -55,7 +55,7 @@ def data_exists(cur, table_name):
 
 def get_cell_line_table_name(cell_line):
     """Get the table name for a given cell line"""
-    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
 
 def create_cell_line_tables():
     """Create separate non_random_hic tables for each cell line"""
@@ -593,11 +593,6 @@ def insert_non_random_HiC_data():
     chromosome_dir = os.path.join(ROOT_DIR, "refined_processed_HiC")
     process_non_random_hic_data(chromosome_dir)
     process_non_random_hic_index()
-
-
-def get_cell_line_table_name(cell_line):
-    """Get the table name for a given cell line"""
-    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
 
 
 initialize_tables()

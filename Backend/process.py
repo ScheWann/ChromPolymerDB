@@ -31,7 +31,7 @@ load_dotenv()
 
 def get_cell_line_table_name(cell_line):
     """Get the table name for a given cell line"""
-    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
 
 
 # postgres database connection settings
@@ -710,7 +710,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
         with db_conn() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
-                    f"""
+                f"""
                     SELECT *
                     FROM {table_name}
                     WHERE chrid = %s

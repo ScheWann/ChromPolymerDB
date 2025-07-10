@@ -15,7 +15,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 def get_cell_line_table_name(cell_line):
     """Get the table name for a given cell line"""
-    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
 
 
 def get_db_connection(database=None):
