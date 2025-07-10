@@ -3,6 +3,7 @@ import psycopg
 from psycopg import sql
 import pandas as pd
 from io import StringIO
+from cell_line_labels import label_mapping
 
 NEW_DATA_DIR = './new_cell_line'
 
@@ -10,6 +11,11 @@ DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+
+def get_cell_line_table_name(cell_line):
+    """Get the table name for a given cell line"""
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
 
 
 def get_db_connection(database=None):
@@ -27,6 +33,7 @@ def get_db_connection(database=None):
 
 
 def process_non_random_hic_data(chromosome_dir):
+    """Process and insert data into separate cell line tables"""
     for file_name in os.listdir(chromosome_dir):
         if not file_name.endswith(".csv.gz"):
             continue
@@ -41,33 +48,48 @@ def process_non_random_hic_data(chromosome_dir):
             compression="gzip"
         ):
             chunk.rename(columns={"chr": "chrid"}, inplace=True)
+            
+            # Group by cell line and insert into separate tables
+            for cell_line, group in chunk.groupby('cell_line'):
+                if cell_line not in label_mapping:
+                    print(f"Warning: Cell line '{cell_line}' not found in label_mapping. Skipping.")
+                    continue
+                
+                table_name = get_cell_line_table_name(cell_line)
+                
+                # Remove cell_line column since it's redundant in separate tables
+                group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
 
-            buffer = StringIO()
-            chunk.to_csv(buffer, sep="\t", index=False, header=False)
-            buffer.seek(0)
+                buffer = StringIO()
+                group_data.to_csv(buffer, sep="\t", index=False, header=False)
+                buffer.seek(0)
 
-            conn = get_db_connection(database=DB_NAME)
-            cur = conn.cursor()
+                conn = get_db_connection(database=DB_NAME)
+                cur = conn.cursor()
 
-            copy_sql = sql.SQL(
-                "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
-            ).format(
-                sql.Identifier("non_random_hic"),
-                sql.SQL(", ").join([
-                    sql.Identifier(col)
-                    for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line")
-                ])
-            )
+                copy_sql = sql.SQL(
+                    "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
+                ).format(
+                    sql.Identifier(table_name),
+                    sql.SQL(", ").join([
+                        sql.Identifier(col)
+                        for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
+                    ])
+                )
 
-            with cur.copy(copy_sql) as copy:
-                data_str = buffer.getvalue()
-                copy.write(data_str.encode("utf-8"))
+                try:
+                    with cur.copy(copy_sql) as copy:
+                        data_str = buffer.getvalue()
+                        copy.write(data_str.encode("utf-8"))
 
-            conn.commit()
-            cur.close()
-            conn.close()
-
-            print(f"Inserted {len(chunk)} records from {file_name}.")
+                    conn.commit()
+                    print(f"Inserted {len(group_data)} records into {table_name} from {file_name}.")
+                except Exception as e:
+                    print(f"Error inserting data into {table_name}: {e}")
+                    conn.rollback()
+                finally:
+                    cur.close()
+                    conn.close()
 
 
 # def process_sequence_data(cur):
