@@ -1,7 +1,2 @@
-# cron/crontab
-DB_HOST=db
-DB_USERNAME=admin
-DB_NAME=chromosome_db
-DB_PASSWORD=chromosome
-
-*/10 * * * * pg_isready -h ${DB_HOST} -U ${DB_USERNAME} -d ${DB_NAME} && psql -h ${DB_HOST} -U ${DB_USERNAME} -d ${DB_NAME} -f /scripts/clear_table.sql >> /var/log/cron.log 2>&1
+# Run daily cleanup at 3 AM
+0 3 * * * pg_isready -h db -U admin -d chromosome_db && psql -h db -U admin -d chromosome_db -c "DELETE FROM position; DELETE FROM distance; DELETE FROM calc_distance;" >> /var/log/cron.log 2>&1

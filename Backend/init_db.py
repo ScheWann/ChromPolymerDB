@@ -128,8 +128,7 @@ def initialize_tables():
     else:
         print("gene table already exists, skipping creation.")
 
-    # Remove the old non_random_hic table creation
-    # Instead, create separate tables for each cell line
+    # Create separate tables for each cell line
     create_cell_line_tables()
 
     # if not table_exists(cur, "epigenetic_track"):
