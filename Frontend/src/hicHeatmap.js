@@ -89,7 +89,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             const cacheKey = `${cell_line}-${chromosomeName}-${currentChromosomeSequence.start}-${currentChromosomeSequence.end}-${sample_id}`;
 
-            fetch("/api/getExampleChromos3DData", {
+            fetch("/api/getChromosome3DData", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

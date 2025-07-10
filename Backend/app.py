@@ -1,7 +1,9 @@
 import os
 import orjson
 import shutil
+import redis
 from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
+from flask_cors import CORS
 from process import (
     gene_names_list, 
     cell_lines_list, 
@@ -10,24 +12,24 @@ from process import (
     chromosome_original_valid_sequences, 
     chromosome_merged_valid_sequences, 
     chromosome_data, 
-    example_chromosome_3d_data, 
+    chromosome_3D_data, 
     comparison_cell_line_list, 
     gene_list, 
     gene_names_list_search, 
     chromosome_size_by_gene_name, 
     chromosome_valid_ibp_data, 
     epigenetic_track_data, 
-    download_full_chromosome_3d_distance_data, 
-    download_full_chromosome_3d_position_data,
+    download_full_chromosome_3D_distance_data, 
+    download_full_chromosome_3D_position_data,
     bead_distribution,
     exist_bead_distribution, 
-    exist_chromosome_3d_data
-    )
-import redis
-from flask_cors import CORS
+    exist_chromosome_3D_data
+)
+
 
 app = Flask(__name__)
 CORS(app)
+
 
 # redis connection settings
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -42,45 +44,36 @@ redis_client = redis.Redis(connection_pool=redis_pool)
 api = Blueprint('api', __name__, url_prefix='/api')
 
 
-@app.route('/api/clear_folding_input', methods=['POST'])
-def clear_folding_input_api():
-    folder = os.path.join(os.path.dirname(__file__), 'Folding_input')
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
-    os.makedirs(folder, exist_ok=True)
-    return jsonify({'status': 'cleared'})
-
-
 @api.route('/getGeneNameList', methods=['GET'])
 def get_GeneNameList():
     return jsonify(gene_names_list())
 
 
 @api.route('/getCellLines', methods=['GET'])
-def get_CellLines():
+def get_CellLinesList():
     return jsonify(cell_lines_list())
 
 
-@api.route('/getChromosList', methods=['POST'])
-def get_ChromosList():
+@api.route('/getChromosomesList', methods=['POST'])
+def get_ChromosomesList():
     cell_line = request.json['cell_line']
     return jsonify(chromosomes_list(cell_line))
 
 
-@api.route('/getChromosSize', methods=['POST'])
-def get_ChromosSize():
+@api.route('/getChromosomeSize', methods=['POST'])
+def get_ChromosomeSize():
     chromosome_name = request.json['chromosome_name']
     return jsonify(chromosome_size(chromosome_name))
 
 
-@api.route('/getChromosSizeByGeneName', methods=['POST'])
-def get_ChromosSizeByGeneName():
+@api.route('/getChromosomeSizeByGeneName', methods=['POST'])
+def get_ChromosomeSizeByGeneName():
     gene_name = request.json['gene_name']
     return jsonify(chromosome_size_by_gene_name(gene_name))
 
 
-@api.route('/getChromosOriginalValidSequence', methods=['POST'])
-def get_ChromosOriginalValidSequences():
+@api.route('/getChromosomeOriginalValidSequence', methods=['POST'])
+def get_ChromosomeOriginalValidSequences():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     return jsonify(chromosome_original_valid_sequences(cell_line, chromosome_name))
@@ -109,26 +102,26 @@ def get_ChromosValidIBPData():
     return jsonify(chromosome_valid_ibp_data(cell_line, chromosome_name, sequences))
 
 
-@api.route('/getExistingChromos3DData', methods=['POST'])
-def get_ExistingChromos3DData():
+@api.route('/getExistChromosome3DData', methods=['POST'])
+def get_ExistChromosome3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
     # return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
-    payload = orjson.dumps(exist_chromosome_3d_data(cell_line, sample_id))
+    payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id))
     return Response(payload, content_type='application/json')
 
 
-@api.route('/getExampleChromos3DData', methods=['POST'])
-def get_ExampleChromos3DData():
+@api.route('/getChromosome3DData', methods=['POST'])
+def get_Chromosome3DData():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     sample_id = request.json['sample_id']
-    return jsonify(example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id))
+    return jsonify(chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id))
 
 
 @api.route('/getComparisonCellLineList', methods=['POST'])
-def get_ComparisonCellLines():
+def get_ComparisonCellLineList():
     cell_line = request.json['cell_line']
     return jsonify(comparison_cell_line_list(cell_line))
 
@@ -148,54 +141,14 @@ def get_epigeneticTrackData():
     return jsonify(epigenetic_track_data(cell_line, chromosome_name, sequences))
 
 
-@api.route('/geneListSearch', methods=['POST'])
-def geneListSearch():
+@api.route('/geneNamesListSearch', methods=['POST'])
+def geneNamesListSearch():
     search = request.json['search']
     return jsonify(gene_names_list_search(search))
 
 
-@api.route('/downloadFullChromosome3dDistanceData', methods=['POST'])
-def downloadFullChromosome3dDistanceData():
-    cell_line = request.json['cell_line']
-    chromosome_name = request.json['chromosome_name']
-    sequences = request.json['sequences']
-    is_example = request.json['is_example']
-    file_path, npz_file = download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences, is_example)
-
-    if not is_example:
-        @after_this_request
-        def remove_file(response):
-            try:
-                os.remove(file_path)
-                app.logger.info("Deleted temporary npz file: %s", file_path)
-            except Exception as error:
-                app.logger.error("Failed to delete npz file: %s", error)
-            return response
-    return npz_file
-
-
-@api.route('/downloadFullChromosome3dPositionData', methods=['POST'])
-def downloadFullChromosome3dPositionData():
-    cell_line = request.json['cell_line']
-    chromosome_name = request.json['chromosome_name']
-    sequences = request.json['sequences']
-    is_example = request.json['is_example']
-    file_path, csv_file = download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences, is_example)
-
-    if not is_example:
-        @after_this_request
-        def remove_file(response):
-            try:
-                os.remove(file_path)
-                app.logger.info("Deleted temporary csv file: %s", file_path)
-            except Exception as error:
-                app.logger.error("Failed to delete csv file: %s", error)
-            return response
-    return csv_file
-
-
 @api.route('/getBeadDistribution', methods=['POST'])
-def getBeadDistribution():
+def get_BeadDistribution():
     cell_line = request.json['cell_line']
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
@@ -204,14 +157,14 @@ def getBeadDistribution():
 
 
 @api.route('/getExistBeadDistribution', methods=['POST'])
-def getExistBeadDistribution():
+def get_ExistBeadDistribution():
     cell_line = request.json['cell_line']
     indices = request.json['indices']
     return jsonify(exist_bead_distribution(cell_line, indices))
 
 
 @api.route('/getExample3DProgress', methods=['GET'])
-def get_example_3d_progress():
+def get_Example3DProgress():
     cell_line       = request.args['cell_line']
     chromosome_name = request.args['chromosome_name']
     start           = request.args['start']
@@ -227,6 +180,55 @@ def get_example_3d_progress():
         key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
         val = redis_client.get(key)
         return jsonify(percent=int(val))
+
+
+@app.route('/api/clearFoldingInputFolderInputContent', methods=['POST'])
+def clearFoldingInputFolderInputContent():
+    folder = os.path.join(os.path.dirname(__file__), 'Folding_input')
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+    os.makedirs(folder, exist_ok=True)
+    return jsonify({'status': 'cleared'})
+
+
+@api.route('/downloadFullChromosome3DDistanceData', methods=['POST'])
+def downloadFullChromosome3DDistanceData():
+    cell_line = request.json['cell_line']
+    chromosome_name = request.json['chromosome_name']
+    sequences = request.json['sequences']
+    is_example = request.json['is_example']
+    file_path, npz_file = download_full_chromosome_3D_distance_data(cell_line, chromosome_name, sequences, is_example)
+
+    if not is_example:
+        @after_this_request
+        def remove_file(response):
+            try:
+                os.remove(file_path)
+                app.logger.info("Deleted temporary npz file: %s", file_path)
+            except Exception as error:
+                app.logger.error("Failed to delete npz file: %s", error)
+            return response
+    return npz_file
+
+
+@api.route('/downloadFullChromosome3DPositionData', methods=['POST'])
+def downloadFullChromosome3DPositionData():
+    cell_line = request.json['cell_line']
+    chromosome_name = request.json['chromosome_name']
+    sequences = request.json['sequences']
+    is_example = request.json['is_example']
+    file_path, csv_file = download_full_chromosome_3D_position_data(cell_line, chromosome_name, sequences, is_example)
+
+    if not is_example:
+        @after_this_request
+        def remove_file(response):
+            try:
+                os.remove(file_path)
+                app.logger.info("Deleted temporary csv file: %s", file_path)
+            except Exception as error:
+                app.logger.error("Failed to delete csv file: %s", error)
+            return response
+    return csv_file
 
 
 app.register_blueprint(api)

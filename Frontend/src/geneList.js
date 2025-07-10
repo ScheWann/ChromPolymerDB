@@ -10,7 +10,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
     const initialHeightRef = useRef(null);
 
     const fetchChromosomeSizeByGeneName = (value) => {
-        fetch("/api/getChromosSizeByGeneName", {
+        fetch("/api/getChromosomeSizeByGeneName", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

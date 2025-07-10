@@ -25,11 +25,6 @@ from cell_line_labels import label_mapping
 load_dotenv()
 
 
-def get_cell_line_table_name(cell_line):
-    """Get the table name for a given cell line"""
-    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
-
-
 # postgres database connection settings
 DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
@@ -67,6 +62,13 @@ def make_redis_cache_key(cell_line, chromosome_name, start, end, custom_name):
     e.g: "chr8:IMR:127300000:128300000:"
     """
     return f"{cell_line}:{chromosome_name}:{start}:{end}:{custom_name}"
+
+
+"""
+Get the table name for a given cell line
+"""
+def get_cell_line_table_name(cell_line):
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
 
 
 """
@@ -359,7 +361,7 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
-def exist_chromosome_3d_data(cell_line, sample_id):
+def exist_chromosome_3D_data(cell_line, sample_id):
     # Establish the progress key for tracking whole progress
     progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{sample_id}_progress")
     redis_client.setex(progress_key, 3600, 0)
@@ -436,38 +438,15 @@ def exist_chromosome_3d_data(cell_line, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     else:
-        if cell_line == "IMR":
-            pos_path = "./example_data/IMR_chr8_127300000_128300000_original_position.feather"
-            dist_path = "./example_data/IMR_chr8_127300000_128300000_original_distance.feather"
+        pos_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_position.feather"
+        dist_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_distance.feather"
 
-            with ThreadPoolExecutor(max_workers=10) as pool:
-                fut_pos  = pool.submit(read_feather_pa, pos_path)
-                fut_dist = pool.submit(read_feather_pa, dist_path)
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            fut_pos  = pool.submit(read_feather_pa, pos_path)
+            fut_dist = pool.submit(read_feather_pa, dist_path)
 
-            position_df = fut_pos.result()
-            distance_df = fut_dist.result()
-        
-        if cell_line == "GM":
-            pos_path = "./example_data/GM_chr8_127300000_128300000_original_position.feather"
-            dist_path = "./example_data/GM_chr8_127300000_128300000_original_distance.feather"
-
-            with ThreadPoolExecutor(max_workers=10) as pool:
-                fut_pos  = pool.submit(read_feather_pa, pos_path)
-                fut_dist = pool.submit(read_feather_pa, dist_path)
-
-            position_df = fut_pos.result()
-            distance_df = fut_dist.result()
-
-        if cell_line == "K":
-            pos_path = "./example_data/K_chr8_127300000_128300000_original_position.feather"
-            dist_path = "./example_data/K_chr8_127300000_128300000_original_distance.feather"
-
-            with ThreadPoolExecutor(max_workers=10) as pool:
-                fut_pos  = pool.submit(read_feather_pa, pos_path)
-                fut_dist = pool.submit(read_feather_pa, dist_path)
-
-            position_df = fut_pos.result()
-            distance_df = fut_dist.result()
+        position_df = fut_pos.result()
+        distance_df = fut_dist.result()
         
         redis_client.setex(progress_key, 3600, 20)
 
@@ -492,7 +471,7 @@ def exist_chromosome_3d_data(cell_line, sample_id):
 """
 Returns the example 3D chromosome data in the given cell line, chromosome name, start, end
 """
-def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id):
+def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
     temp_folding_input_path = "./Folding_input"
     
     # Establish the progress key for tracking whole progress
@@ -811,7 +790,7 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
 """
 Download the full 3D chromosome samples distance data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequences, is_example):
+def download_full_chromosome_3D_distance_data(cell_line, chromosome_name, sequences, is_example):
     def checking_existing_data():
         with db_conn() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
@@ -884,7 +863,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
             return None, None
     else:
         # For example data, we can directly return the path to the example file
-        example_file_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_distance.npz"
+        example_file_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_converted_distance.npz"
         if os.path.exists(example_file_path):
             return example_file_path, send_file(
                 example_file_path,
@@ -897,7 +876,7 @@ def download_full_chromosome_3d_distance_data(cell_line, chromosome_name, sequen
 """
 Download the full 3D chromosome samples position data in the given cell line, chromosome name
 """
-def download_full_chromosome_3d_position_data(cell_line, chromosome_name, sequences, is_example):
+def download_full_chromosome_3D_position_data(cell_line, chromosome_name, sequences, is_example):
     query = """
         SELECT *
         FROM position
