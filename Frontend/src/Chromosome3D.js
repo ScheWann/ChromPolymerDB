@@ -126,12 +126,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
     const onClickDownloadItem = ({ key }) => {
         if (key === '1') {
-            console.log("download png");
             downloadImage();
         }
 
         if (key === '2') {
-            console.log("download pdf");
             downloadPDF();
         }
     }
