@@ -1,6 +1,5 @@
 from flask import send_file
 import numpy as np
-import io
 from scipy.sparse import csr_matrix, save_npz
 from contextlib import contextmanager
 import pandas as pd
@@ -9,16 +8,13 @@ import re
 import tempfile
 import subprocess
 import redis
-import zlib
 import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from itertools import combinations
-from io import BytesIO
 import math
 import json
 from scipy.spatial.distance import squareform
-from scipy.stats import pearsonr
 from dotenv import load_dotenv
 from time import time
 import pyarrow.feather as feather
