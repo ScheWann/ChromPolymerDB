@@ -23,6 +23,7 @@ from dotenv import load_dotenv
 from time import time
 import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
+from cell_line_labels import label_mapping
 
 
 load_dotenv()
@@ -49,60 +50,6 @@ conn_pool = ConnectionPool(
 # Create a Redis connection pool
 redis_pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 redis_client = redis.Redis(connection_pool=redis_pool)
-
-# Define a mapping for cell line labels
-label_mapping = {
-    'NHEK': 'Epidermal keratinocytes cell line (NHEK)',
-    'CyT49': 'Pancreatic endoderm derived from hESC (CyT49)',
-    'CyT49_definitive_endoderm': 'Definitive endoderm derived from CyT49',
-    'CyT49_endoderm_foregut': 'Endoderm of foregut derived from CyT49',
-    'CyT49_pancreatic_endoderm': 'Pancreatic endoderm derived from CyT49',
-    'GM12878': 'B lymphoblastoid cell line (GM12878)',
-    'H1': 'Human embryonic stem cell line (H1-hESC)',
-    'H1_definitive_endoderm': 'Definitive endoderm derived from H1',
-    'heart_left_atrium': 'Cardiomyocytes of heart left atrium',
-    'heart_left_ventricle': 'Cardiomyocytes of heart left ventricle',
-    'Hela': 'Cervical cancer tumor cell line (Hela S3)',
-    'HepG2': 'Hepatocellular carcinoma cell line (HepG2)',
-    'HFFc6': 'Foreskin fibroblast cell line (HFFc6)',
-    'HFF_hTERT': 'Foreskin fibroblasts cell line (HFF-hTERT)',
-    'IMR90': 'Lung fibroblasts cell line (IMR-90)',
-    'b_ALL_peripheral_monocytes': 'Monocytes of peripheral blood from B-cell acute lymphoblastic leukemia patients',
-    'b_ALL_bone_marrow_monocytes': 'Monocytes of bone marrow from B-cell acute lymphoblastic leukemia patients',
-    'OSN': 'Olfactory receptor cells',
-    'WTC11': 'Human induced pluripotent stem cell line (WTC-11)',
-    'cardiac_muscle_from_WTC11': 'Cardiac muscle cells derived from WTC-11',
-    'GM23248': 'Skin fibroblast (arm) cell line (GM23248)',
-    'HL60': 'Promyelocytic leukemia cell line (HL-60/S4)',
-    'K562': 'Chronic myelogenous leukemia cell line (K562)',
-    'HMEC': 'Primary mammary epithelial cell line (HMEC)',
-    'motor_neuron': 'Motor neurons derived from neural progenitor cells',
-    'Ramos': 'Burkitt lymphoma cell line (Ramos)',
-    'A673': 'Rhabdomyosarcoma cell line (A673)',
-    'Calu3': 'Lung adenocarcinoma cell line (Calu3)',
-    'monocytes': 'CD14-positive monocyte',
-    'dendritic_cell': 'Dendritic cells',
-    'HUVEC': 'Endothelial cell of umbilical vein',
-    'HCT116': 'Colorectal carcinoma cell line (HCT116)',
-    'MCF7': 'Breast cancer cell line (MCF-7)',
-    'T_cell': 'Naive thymus-derived CD4-positive, alpha-beta T cells',
-    'NK': 'Natural killer cells',
-    'OCILY7': 'Diffuse large B-cell lymphoma cell line (OCI-LY7)',
-    'Panc1': 'Pancreatic ductal adenocarcinoma cell line (Panc1)',
-    'HuES64': 'Human embryonic stem cells (HuES64)',
-    'HuES64_endoderm': 'Endoderm stem cells derived from HuES64',
-    'HuES64_mesoderm': 'Mesoderm stem cells derived from HuES64',
-    'HuES64_ectoderm': 'Ectoderm stem cells derived from HuES64',
-    'hMSC': 'Mesenchymal stem cells drived from primary human umbilical cord',
-    'Adipocytes': 'Adipocytes derived from hMSC',
-    'Osteoblasts': 'Osteoblasts derived from hMSC',
-    'C28I2': 'Human chondrocyte cell line (C-28/I2)',
-    'macrophage': 'Macrophage drived from THP-1',
-    'NHA': 'Primary normal human astrocytes',
-    'HPNE': 'Pancreatic Nestin-expressing cell cell line (HPNE)',
-    'Capan1': 'Pancreatic ductal adenocarcinoma cell line',
-    'Cardiomyocyte': 'Cardiomyocytes derived from H9',
-}
 
 """
 Read feather file using pandas
