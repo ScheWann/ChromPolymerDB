@@ -29,6 +29,11 @@ from cell_line_labels import label_mapping
 load_dotenv()
 
 
+def get_cell_line_table_name(cell_line):
+    """Get the table name for a given cell line"""
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
+
+
 # postgres database connection settings
 DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
@@ -288,22 +293,26 @@ def chromosome_size_by_gene_name(gene_name):
 Returns the existing chromosome data in the given cell line, chromosome name, start, end
 """
 def chromosome_data(cell_line, chromosome_name, sequences):
+    if cell_line not in label_mapping:
+        raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
+    
+    table_name = get_cell_line_table_name(cell_line)
+    
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                """
-                SELECT cell_line, chrid, fdr, ibp, jbp, fq, rawc
-                FROM non_random_hic
+                f"""
+                SELECT %s as cell_line, chrid, fdr, ibp, jbp, fq, rawc
+                FROM {table_name}
                 WHERE chrid = %s
-                AND cell_line = %s
                 AND ibp >= %s
                 AND ibp <= %s
                 AND jbp >= %s
                 AND jbp <= %s
             """,
                 (
-                    chromosome_name,
                     cell_line,
+                    chromosome_name,
                     sequences["start"],
                     sequences["end"],
                     sequences["start"],
@@ -319,14 +328,18 @@ def chromosome_data(cell_line, chromosome_name, sequences):
 Returns the existing chromosome data in the given cell line, chromosome name, start, end
 """
 def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
+    if cell_line not in label_mapping:
+        raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
+    
+    table_name = get_cell_line_table_name(cell_line)
+    
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                """
+                f"""
                     SELECT DISTINCT ibp
-                    FROM non_random_hic
+                    FROM {table_name}
                     WHERE chrid = %s
-                    AND cell_line = %s
                     AND ibp >= %s
                     AND ibp <= %s
                     AND jbp >= %s
@@ -334,7 +347,6 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
                 """,
                 (
                     chromosome_name,
-                    cell_line,
                     sequences["start"],
                     sequences["end"],
                     sequences["start"],
@@ -689,15 +701,19 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
             "sample_distance_vector": sample_distance_vector
         }
     else:
+        if cell_line not in label_mapping:
+            raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
+        
+        table_name = get_cell_line_table_name(cell_line)
+        
         t3 = time()
         with db_conn() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT *
-                    FROM non_random_hic
+                    FROM {table_name}
                     WHERE chrid = %s
-                    AND cell_line = %s
                     AND ibp >= %s
                     AND ibp <= %s
                     AND jbp >= %s
@@ -705,7 +721,6 @@ def example_chromosome_3d_data(cell_line, chromosome_name, sequences, sample_id)
                 """,
                     (
                         chromosome_name,
-                        cell_line,
                         sequences["start"],
                         sequences["end"],
                         sequences["start"],

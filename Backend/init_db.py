@@ -5,6 +5,7 @@ import psycopg
 from psycopg import sql
 import pandas as pd
 from dotenv import load_dotenv
+from cell_line_labels import label_mapping
 
 
 load_dotenv()
@@ -52,6 +53,43 @@ def data_exists(cur, table_name):
     return cur.fetchone()[0]
 
 
+def get_cell_line_table_name(cell_line):
+    """Get the table name for a given cell line"""
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
+
+def create_cell_line_tables():
+    """Create separate non_random_hic tables for each cell line"""
+    conn = get_db_connection(database=DB_NAME)
+    cur = conn.cursor()
+
+    for cell_line in label_mapping.keys():
+        table_name = get_cell_line_table_name(cell_line)
+        
+        if not table_exists(cur, table_name):
+            print(f"Creating {table_name} table...")
+            # Create safe constraint name
+            constraint_name = f"fk_{table_name}_chrid"
+            cur.execute(
+                f"CREATE TABLE IF NOT EXISTS {table_name} ("
+                "hid serial PRIMARY KEY,"
+                "chrid VARCHAR(50) NOT NULL,"
+                "ibp BIGINT NOT NULL DEFAULT 0,"
+                "jbp BIGINT NOT NULL DEFAULT 0,"
+                "fq FLOAT NOT NULL DEFAULT 0.0,"
+                "fdr FLOAT NOT NULL DEFAULT 0.0,"
+                "rawc FLOAT NOT NULL DEFAULT 0.0,"
+                f"CONSTRAINT {constraint_name} FOREIGN KEY (chrid) REFERENCES chromosome(chrid) ON DELETE CASCADE ON UPDATE CASCADE"
+                ");"
+            )
+            conn.commit()
+            print(f"{table_name} table created successfully.")
+        else:
+            print(f"{table_name} table already exists, skipping creation.")
+
+    cur.close()
+    conn.close()
+
+
 def initialize_tables():
     """Create tables"""
 
@@ -90,25 +128,9 @@ def initialize_tables():
     else:
         print("gene table already exists, skipping creation.")
 
-    if not table_exists(cur, "non_random_hic"):
-        print("Creating non_random_hic table...")
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS non_random_hic ("
-            "hid serial PRIMARY KEY,"
-            "chrid VARCHAR(50) NOT NULL,"
-            "ibp BIGINT NOT NULL DEFAULT 0,"
-            "jbp BIGINT NOT NULL DEFAULT 0,"
-            "fq FLOAT NOT NULL DEFAULT 0.0,"
-            "fdr FLOAT NOT NULL DEFAULT 0.0,"
-            "rawc FLOAT NOT NULL DEFAULT 0.0,"
-            "cell_line VARCHAR(50) NOT NULL,"
-            "CONSTRAINT fk_non_random_hic_chrid FOREIGN KEY (chrid) REFERENCES chromosome(chrid) ON DELETE CASCADE ON UPDATE CASCADE"
-            ");"
-        )
-        conn.commit()
-        print("non_random_hic table created successfully.")
-    else:
-        print("non_random_hic table already exists, skipping creation.")
+    # Remove the old non_random_hic table creation
+    # Instead, create separate tables for each cell line
+    create_cell_line_tables()
 
     # if not table_exists(cur, "epigenetic_track"):
     #     print("Creating epigenetic_track table...")
@@ -266,6 +288,7 @@ def process_gene_data(cur, file_path):
 
 
 def process_non_random_hic_data(chromosome_dir):
+    """Process and insert data into separate cell line tables"""
     for file_name in os.listdir(chromosome_dir):
         if not file_name.endswith(".csv.gz"):
             continue
@@ -280,33 +303,48 @@ def process_non_random_hic_data(chromosome_dir):
             compression="gzip"
         ):
             chunk.rename(columns={"chr": "chrid"}, inplace=True)
+            
+            # Group by cell line and insert into separate tables
+            for cell_line, group in chunk.groupby('cell_line'):
+                if cell_line not in label_mapping:
+                    print(f"Warning: Cell line '{cell_line}' not found in label_mapping. Skipping.")
+                    continue
+                
+                table_name = get_cell_line_table_name(cell_line)
+                
+                # Remove cell_line column since it's redundant in separate tables
+                group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
 
-            buffer = StringIO()
-            chunk.to_csv(buffer, sep="\t", index=False, header=False)
-            buffer.seek(0)
+                buffer = StringIO()
+                group_data.to_csv(buffer, sep="\t", index=False, header=False)
+                buffer.seek(0)
 
-            conn = get_db_connection(database=DB_NAME)
-            cur = conn.cursor()
+                conn = get_db_connection(database=DB_NAME)
+                cur = conn.cursor()
 
-            copy_sql = sql.SQL(
-                "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
-            ).format(
-                sql.Identifier("non_random_hic"),
-                sql.SQL(", ").join([
-                    sql.Identifier(col)
-                    for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line")
-                ])
-            )
+                copy_sql = sql.SQL(
+                    "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
+                ).format(
+                    sql.Identifier(table_name),
+                    sql.SQL(", ").join([
+                        sql.Identifier(col)
+                        for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
+                    ])
+                )
 
-            with cur.copy(copy_sql) as copy:
-                data_str = buffer.getvalue()
-                copy.write(data_str.encode("utf-8"))
+                try:
+                    with cur.copy(copy_sql) as copy:
+                        data_str = buffer.getvalue()
+                        copy.write(data_str.encode("utf-8"))
 
-            conn.commit()
-            cur.close()
-            conn.close()
-
-            print(f"Inserted {len(chunk)} records from {file_name}.")
+                    conn.commit()
+                    print(f"Inserted {len(group_data)} records into {table_name} from {file_name}.")
+                except Exception as e:
+                    print(f"Error inserting data into {table_name}: {e}")
+                    conn.rollback()
+                finally:
+                    cur.close()
+                    conn.close()
 
 
 # def process_epigenetic_track_data(cur):
@@ -390,15 +428,39 @@ def process_valid_regions_data(cur):
                 print(f"file {filename} error: {e}")
 
 
-def process_non_random_hic_index(cur):
-    """Create index on non_random_hic table for faster search."""
-    print("Creating index idx_hic_search...")
-    cur.execute(
-        """
-        CREATE INDEX idx_hic_search ON non_random_hic (chrid, cell_line, ibp, jbp);
-        """
-    )
-    print("Index idx_hic_search created successfully.")
+def process_non_random_hic_index():
+    """Create indexes on all cell line tables for faster search."""
+    conn = get_db_connection(database=DB_NAME)
+    cur = conn.cursor()
+    
+    for cell_line in label_mapping.keys():
+        table_name = get_cell_line_table_name(cell_line)
+        index_name = f"idx_{table_name}_search"
+        
+        # Check if index already exists
+        cur.execute("""
+            SELECT 1 
+            FROM pg_indexes 
+            WHERE indexname = %s 
+            AND tablename = %s;
+        """, [index_name, table_name])
+        
+        if cur.fetchone():
+            print(f"Index {index_name} already exists. Skipping creation.")
+        else:
+            print(f"Creating index {index_name}...")
+            try:
+                cur.execute(
+                    f"CREATE INDEX {index_name} ON {table_name} (chrid, ibp, jbp);"
+                )
+                conn.commit()
+                print(f"Index {index_name} created successfully.")
+            except Exception as e:
+                print(f"Error creating index {index_name}: {e}")
+                conn.rollback()
+    
+    cur.close()
+    conn.close()
 
 
 def process_position_index():
@@ -504,23 +566,39 @@ def insert_data():
     conn.close()
 
 
-def insert_non_random_HiC_data():
-    """Insert non random HiC data into the database if not already present.(it is seperated from insert_data() to avoid long running transactions)"""
+def check_cell_line_tables_have_data():
+    """Check if any of the cell line tables have data."""
     conn = get_db_connection(database=DB_NAME)
     cur = conn.cursor()
-
-    # Insert non-random Hi-C data only if the table is empty
-    if not data_exists(cur, "non_random_hic"):
-        chromosome_dir = os.path.join(ROOT_DIR, "refined_processed_HiC")
-        process_non_random_hic_data(chromosome_dir)
-        conn.commit()
-        process_non_random_hic_index(cur)
-        conn.commit()
-    else:
-        print("Non-random Hi-C data already exists, skipping insertion.")
+    
+    for cell_line in label_mapping.keys():
+        table_name = get_cell_line_table_name(cell_line)
+        if table_exists(cur, table_name) and data_exists(cur, table_name):
+            cur.close()
+            conn.close()
+            return True
     
     cur.close()
     conn.close()
+    return False
+
+
+def insert_non_random_HiC_data():
+    """Insert non random HiC data into the database if not already present.(it is separated from insert_data() to avoid long running transactions)"""
+    
+    # Check if any cell line table has data
+    if check_cell_line_tables_have_data():
+        print("Non-random Hi-C data already exists in cell line tables, skipping insertion.")
+        return
+    
+    chromosome_dir = os.path.join(ROOT_DIR, "refined_processed_HiC")
+    process_non_random_hic_data(chromosome_dir)
+    process_non_random_hic_index()
+
+
+def get_cell_line_table_name(cell_line):
+    """Get the table name for a given cell line"""
+    return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}"
 
 
 initialize_tables()
