@@ -6,12 +6,11 @@ import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
 import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined, SendOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
-import { Chromosome3DDistance } from './Chromosome3DDistance';
+import { Chromosome3DDistance } from './chromosome3DDistance';
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
-// import { AvgDistanceHeatmap } from './avgDistanceHeatmap';
 import "./Styles/chromosome3D.css";
 
-export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixData, chromosomeData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, cellLineDict, isExampleMode }) => {
+export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, isExampleMode }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
     const controlsRef = useRef();
@@ -709,7 +708,6 @@ export const Chromosome3D = ({ chromosome3DExampleData, chromosome3DAvgMatrixDat
                         selectedSphereList={selectedSphereList}
                         distributionData={distributionData}
                         setDistributionData={setDistributionData}
-                        cellLineDict={cellLineDict}
                         isExampleMode={isExampleMode}
                     />
                 </div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Select, Button, message, Spin, Tabs, Switch, Tooltip, Tour, Typography, Dropdown, InputNumber, AutoComplete } from 'antd';
-import './App.css';
-import { Heatmap } from './canvasHeatmap.js';
+import './Styles/App.css';
+import { Heatmap } from './hicHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
-import { Chromosome3D } from './Chromosome3D.js';
+import { Chromosome3D } from './chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
 import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined, FolderViewOutlined } from "@ant-design/icons";
 
@@ -35,7 +35,6 @@ function App() {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [chromosome3DLoading, setChromosome3DLoading] = useState(false);
   const [chromosome3DCellLineName, setChromosome3DCellLineName] = useState(null);
-  const [cellLineDict, setCellLineDict] = useState({});
   const [originalChromosomeDistanceDownloadSpinner, setOriginalChromosomeDownloadSpinner] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedSphereLists, setSelectedSphereLists] = useState({});
@@ -43,15 +42,15 @@ function App() {
   const [tempSampleId, setTempSampleId] = useState(null);
   const [exampleDataItems, setExampleDataItems] = useState([
     {
-      key: 'GM',
+      key: 'GM12878',
       label: 'GM12878-Chr8-127300000-128300000',
     },
     {
-      key: 'IMR',
+      key: 'IMR90',
       label: 'IMR90-Chr8-127300000-128300000',
     },
     {
-      key: 'K',
+      key: 'K562',
       label: 'K562-Chr8-127300000-128300000',
     }
   ])
@@ -149,14 +148,6 @@ function App() {
 
     return isMainCellLineOK && isChromosomeOK && isSequenceOK;
   }
-
-  useEffect(() => {
-    fetch('/cellLineDict.json')
-      .then(res => res.json())
-      .then(data => {
-        setCellLineDict(data);
-      })
-  }, []);
 
   useEffect(() => {
     fetch('/api/clear_folding_input', { method: 'POST' });
@@ -1378,6 +1369,8 @@ function App() {
                 setCellLineName={setCellLineName}
                 setChromosomeName={setChromosomeName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+                setStartInputValue={setStartInputValue}
+                setEndInputValue={setEndInputValue}
               />
             </div>
           )}
@@ -1390,7 +1383,6 @@ function App() {
             ) : (
               chromosomeData.length > 0 && (
                 <Heatmap
-                  cellLineDict={cellLineDict}
                   comparisonHeatmapId={null}
                   warning={warning}
                   formatNumber={formatNumber}
@@ -1429,7 +1421,6 @@ function App() {
               <Heatmap
                 key={index}
                 comparisonHeatmapId={index}
-                cellLineDict={cellLineDict}
                 warning={warning}
                 formatNumber={formatNumber}
                 setChromosome3DExampleData={setChromosome3DExampleData}
@@ -1475,7 +1466,7 @@ function App() {
                     tabBarExtraContent={
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                         <div style={{ fontSize: 11, fontWeight: 'bold', marginRight: 5, display: 'flex', alignItems: 'center' }}>
-                          <span style={{ lineHeight: 'normal' }}>{cellLineDict[chromosome3DCellLineName]}</span>
+                          <span style={{ lineHeight: 'normal' }}>{chromosome3DCellLineName}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
                           <Tooltip
@@ -1581,7 +1572,6 @@ function App() {
                               handleColorChange={handleColorChange}
                               distributionData={distributionData}
                               setDistributionData={setDistributionData}
-                              cellLineDict={cellLineDict}
                               isExampleMode={isExampleMode}
                             />
                           )
@@ -1705,7 +1695,6 @@ function App() {
                                 handleColorChange={handleColorChange}
                                 distributionData={distributionData}
                                 setDistributionData={setDistributionData}
-                                cellLineDict={cellLineDict}
                                 isExampleMode={isExampleMode}
                               />
                             )

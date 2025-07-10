@@ -4,7 +4,7 @@ import { DownloadOutlined } from "@ant-design/icons";
 import jsPDF from 'jspdf';
 import * as d3 from 'd3';
 
-export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, cellLineDict }) => {
+export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading }) => {
     const containerRef = useRef();
     const svgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -356,7 +356,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("x", 15)
                 .attr("y", 9)
                 .attr("font-size", "10px")
-                .text(cellLineDict[cellLine]);
+                .text(cellLine);
         });
 
     }, [dimensions, distributionData, selectedSphereList, loading]);

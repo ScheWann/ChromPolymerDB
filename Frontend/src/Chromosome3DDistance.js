@@ -4,11 +4,10 @@ import jsPDF from 'jspdf';
 import { Canvas } from '@react-three/fiber';
 import { Button, Tooltip, ColorPicker, Dropdown } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
-// import { BeadDistributionPlot } from './beadDistributionplot';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
-import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, DotChartOutlined } from "@ant-design/icons";
+import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
 
-export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, cellLineDict, isExampleMode }) => {
+export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, isExampleMode }) => {
     const controlsRef = useRef();
     const cameraRef = useRef();
     const rendererRef = useRef();
@@ -297,16 +296,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     return (
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
             <div style={{ width: '50%', height: '100%' }}>
-                {/* <BeadDistributionPlot
-                    selectedSphereList={selectedSphereList}
-                    distributionData={distributionData}
-                    loading={loading}
-                /> */}
                 <BeadDistributionViolinPlot
                     selectedSphereList={selectedSphereList}
                     distributionData={distributionData}
                     loading={loading}
-                    cellLineDict={cellLineDict}
                 />
             </div>
             <div style={{ width: '50%', height: '100%', position: 'relative' }}>

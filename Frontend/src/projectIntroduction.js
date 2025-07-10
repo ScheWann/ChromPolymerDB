@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Typography, Card, Tag, Button, Dropdown, Drawer } from 'antd';
 import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
-import { TutorialDrawer } from './TutorialDrawer.js';
+import { TutorialDrawer } from './tutorial.js';
 
 const data = [
     { name: 'The 4D Nucleome (4DN) Data Portal', value: 20 },
@@ -23,7 +23,7 @@ const antColors = [
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence }) => {
+export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setStartInputValue, setEndInputValue }) => {
     const chartRef = useRef(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
 
@@ -95,19 +95,11 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
     }, []);
 
     const onClickExampleDataItem = ({ key }) => {
-        if (key === 'GM') {
-            setCellLineName('GM');
-        }
-
-        if (key === 'IMR') {
-            setCellLineName('IMR');
-        }
-
-        if (key === 'K') {
-            setCellLineName('K');
-        }
+        setCellLineName(key);
         setChromosomeName('chr8');
         setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
+        setStartInputValue('127300000');
+        setEndInputValue('128300000');
     }
 
     return (

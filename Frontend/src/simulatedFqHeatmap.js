@@ -3,12 +3,7 @@ import { InputNumber, Slider } from 'antd';
 import { ExperimentOutlined, LaptopOutlined } from '@ant-design/icons';
 import * as d3 from 'd3';
 
-export const SimulatedFqHeatmap = ({
-    celllineName,
-    chromosomeName,
-    chromosomefqData,
-    selectedChromosomeSequence
-}) => {
+export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqData, selectedChromosomeSequence }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const svgLegendRef = useRef(null);

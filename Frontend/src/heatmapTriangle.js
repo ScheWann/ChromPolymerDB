@@ -7,9 +7,8 @@ import Highlighter from 'react-highlight-words';
 import "./Styles/heatmapTriangle.css";
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from "jspdf";
-// import { TriangleGeneList } from './triangleGeneList.js';
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, currentChromosomeSequence, geneList, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosomeSequence, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -1238,17 +1237,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, geneName, curren
             <canvas ref={canvasRef} style={{ marginTop: 80, transform: 'translate(-2px, 0px)' }} />
             <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all', marginTop: 80 }} />
             <svg ref={axisSvgRef} style={{ height: '25px', flexShrink: 0 }} />
-            {/* {minCanvasDimension > 0 && (
-                <TriangleGeneList
-                    brushedTriangleRange={brushedTriangleRange}
-                    cellLineName={cellLineName}
-                    chromosomeName={chromosomeName}
-                    geneList={geneList}
-                    currentChromosomeSequence={currentChromosomeSequence}
-                    minCanvasDimension={minCanvasDimension}
-                    geneName={geneName}
-                />
-            )} */}
             {minCanvasDimension > 0 && (
                 <IgvViewer
                     refreshIGV={refreshIGV}

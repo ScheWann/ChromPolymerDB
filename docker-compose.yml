@@ -107,21 +107,6 @@ services:
     networks:
       - example
 
-  # nginx:
-  #   image: nginx:stable-alpine
-  #   container_name: Nginx
-  #   restart: on-failure
-  #   depends_on:
-  #     - backend
-  #     - frontend
-  #   ports:
-  #     - 80:80
-  #     - 443:443
-  #   volumes:
-  #     - ./Nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #   networks:
-  #     - example
-
   pgadmin:
     image: dpage/pgadmin4
     container_name: PgAdmin
