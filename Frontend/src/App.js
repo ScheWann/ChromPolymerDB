@@ -842,7 +842,22 @@ function App() {
   }
 
   const handleSubmitExceptions = () => {
-    if (!isCellLineMode) return true;
+    if (!isCellLineMode) {
+      // In gene mode, use the selectedChromosomeSequence values
+      if (!cellLineName || !chromosomeName) {
+        warning('noData');
+        return false;
+      }
+      if (!selectedChromosomeSequence.start || !selectedChromosomeSequence.end) {
+        warning('invalidRange');
+        return false;
+      }
+      
+      startRef.current = selectedChromosomeSequence.start;
+      endRef.current = selectedChromosomeSequence.end;
+      setCurrentChromosomeSequence(selectedChromosomeSequence);
+      return true;
+    }
 
     const startNum = Number(startInputValue);
     const endNum = Number(endInputValue);
