@@ -15,7 +15,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     const [igvHeight, setIgvHeight] = useState(0);
 
     const defaultTracks = {
-        'GM': [
+        'GM12878': [
             {
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
@@ -79,7 +79,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 color: "brown"
             }
         ],
-        'IMR': [
+        'IMR90': [
             {
                 name: "ATAC-seq",
                 url: "https://www.encodeproject.org/files/ENCFF770EAV/@@download/ENCFF770EAV.bigWig",

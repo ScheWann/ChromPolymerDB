@@ -161,9 +161,16 @@ function App() {
       fetchChromosomeList(cellLineName);
       fetchChromosomeSize(chromosomeName);
 
-      // Automatically trigger the submit function
-      submit();
-      setChromosome3DCellLineName(cellLineName)
+      setHeatmapLoading(true);
+      setChromosome3DComparisonShowing(false);
+      setComparisonCellLine3DSampleID(0);
+      setComparisonCellLine3DData({});
+      setChromosome3DExampleID(0);
+      setChromosome3DExampleData({});
+      fetchChromosomeData(selectedChromosomeSequence);
+      fetchValidChromosomeValidIbpData(selectedChromosomeSequence);
+      fetchGeneList(selectedChromosomeSequence);
+      setChromosome3DCellLineName(cellLineName);
     }
   }, [selectedChromosomeSequence]);
 
@@ -528,7 +535,7 @@ function App() {
     }
   };
 
-const fetchGeneList = (sequence) => {
+  const fetchGeneList = (sequence) => {
     if (chromosomeName && sequence) {
       let filteredChromosomeName = chromosomeName.slice(3);
       fetch("/api/getGeneList", {
@@ -834,26 +841,30 @@ const fetchGeneList = (sequence) => {
   }
 
   const handleSubmitExceptions = () => {
-    if (!isCellLineMode || isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) return true;
+    if (!isCellLineMode) return true;
 
     const startNum = Number(startInputValue);
     const endNum = Number(endInputValue);
 
-    if (!startNum || !endNum) {
-      warning('invalidRange');
-      return false;
-    }
-    if (startNum >= endNum) {
-      warning('smallend');
-      return false;
-    }
-    if (!isSequenceInValidRange(startNum, endNum)) {
-      warning('overRegion');
-      return false;
-    }
-    if (!cellLineName || !chromosomeName) {
-      warning('noData');
-      return false;
+    console.log('startNum:', startNum, 'endNum:', endNum);
+
+    if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
+      if (!startNum || !endNum) {
+        warning('invalidRange');
+        return false;
+      }
+      if (startNum >= endNum) {
+        warning('smallend');
+        return false;
+      }
+      if (!isSequenceInValidRange(startNum, endNum)) {
+        warning('overRegion');
+        return false;
+      }
+      if (!cellLineName || !chromosomeName) {
+        warning('noData');
+        return false;
+      }
     }
 
     startRef.current = startNum;
@@ -1140,9 +1151,9 @@ const fetchGeneList = (sequence) => {
   // Submit button click
   const submit = () => {
     if (!handleSubmitExceptions()) return;
-    
+
     const newSequence = { start: startRef.current, end: endRef.current };
-    
+
     if (!isExampleMode(cellLineName, chromosomeName, newSequence)) {
       setCurrentChromosomeSequence(newSequence);
     }
