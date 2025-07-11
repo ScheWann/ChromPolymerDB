@@ -3,6 +3,20 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Hide findDOMNode error from Ant Design components
+// NOTE: Antd has not yet solved this problem, It will not cause bugs or
+//       affect the running logic, but an error will pop up in the console
+
+// ---------------- Hide findDOMNode error -------------------
+const originalError = console.error;
+console.error = (...args) => {
+    if (typeof args[0] === 'string' && args[0].includes('findDOMNode is deprecated')) {
+        return;
+    }
+    originalError.call(console, ...args);
+};
+// -------------------------------------------------------------
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <App />
