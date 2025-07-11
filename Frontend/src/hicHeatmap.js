@@ -7,7 +7,7 @@ import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataBestSampleID, progressPolling }) => {
+export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataBestSampleID, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -67,6 +67,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const comparisonCellLineChange = (value) => {
         setIndependentHeatmapCellLine(value);
         fetchComparisonChromosomeData(value);
+        // Update the parent component about the cell line change
+        if (comparisonHeatmapId && updateComparisonHeatmapCellLine) {
+            updateComparisonHeatmapCellLine(comparisonHeatmapId, value);
+        }
     }
 
     const fetchComparisonChromosomeData = (compared_cell_line) => {
@@ -160,6 +164,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             setColorScaleRange([0, 0.8]);
         }
     }
+
+    // Handle updates triggered by parent component
+    useEffect(() => {
+        if (comparisonHeatmapId && comparisonHeatmapUpdateTrigger && independentHeatmapCellLine) {
+            // Fetch new data when update is triggered
+            fetchComparisonChromosomeData(independentHeatmapCellLine);
+        }
+    }, [comparisonHeatmapUpdateTrigger]);
 
     useEffect(() => {
         const observer = new ResizeObserver((entries) => {

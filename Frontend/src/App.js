@@ -61,6 +61,8 @@ function App() {
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
   const [comparisonHeatmapIndex, setComparisonHeatmapIndex] = useState(1); // Index of comparison heatmap
+  const [comparisonHeatmapCellLines, setComparisonHeatmapCellLines] = useState({}); // Track selected cell lines for each comparison heatmap
+  const [comparisonHeatmapUpdateTrigger, setComparisonHeatmapUpdateTrigger] = useState({}); // Trigger updates for comparison heatmaps
 
   // 3D Chromosome Comparison settings
   const [chromosome3DComparisonShowing, setChromosome3DComparisonShowing] = useState(false);
@@ -880,6 +882,24 @@ function App() {
 
   const removeComparisonHeatmap = (index) => {
     setComparisonHeatmapList((prev) => prev.filter((i) => i !== index));
+    setComparisonHeatmapCellLines((prev) => {
+      const newCellLines = { ...prev };
+      delete newCellLines[index];
+      return newCellLines;
+    });
+    setComparisonHeatmapUpdateTrigger((prev) => {
+      const newTriggers = { ...prev };
+      delete newTriggers[index];
+      return newTriggers;
+    });
+  };
+
+  // Update comparison heatmap cell line selection
+  const updateComparisonHeatmapCellLine = (index, cellLine) => {
+    setComparisonHeatmapCellLines((prev) => ({
+      ...prev,
+      [index]: cellLine
+    }));
   };
 
   // return to introduction page
@@ -1167,6 +1187,15 @@ function App() {
     fetchChromosomeData(newSequence);
     fetchValidChromosomeValidIbpData(newSequence);
     fetchGeneList(newSequence);
+
+    // Trigger updates for all existing comparison heatmaps
+    if (comparisonHeatmapList.length > 0) {
+      const updateTriggers = {};
+      comparisonHeatmapList.forEach(index => {
+        updateTriggers[index] = Date.now(); // Use timestamp as trigger value
+      });
+      setComparisonHeatmapUpdateTrigger(updateTriggers);
+    }
   };
 
 
@@ -1466,6 +1495,8 @@ function App() {
                 setSelectedSphereLists={setSelectedSphereLists}
                 removeComparisonHeatmap={removeComparisonHeatmap}
                 setChromosome3DCellLineName={setChromosome3DCellLineName}
+                updateComparisonHeatmapCellLine={updateComparisonHeatmapCellLine}
+                comparisonHeatmapUpdateTrigger={comparisonHeatmapUpdateTrigger[index]}
               />
             ))}
 
