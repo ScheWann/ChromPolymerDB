@@ -161,7 +161,6 @@ function App() {
       fetchChromosomeList(cellLineName);
       fetchChromosomeSize(chromosomeName);
 
-      setHeatmapLoading(true);
       setChromosome3DComparisonShowing(false);
       setComparisonCellLine3DSampleID(0);
       setComparisonCellLine3DData({});
@@ -846,8 +845,6 @@ function App() {
     const startNum = Number(startInputValue);
     const endNum = Number(endInputValue);
 
-    console.log('startNum:', startNum, 'endNum:', endNum);
-
     if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
       if (!startNum || !endNum) {
         warning('invalidRange');
@@ -922,6 +919,7 @@ function App() {
     setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
     setStartInputValue('127300000');
     setEndInputValue('128300000');
+    setHeatmapLoading(true);
   }
 
   const onClickOriginalDownloadItems = ({ key }) => {
@@ -1152,21 +1150,25 @@ function App() {
   const submit = () => {
     if (!handleSubmitExceptions()) return;
 
-    const newSequence = { start: startRef.current, end: endRef.current };
-
-    if (!isExampleMode(cellLineName, chromosomeName, newSequence)) {
-      setCurrentChromosomeSequence(newSequence);
-    }
     setHeatmapLoading(true);
+
     setChromosome3DComparisonShowing(false);
     setComparisonCellLine3DSampleID(0);
     setComparisonCellLine3DData({});
     setChromosome3DExampleID(0);
     setChromosome3DExampleData({});
+
+    const newSequence = { start: startRef.current, end: endRef.current };
+
+    if (!isExampleMode(cellLineName, chromosomeName, newSequence)) {
+      setCurrentChromosomeSequence(newSequence);
+    }
+
     fetchChromosomeData(newSequence);
     fetchValidChromosomeValidIbpData(newSequence);
     fetchGeneList(newSequence);
   };
+
 
   return (
     <div className="App">
@@ -1389,7 +1391,7 @@ function App() {
             </div>
           )}
 
-        {!(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0) && (
+        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0)) && (
           <>
             {/* Original Heatmap */}
             {(heatmapLoading || chromosomeData.length === 0) ? (
