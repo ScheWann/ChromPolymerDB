@@ -633,6 +633,7 @@ function App() {
     setEndSequencesOptions([]);
     setChromosomeData([]);
     setChromosome3DExampleData({});
+    setDistributionData({});
     fetchCellLineList();
     if (!checked) {
       fetchGeneNameList();
@@ -653,6 +654,7 @@ function App() {
     setChromosomeData([]);
     setChromosome3DExampleData({});
     setComparisonCellLine3DData({});
+    setDistributionData({});
     fetchChromosomeList(value);
     setChromosome3DComparisonShowing(false);
   };
@@ -715,6 +717,8 @@ function App() {
     setComparisonCellLine3DData({});
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
+    // Clear distribution data when chromosome changes
+    setDistributionData({});
     fetchChromosomeSize(value);
     setChromosome3DComparisonShowing(false);
   };
@@ -827,6 +831,7 @@ function App() {
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     setComparisonCellLine3DData({});
+    setDistributionData({});
   }
 
   const handleEndSelect = (value) => {
@@ -839,6 +844,7 @@ function App() {
     setComparisonCellLine(null);
     setComparisonCellLine3DSampleID(0);
     setComparisonCellLine3DData({});
+    setDistributionData({});
   }
 
   const handleSubmitExceptions = () => {
@@ -935,6 +941,7 @@ function App() {
     setGeneName(null);
     setGeneSize({ start: 0, end: 0 });
     setGeneList([]);
+    setDistributionData({});
   }
 
   const downloadItems = [
@@ -955,6 +962,7 @@ function App() {
     setStartInputValue('127300000');
     setEndInputValue('128300000');
     setHeatmapLoading(true);
+    setDistributionData({});
   }
 
   const onClickOriginalDownloadItems = ({ key }) => {
@@ -1129,6 +1137,7 @@ function App() {
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
     setChromosome3DExampleID(key);
+    setDistributionData({});
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!chromosome3DExampleData[cacheKey]) {
       if (!isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)) {
@@ -1144,6 +1153,7 @@ function App() {
   // 3D Comparison Chromosome sample change
   const comparisonSampleChange = (key) => {
     setComparisonCellLine3DSampleID(key);
+    setDistributionData({});
     const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!comparisonCellLine3DData[cacheKey]) {
       if (!isExampleMode(comparisonCellLine, chromosomeName, selectedChromosomeSequence)) {
@@ -1164,12 +1174,14 @@ function App() {
   // Remove 3D Chromosome Comparison
   const handleRemoveChromosome3D = () => {
     setChromosome3DComparisonShowing(false);
+    setDistributionData({});
   };
 
   // Comparison Cell Line change
   const comparisonCellLineChange = (value) => {
     setComparisonCellLine(value);
     setComparisonCellLine3DLoading(true);
+    setDistributionData({});
 
     const isExample = isExampleMode(value, chromosomeName, selectedChromosomeSequence);
     if (!isExample) {
