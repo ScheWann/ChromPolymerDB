@@ -48,18 +48,19 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
             .then(data => {
                 setMergeCompareTotalSequences(data);
             });
-
-        fetch("/api/getChromosData", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ cell_line: mergeCompareCellLine, chromosome_name: chromosomeName, sequences: currentChromosomeSequence })
-        })
-            .then(res => res.json())
-            .then(data => {
-                setMergeCompareChromosomeData(data);
-            });
+        if (mergeCompareCellLine) {
+            fetch("/api/getChromosData", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cell_line: mergeCompareCellLine, chromosome_name: chromosomeName, sequences: currentChromosomeSequence })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    setMergeCompareChromosomeData(data);
+                });
+        }
     }, [mergeCompareCellLine]);
 
     useEffect(() => {
@@ -237,7 +238,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
             .attr('fill', '#333')
             .style('font-weight', 'bold')
             .text(cellLineName);
-        
+
         axisSvg.append('text')
             .attr('x', margin.left + width / 2)
             .attr('y', margin.top + height + 50)
