@@ -312,11 +312,8 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     gap: '10px',
                 }}>
                     <Tooltip
-                        title="Restore the original view"
+                        title={<span style={{ color: 'black' }}>Restore the original view</span>}
                         color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
                     >
                         <Button
                             style={{
@@ -328,11 +325,8 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         />
                     </Tooltip>
                     <Tooltip
-                        title="Download the selected beads and their distance"
+                        title={<span style={{ color: 'black' }}>Download the selected beads and their distance</span>}
                         color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
                     >
                         <Dropdown
                             menu={{
@@ -367,28 +361,9 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             />
                         </Dropdown>
                     </Tooltip>
-                    {/* <Tooltip
-                        title="Show distribution of the selected beads"
-                        color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                            }}
-                            icon={<DotChartOutlined />}
-                            onClick={openDistribution}
-                        />
-                    </Tooltip> */}
                     <Tooltip
-                        title="Collapse the distance window"
+                        title={<span style={{ color: 'black' }}>Collapse the distance window</span>}
                         color='white'
-                        overlayInnerStyle={{
-                            color: 'black'
-                        }}
                     >
                         <Button
                             style={{

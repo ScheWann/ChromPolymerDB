@@ -355,11 +355,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                         />
                         <Tooltip
-                            title="Change the color of selected bead"
+                            title={<span style={{ color: 'black' }}>Change the color of selected bead</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <ColorPicker
                                 value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
@@ -369,11 +366,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Clear the bead selections"
+                            title={<span style={{ color: 'black' }}>Clear the bead selections</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 style={{
@@ -385,11 +379,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Restore the original view"
+                            title={<span style={{ color: 'black' }}>Restore the original view</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 style={{
@@ -401,11 +392,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Download the 3D chromosome image"
+                            title={<span style={{ color: 'black' }}>Download the 3D chromosome image</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Dropdown
                                 menu={{
@@ -441,11 +429,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             </Dropdown>
                         </Tooltip>
                         <Tooltip
-                            title="Check the simulated Hi-C heatmap"
+                            title={<span style={{ color: 'black' }}>Check the simulated Hi-C heatmap</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 style={{
@@ -483,11 +468,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             </Modal>
                         </Tooltip>
                         <Tooltip
-                            title="Generate pairwise distances for selected beads"
+                            title={<span style={{ color: 'black' }}>Generate pairwise distances for selected beads</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 className={`custom-button ${Object.keys(selectedSphereList[celllineName] || {}).length < 2 ? 'disabled' : ''}`}

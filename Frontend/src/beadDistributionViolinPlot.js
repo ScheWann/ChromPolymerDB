@@ -370,11 +370,8 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                     <>
                         <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}>
                             <Tooltip
-                                title="Download the violin plot"
+                                title={<span style={{ color: 'black' }}>Download the violin plot</span>}
                                 color='white'
-                                overlayInnerStyle={{
-                                    color: 'black'
-                                }}
                             >
                                 <Dropdown
                                     menu={{

@@ -1137,11 +1137,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                     <Button size='small'>Tracks</Button>
                 </Dropdown>
                 <Tooltip
-                    title="Refresh IGV.js"
+                    title={<span style={{ color: 'black' }}>Refresh IGV.js</span>}
                     color='white'
-                    overlayInnerStyle={{
-                        color: 'black'
-                    }}
                 >
                     <Button
                         size='small'
@@ -1209,11 +1206,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                     )}
                 </Modal>
                 <Tooltip
-                    title="Download non-random interaction data"
+                    title={<span style={{ color: 'black' }}>Download non-random interaction data</span>}
                     color='white'
-                    overlayInnerStyle={{
-                        color: 'black'
-                    }}
                 >
                     <Dropdown
                         menu={{

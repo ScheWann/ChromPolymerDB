@@ -858,7 +858,7 @@ function App() {
         warning('invalidRange');
         return false;
       }
-      
+
       startRef.current = selectedChromosomeSequence.start;
       endRef.current = selectedChromosomeSequence.end;
       setCurrentChromosomeSequence(selectedChromosomeSequence);
@@ -1262,11 +1262,8 @@ function App() {
               }}
             />
             <Tooltip
-              title="Toggle to switch between Cell Line and Gene fields."
+              title={<span style={{ color: 'black' }}>Toggle to switch between Cell Line and Gene fields.</span>}
               color='white'
-              overlayInnerStyle={{
-                color: 'black'
-              }}
             >
               <InfoCircleOutlined
                 id="info-tooltip"
@@ -1291,6 +1288,11 @@ function App() {
                   }}
                   onChange={cellLineChange}
                   options={cellLineList}
+                  optionRender={(option) => (
+                    <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                      <div>{option.label}</div>
+                    </Tooltip>
+                  )}
                 />
                 <span className="controlGroupText">Chromosome:</span>
                 <Select
@@ -1316,7 +1318,6 @@ function App() {
                       onStartSearch(startRef.current.toString());
                     }
                   }}
-                  // value={selectedChromosomeSequence.start?.toString() || ""}
                   value={startInputValue}
                 />
                 <span className="controlGroupText">~</span>
@@ -1333,23 +1334,18 @@ function App() {
                       onEndSearch(endRef.current.toString());
                     }
                   }}
-                  // value={selectedChromosomeSequence.end?.toString() || ""}
                   value={endInputValue}
                 />
                 <Tooltip
-                  title="Add a new heatmap"
+                  title={<span style={{ color: 'black' }}>Add a new heatmap</span>}
                   color='white'
-                  overlayInnerStyle={{
-                    color: 'black'
-                  }}>
+                >
                   <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
                 </Tooltip>
                 <Tooltip
-                  title="View non-random chromosomal interactions as heatmap"
+                  title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
-                  overlayInnerStyle={{
-                    color: 'black'
-                  }}>
+                >
                   <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
                 </Tooltip>
               </div>
@@ -1366,6 +1362,11 @@ function App() {
                   }}
                   onChange={cellLineChange}
                   options={cellLineList}
+                  optionRender={(option) => (
+                    <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                      <div>{option.label}</div>
+                    </Tooltip>
+                  )}
                 />
                 <span className="controlGroupText">Gene:</span>
                 <Select
@@ -1380,19 +1381,15 @@ function App() {
                   options={geneNameList}
                 />
                 <Tooltip
-                  title="Add a new heatmap"
+                  title={<span style={{ color: 'black' }}>Add a new heatmap</span>}
                   color='white'
-                  overlayInnerStyle={{
-                    color: 'black'
-                  }}>
+                >
                   <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
                 </Tooltip>
                 <Tooltip
-                  title="View non-random chromosomal interactions as heatmap"
+                  title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
-                  overlayInnerStyle={{
-                    color: 'black'
-                  }}>
+                >
                   <Button id="submit-button" size="small" color="primary" variant="outlined" onClick={submit}>Show Heatmap</Button>
                 </Tooltip>
               </div>
@@ -1544,27 +1541,21 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
                           <Tooltip
-                            title="Add a new sample ID"
+                            title={<span>Add a new sample ID</span>}
                             color='white'
-                            overlayInnerStyle={{
-                              color: 'black'
-                            }}
                           >
                             <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
                           </Tooltip>
                         </div>
                         <Tooltip
                           title={
-                            <span>
+                            <span style={{ color: 'black' }}>
                               Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
                               <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
                               <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
                             </span>
                           }
                           color='white'
-                          overlayInnerStyle={{
-                            color: 'black'
-                          }}
                         >
                           <Dropdown menu={{ items: downloadItems, onClick: onClickOriginalDownloadItems }} placement="bottomRight" arrow>
                             <Button
@@ -1580,11 +1571,8 @@ function App() {
                           </Dropdown>
                         </Tooltip>
                         <Tooltip
-                          title="Add a second cell line to compare"
+                          title={<span>Add a second cell line to compare</span>}
                           color='white'
-                          overlayInnerStyle={{
-                            color: 'black'
-                          }}
                         >
                           <Button
                             style={{
@@ -1605,14 +1593,11 @@ function App() {
                         ? (
                           <Tooltip
                             title={
-                              <span>
+                              <span style={{ color: 'black' }}>
                                 Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
                               </span>
                             }
                             color='white'
-                            overlayInnerStyle={{
-                              color: 'black'
-                            }}
                           >
                             <span>Sample {sampleId} (Ens.Rep.)</span>
                           </Tooltip>
@@ -1676,19 +1661,21 @@ function App() {
                             size="small"
                             onChange={comparisonCellLineChange}
                             options={cellLineList}
+                            optionRender={(option) => (
+                              <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                <div>{option.label}</div>
+                              </Tooltip>
+                            )}
                           />
                           <Tooltip
                             title={
-                              <span>
+                              <span style={{ color: 'black' }}>
                                 Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
                                 <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
                                 <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
                               </span>
                             }
                             color='white'
-                            overlayInnerStyle={{
-                              color: 'black'
-                            }}
                           >
                             <Dropdown menu={{ items: downloadItems, onClick: onClickComparisonDownloadItems }} placement="bottomRight" arrow>
                               <Button
@@ -1704,11 +1691,8 @@ function App() {
                             </Dropdown>
                           </Tooltip>
                           <Tooltip
-                            title="Collapse the second cell line window"
+                            title={<span style={{ color: 'black' }}>Collapse the second cell line window</span>}
                             color='white'
-                            overlayInnerStyle={{
-                              color: 'black'
-                            }}
                           >
                             <Button
                               style={{
@@ -1729,14 +1713,11 @@ function App() {
                           ? (
                             <Tooltip
                               title={
-                                <span>
+                                <span style={{ color: 'black' }}>
                                   Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
                                 </span>
                               }
                               color='white'
-                              overlayInnerStyle={{
-                                color: 'black'
-                              }}
                             >
                               <span>Sample {sampleId} (Ens.Rep.)</span>
                             </Tooltip>

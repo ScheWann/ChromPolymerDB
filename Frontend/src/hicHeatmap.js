@@ -460,11 +460,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     </div>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                         <Tooltip
-                            title="fq/rawc value of the heatmap"
+                            title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Switch
                                 size='small'
@@ -479,11 +476,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         </Tooltip>
                         {!comparisonHeatmapId && (
                             <Tooltip
-                                title="FoldRec interactions pairwise comparison"
+                                title={<span style={{ color: 'black' }}>FoldRec interactions pairwise comparison</span>}
                                 color='white'
-                                overlayInnerStyle={{
-                                    color: 'black'
-                                }}
                             >
                                 <Button
                                     size='small'
@@ -497,11 +491,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Tooltip>
                         )}
                         <Tooltip
-                            title="Restore the original heatmap"
+                            title={<span style={{ color: 'black' }}>Restore the original heatmap</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 size='small'
@@ -514,11 +505,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Expand the heatmap view"
+                            title={<span style={{ color: 'black' }}>Expand the heatmap view</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 size='small'
@@ -532,11 +520,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             />
                         </Tooltip>
                         <Tooltip
-                            title="Download non-random interaction data"
+                            title={<span style={{ color: 'black' }}>Download non-random interaction data</span>}
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button
                                 size='small'
@@ -551,11 +536,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         {comparisonHeatmapId && (
                             <>
                                 <Tooltip
-                                    title="Generate a new heatmap based on the comparison cell line"
+                                    title={<span style={{ color: 'black' }}>Generate a new heatmap based on the comparison cell line</span>}
                                     color='white'
-                                    overlayInnerStyle={{
-                                        color: 'black'
-                                    }}
                                 >
                                     <Select
                                         value={independentHeatmapCellLine}
@@ -566,14 +548,16 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         size="small"
                                         onChange={comparisonCellLineChange}
                                         options={cellLineList}
+                                        optionRender={(option) => (
+                                            <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                                <div>{option.label}</div>
+                                            </Tooltip>
+                                        )}
                                     />
                                 </Tooltip>
                                 <Tooltip
-                                    title="Close the comparison heatmap"
+                                    title={<span style={{ color: 'black' }}>Close the comparison heatmap</span>}
                                     color='white'
-                                    overlayInnerStyle={{
-                                        color: 'black'
-                                    }}
                                 >
                                     <Button
                                         size='small'
@@ -589,16 +573,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         )}
                         <Tooltip
                             title={
-                                <span>
+                                <span style={{ color: 'black' }}>
                                     Generate 3D chromosome structure based on in view.<br />
                                     <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> The chromosome structure generated within
                                     <span style={{ color: '#3457D5', fontWeight: 'bold' }}> 8 minutes </span> is the same.
                                 </span>
                             }
                             color='white'
-                            overlayInnerStyle={{
-                                color: 'black'
-                            }}
                         >
                             <Button size='small' color="primary" variant="outlined" onClick={generate3DChromosome} style={{ marginRight: 5, fontSize: 12 }}>
                                 3D Structure
@@ -673,15 +654,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
 
                             {/* half triangle heatmap Modal */}
-                            <Modal 
-                                destroyOnClose={true} 
-                                open={halfHeatMapModalVisible} 
-                                onCancel={closeHalfHeatMapModal} 
-                                footer={null} 
-                                width="60vw" 
+                            <Modal
+                                destroyOnClose={true}
+                                open={halfHeatMapModalVisible}
+                                onCancel={closeHalfHeatMapModal}
+                                footer={null}
+                                width="60vw"
                                 maskClosable={false}
                                 keyboard={false}
-                                style={{ 
+                                style={{
                                     top: 0,
                                     padding: 0,
                                     maxWidth: '60vw',
@@ -719,8 +700,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Modal>
 
                             {/* Merged two heatmaps into one Modal */}
-                            <Modal destroyOnClose={true} open={mergedCellLinesHeatmapModalVisible} onCancel={() => setMergedCellLinesHeatmapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles}  style={{ minWidth: "1000px" }} >
-                                <MergedCellLinesHeatmap 
+                            <Modal destroyOnClose={true} open={mergedCellLinesHeatmapModalVisible} onCancel={() => setMergedCellLinesHeatmapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} style={{ minWidth: "1000px" }} >
+                                <MergedCellLinesHeatmap
                                     cellLineName={independentHeatmapCellLine}
                                     chromosomeName={chromosomeName}
                                     totalChromosomeSequences={totalChromosomeSequences}

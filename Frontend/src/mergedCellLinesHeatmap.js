@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as d3 from 'd3';
-import { Select, Switch, InputNumber, Slider } from "antd";
+import { Select, Switch, InputNumber, Slider, Tooltip } from "antd";
 
 export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChromosomeSequences, currentChromosomeSequence, independentHeatmapData, fqRawcMode, cellLineList, setFqRawcMode, colorScaleRange, setColorScaleRange, changeColorByInput, changeColorScale }) => {
     const containerRef = useRef(null);
@@ -319,6 +319,11 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                     size="small"
                     onChange={setMergeCompareCellLine}
                     options={cellLineList}
+                    optionRender={(option) => (
+                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                            <div>{option.label}</div>
+                        </Tooltip>
+                    )}
                 />
             </div>
             <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
