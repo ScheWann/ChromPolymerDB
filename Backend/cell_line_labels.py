@@ -5,7 +5,7 @@ This module contains the mapping between cell line abbreviations and their full 
 
 label_mapping = {
     'NHEK': 'Epidermal keratinocytes cell line (NHEK)',
-    'CyT49': 'Pancreatic endoderm derived from hESC (CyT49)',
+    'Cyt49': 'Pancreatic endoderm derived from hESC (CyT49)',
     'CyT49_definitive_endoderm': 'Definitive endoderm derived from CyT49',
     'CyT49_endoderm_foregut': 'Endoderm of foregut derived from CyT49',
     'CyT49_pancreatic_endoderm': 'Pancreatic endoderm derived from CyT49',
