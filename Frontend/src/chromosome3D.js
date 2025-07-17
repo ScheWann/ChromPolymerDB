@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
 import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
-import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined, SendOutlined } from "@ant-design/icons";
+import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './chromosome3DDistance';
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";

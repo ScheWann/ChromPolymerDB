@@ -1548,7 +1548,7 @@ function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
                           <Tooltip
-                            title={<span>Add a new sample ID</span>}
+                            title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
                             color='white'
                           >
                             <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
@@ -1578,7 +1578,7 @@ function App() {
                           </Dropdown>
                         </Tooltip>
                         <Tooltip
-                          title={<span>Add a second cell line to compare</span>}
+                          title={<span style={{ color: 'black' }}>Add a second cell line to compare</span>}
                           color='white'
                         >
                           <Button
