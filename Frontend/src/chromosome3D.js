@@ -441,7 +441,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 onClick={() => setOpenAvgMatrixModal(true)}
                             />
                             <Modal
-                                destroyOnClose
+                                destroyOnHidden
                                 width={"45vw"}
                                 styles={modalStyles}
                                 open={openAvgMatrixModal}

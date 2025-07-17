@@ -655,7 +655,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
                             {/* half triangle heatmap Modal */}
                             <Modal
-                                destroyOnClose={true}
+                                destroyOnHidden={true}
                                 open={halfHeatMapModalVisible}
                                 onCancel={closeHalfHeatMapModal}
                                 footer={null}
@@ -700,7 +700,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Modal>
 
                             {/* Merged two heatmaps into one Modal */}
-                            <Modal destroyOnClose={true} open={mergedCellLinesHeatmapModalVisible} onCancel={() => setMergedCellLinesHeatmapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} style={{ minWidth: "1000px" }} >
+                            <Modal destroyOnHidden={true} open={mergedCellLinesHeatmapModalVisible} onCancel={() => setMergedCellLinesHeatmapModalVisible(false)} footer={null} width={"60vw"} styles={modalStyles} style={{ minWidth: "1000px" }} >
                                 <MergedCellLinesHeatmap
                                     cellLineName={independentHeatmapCellLine}
                                     chromosomeName={chromosomeName}
