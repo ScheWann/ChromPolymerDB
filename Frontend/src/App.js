@@ -64,13 +64,9 @@ function App() {
   const [comparisonHeatmapCellLines, setComparisonHeatmapCellLines] = useState({}); // Track selected cell lines for each comparison heatmap
   const [comparisonHeatmapUpdateTrigger, setComparisonHeatmapUpdateTrigger] = useState({}); // Trigger updates for comparison heatmaps
 
-  // 3D Chromosome Comparison settings
-  const [chromosome3DComparisonShowing, setChromosome3DComparisonShowing] = useState(false);
-  const [comparisonCellLine, setComparisonCellLine] = useState(null);
-  const [comparisonCellLine3DData, setComparisonCellLine3DData] = useState({});
-  const [comparisonCellLine3DSampleID, setComparisonCellLine3DSampleID] = useState(0);
-  const [comparisonCellLine3DLoading, setComparisonCellLine3DLoading] = useState(false);
-  const [comparisonChromosomeDistanceDownloadSpinner, setComparisonChromosomeDownloadSpinner] = useState(false);
+  // 3D Chromosome Multiple Components settings
+  const [chromosome3DComponents, setChromosome3DComponents] = useState([]); // Array of component configs
+  const [chromosome3DComponentIndex, setChromosome3DComponentIndex] = useState(1); // Next component index
 
   // Tour visibility state
   const [isTourOpen, setIsTourOpen] = useState(true);
@@ -163,9 +159,8 @@ function App() {
       fetchChromosomeList(cellLineName);
       fetchChromosomeSize(chromosomeName);
 
-      setChromosome3DComparisonShowing(false);
-      setComparisonCellLine3DSampleID(0);
-      setComparisonCellLine3DData({});
+      setChromosome3DComponents([]);
+      setChromosome3DComponentIndex(1);
       setChromosome3DExampleID(0);
       setChromosome3DExampleData({});
       fetchChromosomeData(selectedChromosomeSequence);
@@ -262,41 +257,51 @@ function App() {
     }
   }, [chromosome3DExampleID, chromosome3DExampleData]);
 
-  // update comparison part when comparisonCellLine3DSampleID changes
+  // update multiple chromosome3D components when sample IDs change
   useEffect(() => {
-    const comparisonCacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`;
+    chromosome3DComponents.forEach((component) => {
+      const comparisonCacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${component.sampleID}`;
 
-    if (!comparisonCellLine3DData[comparisonCacheKey]) return;
+      if (!component.data[comparisonCacheKey]) return;
 
-    const selectedBeads = Object.keys(selectedSphereLists[cellLineName] || {});
-    if (selectedBeads.length > 0) {
-      selectedBeads.forEach((index) => {
-        setSelectedSphereLists((prev) => ({
-          ...prev,
-          [comparisonCellLine]: {
-            ...(prev[comparisonCellLine] || {}),
-            [index]: {
-              position: comparisonCellLine3DData[comparisonCacheKey][index],
-              color: prev[cellLineName][index].color,
+      const selectedBeads = Object.keys(selectedSphereLists[cellLineName] || {});
+      if (selectedBeads.length > 0) {
+        selectedBeads.forEach((index) => {
+          setSelectedSphereLists((prev) => ({
+            ...prev,
+            [component.cellLine]: {
+              ...(prev[component.cellLine] || {}),
+              [index]: {
+                position: component.data[comparisonCacheKey][index],
+                color: prev[cellLineName][index].color,
+              },
             },
-          },
-        }));
-      });
-    }
-  }, [comparisonCellLine3DSampleID, comparisonCellLine3DData]);
+          }));
+        });
+      }
+    });
+  }, [chromosome3DComponents, selectedSphereLists[cellLineName]]);
 
-  const fetchExistChromos3DData = (isBest, value, cellLineName, isComparison) => {
+  const fetchExistChromos3DData = (isBest, value, cellLineName, componentId = null) => {
     const sampleID = isBest ? 0 : value;
+    const isComparison = componentId !== null;
     const keyPrefix = isComparison ? `${cellLineName}-COMPARISON` : cellLineName;
     const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
 
     const cachedData = isComparison ?
-      comparisonCellLine3DData[cacheKey] :
+      chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
       chromosome3DExampleData[cacheKey];
 
     if (!cachedData) {
       if (isComparison) {
-        setComparisonCellLine3DLoading(true);
+        // Update the specific component's loading state
+        setChromosome3DComponents(prev => 
+          prev.map(comp => 
+            comp.id === componentId 
+              ? { ...comp, loading: true }
+              : comp
+          )
+        );
       } else {
         setChromosome3DLoading(true);
       }
@@ -312,14 +317,24 @@ function App() {
       .then(res => res.json())
       .then(data => {
         if (isComparison) {
-          setComparisonCellLine3DData(prev => ({
-            ...prev,
-            [cacheKey]: data["position_data"],
-            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-            [cacheKey + "_fq_data"]: data["fq_data"],
-            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-          }));
-          setComparisonCellLine3DLoading(false);
+          // Update the specific component's data
+          setChromosome3DComponents(prev => 
+            prev.map(comp => 
+              comp.id === componentId 
+                ? { 
+                    ...comp, 
+                    data: {
+                      ...comp.data,
+                      [cacheKey]: data["position_data"],
+                      [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                      [cacheKey + "_fq_data"]: data["fq_data"],
+                      [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                    },
+                    loading: false
+                  }
+                : comp
+            )
+          );
         } else {
           setChromosome3DExampleData(prev => ({
             ...prev,
@@ -486,19 +501,26 @@ function App() {
       });
   }
 
-  const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, isComparison) => {
+  const fetchExampleChromos3DData = (cell_line, sample_id, sampleChange, componentId = null) => {
     if (cell_line && chromosomeName && selectedChromosomeSequence) {
+      const isComparison = componentId !== null;
       const keyPrefix = isComparison ? `${cell_line}-COMPARISON` : chromosome3DCellLineName;
 
       const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sample_id}`;
 
       const cachedData = isComparison ?
-        comparisonCellLine3DData[cacheKey] :
+        chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
         chromosome3DExampleData[cacheKey];
 
       if (!cachedData) {
         if (isComparison) {
-          setComparisonCellLine3DLoading(true);
+          setChromosome3DComponents(prev => 
+            prev.map(comp => 
+              comp.id === componentId 
+                ? { ...comp, loading: true }
+                : comp
+            )
+          );
         } else {
           setChromosome3DLoading(true);
         }
@@ -521,14 +543,23 @@ function App() {
         .then(res => res.json())
         .then(data => {
           if (isComparison) {
-            setComparisonCellLine3DData(prev => ({
-              ...prev,
-              [cacheKey]: data["position_data"],
-              [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-              [cacheKey + "_fq_data"]: data["fq_data"],
-              [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-            }));
-            setComparisonCellLine3DLoading(false);
+            setChromosome3DComponents(prev => 
+              prev.map(comp => 
+                comp.id === componentId 
+                  ? { 
+                      ...comp, 
+                      data: {
+                        ...comp.data,
+                        [cacheKey]: data["position_data"],
+                        [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                        [cacheKey + "_fq_data"]: data["fq_data"],
+                        [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                      },
+                      loading: false
+                    }
+                  : comp
+              )
+            );
           } else {
             setChromosome3DExampleData(prev => ({
               ...prev,
@@ -640,6 +671,7 @@ function App() {
     setEndSequencesOptions([]);
     setChromosomeData([]);
     setChromosome3DExampleData({});
+    setChromosome3DComponents([]);
     setDistributionData({});
     fetchCellLineList();
     if (!checked) {
@@ -660,19 +692,15 @@ function App() {
     setGeneName(null);
     setChromosomeData([]);
     setChromosome3DExampleData({});
-    setComparisonCellLine3DData({});
+    setChromosome3DComponents([]);
     setDistributionData({});
     fetchChromosomeList(value);
-    setChromosome3DComparisonShowing(false);
   };
 
   const handleColorChange = (color) => {
     if (selectedIndex !== null) {
       const originalCoordinates = chromosome3DExampleData[
         `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${chromosome3DExampleID}`
-      ];
-      const comparisonCoordinates = comparisonCellLine3DData[
-        `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${comparisonCellLine3DSampleID}`
       ];
 
       setSelectedSphereLists((prev) => {
@@ -684,20 +712,28 @@ function App() {
           },
         };
 
-        const updatedComparison = comparisonCoordinates
-          ? {
-            ...prev[comparisonCellLine],
-            [selectedIndex]: {
-              ...(prev[comparisonCellLine]?.[selectedIndex] || { position: comparisonCoordinates?.[selectedIndex] }),
-              color: color.toHexString(),
-            },
+        // Update all comparison components
+        const updatedComponents = {};
+        chromosome3DComponents.forEach((component) => {
+          const comparisonCoordinates = component.data[
+            `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${component.sampleID}`
+          ];
+          
+          if (comparisonCoordinates) {
+            updatedComponents[component.cellLine] = {
+              ...prev[component.cellLine],
+              [selectedIndex]: {
+                ...(prev[component.cellLine]?.[selectedIndex] || { position: comparisonCoordinates?.[selectedIndex] }),
+                color: color.toHexString(),
+              },
+            };
           }
-          : prev[comparisonCellLine];
+        });
 
         return {
           ...prev,
           ...(cellLineName ? { [cellLineName]: updatedOriginal } : {}),
-          ...(comparisonCellLine ? { [comparisonCellLine]: updatedComparison } : {}),
+          ...updatedComponents,
         };
       });
     }
@@ -721,13 +757,10 @@ function App() {
     setChromosomeName(value);
     setChromosomeData([]);
     setChromosome3DExampleData({});
-    setComparisonCellLine3DData({});
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
+    setChromosome3DComponents([]);
     // Clear distribution data when chromosome changes
     setDistributionData({});
     fetchChromosomeSize(value);
-    setChromosome3DComparisonShowing(false);
   };
 
   // Chromosome sequence change
@@ -834,10 +867,7 @@ function App() {
     setStartInputValue(num.toString());
     setSelectedChromosomeSequence(prev => ({ ...prev, start: num }));
 
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
+    setChromosome3DComponents([]);
     setDistributionData({});
   }
 
@@ -847,10 +877,7 @@ function App() {
     setEndInputValue(num.toString());
     setSelectedChromosomeSequence(prev => ({ ...prev, end: num }));
 
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
+    setChromosome3DComponents([]);
     setDistributionData({});
   }
 
@@ -938,10 +965,8 @@ function App() {
     setSelectedChromosomeSequence({ start: 0, end: 0 });
     setChromosomeData([]);
     setChromosome3DExampleData({});
-    setComparisonCellLine3DData({});
-    setComparisonCellLine(null);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DLoading(false);
+    setChromosome3DComponents([]);
+    setChromosome3DComponentIndex(1);
     setChromosome3DExampleID(0);
     setChromosome3DLoading(false);
     setHeatmapLoading(false);
@@ -975,36 +1000,48 @@ function App() {
   const onClickOriginalDownloadItems = ({ key }) => {
     if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
       if (key === '1') {
-        downloadDistance(false, false);
+        downloadDistance(null, false);
       }
       if (key === '2') {
-        downloadPositionData(false, false);
+        downloadPositionData(null, false);
       }
     } else {
       if (key === '1') {
-        downloadDistance(false, true);
+        downloadDistance(null, true);
       }
       if (key === '2') {
-        downloadPositionData(false, true);
+        downloadPositionData(null, true);
       }
     }
   }
 
-  const onClickComparisonDownloadItems = ({ key }) => {
+  const onClickComponentDownloadItems = (componentId) => ({ key }) => {
     if (key === '1') {
-      downloadDistance(true);
+      downloadDistance(componentId);
     }
     if (key === '2') {
-      downloadPositionData(true);
+      downloadPositionData(componentId);
     }
   }
 
   // Download 5000 samples of beads' distance data
-  const downloadDistance = async (isComparison, isExample) => {
-    if (isComparison) {
-      setComparisonChromosomeDownloadSpinner(true);
+  const downloadDistance = async (componentId, isExample = false) => {
+    const isOriginal = componentId === null;
+    let targetCellLine;
+    
+    if (!isOriginal) {
+      // Update specific component's download spinner
+      setChromosome3DComponents(prev => 
+        prev.map(comp => 
+          comp.id === componentId 
+            ? { ...comp, downloadSpinner: true }
+            : comp
+        )
+      );
+      targetCellLine = chromosome3DComponents.find(c => c.id === componentId)?.cellLine;
     } else {
       setOriginalChromosomeDownloadSpinner(true);
+      targetCellLine = chromosome3DCellLineName;
     }
 
     try {
@@ -1012,7 +1049,7 @@ function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
+          cell_line: targetCellLine,
           chromosome_name: chromosomeName,
           sequences: selectedChromosomeSequence,
           is_example: isExample
@@ -1043,19 +1080,21 @@ function App() {
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
-      if (isComparison) {
-        a.download = `${comparisonCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
-      } else {
-        a.download = `${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
-      }
+      a.download = `${targetCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.npz`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download error:", error);
     } finally {
-      if (isComparison) {
-        setComparisonChromosomeDownloadSpinner(false);
+      if (!isOriginal) {
+        setChromosome3DComponents(prev => 
+          prev.map(comp => 
+            comp.id === componentId 
+              ? { ...comp, downloadSpinner: false }
+              : comp
+          )
+        );
       } else {
         setOriginalChromosomeDownloadSpinner(false);
       }
@@ -1063,11 +1102,22 @@ function App() {
   };
 
   // Download 5000 samples of beads' position data (.csv)
-  const downloadPositionData = async (isComparison, is_example) => {
-    if (isComparison) {
-      setComparisonChromosomeDownloadSpinner(true);
+  const downloadPositionData = async (componentId, isExample = false) => {
+    const isOriginal = componentId === null;
+    let targetCellLine;
+    
+    if (!isOriginal) {
+      setChromosome3DComponents(prev => 
+        prev.map(comp => 
+          comp.id === componentId 
+            ? { ...comp, downloadSpinner: true }
+            : comp
+        )
+      );
+      targetCellLine = chromosome3DComponents.find(c => c.id === componentId)?.cellLine;
     } else {
       setOriginalChromosomeDownloadSpinner(true);
+      targetCellLine = chromosome3DCellLineName;
     }
 
     try {
@@ -1075,10 +1125,10 @@ function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cell_line: isComparison ? comparisonCellLine : chromosome3DCellLineName,
+          cell_line: targetCellLine,
           chromosome_name: chromosomeName,
           sequences: selectedChromosomeSequence,
-          is_example: is_example
+          is_example: isExample
         }),
       });
 
@@ -1106,19 +1156,21 @@ function App() {
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
-      if (isComparison) {
-        a.download = `${comparisonCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.csv`;
-      } else {
-        a.download = `${chromosome3DCellLineName}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.csv`;
-      }
+      a.download = `${targetCellLine}_${chromosomeName}_${selectedChromosomeSequence.start}_${selectedChromosomeSequence.end}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download error:", error);
     } finally {
-      if (isComparison) {
-        setComparisonChromosomeDownloadSpinner(false);
+      if (!isOriginal) {
+        setChromosome3DComponents(prev => 
+          prev.map(comp => 
+            comp.id === componentId 
+              ? { ...comp, downloadSpinner: false }
+              : comp
+          )
+        );
       } else {
         setOriginalChromosomeDownloadSpinner(false);
       }
@@ -1132,7 +1184,7 @@ function App() {
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
     if (!chromosome3DExampleData[cacheKey]) {
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-        fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", false);
+        fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
       } else {
         fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, false);
@@ -1148,7 +1200,7 @@ function App() {
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
     if (!chromosome3DExampleData[cacheKey]) {
       if (!isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)) {
-        fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", false);
+        fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
         fetchExistChromos3DData(false, key, chromosome3DCellLineName, false);
@@ -1158,46 +1210,90 @@ function App() {
   };
 
   // 3D Comparison Chromosome sample change
-  const comparisonSampleChange = (key) => {
-    setComparisonCellLine3DSampleID(key);
+  const componentSampleChange = (componentId) => (key) => {
+    setChromosome3DComponents(prev => 
+      prev.map(comp => 
+        comp.id === componentId 
+          ? { ...comp, sampleID: key }
+          : comp
+      )
+    );
     setDistributionData({});
-    const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-    if (!comparisonCellLine3DData[cacheKey]) {
-      if (!isExampleMode(comparisonCellLine, chromosomeName, selectedChromosomeSequence)) {
-        fetchExampleChromos3DData(comparisonCellLine, key, "sampleChange", true);
-        progressPolling(comparisonCellLine, chromosomeName, selectedChromosomeSequence, key, false);
-      } else {
-        fetchExistChromos3DData(false, key, comparisonCellLine, true);
-        progressPolling(comparisonCellLine, 'chr8', [127300000, 128300000], key, true);
+    
+    const component = chromosome3DComponents.find(c => c.id === componentId);
+    if (component) {
+      const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
+      if (!component.data[cacheKey]) {
+        if (!isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)) {
+          fetchExampleChromos3DData(component.cellLine, key, "sampleChange", componentId);
+          // Note: progressPolling function may need to be updated to handle componentId
+        } else {
+          fetchExistChromos3DData(false, key, component.cellLine, componentId);
+        }
       }
-    };
-  };
-
-  // Add 3D Chromosome Comparison
-  const handleAddChromosome3D = () => {
-    setChromosome3DComparisonShowing(true);
-  };
-
-  // Remove 3D Chromosome Comparison
-  const handleRemoveChromosome3D = () => {
-    setChromosome3DComparisonShowing(false);
-    setDistributionData({});
-  };
-
-  // Comparison Cell Line change
-  const comparisonCellLineChange = (value) => {
-    setComparisonCellLine(value);
-    setComparisonCellLine3DLoading(true);
-    setDistributionData({});
-
-    const isExample = isExampleMode(value, chromosomeName, selectedChromosomeSequence);
-    if (!isExample) {
-      fetchExampleChromos3DData(value, comparisonCellLine3DSampleID, "sampleChange", true);
-      progressPolling(value, chromosomeName, selectedChromosomeSequence, comparisonCellLine3DSampleID, false);
-    } else {
-      fetchExistChromos3DData(true, exampleDataBestSampleID[value], value, true);
-      progressPolling(value, 'chr8', [127300000, 128300000], exampleDataBestSampleID[value], true);
     }
+  };
+
+  // Add 3D Chromosome Component
+  const handleAddChromosome3D = () => {
+    const newComponent = {
+      id: chromosome3DComponentIndex,
+      cellLine: cellLineList[0]?.value || null, // Default to first cell line
+      sampleID: 0,
+      data: {},
+      loading: false,
+      downloadSpinner: false
+    };
+    
+    setChromosome3DComponents(prev => [...prev, newComponent]);
+    setChromosome3DComponentIndex(prev => prev + 1);
+  };
+
+  // Remove 3D Chromosome Component
+  const handleRemoveChromosome3D = (componentId) => {
+    setChromosome3DComponents(prev => prev.filter(comp => comp.id !== componentId));
+    setDistributionData(prev => {
+      const newData = { ...prev };
+      // Remove data for the removed component
+      chromosome3DComponents.forEach(comp => {
+        if (comp.id === componentId) {
+          delete newData[comp.cellLine];
+        }
+      });
+      return newData;
+    });
+  };
+
+  // Update Cell Line for a specific component
+  const updateComponentCellLine = (componentId, cellLine) => {
+    setChromosome3DComponents(prev => 
+      prev.map(comp => 
+        comp.id === componentId 
+          ? { ...comp, cellLine, loading: true }
+          : comp
+      )
+    );
+    
+    // Fetch data for the new cell line
+    const component = chromosome3DComponents.find(c => c.id === componentId);
+    if (component) {
+      fetchExistChromos3DData(false, component.sampleID, cellLine, componentId);
+      if (isExampleMode(cellLine, chromosomeName, currentChromosomeSequence)) {
+        const key = exampleDataBestSampleID[cellLine];
+        fetchExistChromos3DData(false, key, cellLine, componentId);
+      }
+    }
+  };
+
+  // Update Sample ID for a specific component
+  const updateComponentSampleID = (componentId, sampleID) => {
+    setChromosome3DComponents(prev => 
+      prev.map(comp => 
+        comp.id === componentId 
+          ? { ...comp, sampleID }
+          : comp
+      )
+    );
   };
 
   // Submit button click
@@ -1206,9 +1302,8 @@ function App() {
 
     setHeatmapLoading(true);
 
-    setChromosome3DComparisonShowing(false);
-    setComparisonCellLine3DSampleID(0);
-    setComparisonCellLine3DData({});
+    setChromosome3DComponents([]);
+    setChromosome3DComponentIndex(1);
     setChromosome3DExampleID(0);
     setChromosome3DExampleData({});
 
@@ -1481,8 +1576,8 @@ function App() {
                   geneName={geneName}
                   setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                   setChromosome3DLoading={setChromosome3DLoading}
-                  setComparisonCellLine3DData={setComparisonCellLine3DData}
-                  setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
+                  setComparisonCellLine3DData={() => {}} // Legacy compatibility - no longer used
+                  setComparisonCellLine3DLoading={() => {}} // Legacy compatibility - no longer used
                   setGeneName={setGeneName}
                   setGeneSize={setGeneSize}
                   setSelectedSphereLists={setSelectedSphereLists}
@@ -1519,8 +1614,8 @@ function App() {
                 geneName={geneName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                 setChromosome3DLoading={setChromosome3DLoading}
-                setComparisonCellLine3DData={setComparisonCellLine3DData}
-                setComparisonCellLine3DLoading={setComparisonCellLine3DLoading}
+                setComparisonCellLine3DData={() => {}} // Legacy compatibility - no longer used
+                setComparisonCellLine3DLoading={() => {}} // Legacy compatibility - no longer used
                 setGeneName={setGeneName}
                 setGeneSize={setGeneSize}
                 setSelectedSphereLists={setSelectedSphereLists}
@@ -1531,10 +1626,22 @@ function App() {
               />
             ))}
 
-            {/* Original 3D chromosome */}
-            {(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DLoading) && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', height: '100%', width: 'calc(100% - 40vw)', flexShrink: 0 }}>
-                <div style={{ width: chromosome3DComparisonShowing ? "49.9%" : "100%", marginRight: chromosome3DComparisonShowing ? '0.2%' : '0%', flexShrink: 0 }}>
+            {/* Multiple 3D chromosome components */}
+            {(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DLoading || chromosome3DComponents.length > 0) && (
+              <div style={{ 
+                height: '100%', 
+                width: 'calc(100% - 40vw)', 
+                flexShrink: 0,
+                overflowX: 'auto',
+                display: 'flex'
+              }}>
+                {/* Original 3D chromosome */}
+                <div style={{ 
+                  width: chromosome3DComponents.length > 0 ? "49.9%" : "100%", 
+                  marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%', 
+                  flexShrink: 0,
+                  minWidth: chromosome3DComponents.length > 0 ? "49.9%" : "auto"
+                }}>
                   <Tabs
                     size="small"
                     activeKey={chromosome3DExampleID}
@@ -1578,7 +1685,7 @@ function App() {
                           </Dropdown>
                         </Tooltip>
                         <Tooltip
-                          title={<span style={{ color: 'black' }}>Add a second cell line to compare</span>}
+                          title={<span style={{ color: 'black' }}>Add a cell line to compare</span>}
                           color='white'
                         >
                           <Button
@@ -1648,25 +1755,31 @@ function App() {
                 </div>
 
                 {/* Comparison 3D chromosome */}
-                {chromosome3DComparisonShowing && (
-                  <div style={{ width: "49.9%", flexShrink: 0 }}>
+                                {/* Multiple comparison 3D chromosomes */}
+                {chromosome3DComponents.map((component) => (
+                  <div key={component.id} style={{ 
+                    width: "49.9%", 
+                    marginRight: '0.2%', 
+                    flexShrink: 0,
+                    minWidth: "49.9%"
+                  }}>
                     <Tabs
                       size="small"
-                      activeKey={comparisonCellLine3DSampleID}
-                      defaultActiveKey={comparisonCellLine3DSampleID}
+                      activeKey={component.sampleID}
+                      defaultActiveKey={component.sampleID}
                       style={{ width: '100%', height: '100%' }}
-                      onChange={comparisonSampleChange}
+                      onChange={componentSampleChange(component.id)}
                       tabBarExtraContent={
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
                           <Select
-                            value={comparisonCellLine}
+                            value={component.cellLine}
                             style={{
                               minWidth: 150,
                               maxWidth: 150,
                               marginRight: 5,
                             }}
                             size="small"
-                            onChange={comparisonCellLineChange}
+                            onChange={(value) => updateComponentCellLine(component.id, value)}
                             options={cellLineList}
                             optionRender={(option) => (
                               <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
@@ -1684,21 +1797,21 @@ function App() {
                             }
                             color='white'
                           >
-                            <Dropdown menu={{ items: downloadItems, onClick: onClickComparisonDownloadItems }} placement="bottomRight" arrow>
+                            <Dropdown menu={{ items: downloadItems, onClick: onClickComponentDownloadItems(component.id) }} placement="bottomRight" arrow>
                               <Button
                                 style={{
                                   fontSize: 15,
                                   cursor: "pointer",
                                   marginRight: 5,
                                 }}
-                                disabled={Object.keys(comparisonCellLine3DData).length === 0}
+                                disabled={Object.keys(component.data).length === 0}
                                 size="small"
-                                icon={comparisonChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                                icon={component.downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                               />
                             </Dropdown>
                           </Tooltip>
                           <Tooltip
-                            title={<span style={{ color: 'black' }}>Collapse the second cell line window</span>}
+                            title={<span style={{ color: 'black' }}>Remove this cell line</span>}
                             color='white'
                           >
                             <Button
@@ -1708,14 +1821,14 @@ function App() {
                               }}
                               size="small"
                               icon={<MinusOutlined />}
-                              onClick={handleRemoveChromosome3D}
+                              onClick={() => handleRemoveChromosome3D(component.id)}
                             />
                           </Tooltip>
                         </div>
                       }
 
                       items={sampleKeys.map((sampleId, i) => {
-                        const cacheKey = `${comparisonCellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
+                        const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         const label = sampleId === 0
                           ? (
                             <Tooltip
@@ -1734,20 +1847,20 @@ function App() {
                           label: label,
                           key: sampleId,
                           children: (
-                            comparisonCellLine3DLoading ? (
+                            component.loading ? (
                               <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
                             ) : (
                               <Chromosome3D
                                 formatNumber={formatNumber}
-                                celllineName={comparisonCellLine}
+                                celllineName={component.cellLine}
                                 chromosomeName={chromosomeName}
                                 currentChromosomeSequence={currentChromosomeSequence}
                                 geneSize={geneSize}
                                 chromosomeData={chromosomeData}
-                                chromosome3DExampleData={comparisonCellLine3DData[cacheKey] || []}
-                                chromosome3DAvgMatrixData={comparisonCellLine3DData[cacheKey + "_avg_matrix"]}
-                                chromosomefqData={comparisonCellLine3DData[cacheKey + "_fq_data"]}
-                                chromosomeCurrentSampleDistanceVector={comparisonCellLine3DData[cacheKey + "sample_distance_vector"]}
+                                chromosome3DExampleData={component.data[cacheKey] || []}
+                                chromosome3DAvgMatrixData={component.data[cacheKey + "_avg_matrix"]}
+                                chromosomefqData={component.data[cacheKey + "_fq_data"]}
+                                chromosomeCurrentSampleDistanceVector={component.data[cacheKey + "sample_distance_vector"]}
                                 validChromosomeValidIbpData={validChromosomeValidIbpData}
                                 selectedChromosomeSequence={selectedChromosomeSequence}
                                 selectedIndex={selectedIndex}
@@ -1765,7 +1878,7 @@ function App() {
                       })}
                     />
                   </div>
-                )}
+                ))}
               </div>
             )
             }
