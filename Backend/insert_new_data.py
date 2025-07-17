@@ -18,6 +18,44 @@ def get_cell_line_table_name(cell_line):
     return f"non_random_hic_{cell_line.replace('-', '_').replace('/', '_').replace(' ', '_')}".lower()
 
 
+def table_exists(cur, table_name):
+    """Check if a table exists in the database."""
+    cur.execute(
+        sql.SQL(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s);"
+        ),
+        [table_name],
+    )
+    return cur.fetchone()[0]
+
+
+def create_cell_line_table(cur, cell_line):
+    """Create a table for a specific cell line"""
+    table_name = get_cell_line_table_name(cell_line)
+    
+    if not table_exists(cur, table_name):
+        print(f"Creating {table_name} table...")
+        # Create safe constraint name
+        constraint_name = f"fk_{table_name}_chrid"
+        cur.execute(
+            f"CREATE TABLE IF NOT EXISTS {table_name} ("
+            "hid serial PRIMARY KEY,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "ibp BIGINT NOT NULL DEFAULT 0,"
+            "jbp BIGINT NOT NULL DEFAULT 0,"
+            "fq FLOAT NOT NULL DEFAULT 0.0,"
+            "fdr FLOAT NOT NULL DEFAULT 0.0,"
+            "rawc FLOAT NOT NULL DEFAULT 0.0,"
+            f"CONSTRAINT {constraint_name} FOREIGN KEY (chrid) REFERENCES chromosome(chrid) ON DELETE CASCADE ON UPDATE CASCADE"
+            ");"
+        )
+        print(f"{table_name} table created successfully.")
+        return True
+    else:
+        print(f"{table_name} table already exists.")
+        return False
+
+
 def get_db_connection(database=None):
     try:
         conn = psycopg.connect(
@@ -57,35 +95,42 @@ def process_non_random_hic_data(chromosome_dir):
                 
                 table_name = get_cell_line_table_name(cell_line)
                 
-                # Remove cell_line column since it's redundant in separate tables
-                group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
-
-                buffer = StringIO()
-                group_data.to_csv(buffer, sep="\t", index=False, header=False)
-                buffer.seek(0)
-
+                # Check if table exists and create if necessary
                 conn = get_db_connection(database=DB_NAME)
                 cur = conn.cursor()
-
-                copy_sql = sql.SQL(
-                    "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
-                ).format(
-                    sql.Identifier(table_name),
-                    sql.SQL(", ").join([
-                        sql.Identifier(col)
-                        for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
-                    ])
-                )
-
+                
                 try:
+                    # Check if table exists, create if it doesn't
+                    table_created = create_cell_line_table(cur, cell_line)
+                    if table_created:
+                        conn.commit()
+                    
+                    # Remove cell_line column since it's redundant in separate tables
+                    group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
+
+                    buffer = StringIO()
+                    group_data.to_csv(buffer, sep="\t", index=False, header=False)
+                    buffer.seek(0)
+
+                    copy_sql = sql.SQL(
+                        "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
+                    ).format(
+                        sql.Identifier(table_name),
+                        sql.SQL(", ").join([
+                            sql.Identifier(col)
+                            for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
+                        ])
+                    )
+
                     with cur.copy(copy_sql) as copy:
                         data_str = buffer.getvalue()
                         copy.write(data_str.encode("utf-8"))
 
                     conn.commit()
                     print(f"Inserted {len(group_data)} records into {table_name} from {file_name}.")
+                    
                 except Exception as e:
-                    print(f"Error inserting data into {table_name}: {e}")
+                    print(f"Error processing data for {table_name}: {e}")
                     conn.rollback()
                 finally:
                     cur.close()
