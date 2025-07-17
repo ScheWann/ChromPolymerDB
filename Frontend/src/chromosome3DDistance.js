@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import jsPDF from 'jspdf';
 import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip, ColorPicker, Dropdown } from 'antd';
+import { Button, Tooltip, ColorPicker, Dropdown, Splitter } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
@@ -213,14 +213,14 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     indices: beadsArray
                 })
             })
-            .then(res => res.json())
-            .then(data => {
-                setDistributionData(prev => ({
-                    ...prev,
-                    [celllineName]: data
-                }));
-                setLoading(false);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    setDistributionData(prev => ({
+                        ...prev,
+                        [celllineName]: data
+                    }));
+                    setLoading(false);
+                });
         } else {
             if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
             fetch('/api/getBeadDistribution', {
@@ -235,14 +235,14 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     indices: beadsArray
                 })
             })
-            .then(res => res.json())
-            .then(data => {
-                setDistributionData(prev => ({
-                    ...prev,
-                    [celllineName]: data
-                }));
-                setLoading(false);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    setDistributionData(prev => ({
+                        ...prev,
+                        [celllineName]: data
+                    }));
+                    setLoading(false);
+                });
         }
     }, [selectedSphereList, celllineName]);
 
@@ -294,185 +294,207 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     };
 
     return (
-        <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-            <div style={{ width: '50%', height: '100%' }}>
-                <BeadDistributionViolinPlot
-                    selectedSphereList={selectedSphereList}
-                    distributionData={distributionData}
-                    loading={loading}
-                />
-            </div>
-            <div style={{ width: '50%', height: '100%', position: 'relative' }}>
-                <div style={{
-                    position: 'absolute',
-                    top: 10,
-                    right: 10,
-                    zIndex: 10,
-                    display: 'flex',
-                    gap: '10px',
-                }}>
-                    <Tooltip
-                        title={<span style={{ color: 'black' }}>Restore the original view</span>}
-                        color='white'
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                            }}
-                            icon={<RollbackOutlined />}
-                            onClick={resetView}
-                        />
-                    </Tooltip>
-                    <Tooltip
-                        title={<span style={{ color: 'black' }}>Download the selected beads and their distance</span>}
-                        color='white'
-                    >
-                        <Dropdown
-                            menu={{
-                                items: downloadItems,
-                                onClick: onClickDownloadItem,
-                            }}
-                            placement="bottom"
-                            dropdownRender={(menu) => (
-                                <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
-                                        <span>Background Color: </span>
-                                        <ColorPicker
-                                            size="small"
-                                            trigger='hover'
-                                            value={chromosome3DDistanceBackgroundColor}
-                                            style={{ marginRight: 15 }}
-                                            onChange={(color) => {
-                                                setChromosome3DDistanceBackgroundColor(color.toHexString());
-                                            }}
-                                        />
-                                    </div>
-                                    {React.cloneElement(menu, { style: { boxShadow: 'none' } })}
-                                </div>
-                            )}
-                        >
-                            <Button
-                                style={{
-                                    fontSize: 15,
-                                    cursor: "pointer",
-                                }}
-                                icon={<DownloadOutlined />}
-                            />
-                        </Dropdown>
-                    </Tooltip>
-                    <Tooltip
-                        title={<span style={{ color: 'black' }}>Collapse the distance window</span>}
-                        color='white'
-                    >
-                        <Button
-                            style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                            }}
-                            icon={<CaretUpOutlined />}
-                            onClick={() => setShowChromosome3DDistance(false)}
-                        />
-                    </Tooltip>
-                </div>
-
-                <Canvas
-                    shadows
-                    style={{ height: 'calc(100% - 2px)', backgroundColor: '#222' }}
-                    camera={{ position: [0, 0, 100], fov: 50 }}
-                    onCreated={({ camera, gl, scene }) => {
-                        cameraRef.current = camera;
-                        rendererRef.current = { gl, scene, camera };
-                        if (controlsRef.current) {
-                            controlsRef.current.update();
-                        }
-                    }}
+        <div style={{ width: '100%', height: '100%' }}>
+            <Splitter 
+                style={{ height: '100%' }}
+                split="vertical"
+                resizerStyle={{
+                    background: '#d9d9d9',
+                    borderLeft: '1px solid #bfbfbf',
+                    borderRight: '1px solid #bfbfbf',
+                    cursor: 'col-resize',
+                    width: '4px',
+                    zIndex: 1000
+                }}
+            >
+                <Splitter.Panel 
+                    defaultSize="50%" 
+                    min="30%" 
+                    max="70%"
+                    style={{ overflow: 'hidden' }}
                 >
-                    <OrbitControls
-                        ref={controlsRef}
-                        enableZoom={true}
-                        enableRotate={true}
-                        enablePan={false}
-                        target={center}
-                    />
-
-                    <ambientLight intensity={0.8} />
-                    <directionalLight
-                        position={[10, 20, 10]}
-                        intensity={1}
-                        castShadow
-                    />
-                    <spotLight
-                        position={[30, 50, 50]}
-                        angle={0.3}
-                        penumbra={1}
-                        intensity={1}
-                        castShadow
-                    />
-
-                    {spheresData.map(({ position, color }, index) => (
-                        <group key={index} position={position}>
-                            <mesh>
-                                <sphereGeometry args={[2.5, 32, 32]} />
-                                <meshStandardMaterial
-                                    receiveShadow
-                                    castShadow
-                                    color={color}
-                                    metalness={0.3}
-                                    roughness={0.1}
-                                    emissiveIntensity={0.3} />
-                            </mesh>
-                            <mesh>
-                                <sphereGeometry args={[2.7, 32, 32]} />
-                                <meshBasicMaterial color="white" side={THREE.BackSide} />
-                            </mesh>
-                        </group>
-                    ))}
-
-                    {spheresData.map(({ position: positionA }, indexA) => (
-                        spheresData.map(({ position: positionB }, indexB) => {
-                            if (indexA < indexB) {
-                                const distance = positionA.distanceTo(positionB);
-                                const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
-
-                                return (
-                                    <group key={`${indexA}-${indexB}`}>
-                                        <Line start={positionA} end={positionB} />
-                                        <Text
-                                            position={[midPoint.x, midPoint.y, midPoint.z]}
-                                            fontSize={10}
-                                            color="white"
-                                            anchorX="center"
-                                            anchorY="middle"
-                                        >
-                                            {distance.toFixed(2)}nm
-                                        </Text>
-                                    </group>
-                                );
-                            }
-                            return null;
-                        })
-                    ))}
-
-                    {spheresData.map(({ position, key, color }) => (
-                        <group key={key}>
-                            <mesh position={position}>
-                                <sphereGeometry args={[1, 32, 32]} />
-                                <meshStandardMaterial color={color} />
-                            </mesh>
-                            <Text
-                                position={[position.x, position.y, position.z]}
-                                fontSize={10}
-                                color="#DAA520"
-                                anchorX="center"
-                                anchorY="bottom"
+                    <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
+                        <BeadDistributionViolinPlot
+                            selectedSphereList={selectedSphereList}
+                            distributionData={distributionData}
+                            loading={loading}
+                        />
+                    </div>
+                </Splitter.Panel>
+                <Splitter.Panel style={{ overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '100%', position: 'relative', pointerEvents: 'auto' }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 10,
+                            display: 'flex',
+                            gap: '10px',
+                        }}>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Restore the original view</span>}
+                                color='white'
                             >
-                                {key}
-                            </Text>
-                        </group>
-                    ))}
-                </Canvas>
-            </div>
+                                <Button
+                                    style={{
+                                        fontSize: 15,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<RollbackOutlined />}
+                                    onClick={resetView}
+                                />
+                            </Tooltip>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Download the selected beads and their distance</span>}
+                                color='white'
+                            >
+                                <Dropdown
+                                    menu={{
+                                        items: downloadItems,
+                                        onClick: onClickDownloadItem,
+                                    }}
+                                    placement="bottom"
+                                    dropdownRender={(menu) => (
+                                        <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
+                                                <span>Background Color: </span>
+                                                <ColorPicker
+                                                    size="small"
+                                                    trigger='hover'
+                                                    value={chromosome3DDistanceBackgroundColor}
+                                                    style={{ marginRight: 15 }}
+                                                    onChange={(color) => {
+                                                        setChromosome3DDistanceBackgroundColor(color.toHexString());
+                                                    }}
+                                                />
+                                            </div>
+                                            {React.cloneElement(menu, { style: { boxShadow: 'none' } })}
+                                        </div>
+                                    )}
+                                >
+                                    <Button
+                                        style={{
+                                            fontSize: 15,
+                                            cursor: "pointer",
+                                        }}
+                                        icon={<DownloadOutlined />}
+                                    />
+                                </Dropdown>
+                            </Tooltip>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Collapse the distance window</span>}
+                                color='white'
+                            >
+                                <Button
+                                    style={{
+                                        fontSize: 15,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<CaretUpOutlined />}
+                                    onClick={() => setShowChromosome3DDistance(false)}
+                                />
+                            </Tooltip>
+                        </div>
+
+                        <Canvas
+                            shadows
+                            style={{ height: 'calc(100% - 2px)', backgroundColor: '#222' }}
+                            camera={{ position: [0, 0, 100], fov: 50 }}
+                            onCreated={({ camera, gl, scene }) => {
+                                cameraRef.current = camera;
+                                rendererRef.current = { gl, scene, camera };
+                                if (controlsRef.current) {
+                                    controlsRef.current.update();
+                                }
+                            }}
+                        >
+                            <OrbitControls
+                                ref={controlsRef}
+                                enableZoom={true}
+                                enableRotate={true}
+                                enablePan={false}
+                                target={center}
+                            />
+
+                            <ambientLight intensity={0.8} />
+                            <directionalLight
+                                position={[10, 20, 10]}
+                                intensity={1}
+                                castShadow
+                            />
+                            <spotLight
+                                position={[30, 50, 50]}
+                                angle={0.3}
+                                penumbra={1}
+                                intensity={1}
+                                castShadow
+                            />
+
+                            {spheresData.map(({ position, color }, index) => (
+                                <group key={index} position={position}>
+                                    <mesh>
+                                        <sphereGeometry args={[2.5, 32, 32]} />
+                                        <meshStandardMaterial
+                                            receiveShadow
+                                            castShadow
+                                            color={color}
+                                            metalness={0.3}
+                                            roughness={0.1}
+                                            emissiveIntensity={0.3} />
+                                    </mesh>
+                                    <mesh>
+                                        <sphereGeometry args={[2.7, 32, 32]} />
+                                        <meshBasicMaterial color="white" side={THREE.BackSide} />
+                                    </mesh>
+                                </group>
+                            ))}
+
+                            {spheresData.map(({ position: positionA }, indexA) => (
+                                spheresData.map(({ position: positionB }, indexB) => {
+                                    if (indexA < indexB) {
+                                        const distance = positionA.distanceTo(positionB);
+                                        const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
+
+                                        return (
+                                            <group key={`${indexA}-${indexB}`}>
+                                                <Line start={positionA} end={positionB} />
+                                                <Text
+                                                    position={[midPoint.x, midPoint.y, midPoint.z]}
+                                                    fontSize={10}
+                                                    color="white"
+                                                    anchorX="center"
+                                                    anchorY="middle"
+                                                >
+                                                    {distance.toFixed(2)}nm
+                                                </Text>
+                                            </group>
+                                        );
+                                    }
+                                    return null;
+                                })
+                            ))}
+
+                            {spheresData.map(({ position, key, color }) => (
+                                <group key={key}>
+                                    <mesh position={position}>
+                                        <sphereGeometry args={[1, 32, 32]} />
+                                        <meshStandardMaterial color={color} />
+                                    </mesh>
+                                    <Text
+                                        position={[position.x, position.y, position.z]}
+                                        fontSize={10}
+                                        color="#DAA520"
+                                        anchorX="center"
+                                        anchorY="bottom"
+                                    >
+                                        {key}
+                                    </Text>
+                                </group>
+                            ))}
+                        </Canvas>
+                    </div>
+                </Splitter.Panel>
+            </Splitter>
         </div>
     );
 };
