@@ -80,6 +80,9 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
 
     useEffect(() => {
         if (!containerSize.width || !containerSize.height || !selectedChromosomeSequence) return;
+        
+        const { start: seqStart, end: seqEnd } = selectedChromosomeSequence;
+        if (typeof seqStart !== 'number' || typeof seqEnd !== 'number' || seqStart >= seqEnd) return;
 
         const margin = { top: 30, right: 0, bottom: 40, left: 120 };
         const legendWidth = 20;
@@ -97,6 +100,10 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
         const availableHeight = containerSize.height - margin.top - margin.bottom;
         const maxSize = Math.min(availableWidth, availableHeight);
         const numCells = axisValues.length;
+        
+        // Safeguard against division by zero or invalid calculations
+        if (numCells === 0 || maxSize <= 0) return;
+        
         const cellSize = maxSize / numCells;
         const heatmapSize = cellSize * numCells;
 
@@ -282,66 +289,68 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
                     <>
                         <LaptopOutlined style={{ fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, position: 'absolute', transform: `translateX(-${(svgSize.width / 2) - layout.margin.left - 25}px)`, bottom: layout.heatmapSize + 8 }}/>
                         <ExperimentOutlined style={{ fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, position: 'absolute', transform: `translateX(${(svgSize.width / 2) - 30}px)`, top: layout.heatmapSize }}/>
+                        <svg
+                            ref={svgLegendRef}
+                            style={{
+                                transform: 'translateX(80%)',
+                                width: layout.legendWidth + 50,
+                                height: svgSize.height
+                            }}
+                        />
+                        <canvas
+                            ref={canvasRef}
+                            width={svgSize.width}
+                            height={svgSize.height}
+                        />
+                        <svg
+                            ref={axisRef}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                transform: 'translateX(5px)',
+                                width: svgSize.width,
+                                height: svgSize.height,
+                                pointerEvents: 'none'
+                            }}
+                        />
                     </>
                 )}
-                <svg
-                    ref={svgLegendRef}
-                    style={{
-                        transform: 'translateX(80%)',
-                        width: layout?.legendWidth + 50,
-                        height: svgSize.height
-                    }}
-                />
-                <canvas
-                    ref={canvasRef}
-                    width={svgSize.width}
-                    height={svgSize.height}
-                />
-                <svg
-                    ref={axisRef}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        transform: 'translateX(5px)',
-                        width: svgSize.width,
-                        height: svgSize.height,
-                        pointerEvents: 'none'
-                    }}
-                />
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 8
-                }}>
-                    <InputNumber
-                        size="small"
-                        controls={false}
-                        value={simulatedColorScaleRange[1]}
-                        onChange={changeSimulatedColorByInput('max')}
-                        step={0.1}
-                        style={{ width: 60 }}
-                    />
-                    <Slider
-                        vertical
-                        range={{ draggableTrack: true }}
-                        min={simulatedDataMin}
-                        max={simulatedDataMax}
-                        value={simulatedColorScaleRange}
-                        onChange={changeSimulatedColorScale}
-                        step={0.1}
-                        style={{ height: 150 }}
-                    />
-                    <InputNumber
-                        size="small"
-                        controls={false}
-                        value={simulatedColorScaleRange[0]}
-                        onChange={changeSimulatedColorByInput('min')}
-                        step={0.1}
-                        style={{ width: 60 }}
-                    />
-                </div>
+                {layout && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 8
+                    }}>
+                        <InputNumber
+                            size="small"
+                            controls={false}
+                            value={simulatedColorScaleRange[1]}
+                            onChange={changeSimulatedColorByInput('max')}
+                            step={0.1}
+                            style={{ width: 60 }}
+                        />
+                        <Slider
+                            vertical
+                            range={{ draggableTrack: true }}
+                            min={simulatedDataMin}
+                            max={simulatedDataMax}
+                            value={simulatedColorScaleRange}
+                            onChange={changeSimulatedColorScale}
+                            step={0.1}
+                            style={{ height: 150 }}
+                        />
+                        <InputNumber
+                            size="small"
+                            controls={false}
+                            value={simulatedColorScaleRange[0]}
+                            onChange={changeSimulatedColorByInput('min')}
+                            step={0.1}
+                            style={{ width: 60 }}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
