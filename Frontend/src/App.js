@@ -323,7 +323,7 @@ function App() {
 
   // fetch 3D chromosome data progress
   const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
-    setChromosomeDataSpinnerProgress(0);
+    setChromosomeDataSpinnerProgress(5); // Start with 5% to show the progress bar
     let first = true;
 
     const fetchProgress = () => {
@@ -338,7 +338,9 @@ function App() {
       )
         .then(res => res.json())
         .then(({ percent }) => {
-          setChromosomeDataSpinnerProgress(percent);
+          // Ensure percent is in the correct range (0-100) for the Spin component
+          const progressPercent = percent > 1 ? percent : percent * 100;
+          setChromosomeDataSpinnerProgress(progressPercent);
 
           if (percent >= 99) {
             // Progress complete, reset the progress and stop polling
@@ -470,6 +472,11 @@ function App() {
     // For 3D components, use the same endpoint as fetchExampleChromos3DData
     // which expects chromosome sequences, not just sample_id
     if (is3DComponent) {
+      // Start progress polling for 3D components that need data generation
+      if (!isBest) {
+        progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, false);
+      }
+      
       fetch('/api/getChromosome3DData', {
         method: 'POST',
         headers: {
@@ -1466,6 +1473,7 @@ function App() {
         
         if (!isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)) {
           fetchExampleChromos3DData(component.cellLine, key, "sampleChange", componentId);
+          progressPolling(component.cellLine, chromosomeName, selectedChromosomeSequence, key, false);
         } else {
           fetchExistChromos3DData(false, key, component.cellLine, componentId);
         }
@@ -1525,6 +1533,9 @@ function App() {
     // Fetch data for the new cell line
     const component = chromosome3DComponents.find(c => c.id === componentId);
     if (component) {
+      if (!isExampleMode(cellLine, chromosomeName, selectedChromosomeSequence)) {
+        progressPolling(cellLine, chromosomeName, selectedChromosomeSequence, component.sampleID, false);
+      }
       fetchExistChromos3DData(false, component.sampleID, cellLine, componentId);
       if (isExampleMode(cellLine, chromosomeName, currentChromosomeSequence)) {
         const key = exampleDataBestSampleID[cellLine];

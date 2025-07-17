@@ -99,6 +99,19 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 ? `${cell_line}-COMPARISON-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`
                 : `${cell_line}-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`;
 
+            // Set loading state before making the request
+            if (componentId && setChromosome3DComponents) {
+                setChromosome3DComponents(prev =>
+                    prev.map(comp =>
+                        comp.id === componentId
+                            ? { ...comp, loading: true }
+                            : comp
+                    )
+                );
+            } else {
+                setChromosome3DLoading(true);
+            }
+
             fetch("/api/getChromosome3DData", {
                 method: 'POST',
                 headers: {
@@ -199,6 +212,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
                 if (!isExampleMode(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence)) {
                     fetchExampleChromos3DData(independentHeatmapCellLine, 0, newComponentId);
+                    progressPolling(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence, 0, false);
                 } else {
                     fetchExistChromos3DData(true, exampleDataBestSampleID[independentHeatmapCellLine], independentHeatmapCellLine, newComponentId);
                 }
