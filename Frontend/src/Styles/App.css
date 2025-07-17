@@ -136,3 +136,97 @@ body {
   padding-right: 5px !important;
   line-height: normal !important;
 }
+
+/* Improved horizontal scrolling for 3D chromosome components */
+.chromosome3d-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.chromosome3d-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.chromosome3d-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.chromosome3d-scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.chromosome3d-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Scroll button hover effects */
+.chromosome3d-scroll-button:hover {
+  background-color: rgba(255, 255, 255, 1) !important;
+  border-color: #40a9ff !important;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.chromosome3d-scroll-button:disabled {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border-color: #d9d9d9 !important;
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Ensure scroll buttons are always visible */
+.chromosome3d-scroll-button {
+  transition: all 0.3s ease;
+}
+
+/* Responsive positioning for scroll buttons */
+@media (max-width: 1400px) {
+  .chromosome3d-scroll-button {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .chromosome3d-scroll-button {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* Gradient fade effect for scroll indication */
+.chromosome3d-scroll-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chromosome3d-scroll-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chromosome3d-scroll-container.can-scroll-left::before {
+  opacity: 1;
+}
+
+.chromosome3d-scroll-container.can-scroll-right::after {
+  opacity: 1;
+}

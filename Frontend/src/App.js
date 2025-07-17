@@ -5,7 +5,7 @@ import { Heatmap } from './hicHeatmap.js';
 import { ChromosomeBar } from './chromosomeBar.js';
 import { Chromosome3D } from './chromosome3D.js';
 import { ProjectIntroduction } from './projectIntroduction.js';
-import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined, FolderViewOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusOutlined, InfoCircleOutlined, ExperimentOutlined, DownloadOutlined, SyncOutlined, FolderViewOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 
 
 function App() {
@@ -71,10 +71,16 @@ function App() {
   // Tour visibility state
   const [isTourOpen, setIsTourOpen] = useState(true);
 
+  // Check if scroll buttons should be visible
+  const [showScrollButtons, setShowScrollButtons] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
   const { Title } = Typography;
 
   const startRef = useRef(0);
   const endRef = useRef(0);
+  const scrollContainerRef = useRef(null);
 
   // Define Tour steps
   const steps = [
@@ -136,6 +142,99 @@ function App() {
     if (!value) return '';
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
+
+  // Scroll functions for horizontal navigation
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      const scrollWidth = scrollContainerRef.current.offsetWidth * 0.8; // Scroll 80% of container width
+      scrollContainerRef.current.scrollBy({
+        left: -scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      const scrollWidth = scrollContainerRef.current.offsetWidth * 0.8; // Scroll 80% of container width
+      scrollContainerRef.current.scrollBy({
+        left: scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Update scroll button states
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      const hasOverflow = scrollWidth > clientWidth;
+      
+      // Debug logging
+      console.log('Scroll update:', {
+        componentsLength: chromosome3DComponents.length,
+        scrollWidth,
+        clientWidth,
+        hasOverflow,
+        scrollLeft
+      });
+      
+      setCanScrollLeft(scrollLeft > 0 && hasOverflow);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1 && hasOverflow);
+      // Show scroll buttons when there are 2 or more comparison components 
+      // (meaning 3 total: original + 2 comparisons) OR when there's actual overflow
+      setShowScrollButtons(chromosome3DComponents.length >= 2 || hasOverflow);
+    }
+  };
+
+  // Add scroll event listener
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateScrollButtons);
+      updateScrollButtons(); // Initial check
+      
+      // ResizeObserver to update on size changes
+      const resizeObserver = new ResizeObserver(updateScrollButtons);
+      resizeObserver.observe(container);
+      
+      // Handle wheel events for better horizontal scrolling
+      const handleWheel = (e) => {
+        if (e.deltaY !== 0 && chromosome3DComponents.length > 0) {
+          // Prevent vertical scrolling and convert to horizontal
+          e.preventDefault();
+          container.scrollLeft += e.deltaY;
+        }
+      };
+      
+      container.addEventListener('wheel', handleWheel, { passive: false });
+      
+      return () => {
+        container.removeEventListener('scroll', updateScrollButtons);
+        container.removeEventListener('wheel', handleWheel);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [chromosome3DComponents.length]);
+
+  // Update scroll buttons when components change
+  useEffect(() => {
+    // Use a small delay to ensure DOM has updated
+    const timer = setTimeout(() => {
+      updateScrollButtons();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [chromosome3DComponents.length]);
+
+  // Update scroll buttons when chromosome3D data is loaded
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateScrollButtons();
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [chromosome3DExampleData, chromosome3DComponents]);
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
@@ -1670,146 +1769,88 @@ function App() {
                 height: '100%', 
                 width: 'calc(100% - 40vw)', 
                 flexShrink: 0,
-                overflowX: chromosome3DComponents.length <= 1 ? 'hidden' : 'auto',
-                display: 'flex'
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center'
               }}>
-                {/* Original 3D chromosome */}
-                <div style={{ 
-                  width: chromosome3DComponents.length > 0 ? "49.9%" : "100%", 
-                  marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%', 
-                  flexShrink: 0,
-                  minWidth: chromosome3DComponents.length > 0 ? "49.9%" : "auto"
-                }}>
-                  <Tabs
+                {/* Left scroll button */}
+                {showScrollButtons && (
+                  <Button
+                    className="chromosome3d-scroll-button"
+                    icon={<LeftOutlined />}
+                    onClick={scrollLeft}
+                    disabled={!canScrollLeft}
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 1000,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      cursor: canScrollLeft ? 'pointer' : 'not-allowed'
+                    }}
                     size="small"
-                    activeKey={chromosome3DExampleID}
-                    defaultActiveKey={chromosome3DExampleID}
-                    style={{ width: '100%', height: '100%' }}
-                    onChange={originalSampleChange}
-                    tabBarExtraContent={
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                        <div style={{ fontSize: 11, fontWeight: 'bold', marginRight: 5, display: 'flex', alignItems: 'center' }}>
-                          <span style={{ lineHeight: 'normal' }}>{chromosome3DCellLineName}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
-                          <Tooltip
-                            title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
-                            color='white'
-                          >
-                            <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} value={tempSampleId} onChange={setTempSampleId} />
-                          </Tooltip>
-                        </div>
-                        <Tooltip
-                          title={
-                            <span style={{ color: 'black' }}>
-                              Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
-                              <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
-                              <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
-                            </span>
-                          }
-                          color='white'
-                        >
-                          <Dropdown menu={{ items: downloadItems, onClick: onClickOriginalDownloadItems }} placement="bottomRight" arrow>
-                            <Button
-                              style={{
-                                fontSize: 15,
-                                cursor: "pointer",
-                                marginRight: 5,
-                              }}
-                              disabled={Object.keys(chromosome3DExampleData).length === 0 || chromosome3DLoading}
-                              size="small"
-                              icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
-                            />
-                          </Dropdown>
-                        </Tooltip>
-                      </div>
-                    }
-                    items={sampleKeys.map((sampleId, i) => {
-                      const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
-                      const label = sampleId === 0
-                        ? (
-                          <Tooltip
-                            title={
-                              <span style={{ color: 'black' }}>
-                                Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
-                              </span>
-                            }
-                            color='white'
-                          >
-                            <span>Sample {sampleId} (Ens.Rep.)</span>
-                          </Tooltip>
-                        )
-                        : `Sample ${sampleId}`;
-                      return {
-                        label: label,
-                        key: sampleId,
-                        disabled: chromosome3DLoading,
-                        children: (
-                          chromosome3DLoading ? (
-                            <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
-                          ) : (
-                            <Chromosome3D
-                              formatNumber={formatNumber}
-                              celllineName={chromosome3DCellLineName}
-                              chromosomeName={chromosomeName}
-                              currentChromosomeSequence={currentChromosomeSequence}
-                              geneSize={geneSize}
-                              chromosomeData={chromosomeData}
-                              chromosome3DExampleData={chromosome3DExampleData[cacheKey] || []}
-                              chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
-                              chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
-                              chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
-                              validChromosomeValidIbpData={validChromosomeValidIbpData}
-                              selectedChromosomeSequence={selectedChromosomeSequence}
-                              selectedIndex={selectedIndex}
-                              setSelectedIndex={setSelectedIndex}
-                              selectedSphereList={selectedSphereLists}
-                              setSelectedSphereList={setSelectedSphereLists}
-                              handleColorChange={handleColorChange}
-                              distributionData={distributionData}
-                              setDistributionData={setDistributionData}
-                              isExampleMode={isExampleMode}
-                            />
-                          )
-                        )
-                      };
-                    })}
                   />
-                </div>
+                )}
 
-                {/* Comparison 3D chromosome */}
-                                {/* Multiple comparison 3D chromosomes */}
-                {chromosome3DComponents.map((component) => (
-                  <div key={component.id} style={{ 
-                    width: "49.9%", 
-                    marginRight: '0.2%', 
+                {/* Scrollable container */}
+                <div 
+                  ref={scrollContainerRef}
+                  className={`chromosome3d-scroll-container ${canScrollLeft ? 'can-scroll-left' : ''} ${canScrollRight ? 'can-scroll-right' : ''}`}
+                  style={{ 
+                    height: '100%', 
+                    width: '100%',
+                    overflowX: chromosome3DComponents.length >= 1 ? 'auto' : 'hidden',
+                    overflowY: 'hidden',
+                    display: 'flex',
+                    scrollBehavior: 'smooth',
+                    WebkitOverflowScrolling: 'touch', // Better touch scrolling on mobile
+                    scrollbarWidth: 'thin', // For Firefox
+                    scrollbarHeight: 'thin'
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      scrollLeft();
+                    } else if (e.key === 'ArrowRight') {
+                      scrollRight();
+                    }
+                  }}
+                  tabIndex={0}
+                >
+                  {/* Original 3D chromosome */}
+                  <div style={{ 
+                    width: chromosome3DComponents.length > 0 ? "49.9%" : "100%", 
+                    marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%', 
                     flexShrink: 0,
-                    minWidth: "49.9%"
+                    minWidth: chromosome3DComponents.length > 0 ? "49.9%" : "auto"
                   }}>
                     <Tabs
                       size="small"
-                      activeKey={component.sampleID}
-                      defaultActiveKey={component.sampleID}
+                      activeKey={chromosome3DExampleID}
+                      defaultActiveKey={chromosome3DExampleID}
                       style={{ width: '100%', height: '100%' }}
-                      onChange={componentSampleChange(component.id)}
+                      onChange={originalSampleChange}
                       tabBarExtraContent={
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                          <Select
-                            value={component.cellLine}
-                            style={{
-                              minWidth: 150,
-                              maxWidth: 150,
-                              marginRight: 5,
-                            }}
-                            size="small"
-                            onChange={(value) => updateComponentCellLine(component.id, value)}
-                            options={cellLineList}
-                            optionRender={(option) => (
-                              <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
-                                <div>{option.label}</div>
-                              </Tooltip>
-                            )}
-                          />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                          <div style={{ fontSize: 11, fontWeight: 'bold', marginRight: 5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ lineHeight: 'normal' }}>{chromosome3DCellLineName}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', marginRight: 5 }}>
+                            <Tooltip
+                              title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
+                              color='white'
+                            >
+                              <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} value={tempSampleId} onChange={setTempSampleId} />
+                            </Tooltip>
+                          </div>
                           <Tooltip
                             title={
                               <span style={{ color: 'black' }}>
@@ -1820,38 +1861,23 @@ function App() {
                             }
                             color='white'
                           >
-                            <Dropdown menu={{ items: downloadItems, onClick: onClickComponentDownloadItems(component.id) }} placement="bottomRight" arrow>
+                            <Dropdown menu={{ items: downloadItems, onClick: onClickOriginalDownloadItems }} placement="bottomRight" arrow>
                               <Button
                                 style={{
                                   fontSize: 15,
                                   cursor: "pointer",
                                   marginRight: 5,
                                 }}
-                                disabled={Object.keys(component.data).length === 0}
+                                disabled={Object.keys(chromosome3DExampleData).length === 0 || chromosome3DLoading}
                                 size="small"
-                                icon={component.downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                                icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                               />
                             </Dropdown>
                           </Tooltip>
-                          <Tooltip
-                            title={<span style={{ color: 'black' }}>Remove this cell line</span>}
-                            color='white'
-                          >
-                            <Button
-                              style={{
-                                fontSize: 15,
-                                cursor: 'pointer',
-                              }}
-                              size="small"
-                              icon={<MinusOutlined />}
-                              onClick={() => handleRemoveChromosome3D(component.id)}
-                            />
-                          </Tooltip>
                         </div>
                       }
-
                       items={sampleKeys.map((sampleId, i) => {
-                        const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
+                        const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
                         const label = sampleId === 0
                           ? (
                             <Tooltip
@@ -1869,21 +1895,22 @@ function App() {
                         return {
                           label: label,
                           key: sampleId,
+                          disabled: chromosome3DLoading,
                           children: (
-                            component.loading ? (
+                            chromosome3DLoading ? (
                               <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
                             ) : (
                               <Chromosome3D
                                 formatNumber={formatNumber}
-                                celllineName={component.cellLine}
+                                celllineName={chromosome3DCellLineName}
                                 chromosomeName={chromosomeName}
                                 currentChromosomeSequence={currentChromosomeSequence}
                                 geneSize={geneSize}
                                 chromosomeData={chromosomeData}
-                                chromosome3DExampleData={component.data[cacheKey] || []}
-                                chromosome3DAvgMatrixData={component.data[cacheKey + "_avg_matrix"]}
-                                chromosomefqData={component.data[cacheKey + "_fq_data"]}
-                                chromosomeCurrentSampleDistanceVector={component.data[cacheKey + "sample_distance_vector"]}
+                                chromosome3DExampleData={chromosome3DExampleData[cacheKey] || []}
+                                chromosome3DAvgMatrixData={chromosome3DExampleData[cacheKey + "_avg_matrix"]}
+                                chromosomefqData={chromosome3DExampleData[cacheKey + "_fq_data"]}
+                                chromosomeCurrentSampleDistanceVector={chromosome3DExampleData[cacheKey + "sample_distance_vector"]}
                                 validChromosomeValidIbpData={validChromosomeValidIbpData}
                                 selectedChromosomeSequence={selectedChromosomeSequence}
                                 selectedIndex={selectedIndex}
@@ -1901,7 +1928,161 @@ function App() {
                       })}
                     />
                   </div>
-                ))}
+
+                  {/* Comparison 3D chromosome */}
+                  {/* Multiple comparison 3D chromosomes */}
+                  {chromosome3DComponents.map((component) => (
+                    <div key={component.id} style={{ 
+                      width: "49.9%", 
+                      marginRight: '0.2%', 
+                      flexShrink: 0,
+                      minWidth: "49.9%"
+                    }}>
+                      <Tabs
+                        size="small"
+                        activeKey={component.sampleID}
+                        defaultActiveKey={component.sampleID}
+                        style={{ width: '100%', height: '100%' }}
+                        onChange={componentSampleChange(component.id)}
+                        tabBarExtraContent={
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
+                            <Select
+                              value={component.cellLine}
+                              style={{
+                                minWidth: 150,
+                                maxWidth: 150,
+                                marginRight: 5,
+                              }}
+                              size="small"
+                              onChange={(value) => updateComponentCellLine(component.id, value)}
+                              options={cellLineList}
+                              optionRender={(option) => (
+                                <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                  <div>{option.label}</div>
+                                </Tooltip>
+                              )}
+                            />
+                            <Tooltip
+                              title={
+                                <span style={{ color: 'black' }}>
+                                  Download <span style={{ color: '#3457D5', fontWeight: 'bold' }}>5000</span> chromosomal bead distance matrix (.npz).<br />
+                                  <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> It may take
+                                  <span style={{ color: '#dd1c77', fontWeight: 'bold' }}> 10 minutes </span> to download the data.
+                                </span>
+                              }
+                              color='white'
+                            >
+                              <Dropdown menu={{ items: downloadItems, onClick: onClickComponentDownloadItems(component.id) }} placement="bottomRight" arrow>
+                                <Button
+                                  style={{
+                                    fontSize: 15,
+                                    cursor: "pointer",
+                                    marginRight: 5,
+                                  }}
+                                  disabled={Object.keys(component.data).length === 0}
+                                  size="small"
+                                  icon={component.downloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
+                                />
+                              </Dropdown>
+                            </Tooltip>
+                            <Tooltip
+                              title={<span style={{ color: 'black' }}>Remove this cell line</span>}
+                              color='white'
+                            >
+                              <Button
+                                style={{
+                                  fontSize: 15,
+                                  cursor: 'pointer',
+                                }}
+                                size="small"
+                                icon={<MinusOutlined />}
+                                onClick={() => handleRemoveChromosome3D(component.id)}
+                              />
+                            </Tooltip>
+                          </div>
+                        }
+
+                        items={sampleKeys.map((sampleId, i) => {
+                          const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleId}`;
+                          const label = sampleId === 0
+                            ? (
+                              <Tooltip
+                                title={
+                                  <span style={{ color: 'black' }}>
+                                    Most representative single-cell structure (<span style={{ color: '#3457D5', fontWeight: 'bold' }}>highest correlation</span> with average)
+                                  </span>
+                                }
+                                color='white'
+                              >
+                                <span>Sample {sampleId} (Ens.Rep.)</span>
+                              </Tooltip>
+                            )
+                            : `Sample ${sampleId}`;
+                          return {
+                            label: label,
+                            key: sampleId,
+                            children: (
+                              component.loading ? (
+                                <Spin size="large" style={{ margin: '20px 0' }} percent={ChromosomeDataSpinnerProgress} />
+                              ) : (
+                                <Chromosome3D
+                                  formatNumber={formatNumber}
+                                  celllineName={component.cellLine}
+                                  chromosomeName={chromosomeName}
+                                  currentChromosomeSequence={currentChromosomeSequence}
+                                  geneSize={geneSize}
+                                  chromosomeData={chromosomeData}
+                                  chromosome3DExampleData={component.data[cacheKey] || []}
+                                  chromosome3DAvgMatrixData={component.data[cacheKey + "_avg_matrix"]}
+                                  chromosomefqData={component.data[cacheKey + "_fq_data"]}
+                                  chromosomeCurrentSampleDistanceVector={component.data[cacheKey + "sample_distance_vector"]}
+                                  validChromosomeValidIbpData={validChromosomeValidIbpData}
+                                  selectedChromosomeSequence={selectedChromosomeSequence}
+                                  selectedIndex={selectedIndex}
+                                  setSelectedIndex={setSelectedIndex}
+                                  selectedSphereList={selectedSphereLists}
+                                  setSelectedSphereList={setSelectedSphereLists}
+                                  handleColorChange={handleColorChange}
+                                  distributionData={distributionData}
+                                  setDistributionData={setDistributionData}
+                                  isExampleMode={isExampleMode}
+                                />
+                              )
+                            )
+                          };
+                        })}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right scroll button */}
+                {showScrollButtons && (
+                  <Button
+                    className="chromosome3d-scroll-button"
+                    icon={<RightOutlined />}
+                    onClick={scrollRight}
+                    disabled={!canScrollRight}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 1000,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      cursor: canScrollRight ? 'pointer' : 'not-allowed'
+                    }}
+                    size="small"
+                  />
+                )}
               </div>
             )
             }
