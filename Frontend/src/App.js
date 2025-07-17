@@ -373,7 +373,14 @@ function App() {
     fetch('/api/getCellLines')
       .then(res => res.json())
       .then(data => {
-        setCellLineList(data);
+        // Sort the data alphabetically by label
+        const sortedData = data.sort((a, b) => {
+          if (a.label && b.label) {
+            return a.label.localeCompare(b.label);
+          }
+          return 0;
+        });
+        setCellLineList(sortedData);
       });
   };
 
