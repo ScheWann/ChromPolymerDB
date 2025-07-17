@@ -436,6 +436,9 @@ function App() {
       setChromosome3DLoading(true);
     }
 
+    // Start progress polling
+    progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, true);
+
     fetch('/api/getExistChromosome3DData', {
       method: 'POST',
       headers: {
