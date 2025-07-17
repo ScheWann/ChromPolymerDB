@@ -146,9 +146,13 @@ function App() {
   // Scroll functions for horizontal navigation
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      const scrollWidth = scrollContainerRef.current.offsetWidth * 0.8; // Scroll 80% of container width
+      // Calculate the width of one component
+      const totalComponents = 1 + chromosome3DComponents.length; // Original + comparison components
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const componentWidth = scrollContainerRef.current.scrollWidth / totalComponents;
+      
       scrollContainerRef.current.scrollBy({
-        left: -scrollWidth,
+        left: -componentWidth,
         behavior: 'smooth'
       });
     }
@@ -156,9 +160,13 @@ function App() {
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      const scrollWidth = scrollContainerRef.current.offsetWidth * 0.8; // Scroll 80% of container width
+      // Calculate the width of one component
+      const totalComponents = 1 + chromosome3DComponents.length; // Original + comparison components
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      const componentWidth = scrollContainerRef.current.scrollWidth / totalComponents;
+      
       scrollContainerRef.current.scrollBy({
-        left: scrollWidth,
+        left: componentWidth,
         behavior: 'smooth'
       });
     }
