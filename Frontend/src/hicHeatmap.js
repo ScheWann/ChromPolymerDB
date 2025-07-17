@@ -128,8 +128,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             fetchExampleChromos3DData(independentHeatmapCellLine, 0);
             progressPolling(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence, 0, false);
         } else {
-            fetchExistChromos3DData(true, exampleDataBestSampleID[cellLineName], cellLineName, false);
-            progressPolling(cellLineName, 'chr8', [127300000, 128300000], exampleDataBestSampleID[cellLineName], true);
+            fetchExistChromos3DData(true, exampleDataBestSampleID[cellLineName], cellLineName, null);
+            // No progress polling needed for fetchExistChromos3DData since it returns immediately
         }
         setChromosome3DCellLineName(independentHeatmapCellLine);
     };

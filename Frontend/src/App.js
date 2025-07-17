@@ -221,6 +221,8 @@ function App() {
           setChromosomeDataSpinnerProgress(percent);
 
           if (percent >= 99) {
+            // Progress complete, reset the progress and stop polling
+            setChromosomeDataSpinnerProgress(0);
             return;
           }
 
@@ -229,6 +231,10 @@ function App() {
 
           setTimeout(fetchProgress, delay);
         })
+        .catch(error => {
+          console.error('Error fetching progress:', error);
+          setChromosomeDataSpinnerProgress(0);
+        });
     };
 
     setTimeout(fetchProgress, 100);
@@ -292,19 +298,22 @@ function App() {
       chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
       chromosome3DExampleData[cacheKey];
 
-    if (!cachedData) {
-      if (isComparison) {
-        // Update the specific component's loading state
-        setChromosome3DComponents(prev => 
-          prev.map(comp => 
-            comp.id === componentId 
-              ? { ...comp, loading: true }
-              : comp
-          )
-        );
-      } else {
-        setChromosome3DLoading(true);
-      }
+    if (cachedData) {
+      // Data already exists, no need to fetch
+      return;
+    }
+
+    // Set loading state before fetching
+    if (isComparison) {
+      setChromosome3DComponents(prev => 
+        prev.map(comp => 
+          comp.id === componentId 
+            ? { ...comp, loading: true }
+            : comp
+        )
+      );
+    } else {
+      setChromosome3DLoading(true);
     }
 
     fetch('/api/getExistChromosome3DData', {
@@ -343,6 +352,21 @@ function App() {
             [cacheKey + "_fq_data"]: data["fq_data"],
             [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
           }));
+          setChromosome3DLoading(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching chromosome 3D data:', error);
+        // Reset loading state on error
+        if (isComparison) {
+          setChromosome3DComponents(prev => 
+            prev.map(comp => 
+              comp.id === componentId 
+                ? { ...comp, loading: false }
+                : comp
+            )
+          );
+        } else {
           setChromosome3DLoading(false);
         }
       });
@@ -1187,8 +1211,8 @@ function App() {
         fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
       } else {
-        fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, false);
-        progressPolling(chromosome3DCellLineName, 'chr8', [127300000, 128300000], tempSampleId, true);
+        fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, null);
+        // No progress polling needed for fetchExistChromos3DData since it returns immediately
       }
     }
   }
@@ -1203,8 +1227,8 @@ function App() {
         fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
-        fetchExistChromos3DData(false, key, chromosome3DCellLineName, false);
-        progressPolling(chromosome3DCellLineName, 'chr8', [127300000, 128300000], key, true);
+        fetchExistChromos3DData(false, key, chromosome3DCellLineName, null);
+        // No progress polling needed for fetchExistChromos3DData since it returns immediately
       }
     };
   };

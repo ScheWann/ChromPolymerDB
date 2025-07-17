@@ -420,7 +420,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                                         backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                         zIndex: 10
                                     }}>
-                                        <Spin size="large" tip="Loading violin plot..." />
+                                        <Spin size="large" />
                                     </div>
                                 )}
                                 <svg ref={modalSvgRef}></svg>
