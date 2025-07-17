@@ -1,2 +1,2 @@
 # Run daily cleanup at 3 AM
-0 3 * * * pg_isready -h db -U admin -d chromosome_db && psql -h db -U admin -d chromosome_db -c "DELETE FROM position; DELETE FROM distance; DELETE FROM calc_distance;" >> /var/log/cron.log 2>&1
+# 0 3 * * * pg_isready -h db -U admin -d chromosome_db && psql -h db -U admin -d chromosome_db -c "DELETE FROM position; DELETE FROM distance; DELETE FROM calc_distance;" >> /var/log/cron.log 2>&1
