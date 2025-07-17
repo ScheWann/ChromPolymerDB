@@ -410,21 +410,48 @@ function App() {
 
   const fetchExistChromos3DData = (isBest, value, cellLineName, componentId = null) => {
     const sampleID = isBest ? 0 : value;
-    const isComparison = componentId !== null;
-    const keyPrefix = isComparison ? `${cellLineName}-COMPARISON` : cellLineName;
+    
+    // Check if the componentId represents a 3D chromosome component
+    const is3DComponent = componentId !== null && chromosome3DComponents.some(c => c.id === componentId);
+    
+    // Determine the cache key pattern:
+    // - For original heatmap (componentId = null): use cellLineName (traditional pattern)
+    // - For comparison heatmaps (componentId = heatmapId): use HEATMAP-{id} pattern
+    // - For 3D chromosome components: use COMPARISON pattern
+    let keyPrefix;
+    if (is3DComponent) {
+      keyPrefix = `${cellLineName}-COMPARISON`;
+    } else if (componentId === null) {
+      keyPrefix = cellLineName; // Original heatmap
+    } else {
+      keyPrefix = `${cellLineName}-HEATMAP-${componentId}`; // Comparison heatmap
+    }
+    
     const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
-
-    const cachedData = isComparison ?
+    
+    const cachedData = is3DComponent ?
       chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
       chromosome3DExampleData[cacheKey];
 
     if (cachedData) {
       // Data already exists, no need to fetch
+      // But we should still ensure loading state is reset
+      if (is3DComponent) {
+        setChromosome3DComponents(prev =>
+          prev.map(comp =>
+            comp.id === componentId
+              ? { ...comp, loading: false }
+              : comp
+          )
+        );
+      } else {
+        setChromosome3DLoading(false);
+      }
       return;
     }
 
     // Set loading state before fetching
-    if (isComparison) {
+    if (is3DComponent) {
       setChromosome3DComponents(prev =>
         prev.map(comp =>
           comp.id === componentId
@@ -448,7 +475,7 @@ function App() {
     })
       .then(res => res.json())
       .then(data => {
-        if (isComparison) {
+        if (is3DComponent) {
           // Update the specific component's data
           setChromosome3DComponents(prev =>
             prev.map(comp =>
@@ -468,6 +495,7 @@ function App() {
             )
           );
         } else {
+          // For heatmaps (including comparison heatmaps), store in chromosome3DExampleData
           setChromosome3DExampleData(prev => ({
             ...prev,
             [cacheKey]: data["position_data"],
@@ -481,7 +509,7 @@ function App() {
       .catch(error => {
         console.error('Error fetching chromosome 3D data:', error);
         // Reset loading state on error
-        if (isComparison) {
+        if (is3DComponent) {
           setChromosome3DComponents(prev =>
             prev.map(comp =>
               comp.id === componentId
@@ -672,6 +700,18 @@ function App() {
           setChromosome3DLoading(true);
         }
       } else {
+        // Data already exists, ensure loading state is reset
+        if (isComparison) {
+          setChromosome3DComponents(prev =>
+            prev.map(comp =>
+              comp.id === componentId
+                ? { ...comp, loading: false }
+                : comp
+            )
+          );
+        } else {
+          setChromosome3DLoading(false);
+        }
         return;
       }
 

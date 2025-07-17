@@ -122,13 +122,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
     const generate3DChromosome = () => {
         setSelectedChromosomeSequence(currentChromosomeSequence);
-        setChromosome3DLoading(true);
         setSelectedSphereLists({ [cellLineName]: {} });
         if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
             fetchExampleChromos3DData(independentHeatmapCellLine, 0);
             progressPolling(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence, 0, false);
         } else {
-            fetchExistChromos3DData(true, exampleDataBestSampleID[cellLineName], cellLineName, null);
+            // Pass comparisonHeatmapId as componentId to distinguish between different heatmaps
+            fetchExistChromos3DData(true, exampleDataBestSampleID[independentHeatmapCellLine], independentHeatmapCellLine, comparisonHeatmapId);
             // No progress polling needed for fetchExistChromos3DData since it returns immediately
         }
         setChromosome3DCellLineName(independentHeatmapCellLine);
