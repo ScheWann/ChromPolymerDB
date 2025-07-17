@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Spin, Empty, Dropdown, Tooltip, Button } from 'antd';
-import { DownloadOutlined } from "@ant-design/icons";
+import { Spin, Empty, Dropdown, Tooltip, Button, Modal } from 'antd';
+import { DownloadOutlined, ExpandOutlined } from "@ant-design/icons";
 import jsPDF from 'jspdf';
 import * as d3 from 'd3';
 
 export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading }) => {
     const containerRef = useRef();
     const svgRef = useRef();
+    const modalSvgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const downloadItems = [
         {
@@ -19,6 +21,24 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             label: 'Download PDF',
         }
     ]
+
+    const showModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleModalCancel = () => {
+        setIsModalVisible(false);
+    };
+
+    const handleModalAfterOpen = () => {
+        // Draw the plot after the modal is fully opened
+        if (modalSvgRef.current) {
+            console.log('Drawing modal violin plot...');
+            const modalWidth = 1000;
+            const modalHeight = 600;
+            drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight);
+        }
+    };
 
     const onClickDownloadItem = ({ key }) => {
         if (key === '1') {
@@ -103,45 +123,25 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         image.src = url;
     };
 
-
-    useEffect(() => {
-        const observer = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                if (entry.contentRect) {
-                    setDimensions({
-                        width: entry.contentRect.width,
-                        height: entry.contentRect.height,
-                    });
-                }
-            }
-        });
-        if (containerRef.current) {
-            observer.observe(containerRef.current);
-        }
-        return () => {
-            if (containerRef.current) observer.unobserve(containerRef.current);
-        };
-    }, []);
-
-    useEffect(() => {
+    const drawViolinPlot = (svgElement, plotWidth, plotHeight) => {
         if (
-            !dimensions.width ||
-            !dimensions.height ||
+            !plotWidth ||
+            !plotHeight ||
             Object.keys(selectedSphereList).length < 1 ||
             Object.keys(distributionData).length === 0 ||
             loading
         )
             return;
 
-        d3.select(svgRef.current).selectAll("*").remove();
+        d3.select(svgElement).selectAll("*").remove();
 
-        const svg = d3.select(svgRef.current)
-            .attr("width", dimensions.width)
-            .attr("height", dimensions.height);
+        const svg = d3.select(svgElement)
+            .attr("width", plotWidth)
+            .attr("height", plotHeight);
 
         const margin = { top: 20, right: 20, bottom: 25, left: 45 },
-            width = dimensions.width - margin.left - margin.right,
-            height = dimensions.height - margin.top - margin.bottom;
+            width = plotWidth - margin.left - margin.right,
+            height = plotHeight - margin.top - margin.bottom;
 
         const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -209,8 +209,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .domain([0, maxDensity])
             .range([0, segmentWidth / 2]);
 
+        // Create unique clip path ID to avoid conflicts between main and modal plots
+        const clipId = `clip-${Math.random().toString(36).substr(2, 9)}`;
         g.append("clipPath")
-            .attr("id", "clip")
+            .attr("id", clipId)
             .append("rect")
             .attr("width", violinWidth)
             .attr("height", height);
@@ -219,7 +221,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         categories.forEach(category => {
             const categoryGroup = g.append("g")
                 .attr("transform", `translate(${xScale(category)},0)`)
-                .attr("clip-path", "url(#clip)");
+                .attr("clip-path", `url(#${clipId})`);
 
             distKeys.forEach((cellLine, keyIndex) => {
                 const dataArray = distributionData[cellLine][category] || [];
@@ -271,49 +273,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                         .attr("stroke", "#333")
                         .attr("stroke-width", 2);
                 }
-
-                // const parts = category.split('-');
-                // if (parts.length === 2) {
-                //     const sphereA = parts[0];
-                //     const sphereB = parts[1];
-
-                //     const beadA = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereA];
-                //     const beadB = selectedSphereList[cellLine] && selectedSphereList[cellLine][sphereB];
-                //     if (beadA && beadB) {
-                //         const posA = beadA.position;
-                //         const posB = beadB.position;
-                //         const markerDistance = Math.sqrt(
-                //             Math.pow(posB.x - posA.x, 2) +
-                //             Math.pow(posB.y - posA.y, 2) +
-                //             Math.pow(posB.z - posA.z, 2)
-                //         );
-
-                //         const bisect = d3.bisector(d => d[0]).left;
-                //         const i = bisect(density, markerDistance);
-                //         let markerDensity;
-                //         if (i === 0) {
-                //             markerDensity = density[0][1];
-                //         } else if (i >= density.length) {
-                //             markerDensity = density[density.length - 1][1];
-                //         } else {
-                //             const d0 = density[i - 1];
-                //             const d1 = density[i];
-                //             const t = (markerDistance - d0[0]) / (d1[0] - d0[0]);
-                //             markerDensity = d0[1] + t * (d1[1] - d0[1]);
-                //         }
-                //         const markerLineHalfLength = halfWidthScale(markerDensity);
-                //         const x1 = center - markerLineHalfLength;
-                //         const x2 = center + markerLineHalfLength;
-                //         const yPos = yScale(markerDistance);
-                //         categoryGroup.append("line")
-                //             .attr("x1", x1)
-                //             .attr("x2", x2)
-                //             .attr("y1", yPos)
-                //             .attr("y2", yPos)
-                //             .attr("stroke", colorScale(cellLine))
-                //             .attr("stroke-width", 2);
-                //     }
-                // }
             });
         });
 
@@ -358,7 +317,30 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("font-size", "10px")
                 .text(cellLine);
         });
+    };
 
+
+    useEffect(() => {
+        const observer = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                if (entry.contentRect) {
+                    setDimensions({
+                        width: entry.contentRect.width,
+                        height: entry.contentRect.height,
+                    });
+                }
+            }
+        });
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+        return () => {
+            if (containerRef.current) observer.unobserve(containerRef.current);
+        };
+    }, []);
+
+    useEffect(() => {
+        drawViolinPlot(svgRef.current, dimensions.width, dimensions.height);
     }, [dimensions, distributionData, selectedSphereList, loading]);
 
     return (
@@ -368,7 +350,20 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                     <Spin spinning={true} style={{ width: '100%', height: '100%' }} />
                 ) : (
                     <>
-                        <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}>
+                        <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10, display: 'flex', gap: '8px' }}>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Zoom in</span>}
+                                color='white'
+                            >
+                                <Button
+                                    style={{
+                                        fontSize: 15,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<ExpandOutlined />}
+                                    onClick={showModal}
+                                />
+                            </Tooltip>
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>Download the violin plot</span>}
                                 color='white'
@@ -391,6 +386,23 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             </Tooltip>
                         </div>
                         <svg ref={svgRef}></svg>
+                        <Modal
+                            title="Bead Distribution Violin Plot"
+                            open={isModalVisible}
+                            onCancel={handleModalCancel}
+                            afterOpenChange={(open) => {
+                                if (open) {
+                                    handleModalAfterOpen();
+                                }
+                            }}
+                            footer={null}
+                            width={1040}
+                            centered
+                        >
+                            <div style={{ width: '100%', height: '600px', overflow: 'auto' }}>
+                                <svg ref={modalSvgRef}></svg>
+                            </div>
+                        </Modal>
                     </>
                 )
             ) : (
