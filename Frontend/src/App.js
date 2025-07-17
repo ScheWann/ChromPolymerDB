@@ -1818,10 +1818,10 @@ function App() {
                 >
                   {/* Original 3D chromosome */}
                   <div style={{
-                    width: chromosome3DComponents.length > 0 ? "49.9%" : "100%",
+                    width: chromosome3DComponents.length > 0 ? "49.8%" : "100%",
                     marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%',
                     flexShrink: 0,
-                    minWidth: chromosome3DComponents.length > 0 ? "49.9%" : "auto"
+                    minWidth: chromosome3DComponents.length > 0 ? "49.8%" : "auto"
                   }}>
                     <Tabs
                       size="small"
@@ -1924,10 +1924,10 @@ function App() {
                   {/* Multiple comparison 3D chromosomes */}
                   {chromosome3DComponents.map((component) => (
                     <div key={component.id} style={{
-                      width: "49.9%",
+                      width: "49.8%",
                       marginRight: '0.2%',
                       flexShrink: 0,
-                      minWidth: "49.9%"
+                      minWidth: "49.8%"
                     }}>
                       <Tabs
                         size="small"
