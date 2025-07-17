@@ -10,6 +10,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const modalSvgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
 
     const downloadItems = [
         {
@@ -24,10 +25,12 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
     const showModal = () => {
         setIsModalVisible(true);
+        setModalLoading(true);
     };
 
     const handleModalCancel = () => {
         setIsModalVisible(false);
+        setModalLoading(false);
     };
 
     const handleModalAfterOpen = () => {
@@ -37,6 +40,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             const modalWidth = 1000;
             const modalHeight = 600;
             drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight);
+            // Turn off loading after plot is drawn
+            setTimeout(() => {
+                setModalLoading(false);
+            }, 100);
         }
     };
 
@@ -399,7 +406,23 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             width={1040}
                             centered
                         >
-                            <div style={{ width: '100%', height: '600px', overflow: 'auto' }}>
+                            <div style={{ width: '100%', height: '600px', overflow: 'auto', position: 'relative' }}>
+                                {modalLoading && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                        zIndex: 10
+                                    }}>
+                                        <Spin size="large" tip="Loading violin plot..." />
+                                    </div>
+                                )}
                                 <svg ref={modalSvgRef}></svg>
                             </div>
                         </Modal>
