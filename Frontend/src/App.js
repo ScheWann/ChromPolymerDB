@@ -137,6 +137,29 @@ function App() {
     },
   ];
 
+  const downloadItems = [
+    {
+      key: '1',
+      label: 'Distance data',
+    },
+    {
+      key: '2',
+      label: 'Position data'
+    },
+  ]
+
+  const addItems = [
+    {
+      key: 'heatmap',
+      label: 'Add Heatmap',
+    },
+    {
+      key: 'chromosome3d',
+      label: 'Add Chromosome 3D',
+      disabled: !(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DComponents.length > 0)
+    }
+  ]
+
   // Add "," to the number by every 3 digits
   const formatNumber = (value) => {
     if (!value) return '';
@@ -148,9 +171,9 @@ function App() {
     if (scrollContainerRef.current) {
       // Calculate the width of one component
       const totalComponents = 1 + chromosome3DComponents.length; // Original + comparison components
-      const containerWidth = scrollContainerRef.current.offsetWidth;
+      // const containerWidth = scrollContainerRef.current.offsetWidth;
       const componentWidth = scrollContainerRef.current.scrollWidth / totalComponents;
-      
+
       scrollContainerRef.current.scrollBy({
         left: -componentWidth,
         behavior: 'smooth'
@@ -162,9 +185,9 @@ function App() {
     if (scrollContainerRef.current) {
       // Calculate the width of one component
       const totalComponents = 1 + chromosome3DComponents.length; // Original + comparison components
-      const containerWidth = scrollContainerRef.current.offsetWidth;
+      // const containerWidth = scrollContainerRef.current.offsetWidth;
       const componentWidth = scrollContainerRef.current.scrollWidth / totalComponents;
-      
+
       scrollContainerRef.current.scrollBy({
         left: componentWidth,
         behavior: 'smooth'
@@ -178,15 +201,24 @@ function App() {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       const hasOverflow = scrollWidth > clientWidth;
       const hasEnoughComponents = chromosome3DComponents.length >= 2;
-      
+
       // Only show gradient effects when there are 3+ components AND there's actual overflow
       setCanScrollLeft(scrollLeft > 0 && hasOverflow && hasEnoughComponents);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1 && hasOverflow && hasEnoughComponents);
-      // Show scroll buttons when there are 3 or more total components 
-      // (original + 2 or more comparisons) AND there's actual overflow
       setShowScrollButtons(hasEnoughComponents && hasOverflow);
     }
   };
+
+  useEffect(() => {
+    fetch('/api/clearFoldingInputFolderInputContent', { method: 'POST' });
+  }, []);
+
+  useEffect(() => {
+    if (!isCellLineMode) {
+      fetchGeneNameList();
+    }
+    fetchCellLineList();
+  }, []);
 
   // Add scroll event listener
   useEffect(() => {
@@ -194,22 +226,21 @@ function App() {
     if (container) {
       container.addEventListener('scroll', updateScrollButtons);
       updateScrollButtons(); // Initial check
-      
+
       // ResizeObserver to update on size changes
       const resizeObserver = new ResizeObserver(updateScrollButtons);
       resizeObserver.observe(container);
-      
+
       // Handle wheel events for better horizontal scrolling
       const handleWheel = (e) => {
         if (e.deltaY !== 0 && chromosome3DComponents.length >= 2) {
-          // Prevent vertical scrolling and convert to horizontal
           e.preventDefault();
           container.scrollLeft += e.deltaY;
         }
       };
-      
+
       container.addEventListener('wheel', handleWheel, { passive: false });
-      
+
       return () => {
         container.removeEventListener('scroll', updateScrollButtons);
         container.removeEventListener('wheel', handleWheel);
@@ -224,7 +255,7 @@ function App() {
     const timer = setTimeout(() => {
       updateScrollButtons();
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [chromosome3DComponents.length]);
 
@@ -233,23 +264,9 @@ function App() {
     const timer = setTimeout(() => {
       updateScrollButtons();
     }, 200);
-    
+
     return () => clearTimeout(timer);
   }, [chromosome3DExampleData, chromosome3DComponents]);
-
-  // varify if in example mode
-  const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
-    const validCellLines = ['GM12878', 'IMR90', 'NHEK'];
-    const isMainCellLineOK = validCellLines.includes(cellLineName);
-    const isChromosomeOK = chromosomeName === 'chr8';
-    const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
-
-    return isMainCellLineOK && isChromosomeOK && isSequenceOK;
-  }
-
-  useEffect(() => {
-    fetch('/api/clearFoldingInputFolderInputContent', { method: 'POST' });
-  }, []);
 
   // Effect that triggers after selectedChromosomeSequence changes
   useEffect(() => {
@@ -269,13 +286,6 @@ function App() {
       setChromosome3DCellLineName(cellLineName);
     }
   }, [selectedChromosomeSequence]);
-
-  useEffect(() => {
-    if (!isCellLineMode) {
-      fetchGeneNameList();
-    }
-    fetchCellLineList();
-  }, []);
 
   useEffect(() => {
     if (cellLineName && chromosomeName) {
@@ -300,6 +310,16 @@ function App() {
       }
     }
   }, [totalChromosomeSequences, totalOriginalChromosomeValidSequences]);
+
+  // varify if in example mode
+  const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
+    const validCellLines = ['GM12878', 'IMR90', 'NHEK'];
+    const isMainCellLineOK = validCellLines.includes(cellLineName);
+    const isChromosomeOK = chromosomeName === 'chr8';
+    const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
+
+    return isMainCellLineOK && isChromosomeOK && isSequenceOK;
+  }
 
   // fetch 3D chromosome data progress
   const progressPolling = (cellLineName, chromosomeName, sequence, sampleId, isExist) => {
@@ -405,9 +425,9 @@ function App() {
 
     // Set loading state before fetching
     if (isComparison) {
-      setChromosome3DComponents(prev => 
-        prev.map(comp => 
-          comp.id === componentId 
+      setChromosome3DComponents(prev =>
+        prev.map(comp =>
+          comp.id === componentId
             ? { ...comp, loading: true }
             : comp
         )
@@ -427,20 +447,20 @@ function App() {
       .then(data => {
         if (isComparison) {
           // Update the specific component's data
-          setChromosome3DComponents(prev => 
-            prev.map(comp => 
-              comp.id === componentId 
-                ? { 
-                    ...comp, 
-                    data: {
-                      ...comp.data,
-                      [cacheKey]: data["position_data"],
-                      [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-                      [cacheKey + "_fq_data"]: data["fq_data"],
-                      [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-                    },
-                    loading: false
-                  }
+          setChromosome3DComponents(prev =>
+            prev.map(comp =>
+              comp.id === componentId
+                ? {
+                  ...comp,
+                  data: {
+                    ...comp.data,
+                    [cacheKey]: data["position_data"],
+                    [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                    [cacheKey + "_fq_data"]: data["fq_data"],
+                    [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                  },
+                  loading: false
+                }
                 : comp
             )
           );
@@ -459,9 +479,9 @@ function App() {
         console.error('Error fetching chromosome 3D data:', error);
         // Reset loading state on error
         if (isComparison) {
-          setChromosome3DComponents(prev => 
-            prev.map(comp => 
-              comp.id === componentId 
+          setChromosome3DComponents(prev =>
+            prev.map(comp =>
+              comp.id === componentId
                 ? { ...comp, loading: false }
                 : comp
             )
@@ -638,9 +658,9 @@ function App() {
 
       if (!cachedData) {
         if (isComparison) {
-          setChromosome3DComponents(prev => 
-            prev.map(comp => 
-              comp.id === componentId 
+          setChromosome3DComponents(prev =>
+            prev.map(comp =>
+              comp.id === componentId
                 ? { ...comp, loading: true }
                 : comp
             )
@@ -667,20 +687,20 @@ function App() {
         .then(res => res.json())
         .then(data => {
           if (isComparison) {
-            setChromosome3DComponents(prev => 
-              prev.map(comp => 
-                comp.id === componentId 
-                  ? { 
-                      ...comp, 
-                      data: {
-                        ...comp.data,
-                        [cacheKey]: data["position_data"],
-                        [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-                        [cacheKey + "_fq_data"]: data["fq_data"],
-                        [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-                      },
-                      loading: false
-                    }
+            setChromosome3DComponents(prev =>
+              prev.map(comp =>
+                comp.id === componentId
+                  ? {
+                    ...comp,
+                    data: {
+                      ...comp.data,
+                      [cacheKey]: data["position_data"],
+                      [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                      [cacheKey + "_fq_data"]: data["fq_data"],
+                      [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                    },
+                    loading: false
+                  }
                   : comp
               )
             );
@@ -842,7 +862,7 @@ function App() {
           const comparisonCoordinates = component.data[
             `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${component.sampleID}`
           ];
-          
+
           if (comparisonCoordinates) {
             updatedComponents[component.cellLine] = {
               ...prev[component.cellLine],
@@ -1100,29 +1120,6 @@ function App() {
     setDistributionData({});
   }
 
-  const downloadItems = [
-    {
-      key: '1',
-      label: 'Distance data',
-    },
-    {
-      key: '2',
-      label: 'Position data'
-    },
-  ]
-
-  const addItems = [
-    {
-      key: 'heatmap',
-      label: 'Add Heatmap',
-    },
-    {
-      key: 'chromosome3d',
-      label: 'Add Chromosome 3D',
-      disabled: !(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DComponents.length > 0)
-    }
-  ]
-
   const onClickExampleDataItem = ({ key }) => {
     setCellLineName(key);
     setChromosomeName('chr8');
@@ -1172,12 +1169,12 @@ function App() {
   const downloadDistance = async (componentId, isExample = false) => {
     const isOriginal = componentId === null;
     let targetCellLine;
-    
+
     if (!isOriginal) {
       // Update specific component's download spinner
-      setChromosome3DComponents(prev => 
-        prev.map(comp => 
-          comp.id === componentId 
+      setChromosome3DComponents(prev =>
+        prev.map(comp =>
+          comp.id === componentId
             ? { ...comp, downloadSpinner: true }
             : comp
         )
@@ -1232,9 +1229,9 @@ function App() {
       console.error("Download error:", error);
     } finally {
       if (!isOriginal) {
-        setChromosome3DComponents(prev => 
-          prev.map(comp => 
-            comp.id === componentId 
+        setChromosome3DComponents(prev =>
+          prev.map(comp =>
+            comp.id === componentId
               ? { ...comp, downloadSpinner: false }
               : comp
           )
@@ -1249,11 +1246,11 @@ function App() {
   const downloadPositionData = async (componentId, isExample = false) => {
     const isOriginal = componentId === null;
     let targetCellLine;
-    
+
     if (!isOriginal) {
-      setChromosome3DComponents(prev => 
-        prev.map(comp => 
-          comp.id === componentId 
+      setChromosome3DComponents(prev =>
+        prev.map(comp =>
+          comp.id === componentId
             ? { ...comp, downloadSpinner: true }
             : comp
         )
@@ -1308,9 +1305,9 @@ function App() {
       console.error("Download error:", error);
     } finally {
       if (!isOriginal) {
-        setChromosome3DComponents(prev => 
-          prev.map(comp => 
-            comp.id === componentId 
+        setChromosome3DComponents(prev =>
+          prev.map(comp =>
+            comp.id === componentId
               ? { ...comp, downloadSpinner: false }
               : comp
           )
@@ -1332,7 +1329,6 @@ function App() {
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
       } else {
         fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, null);
-        // No progress polling needed for fetchExistChromos3DData since it returns immediately
       }
     }
   }
@@ -1348,29 +1344,27 @@ function App() {
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
         fetchExistChromos3DData(false, key, chromosome3DCellLineName, null);
-        // No progress polling needed for fetchExistChromos3DData since it returns immediately
       }
     };
   };
 
   // 3D Comparison Chromosome sample change
   const componentSampleChange = (componentId) => (key) => {
-    setChromosome3DComponents(prev => 
-      prev.map(comp => 
-        comp.id === componentId 
+    setChromosome3DComponents(prev =>
+      prev.map(comp =>
+        comp.id === componentId
           ? { ...comp, sampleID: key }
           : comp
       )
     );
     setDistributionData({});
-    
+
     const component = chromosome3DComponents.find(c => c.id === componentId);
     if (component) {
       const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
       if (!component.data[cacheKey]) {
         if (!isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)) {
           fetchExampleChromos3DData(component.cellLine, key, "sampleChange", componentId);
-          // Note: progressPolling function may need to be updated to handle componentId
         } else {
           fetchExistChromos3DData(false, key, component.cellLine, componentId);
         }
@@ -1382,13 +1376,13 @@ function App() {
   const handleAddChromosome3D = () => {
     const newComponent = {
       id: chromosome3DComponentIndex,
-      cellLine: cellLineList[0]?.value || null, // Default to first cell line
+      cellLine: cellLineList[0]?.value || null,
       sampleID: 0,
       data: {},
       loading: false,
       downloadSpinner: false
     };
-    
+
     setChromosome3DComponents(prev => [...prev, newComponent]);
     setChromosome3DComponentIndex(prev => prev + 1);
   };
@@ -1410,14 +1404,14 @@ function App() {
 
   // Update Cell Line for a specific component
   const updateComponentCellLine = (componentId, cellLine) => {
-    setChromosome3DComponents(prev => 
-      prev.map(comp => 
-        comp.id === componentId 
+    setChromosome3DComponents(prev =>
+      prev.map(comp =>
+        comp.id === componentId
           ? { ...comp, cellLine, loading: true }
           : comp
       )
     );
-    
+
     // Fetch data for the new cell line
     const component = chromosome3DComponents.find(c => c.id === componentId);
     if (component) {
@@ -1431,9 +1425,9 @@ function App() {
 
   // Update Sample ID for a specific component
   const updateComponentSampleID = (componentId, sampleID) => {
-    setChromosome3DComponents(prev => 
-      prev.map(comp => 
-        comp.id === componentId 
+    setChromosome3DComponents(prev =>
+      prev.map(comp =>
+        comp.id === componentId
           ? { ...comp, sampleID }
           : comp
       )
@@ -1465,7 +1459,8 @@ function App() {
     if (comparisonHeatmapList.length > 0) {
       const updateTriggers = {};
       comparisonHeatmapList.forEach(index => {
-        updateTriggers[index] = Date.now(); // Use timestamp as trigger value
+        // Use timestamp as trigger value
+        updateTriggers[index] = Date.now();
       });
       setComparisonHeatmapUpdateTrigger(updateTriggers);
     }
@@ -1582,9 +1577,9 @@ function App() {
                   }}
                   value={endInputValue}
                 />
-                  <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
-                    <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} />
-                  </Dropdown>
+                <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
+                  <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} />
+                </Dropdown>
                 <Tooltip
                   title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
@@ -1623,9 +1618,9 @@ function App() {
                   onSearch={geneNameSearch}
                   options={geneNameList}
                 />
-                  <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
-                    <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} />
-                  </Dropdown>
+                <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
+                  <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} />
+                </Dropdown>
                 <Tooltip
                   title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
@@ -1714,8 +1709,6 @@ function App() {
                   geneName={geneName}
                   setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                   setChromosome3DLoading={setChromosome3DLoading}
-                  setComparisonCellLine3DData={() => {}} // Legacy compatibility - no longer used
-                  setComparisonCellLine3DLoading={() => {}} // Legacy compatibility - no longer used
                   setGeneName={setGeneName}
                   setGeneSize={setGeneSize}
                   setSelectedSphereLists={setSelectedSphereLists}
@@ -1752,8 +1745,6 @@ function App() {
                 geneName={geneName}
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                 setChromosome3DLoading={setChromosome3DLoading}
-                setComparisonCellLine3DData={() => {}} // Legacy compatibility - no longer used
-                setComparisonCellLine3DLoading={() => {}} // Legacy compatibility - no longer used
                 setGeneName={setGeneName}
                 setGeneSize={setGeneSize}
                 setSelectedSphereLists={setSelectedSphereLists}
@@ -1766,9 +1757,9 @@ function App() {
 
             {/* Multiple 3D chromosome components */}
             {(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DLoading || chromosome3DComponents.length > 0) && (
-              <div style={{ 
-                height: '100%', 
-                width: 'calc(100% - 40vw)', 
+              <div style={{
+                height: '100%',
+                width: 'calc(100% - 40vw)',
                 flexShrink: 0,
                 position: 'relative',
                 display: 'flex',
@@ -1803,18 +1794,17 @@ function App() {
                 )}
 
                 {/* Scrollable container */}
-                <div 
+                <div
                   ref={scrollContainerRef}
                   className={`chromosome3d-scroll-container ${canScrollLeft ? 'can-scroll-left' : ''} ${canScrollRight ? 'can-scroll-right' : ''}`}
-                  style={{ 
-                    height: '100%', 
+                  style={{
+                    height: '100%',
                     width: '100%',
                     overflowX: chromosome3DComponents.length >= 2 ? 'auto' : 'hidden',
                     overflowY: 'hidden',
                     display: 'flex',
                     scrollBehavior: 'smooth',
-                    WebkitOverflowScrolling: 'touch', // Better touch scrolling on mobile
-                    scrollbarWidth: 'thin', // For Firefox
+                    scrollbarWidth: 'thin',
                     scrollbarHeight: 'thin'
                   }}
                   onKeyDown={(e) => {
@@ -1827,9 +1817,9 @@ function App() {
                   tabIndex={0}
                 >
                   {/* Original 3D chromosome */}
-                  <div style={{ 
-                    width: chromosome3DComponents.length > 0 ? "49.9%" : "100%", 
-                    marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%', 
+                  <div style={{
+                    width: chromosome3DComponents.length > 0 ? "49.9%" : "100%",
+                    marginRight: chromosome3DComponents.length > 0 ? '0.2%' : '0%',
                     flexShrink: 0,
                     minWidth: chromosome3DComponents.length > 0 ? "49.9%" : "auto"
                   }}>
@@ -1933,9 +1923,9 @@ function App() {
                   {/* Comparison 3D chromosome */}
                   {/* Multiple comparison 3D chromosomes */}
                   {chromosome3DComponents.map((component) => (
-                    <div key={component.id} style={{ 
-                      width: "49.9%", 
-                      marginRight: '0.2%', 
+                    <div key={component.id} style={{
+                      width: "49.9%",
+                      marginRight: '0.2%',
                       flexShrink: 0,
                       minWidth: "49.9%"
                     }}>
