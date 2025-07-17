@@ -169,21 +169,14 @@ function App() {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       const hasOverflow = scrollWidth > clientWidth;
+      const hasEnoughComponents = chromosome3DComponents.length >= 2;
       
-      // Debug logging
-      console.log('Scroll update:', {
-        componentsLength: chromosome3DComponents.length,
-        scrollWidth,
-        clientWidth,
-        hasOverflow,
-        scrollLeft
-      });
-      
-      setCanScrollLeft(scrollLeft > 0 && hasOverflow);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1 && hasOverflow);
-      // Show scroll buttons when there are 2 or more comparison components 
-      // (meaning 3 total: original + 2 comparisons) OR when there's actual overflow
-      setShowScrollButtons(chromosome3DComponents.length >= 2 || hasOverflow);
+      // Only show gradient effects when there are 3+ components AND there's actual overflow
+      setCanScrollLeft(scrollLeft > 0 && hasOverflow && hasEnoughComponents);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1 && hasOverflow && hasEnoughComponents);
+      // Show scroll buttons when there are 3 or more total components 
+      // (original + 2 or more comparisons) AND there's actual overflow
+      setShowScrollButtons(hasEnoughComponents && hasOverflow);
     }
   };
 
@@ -200,7 +193,7 @@ function App() {
       
       // Handle wheel events for better horizontal scrolling
       const handleWheel = (e) => {
-        if (e.deltaY !== 0 && chromosome3DComponents.length > 0) {
+        if (e.deltaY !== 0 && chromosome3DComponents.length >= 2) {
           // Prevent vertical scrolling and convert to horizontal
           e.preventDefault();
           container.scrollLeft += e.deltaY;
@@ -1808,7 +1801,7 @@ function App() {
                   style={{ 
                     height: '100%', 
                     width: '100%',
-                    overflowX: chromosome3DComponents.length >= 1 ? 'auto' : 'hidden',
+                    overflowX: chromosome3DComponents.length >= 2 ? 'auto' : 'hidden',
                     overflowY: 'hidden',
                     display: 'flex',
                     scrollBehavior: 'smooth',
