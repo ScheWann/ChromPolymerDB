@@ -1011,6 +1011,18 @@ function App() {
     },
   ]
 
+  const addItems = [
+    {
+      key: 'heatmap',
+      label: 'Add Heatmap',
+    },
+    {
+      key: 'chromosome3d',
+      label: 'Add Chromosome 3D',
+      disabled: !(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DComponents.length > 0)
+    }
+  ]
+
   const onClickExampleDataItem = ({ key }) => {
     setCellLineName(key);
     setChromosomeName('chr8');
@@ -1019,6 +1031,14 @@ function App() {
     setEndInputValue('128300000');
     setHeatmapLoading(true);
     setDistributionData({});
+  }
+
+  const onClickAddItems = ({ key }) => {
+    if (key === 'heatmap') {
+      addNewComparisonHeatmap();
+    } else if (key === 'chromosome3d') {
+      handleAddChromosome3D();
+    }
   }
 
   const onClickOriginalDownloadItems = ({ key }) => {
@@ -1462,12 +1482,9 @@ function App() {
                   }}
                   value={endInputValue}
                 />
-                <Tooltip
-                  title={<span style={{ color: 'black' }}>Add a new heatmap</span>}
-                  color='white'
-                >
-                  <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
-                </Tooltip>
+                  <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
+                    <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} />
+                  </Dropdown>
                 <Tooltip
                   title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
@@ -1506,12 +1523,9 @@ function App() {
                   onSearch={geneNameSearch}
                   options={geneNameList}
                 />
-                <Tooltip
-                  title={<span style={{ color: 'black' }}>Add a new heatmap</span>}
-                  color='white'
-                >
-                  <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} onClick={addNewComparisonHeatmap} />
-                </Tooltip>
+                  <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
+                    <Button id="add-new-heatmap-button" disabled={chromosomeData.length === 0} size="small" icon={<PlusOutlined />} />
+                  </Dropdown>
                 <Tooltip
                   title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
                   color='white'
@@ -1707,21 +1721,6 @@ function App() {
                               icon={originalChromosomeDistanceDownloadSpinner ? <SyncOutlined spin /> : <DownloadOutlined />}
                             />
                           </Dropdown>
-                        </Tooltip>
-                        <Tooltip
-                          title={<span style={{ color: 'black' }}>Add a cell line to compare</span>}
-                          color='white'
-                        >
-                          <Button
-                            style={{
-                              fontSize: 15,
-                              cursor: "pointer",
-                              marginRight: 5,
-                            }}
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={handleAddChromosome3D}
-                          />
                         </Tooltip>
                       </div>
                     }
