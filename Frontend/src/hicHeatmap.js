@@ -90,15 +90,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     };
 
     const fetchExampleChromos3DData = (cell_line, sample_id, componentId = null) => {
-        console.log('fetchExampleChromos3DData called with:', {
-            cell_line,
-            sample_id,
-            componentId,
-            chromosomeName,
-            selectedChromosomeSequence,
-            currentChromosomeSequence
-        });
-        
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             // Use the correct sequence based on context
             const sequenceToUse = componentId ? selectedChromosomeSequence : currentChromosomeSequence;
@@ -107,8 +98,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             const cacheKey = componentId 
                 ? `${cell_line}-COMPARISON-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`
                 : `${cell_line}-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`;
-
-            console.log('Using cache key:', cacheKey);
 
             fetch("/api/getChromosome3DData", {
                 method: 'POST',
@@ -124,15 +113,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             })
                 .then(res => res.json())
                 .then(data => {
-                    console.log('fetchExampleChromos3DData response received:', {
-                        componentId,
-                        cacheKey,
-                        hasPositionData: !!data["position_data"],
-                        hasAvgData: !!data["avg_distance_data"]
-                    });
-                    
                     if (componentId && setChromosome3DComponents) {
-                        console.log('Updating component data for ID:', componentId);
                         // Update the specific component's data
                         setChromosome3DComponents(prev =>
                             prev.map(comp =>
@@ -152,7 +133,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             )
                         );
                     } else {
-                        console.log('Updating global 3D data');
                         // For main heatmap, store in global state
                         setChromosome3DExampleData(prev => ({
                             ...prev,
@@ -181,20 +161,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     }
                 });
         } else {
-            console.log('fetchExampleChromos3DData: Missing required parameters');
+            console.error('fetchExampleChromos3DData: Missing required parameters');
         }
     };
 
     const generate3DChromosome = () => {
-        console.log('generate3DChromosome called with:', {
-            comparisonHeatmapId,
-            independentHeatmapCellLine,
-            chromosomeName,
-            currentChromosomeSequence,
-            selectedChromosomeSequence,
-            isExampleMode: isExampleMode(independentHeatmapCellLine, chromosomeName, comparisonHeatmapId ? selectedChromosomeSequence : currentChromosomeSequence)
-        });
-        
         // Only set global state for the main heatmap
         if (!comparisonHeatmapId) {
             setSelectedChromosomeSequence(currentChromosomeSequence);
@@ -222,27 +193,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     loading: true,
                     downloadSpinner: false
                 };
-                
-                console.log('Creating new component:', newComponent);
-                
+
                 setChromosome3DComponents(prev => [...prev, newComponent]);
                 setChromosome3DComponentIndex(prev => prev + 1);
-                
-                // Fetch data for the new component
-                console.log('Checking isExampleMode for component:', {
-                    cell_line: independentHeatmapCellLine,
-                    chromosomeName,
-                    selectedChromosomeSequence,
-                    isExample: isExampleMode(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence)
-                });
-                
+
                 if (!isExampleMode(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence)) {
-                    console.log('Fetching new 3D data for component');
                     fetchExampleChromos3DData(independentHeatmapCellLine, 0, newComponentId);
-                    // Note: progressPolling is global and not designed for component-specific loading
-                    // The component loading state will be managed by fetchExampleChromos3DData
                 } else {
-                    console.log('Using existing 3D data for component');
                     fetchExistChromos3DData(true, exampleDataBestSampleID[independentHeatmapCellLine], independentHeatmapCellLine, newComponentId);
                 }
             }

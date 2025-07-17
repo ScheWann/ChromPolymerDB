@@ -409,15 +409,6 @@ function App() {
   }, [chromosome3DComponents, selectedSphereLists[cellLineName]]);
 
   const fetchExistChromos3DData = (isBest, value, cellLineName, componentId = null) => {
-    console.log('fetchExistChromos3DData called with:', {
-      isBest,
-      value,
-      cellLineName,
-      componentId,
-      chromosomeName,
-      selectedChromosomeSequence
-    });
-    
     const sampleID = isBest ? 0 : value;
     
     // Check if the componentId represents a 3D chromosome component
@@ -427,9 +418,6 @@ function App() {
       chromosome3DComponents.some(c => c.id === componentId) ||
       (componentId > 1000000000000) // Timestamp-like ID indicates 3D component
     );
-    console.log('is3DComponent:', is3DComponent);
-    console.log('componentId:', componentId);
-    console.log('chromosome3DComponents length:', chromosome3DComponents.length);
     
     // Determine the cache key pattern:
     // - For original heatmap (componentId = null): use cellLineName (traditional pattern)
@@ -445,17 +433,13 @@ function App() {
     }
     
     const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
-    console.log('fetchExistChromos3DData cache key:', cacheKey);
     
     const cachedData = is3DComponent ?
       chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
       chromosome3DExampleData[cacheKey];
 
-    console.log('cachedData exists:', !!cachedData);
-
     if (cachedData) {
       // Data already exists, no need to fetch
-      // But we should still ensure loading state is reset
       if (is3DComponent) {
         setChromosome3DComponents(prev =>
           prev.map(comp =>
@@ -483,10 +467,9 @@ function App() {
       setChromosome3DLoading(true);
     }
 
-    // For 3D components, we need to use the same endpoint as fetchExampleChromos3DData
+    // For 3D components, use the same endpoint as fetchExampleChromos3DData
     // which expects chromosome sequences, not just sample_id
     if (is3DComponent) {
-      console.log('Fetching 3D component data with chromosome sequences');
       fetch('/api/getChromosome3DData', {
         method: 'POST',
         headers: {
@@ -501,13 +484,6 @@ function App() {
       })
         .then(res => res.json())
         .then(data => {
-          console.log('3D component data received:', {
-            componentId,
-            cacheKey,
-            hasPositionData: !!data["position_data"],
-            hasAvgData: !!data["avg_distance_data"]
-          });
-          
           // Update the specific component's data
           setChromosome3DComponents(prev =>
             prev.map(comp =>
@@ -538,7 +514,6 @@ function App() {
           );
         });
     } else {
-      console.log('Fetching existing chromosome 3D data');
       // Start progress polling for non-component data
       progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, true);
       
@@ -1005,7 +980,6 @@ function App() {
     setChromosomeData([]);
     setChromosome3DExampleData({});
     setChromosome3DComponents([]);
-    // Clear distribution data when chromosome changes
     setDistributionData({});
     fetchChromosomeSize(value);
   };
@@ -1423,34 +1397,21 @@ function App() {
 
   // add custom sample id by users and fetch data
   const addCustomKey = () => {
-    console.log('addCustomKey called with:', {
-      tempSampleId,
-      chromosome3DCellLineName,
-      chromosomeName,
-      selectedChromosomeSequence,
-      isExample: isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)
-    });
-    
     setSampleKeys((prev) => [...prev, tempSampleId]);
     setChromosome3DExampleID(tempSampleId);
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
-    console.log('addCustomKey cache key:', cacheKey);
-    console.log('Data exists in cache:', !!chromosome3DExampleData[cacheKey]);
     
     if (!chromosome3DExampleData[cacheKey]) {
       // Set loading state before fetching
       setChromosome3DLoading(true);
       
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
-        console.log('Calling fetchExampleChromos3DData for non-example data');
         fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
       } else {
-        console.log('Calling fetchExistChromos3DData for example data');
         fetchExistChromos3DData(false, tempSampleId, chromosome3DCellLineName, null);
       }
     } else {
-      console.log('Data already exists in cache, ensuring loading state is reset');
       // Data already exists, ensure loading state is reset
       setChromosome3DLoading(false);
     }
@@ -1458,34 +1419,21 @@ function App() {
 
   // 3D Original Chromosome sample change
   const originalSampleChange = (key) => {
-    console.log('originalSampleChange called with:', {
-      key,
-      chromosome3DCellLineName,
-      chromosomeName,
-      selectedChromosomeSequence,
-      isExample: isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)
-    });
-    
     setChromosome3DExampleID(key);
     setDistributionData({});
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-    console.log('originalSampleChange cache key:', cacheKey);
-    console.log('Data exists in cache:', !!chromosome3DExampleData[cacheKey]);
     
     if (!chromosome3DExampleData[cacheKey]) {
       // Set loading state before fetching
       setChromosome3DLoading(true);
       
       if (!isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)) {
-        console.log('Calling fetchExampleChromos3DData for non-example data');
         fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
       } else {
-        console.log('Calling fetchExistChromos3DData for example data');
         fetchExistChromos3DData(false, key, chromosome3DCellLineName, null);
       }
     } else {
-      console.log('Data already exists in cache, ensuring loading state is reset');
       // Data already exists, ensure loading state is reset
       setChromosome3DLoading(false);
     }
@@ -1493,13 +1441,6 @@ function App() {
 
   // 3D Comparison Chromosome sample change
   const componentSampleChange = (componentId) => (key) => {
-    console.log('componentSampleChange called with:', {
-      componentId,
-      key,
-      chromosomeName,
-      selectedChromosomeSequence
-    });
-    
     setChromosome3DComponents(prev =>
       prev.map(comp =>
         comp.id === componentId
@@ -1511,15 +1452,8 @@ function App() {
 
     const component = chromosome3DComponents.find(c => c.id === componentId);
     if (component) {
-      console.log('Found component:', {
-        cellLine: component.cellLine,
-        isExample: isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)
-      });
-      
       const cacheKey = `${component.cellLine}-COMPARISON-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-      console.log('Cache key:', cacheKey);
-      console.log('Data exists in cache:', !!component.data[cacheKey]);
-      
+
       if (!component.data[cacheKey]) {
         // Set loading state before fetching
         setChromosome3DComponents(prev =>
@@ -1531,14 +1465,11 @@ function App() {
         );
         
         if (!isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)) {
-          console.log('Calling fetchExampleChromos3DData for non-example data');
           fetchExampleChromos3DData(component.cellLine, key, "sampleChange", componentId);
         } else {
-          console.log('Calling fetchExistChromos3DData for example data');
           fetchExistChromos3DData(false, key, component.cellLine, componentId);
         }
       } else {
-        console.log('Data already exists in cache, ensuring loading state is reset');
         // Data already exists, ensure loading state is reset
         setChromosome3DComponents(prev =>
           prev.map(comp =>
@@ -1600,17 +1531,6 @@ function App() {
         fetchExistChromos3DData(false, key, cellLine, componentId);
       }
     }
-  };
-
-  // Update Sample ID for a specific component
-  const updateComponentSampleID = (componentId, sampleID) => {
-    setChromosome3DComponents(prev =>
-      prev.map(comp =>
-        comp.id === componentId
-          ? { ...comp, sampleID }
-          : comp
-      )
-    );
   };
 
   // Submit button click
