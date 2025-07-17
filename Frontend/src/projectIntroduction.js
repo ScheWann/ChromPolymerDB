@@ -170,7 +170,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                 <Title level={5}>Key Features</Title>
 
                 <Card
-                    variant={false}
+                    variant="outlined"
                     style={{ background: '#f0f5ff', width: '100%' }}
                     body={{ padding: 12 }}
                 >
