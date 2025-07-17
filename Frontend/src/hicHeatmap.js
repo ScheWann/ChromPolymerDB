@@ -192,7 +192,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             chromosomeName,
             currentChromosomeSequence,
             selectedChromosomeSequence,
-            isExampleMode: isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)
+            isExampleMode: isExampleMode(independentHeatmapCellLine, chromosomeName, comparisonHeatmapId ? selectedChromosomeSequence : currentChromosomeSequence)
         });
         
         // Only set global state for the main heatmap
@@ -232,11 +232,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 console.log('Checking isExampleMode for component:', {
                     cell_line: independentHeatmapCellLine,
                     chromosomeName,
-                    currentChromosomeSequence,
-                    isExample: isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)
+                    selectedChromosomeSequence,
+                    isExample: isExampleMode(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence)
                 });
                 
-                if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
+                if (!isExampleMode(independentHeatmapCellLine, chromosomeName, selectedChromosomeSequence)) {
                     console.log('Fetching new 3D data for component');
                     fetchExampleChromos3DData(independentHeatmapCellLine, 0, newComponentId);
                     // Note: progressPolling is global and not designed for component-specific loading
