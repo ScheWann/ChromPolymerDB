@@ -1696,7 +1696,7 @@ function App() {
                             title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
                             color='white'
                           >
-                            <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={addCustomKey} />} value={tempSampleId} onChange={setTempSampleId} />
+                            <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} value={tempSampleId} onChange={setTempSampleId} />
                           </Tooltip>
                         </div>
                         <Tooltip
