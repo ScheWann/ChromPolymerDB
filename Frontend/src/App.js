@@ -1670,7 +1670,7 @@ function App() {
                 height: '100%', 
                 width: 'calc(100% - 40vw)', 
                 flexShrink: 0,
-                overflowX: 'auto',
+                overflowX: chromosome3DComponents.length <= 1 ? 'hidden' : 'auto',
                 display: 'flex'
               }}>
                 {/* Original 3D chromosome */}
