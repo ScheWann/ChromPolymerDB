@@ -337,9 +337,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 }}>
                     {/* location selection and gene switch function */}
                     <div className='buttonGroup'>
-                        <span style={{ color: 'white' }}>Locations: </span>
+                        <span style={{ color: 'white', userSelect: 'none' }}>Locations: </span>
                         <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.start} controls={false} placeholder='start' onChange={value => handleInputLocation(value, 'start')} />
-                        <span style={{ color: 'white' }}>~</span>
+                        <span style={{ color: 'white', userSelect: 'none' }}>~</span>
                         <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.end} controls={false} placeholder='end' onChange={value => handleInputLocation(value, 'end')} />
                     </div>
                     {/* icon control group */}
@@ -404,7 +404,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 dropdownRender={(menu) => (
                                     <div style={{backgroundColor: 'white', borderRadius: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
-                                            <span>Background Color: </span>
+                                            <span style={{ userSelect: 'none' }}>Background Color: </span>
                                             <ColorPicker
                                                 size="small"
                                                 trigger='hover'
@@ -490,7 +490,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     fontSize: 10,
                     padding: 5,
                     borderRadius: 3,
-                    gap: 5
+                    gap: 5,
+                    userSelect: 'none'
                 }}>
                     <div className='colorLegendWrapper'>
                         <div className='colorRect' style={{ backgroundColor: '#00BFFF' }} />
@@ -519,7 +520,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 </div>
                 {/* Beads hover on information */}
                 {showBeadInfo && (
-                    <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`}>
+                    <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`} style={{ userSelect: 'none' }}>
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
                         <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
                         <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
@@ -632,19 +633,22 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                         return (
                             <group
-                                style={{ pointerEvents: 'none' }}
                                 key={index}
                                 position={coord}
                                 onPointerOver={(e) => {
                                     e.stopPropagation();
-                                    setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
-                                    setShowBeadInfo(true);
-                                    setHoveredIndex(index);
+                                    if (hoveredIndex !== index) {
+                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                        setShowBeadInfo(true);
+                                        setHoveredIndex(index);
+                                    }
                                 }}
                                 onPointerOut={(e) => {
                                     e.stopPropagation();
-                                    setShowBeadInfo(false);
-                                    setHoveredIndex(null);
+                                    if (hoveredIndex === index) {
+                                        setShowBeadInfo(false);
+                                        setHoveredIndex(null);
+                                    }
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
