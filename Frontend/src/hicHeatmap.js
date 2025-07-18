@@ -19,7 +19,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [mergedCellLinesHeatmapModalVisible, setMergedCellLinesHeatmapModalVisible] = useState(false);
     const [colorScaleRange, setColorScaleRange] = useState([0, 0.8]);
     const [igvMountStatus, setIgvMountStatus] = useState(false);
-    const [independentHeatmapCellLine, setIndependentHeatmapCellLine] = useState(cellLineName)
+    const [independentHeatmapCellLine, setIndependentHeatmapCellLine] = useState(comparisonHeatmapId ? null : cellLineName)
     const [independentHeatmapData, setIndependentHeatmapData] = useState(chromosomeData);
     const [currentChromosomeData, setCurrentChromosomeData] = useState(independentHeatmapData);
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
@@ -622,14 +622,22 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         {comparisonHeatmapId && (
                             <>
                                 <Tooltip
-                                    title={<span style={{ color: 'black' }}>Generate a new heatmap based on the comparison cell line</span>}
+                                    title={
+                                        <span style={{ color: 'black' }}>
+                                            Generate a new heatmap based on the comparison cell line<br />
+                                            {independentHeatmapCellLine ? 
+                                                <>Selected: <span style={{ color: '#3457D5', fontWeight: 'bold' }}>{cellLineList.find(cl => cl.value === independentHeatmapCellLine)?.label || independentHeatmapCellLine}</span></> : 
+                                                <>Selected: <span style={{ color: '#3457D5', fontWeight: 'bold' }}>None</span></>
+                                            }
+                                        </span>
+                                    }
                                     color='white'
+                                    placement="topLeft"
                                 >
                                     <Select
                                         value={independentHeatmapCellLine}
                                         style={{
-                                            minWidth: 100,
-                                            maxWidth: 120,
+                                            width: 100,
                                         }}
                                         size="small"
                                         onChange={comparisonCellLineChange}

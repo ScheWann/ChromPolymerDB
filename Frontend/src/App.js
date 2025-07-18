@@ -1557,7 +1557,7 @@ function App() {
   const handleAddChromosome3D = () => {
     const newComponent = {
       id: chromosome3DComponentIndex,
-      cellLine: cellLineList[0]?.value || null,
+      cellLine: null,
       sampleID: 0,
       data: {},
       loading: false,
@@ -2117,22 +2117,35 @@ function App() {
                         onChange={componentSampleChange(component.id)}
                         tabBarExtraContent={
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '5px' }}>
-                            <Select
-                              value={component.cellLine}
-                              style={{
-                                minWidth: 150,
-                                maxWidth: 150,
-                                marginRight: 5,
-                              }}
-                              size="small"
-                              onChange={(value) => updateComponentCellLine(component.id, value)}
-                              options={cellLineList}
-                              optionRender={(option) => (
-                                <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
-                                  <div>{option.label}</div>
-                                </Tooltip>
-                              )}
-                            />
+                            <Tooltip
+                              title={
+                                <span style={{ color: 'black' }}>
+                                  {component.cellLine ? 
+                                    `${cellLineList.find(cl => cl.value === component.cellLine)?.label || component.cellLine}` : 
+                                    'No cell line selected'
+                                  }
+                                </span>
+                              }
+                              color='white'
+                              placement="topRight"
+                            >
+                              <Select
+                                value={component.cellLine}
+                                style={{
+                                  minWidth: 150,
+                                  maxWidth: 150,
+                                  marginRight: 5,
+                                }}
+                                size="small"
+                                onChange={(value) => updateComponentCellLine(component.id, value)}
+                                options={cellLineList}
+                                optionRender={(option) => (
+                                  <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                    <div>{option.label}</div>
+                                  </Tooltip>
+                                )}
+                              />
+                            </Tooltip>
                             <Tooltip
                               title={
                                 <span style={{ color: 'black' }}>
