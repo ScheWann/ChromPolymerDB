@@ -365,7 +365,7 @@ def exist_chromosome_3D_data(cell_line, sample_id):
     # Sample ID mapping for when sample_id is 0
     sample_id_mapping = {
         "GM12878": 4229,
-        "IMR90": 559,
+        "IMR90": 1201,
         "NHEK": 4225
     }
     

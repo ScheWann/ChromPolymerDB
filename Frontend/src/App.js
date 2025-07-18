@@ -55,7 +55,7 @@ function App() {
     }
   ])
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
-  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM12878": 4229, "IMR90": 559, "NHEK": 4225 }); // Example data best sample ID
+  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM12878": 4229, "IMR90": 1201, "NHEK": 4225 }); // Example data best sample ID
   const [ChromosomeDataSpinnerProgress, setChromosomeDataSpinnerProgress] = useState(0);
 
   // Heatmap Comparison settings
