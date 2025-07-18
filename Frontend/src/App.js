@@ -469,13 +469,72 @@ function App() {
       setChromosome3DLoading(true);
     }
 
-    // For 3D components, use the same endpoint as fetchExampleChromos3DData
-    // which expects chromosome sequences, not just sample_id
-    if (is3DComponent) {
-      // Start progress polling for 3D components that need data generation
-      if (!isBest) {
-        progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, false);
-      }
+    // Determine which API to use based on isExampleMode
+    const isExample = isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence);
+    
+    if (isExample) {
+      // For example mode, use the existing getExistChromosome3DData API
+      // Start progress polling for example data
+      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, true);
+      
+      fetch('/api/getExistChromosome3DData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cell_line: cellLineName, sample_id: value })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (is3DComponent) {
+            // Update the specific component's data
+            setChromosome3DComponents(prev =>
+              prev.map(comp =>
+                comp.id === componentId
+                  ? {
+                    ...comp,
+                    data: {
+                      ...comp.data,
+                      [cacheKey]: data["position_data"],
+                      [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                      [cacheKey + "_fq_data"]: data["fq_data"],
+                      [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                    },
+                    loading: false
+                  }
+                  : comp
+              )
+            );
+          } else {
+            // For heatmaps (including comparison heatmaps), store in chromosome3DExampleData
+            setChromosome3DExampleData(prev => ({
+              ...prev,
+              [cacheKey]: data["position_data"],
+              [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+              [cacheKey + "_fq_data"]: data["fq_data"],
+              [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+            }));
+            setChromosome3DLoading(false);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching existing chromosome 3D data:', error);
+          if (is3DComponent) {
+            setChromosome3DComponents(prev =>
+              prev.map(comp =>
+                comp.id === componentId
+                  ? { ...comp, loading: false }
+                  : comp
+              )
+            );
+          } else {
+            setChromosome3DLoading(false);
+          }
+        });
+    } else {
+      // For non-example mode, use the getChromosome3DData API
+      // Start progress polling for non-example data
+      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, false);
       
       fetch('/api/getChromosome3DData', {
         method: 'POST',
@@ -491,61 +550,50 @@ function App() {
       })
         .then(res => res.json())
         .then(data => {
-          // Update the specific component's data
-          setChromosome3DComponents(prev =>
-            prev.map(comp =>
-              comp.id === componentId
-                ? {
-                  ...comp,
-                  data: {
-                    ...comp.data,
-                    [cacheKey]: data["position_data"],
-                    [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-                    [cacheKey + "_fq_data"]: data["fq_data"],
-                    [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-                  },
-                  loading: false
-                }
-                : comp
-            )
-          );
+          if (is3DComponent) {
+            // Update the specific component's data
+            setChromosome3DComponents(prev =>
+              prev.map(comp =>
+                comp.id === componentId
+                  ? {
+                    ...comp,
+                    data: {
+                      ...comp.data,
+                      [cacheKey]: data["position_data"],
+                      [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+                      [cacheKey + "_fq_data"]: data["fq_data"],
+                      [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+                    },
+                    loading: false
+                  }
+                  : comp
+              )
+            );
+          } else {
+            // For heatmaps (including comparison heatmaps), store in chromosome3DExampleData
+            setChromosome3DExampleData(prev => ({
+              ...prev,
+              [cacheKey]: data["position_data"],
+              [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
+              [cacheKey + "_fq_data"]: data["fq_data"],
+              [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
+            }));
+            setChromosome3DLoading(false);
+          }
         })
         .catch(error => {
-          console.error('Error fetching 3D component data:', error);
-          setChromosome3DComponents(prev =>
-            prev.map(comp =>
-              comp.id === componentId
-                ? { ...comp, loading: false }
-                : comp
-            )
-          );
-        });
-    } else {
-      // Start progress polling for non-component data
-      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, true);
-      
-      fetch('/api/getExistChromosome3DData', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ cell_line: cellLineName, sample_id: value })
-      })
-        .then(res => res.json())
-        .then(data => {
-          // For heatmaps (including comparison heatmaps), store in chromosome3DExampleData
-          setChromosome3DExampleData(prev => ({
-            ...prev,
-            [cacheKey]: data["position_data"],
-            [cacheKey + "_avg_matrix"]: data["avg_distance_data"],
-            [cacheKey + "_fq_data"]: data["fq_data"],
-            [cacheKey + "sample_distance_vector"]: data["sample_distance_vector"]
-          }));
-          setChromosome3DLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching existing chromosome 3D data:', error);
-          setChromosome3DLoading(false);
+          console.error('Error fetching chromosome 3D data:', error);
+          if (is3DComponent) {
+            setChromosome3DComponents(prev =>
+              prev.map(comp =>
+                comp.id === componentId
+                  ? { ...comp, loading: false }
+                  : comp
+              )
+            );
+          } else {
+            setChromosome3DLoading(false);
+          }
         });
     }
   }
