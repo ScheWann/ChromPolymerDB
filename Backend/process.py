@@ -362,8 +362,22 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
 def exist_chromosome_3D_data(cell_line, sample_id):
-    # Establish the progress key for tracking whole progress
-    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{sample_id}_progress")
+    # Sample ID mapping for when sample_id is 0
+    sample_id_mapping = {
+        "GM12878": 4229,
+        "IMR90": 559,
+        "NHEK": 4225
+    }
+    
+    # Keep the original sample_id for progress key
+    original_sample_id = sample_id
+    
+    # Use mapped sample_id if sample_id is 0, otherwise keep the passed sample_id
+    if sample_id == 0:
+        sample_id = sample_id_mapping.get(cell_line, sample_id)
+    
+    # Establish the progress key for tracking whole progress (use original sample_id)
+    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
     redis_client.setex(progress_key, 3600, 0)
 
     def checking_existing_data(cell_line, sample_id):

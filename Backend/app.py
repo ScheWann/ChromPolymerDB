@@ -175,11 +175,11 @@ def get_Example3DProgress():
     if is_exist == 'true':
         key = f"{cell_line}:chr8:127300000:128300000:exist_{sample_id}_progress"
         val = redis_client.get(key)
-        return jsonify(percent=int(val))
+        return jsonify(percent=int(val) if val is not None else 0)
     else:
         key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
         val = redis_client.get(key)
-        return jsonify(percent=int(val))
+        return jsonify(percent=int(val) if val is not None else 0)
 
 
 @app.route('/api/clearFoldingInputFolderInputContent', methods=['POST'])
