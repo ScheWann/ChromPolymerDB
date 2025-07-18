@@ -434,7 +434,22 @@ function App() {
       keyPrefix = `${cellLineName}-HEATMAP-${componentId}`; // Comparison heatmap
     }
     
-    const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${sampleID}`;
+    // Special handling for 3D components in example mode
+    // In example mode, we want to use the best sample ID for the API call,
+    // but store the data under the cache key that uses the component's current sampleID
+    let cacheKeySampleID = sampleID;
+    let apiSampleID = sampleID;
+    
+    if (is3DComponent && isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
+      const component = chromosome3DComponents.find(c => c.id === componentId);
+      if (component) {
+        // Use component's current sampleID for cache key, but best sample ID for API
+        cacheKeySampleID = component.sampleID;
+        apiSampleID = sampleID; // This is the best sample ID passed from updateComponentCellLine
+      }
+    }
+    
+    const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${cacheKeySampleID}`;
     
     const cachedData = is3DComponent ?
       chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
@@ -475,14 +490,14 @@ function App() {
     if (isExample) {
       // For example mode, use the existing getExistChromosome3DData API
       // Start progress polling for example data
-      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, true);
+      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, apiSampleID, true);
       
       fetch('/api/getExistChromosome3DData', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cell_line: cellLineName, sample_id: value })
+        body: JSON.stringify({ cell_line: cellLineName, sample_id: apiSampleID })
       })
         .then(res => res.json())
         .then(data => {
@@ -534,7 +549,7 @@ function App() {
     } else {
       // For non-example mode, use the getChromosome3DData API
       // Start progress polling for non-example data
-      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, value, false);
+      progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, apiSampleID, false);
       
       fetch('/api/getChromosome3DData', {
         method: 'POST',
@@ -545,7 +560,7 @@ function App() {
           cell_line: cellLineName,
           chromosome_name: chromosomeName,
           sequences: selectedChromosomeSequence,
-          sample_id: sampleID
+          sample_id: apiSampleID
         })
       })
         .then(res => res.json())
@@ -1581,13 +1596,14 @@ function App() {
     // Fetch data for the new cell line
     const component = chromosome3DComponents.find(c => c.id === componentId);
     if (component) {
-      if (!isExampleMode(cellLine, chromosomeName, selectedChromosomeSequence)) {
+      if (isExampleMode(cellLine, chromosomeName, selectedChromosomeSequence)) {
+        // In example mode, use the best sample ID for fetching data
+        const bestSampleID = exampleDataBestSampleID[cellLine];
+        fetchExistChromos3DData(false, bestSampleID, cellLine, componentId);
+      } else {
+        // In non-example mode, use the component's current sample ID
         progressPolling(cellLine, chromosomeName, selectedChromosomeSequence, component.sampleID, false);
-      }
-      fetchExistChromos3DData(false, component.sampleID, cellLine, componentId);
-      if (isExampleMode(cellLine, chromosomeName, currentChromosomeSequence)) {
-        const key = exampleDataBestSampleID[cellLine];
-        fetchExistChromos3DData(false, key, cellLine, componentId);
+        fetchExistChromos3DData(false, component.sampleID, cellLine, componentId);
       }
     }
   };
