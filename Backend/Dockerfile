@@ -15,7 +15,7 @@ RUN git clone https://github.com/ScheWann/sBIF.git
 WORKDIR /chromosome/sBIF
 ENV CXX=g++
 RUN mkdir output
-RUN cmake . && make
+RUN cmake -DCMAKE_BUILD_TYPE=Release . && make -j$(nproc)
 
 WORKDIR /chromosome/backend
 
