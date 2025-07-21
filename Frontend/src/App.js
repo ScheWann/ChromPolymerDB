@@ -348,7 +348,7 @@ function App() {
             return;
           }
 
-          const delay = first ? 100 : 1000;
+          const delay = first ? 100 : 10000;
           first = false;
 
           setTimeout(fetchProgress, delay);
@@ -359,7 +359,7 @@ function App() {
         });
     };
 
-    setTimeout(fetchProgress, 1500);
+    setTimeout(fetchProgress, 10000);
   }
 
   // update original part when chromosome3DExampleID changes
