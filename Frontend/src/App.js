@@ -359,7 +359,7 @@ function App() {
         });
     };
 
-    setTimeout(fetchProgress, 100);
+    setTimeout(fetchProgress, 1500);
   }
 
   // update original part when chromosome3DExampleID changes
