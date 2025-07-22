@@ -151,11 +151,11 @@ function App() {
   const addItems = [
     {
       key: 'heatmap',
-      label: 'Add Heatmap',
+      label: 'Add Heatmap Comparison',
     },
     {
       key: 'chromosome3d',
-      label: 'Add Chromosome 3D',
+      label: 'Add 3D Structure Comparison',
       disabled: !(Object.keys(chromosome3DExampleData).length > 0 || chromosome3DComponents.length > 0)
     }
   ]
