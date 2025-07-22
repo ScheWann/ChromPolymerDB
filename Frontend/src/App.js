@@ -115,8 +115,8 @@ function App() {
       target: () => document.querySelector(".controlGroupText:nth-of-type(3) + .ant-input"),
     },
     {
-      title: "New Heatmap Comparison Button",
-      description: "Click this button to add a new heatmap for comparison.",
+      title: "New Sample Comparison Button",
+      description: "Click this button to add a new heatmap or 3D chromatin strucrute for comparison.",
       target: () => document.querySelector("#add-new-heatmap-button"),
     },
     {
