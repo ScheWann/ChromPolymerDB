@@ -54,4 +54,5 @@ label_mapping = {
     'HPNE': 'Pancreatic Nestin-expressing cell cell line (HPNE)',
     'Capan1': 'Pancreatic ductal adenocarcinoma cell line',
     'Cardiomyocyte': 'Cardiomyocytes derived from H9',
+    'activated_bcells':'Activated B cells'
 }
