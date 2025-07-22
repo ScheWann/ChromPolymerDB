@@ -72,6 +72,9 @@ def get_db_connection(database=None):
 
 def process_non_random_hic_data(chromosome_dir):
     """Process and insert data into separate cell line tables"""
+    # Get all unique cell lines from all files to create tables once
+    created_tables = set()
+    
     for file_name in os.listdir(chromosome_dir):
         if not file_name.endswith(".csv.gz"):
             continue
@@ -96,15 +99,29 @@ def process_non_random_hic_data(chromosome_dir):
                 table_name = get_cell_line_table_name(cell_line)
                 
                 # Check if table exists and create if necessary
+                if cell_line not in created_tables:
+                    conn = get_db_connection(database=DB_NAME)
+                    cur = conn.cursor()
+                    try:
+                        table_created = create_cell_line_table(cur, cell_line)
+                        if table_created:
+                            conn.commit()
+                        created_tables.add(cell_line)
+                    except Exception as e:
+                        print(f"Error creating table for {cell_line}: {e}")
+                        conn.rollback()
+                        cur.close()
+                        conn.close()
+                        continue
+                    finally:
+                        cur.close()
+                        conn.close()
+                
+                # Insert data into the table
                 conn = get_db_connection(database=DB_NAME)
                 cur = conn.cursor()
                 
                 try:
-                    # Check if table exists, create if it doesn't
-                    table_created = create_cell_line_table(cur, cell_line)
-                    if table_created:
-                        conn.commit()
-                    
                     # Remove cell_line column since it's redundant in separate tables
                     group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
 
