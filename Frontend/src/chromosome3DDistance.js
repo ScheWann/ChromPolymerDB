@@ -354,7 +354,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         onClick: onClickDownloadItem,
                                     }}
                                     placement="bottom"
-                                    dropdownRender={(menu) => (
+                                    popupRender={(menu) => (
                                         <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
                                                 <span>Background Color: </span>

@@ -80,7 +80,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             key: '5',
             label: (
                 <Upload
-                    accept=".bed,.bigWig,.gz"
+                    accept=".bed,.bigWig,.gz,.bedpe"
                     showUploadList={false}
                     beforeUpload={(file) => {
                         const fileURL = URL.createObjectURL(file);

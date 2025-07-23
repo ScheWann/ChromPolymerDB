@@ -401,7 +401,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     onClick: onClickDownloadItem,
                                 }}
                                 placement="bottom"
-                                dropdownRender={(menu) => (
+                                popupRender={(menu) => (
                                     <div style={{backgroundColor: 'white', borderRadius: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
                                             <span style={{ userSelect: 'none' }}>Background Color: </span>
