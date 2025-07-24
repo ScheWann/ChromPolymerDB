@@ -29,6 +29,7 @@ services:
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
@@ -69,6 +70,7 @@ services:
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis
