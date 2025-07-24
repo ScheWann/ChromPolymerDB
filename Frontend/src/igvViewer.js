@@ -275,11 +275,20 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             } else {
                 format = uploadTrackData.format
             }
+            
             const newTrack = {
                 url: uploadTrackData.trackUrl,
                 name: uploadTrackData.name,
                 format: `${format}`,
             };
+
+            // Add specific properties for BEDPE interaction tracks
+            if (format === 'bedpe') {
+                newTrack.type = "interact";
+                newTrack.arcType = "Nested";
+                newTrack.arcOrientation = "UP";
+                newTrack.color = "rgb(109,122,250)";
+            }
             
             // Store the track for potential reload
             customTracks.current.push(newTrack);
