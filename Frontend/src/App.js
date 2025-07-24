@@ -112,7 +112,7 @@ function App() {
     {
       title: "Genomic Locations Input",
       description: "Specify the genomic location using the start and end inputs.",
-      target: () => document.querySelector(".controlGroupText:nth-of-type(3) + .ant-input"),
+      target: () => document.querySelector(".controlGroupText:nth-of-type(3) + .ant-select"),
     },
     {
       title: "New Sample Comparison Button",
