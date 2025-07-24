@@ -767,18 +767,29 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            result = subprocess.Popen(
-                ["bash", script, str(n_samples), str(n_samples_per_run)],
-                text=True,
-                stdout=subprocess.PIPE,
-                bufsize=1,
-            )
-            pattern = re.compile(r'^\[.*DONE\]')
-            progress_values = [50, 90, 91, 92, 93, 94, 95]
-            matches = (line.strip() for line in result.stdout if pattern.match(line))
-            for val, line in zip(progress_values, matches):
-                print(line)
-                redis_client.setex(progress_key, 3600, val)
+            try:
+                result = subprocess.Popen(
+                    ["bash", script, str(n_samples), str(n_samples_per_run)],
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace',
+                    stdout=subprocess.PIPE,
+                    bufsize=1,
+                )
+                pattern = re.compile(r'^\[.*DONE\]')
+                progress_values = [50, 90, 91, 92, 93, 94, 95]
+                matches = (line.strip() for line in result.stdout if pattern.match(line))
+                for val, line in zip(progress_values, matches):
+                    print(line)
+                    redis_client.setex(progress_key, 3600, val)
+            except UnicodeDecodeError as e:
+                print(f"[WARNING] Unicode decode error in subprocess output: {e}")
+                # Set a default progress value to continue execution
+                redis_client.setex(progress_key, 3600, 95)
+            except Exception as e:
+                print(f"[ERROR] Unexpected error in subprocess execution: {e}")
+                # Set a default progress value to continue execution
+                redis_client.setex(progress_key, 3600, 95)
             t8 = time()
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()
