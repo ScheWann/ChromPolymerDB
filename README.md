@@ -7,18 +7,18 @@
 
 4. Create a **.env** file under the root project directory
     ```dotenv
-        DB_USERNAME=admin
-        DB_HOST=db
-        DB_NAME=chromosome_db
-        DB_PASSWORD=chromosome
-        DB_PORT=5432
-        PGADMIN_DEFAULT_EMAIL=admin@uic.edu
-        PGADMIN_DEFAULT_PASSWORD=chromosome
+    DB_USERNAME=admin
+    DB_HOST=db
+    DB_NAME=chromosome_db
+    DB_PASSWORD=chromosome
+    DB_PORT=5432
+    PGADMIN_DEFAULT_EMAIL=admin@uic.edu
+    PGADMIN_DEFAULT_PASSWORD=chromosome
     ```
 
 5. For development, under this project folder, and run 
     ```bash
-        docker compose up -d --build
+    docker compose up -d --build
     ```
 
 # DEPLOY
@@ -28,48 +28,53 @@
     ```
 2. Build
     ```bash
-    docker-compose -f docker-compose.prod.yml up -d --build
+    docker compose -f docker-compose.prod.yml up -d --build
     ```
 
-## Troubleshooting
+# Troubleshooting
 
 ### View Logs
 ```bash
 # All services
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker compose logs -f backend
 ```
 
 ### Restart Services
 ```bash
 # Restart all
-docker-compose -f docker-compose.prod.yml restart
+docker compose restart
 
 # Restart specific service
-docker-compose -f docker-compose.prod.yml restart backend
+docker compose restart backend
 ```
 
 ### Database Issues
 ```bash
 # Check database connection
-docker-compose -f docker-compose.prod.yml exec db psql -U $DB_USERNAME -d $DB_NAME
+docker compose exec db psql -U $DB_USERNAME -d $DB_NAME
 ```
 
-### API Connection Issues
-If frontend and backend are not connecting:
-
+### Clean Redis
 ```bash
-# Check if backend is responding
-curl http://localhost:5001/
+docker exec -it Redis redis-cli FLUSHALL
+```
 
-# Check backend logs for errors
-docker-compose -f docker-compose.prod.yml logs -f backend
+### Clean the Docker Build Cache
+```bash
+docker builder prune --all
+```
 
-# Check frontend proxy logs
-docker-compose -f docker-compose.prod.yml logs -f frontend
+### Container Operation
+```bash
+docker exec -it <container ID> bash
+```
 
-# Test API endpoint directly
-curl http://localhost:5001/api/getCellLines
+### Download distance data from the database
+Take GM12878-chr8-127300000-128300000 as an example
+```bash
+psql -U admin -d chromosome_db \
+  --command "\copy (SELECT * FROM public.distance WHERE cell_line = 'GM12878' AND chrid = 'chr8' AND start_value = 127300000 AND end_value = 128300000) TO '/opt/GM12878_chr8_127300000_128300000_original_distance.csv' WITH (FORMAT csv, HEADER, DELIMITER ',', QUOTE '\"', ESCAPE '''');"
 ```
