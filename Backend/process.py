@@ -770,24 +770,32 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             try:
                 result = subprocess.Popen(
                     ["bash", script, str(n_samples), str(n_samples_per_run)],
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace',
+                    text=False,  # Use binary mode to avoid encoding issues
                     stdout=subprocess.PIPE,
                     bufsize=1,
                 )
                 pattern = re.compile(r'^\[.*DONE\]')
                 progress_values = [50, 90, 91, 92, 93, 94, 95]
-                matches = (line.strip() for line in result.stdout if pattern.match(line))
-                for val, line in zip(progress_values, matches):
+                
+                # Process lines with explicit encoding handling
+                matched_lines = []
+                for raw_line in result.stdout:
+                    try:
+                        # Decode each line individually with error handling
+                        line = raw_line.decode('utf-8', errors='replace').strip()
+                        if pattern.match(line):
+                            matched_lines.append(line)
+                    except Exception as decode_error:
+                        print(f"[WARNING] Error processing line: {decode_error}")
+                        continue
+                
+                # Process matched lines with progress updates
+                for val, line in zip(progress_values, matched_lines):
                     print(line)
                     redis_client.setex(progress_key, 3600, val)
-            except UnicodeDecodeError as e:
-                print(f"[WARNING] Unicode decode error in subprocess output: {e}")
-                # Set a default progress value to continue execution
-                redis_client.setex(progress_key, 3600, 95)
+                    
             except Exception as e:
-                print(f"[ERROR] Unexpected error in subprocess execution: {e}")
+                print(f"[ERROR] Error in subprocess execution: {e}")
                 # Set a default progress value to continue execution
                 redis_client.setex(progress_key, 3600, 95)
             t8 = time()

@@ -31,7 +31,7 @@
     docker-compose -f docker-compose.prod.yml up -d --build
     ```
 
-# Troubleshooting
+## Troubleshooting
 
 ### View Logs
 ```bash
