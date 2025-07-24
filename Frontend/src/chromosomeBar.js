@@ -5,7 +5,7 @@ import "./Styles/chromosomeBar.css";
 export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences, setStartInputValue, setEndInputValue }) => {
     const svgRef = useRef();
     const parentRef = useRef();
-    const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
+    // const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
     const [parentSize, setParentSize] = useState({ width: 0, height: 0 });
 
     useEffect(() => {
@@ -137,13 +137,13 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             ? window.innerWidth - tooltipWidth - 10
                             : tooltipX;
 
-                        setTooltip({
-                            visible: true,
-                            minStart: seq.start,
-                            maxEnd: seq.end,
-                            left: adjustedLeft,
-                            top: event.pageY - 50,
-                        });
+                        // setTooltip({
+                        //     visible: true,
+                        //     minStart: seq.start,
+                        //     maxEnd: seq.end,
+                        //     left: adjustedLeft,
+                        //     top: event.pageY - 50,
+                        // });
                     })
                     .on('mouseout', (event) => {
                         d3.select(event.currentTarget)
@@ -152,7 +152,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                             .attr('stroke', 'none')
                             .attr('stroke-width', 0)
                             .style('opacity', 0.8);
-                        setTooltip((prev) => ({ ...prev, visible: false }));
+                        // setTooltip((prev) => ({ ...prev, visible: false }));
                     });
                 if (overlapStart < overlapEnd) {
                     const overlapX = xScale(overlapStart);
@@ -189,14 +189,14 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                                 ? window.innerWidth - tooltipWidth - 10
                                 : tooltipX;
 
-                            setTooltip({
-                                visible: true,
-                                minStart: overlapStart,
-                                maxEnd: overlapEnd,
-                                left: adjustedLeft,
-                                top: event.pageY - 50,
-                                type: 'overlap',
-                            });
+                            // setTooltip({
+                            //     visible: true,
+                            //     minStart: overlapStart,
+                            //     maxEnd: overlapEnd,
+                            //     left: adjustedLeft,
+                            //     top: event.pageY - 50,
+                            //     type: 'overlap',
+                            // });
                         })
                         .on('mouseout', (event) => {
                             d3.select(event.currentTarget)
@@ -205,7 +205,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                                 .attr('stroke', 'none')
                                 .attr('stroke-width', 0)
                                 .style('opacity', 0.8);
-                            setTooltip((prev) => ({ ...prev, visible: false }));
+                            // setTooltip((prev) => ({ ...prev, visible: false }));
                         });
                 }
             });
@@ -291,7 +291,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
     return (
         <div id="chromosome-bar" ref={parentRef} style={{ width: '100%', position: 'relative' }}>
             <svg ref={svgRef}></svg>
-            <div
+            {/* <div
                 className={`tooltip ${tooltip.visible ? 'visible' : ''}`}
                 style={{
                     left: tooltip.left,
@@ -301,7 +301,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
             >
                 <div className="chromosomeBarTooltipText"><strong>Start:</strong>{formatNumber(tooltip.minStart)}</div>
                 <div className="chromosomeBarTooltipText"><strong>End:</strong>{formatNumber(tooltip.maxEnd)}</div>
-            </div>
+            </div> */}
         </div>
     );
 };
