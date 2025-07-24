@@ -767,37 +767,18 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            try:
-                result = subprocess.Popen(
-                    ["bash", script, str(n_samples), str(n_samples_per_run)],
-                    text=False,  # Use binary mode to avoid encoding issues
-                    stdout=subprocess.PIPE,
-                    bufsize=1,
-                )
-                pattern = re.compile(r'^\[.*DONE\]')
-                progress_values = [50, 90, 91, 92, 93, 94, 95]
-                
-                # Process lines with explicit encoding handling
-                matched_lines = []
-                for raw_line in result.stdout:
-                    try:
-                        # Decode each line individually with error handling
-                        line = raw_line.decode('utf-8', errors='replace').strip()
-                        if pattern.match(line):
-                            matched_lines.append(line)
-                    except Exception as decode_error:
-                        print(f"[WARNING] Error processing line: {decode_error}")
-                        continue
-                
-                # Process matched lines with progress updates
-                for val, line in zip(progress_values, matched_lines):
-                    print(line)
-                    redis_client.setex(progress_key, 3600, val)
-                    
-            except Exception as e:
-                print(f"[ERROR] Error in subprocess execution: {e}")
-                # Set a default progress value to continue execution
-                redis_client.setex(progress_key, 3600, 95)
+            result = subprocess.Popen(
+                ["bash", script, str(n_samples), str(n_samples_per_run)],
+                text=True,
+                stdout=subprocess.PIPE,
+                bufsize=1,
+            )
+            pattern = re.compile(r'^\[.*DONE\]')
+            progress_values = [50, 90, 91, 92, 93, 94, 95]
+            matches = (line.strip() for line in result.stdout if pattern.match(line))
+            for val, line in zip(progress_values, matches):
+                print(line)
+                redis_client.setex(progress_key, 3600, val)
             t8 = time()
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()
