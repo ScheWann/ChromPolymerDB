@@ -6,8 +6,8 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install git
-RUN apt-get update && apt-get install -y git cmake libzip-dev
+# Install git, curl, and other dependencies
+RUN apt-get update && apt-get install -y git cmake libzip-dev curl
 WORKDIR /chromosome
 RUN git clone https://github.com/ScheWann/sBIF.git
 
@@ -25,4 +25,4 @@ RUN chmod +x ./process.py
 RUN chmod +x ./sBIF.sh
 
 EXPOSE 5001
-CMD ["sh", "-c", "python -u app.py"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]

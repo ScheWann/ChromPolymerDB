@@ -1,0 +1,164 @@
+services:
+  db:
+    build:
+      context: ./DB
+      dockerfile: Dockerfile
+    container_name: DB
+    command: postgres -c max_wal_size=4GB -c shared_preload_libraries=pg_cron
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 30s      
+      timeout: 10s         
+      retries: 3      
+    ports:
+      - "5432:5432"
+    networks:
+      - chrompolymerdb
+
+  data-importer:
+    build:
+      context: ./Backend
+    container_name: Data-Importer
+    restart: 'no'
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./Data:/chromosome/Data:ro
+      - data_import_volume:/chromosome/import_status
+    command: >
+      sh -c "
+        if [ ! -f /chromosome/import_status/.imported ]; then
+          echo 'Start to import data...' &&
+          python /chromosome/backend/init_db.py &&
+          touch /chromosome/import_status/.imported &&
+          echo 'Data imported'
+        else
+          echo 'Data exists, skip importing'
+        fi
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - chrompolymerdb
+
+  redis:
+    image: redis:8.0.2-bookworm
+    container_name: Redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - chrompolymerdb
+
+  backend:
+    container_name: Backend
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      data-importer:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - chrompolymerdb
+
+  frontend:
+    container_name: Frontend
+    restart: always
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - chrompolymerdb
+
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: PgAdmin
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   ports:
+  #     - "8080:80"
+  #   networks:
+  #     - chrompolymerdb
+
+  db-cron:
+    build:
+      context: ./Cron
+      dockerfile: Dockerfile
+    container_name: DB-Cron
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    command: sh -c 'echo "$${DB_HOST}:5432:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - chrompolymerdb
+
+networks:
+  chrompolymerdb:
+    driver: bridge
+
+volumes:
+  pgadmin_data:
+  data_import_volume:
+  pgdata:
+  redis_data: 
