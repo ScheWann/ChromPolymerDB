@@ -12,22 +12,32 @@ import "./Styles/chromosome3D.css";
 
 // XYZ Axis Indicator Component
 const AxisIndicator = ({ cameraRotation }) => {
+    const SCALE = 1.5;  // ← change this to uniformly scale all dimensions
+    const SEGMENTS = 8;
+
+    const AXIS_LENGTH = 15 * SCALE;  // original 15
+    const SHAFT_RADIUS = 0.5 * SCALE; // original 0.5
+    const CONE_RADIUS = 2 * SCALE;   // original 2
+    const CONE_HEIGHT = 4 * SCALE;   // original 4
+    const TEXT_DISTANCE = 20 * SCALE;  // original 20
+    const SPRITE_SCALE = 6 * SCALE;   // original 6
+
     const createTextSprite = (text, color, position) => {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 64;
-        canvas.height = 64;
-        
+        canvas.width = 120;
+        canvas.height = 120;
+
         context.fillStyle = color;
         context.font = 'bold 80px Arial';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillText(text, 32, 32);
-        
+
         const texture = new THREE.CanvasTexture(canvas);
-        
+
         return (
-            <sprite position={position} scale={[6, 6, 1]}>
+            <sprite position={position} scale={[SPRITE_SCALE, SPRITE_SCALE, 1]}>
                 <spriteMaterial map={texture} />
             </sprite>
         );
@@ -35,43 +45,52 @@ const AxisIndicator = ({ cameraRotation }) => {
 
     return (
         <group rotation={cameraRotation}>
-            {/* X-axis (Red) */}
+
+            {/* X-axis */}
             <group>
-                <mesh position={[15, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-                    <coneGeometry args={[2, 4, 8]} />
-                    <meshBasicMaterial color="#00BFFF" />
+                <mesh
+                    position={[AXIS_LENGTH, 0, 0]}
+                    rotation={[0, 0, -Math.PI / 2]}>
+                    <coneGeometry args={[CONE_RADIUS, CONE_HEIGHT, SEGMENTS]} />
+                    <meshBasicMaterial color="#117A65" />
                 </mesh>
-                <mesh position={[7.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
-                    <meshBasicMaterial color="#00BFFF" />
+                <mesh
+                    position={[AXIS_LENGTH / 2, 0, 0]}
+                    rotation={[0, 0, Math.PI / 2]}>
+                    <cylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, AXIS_LENGTH, SEGMENTS]} />
+                    <meshBasicMaterial color="#117A65" />
                 </mesh>
-                {createTextSprite('X', '#00BFFF', [20, 0, 0])}
+                {createTextSprite('X', '#117A65', [TEXT_DISTANCE, 0, 0])}
             </group>
-            
-            {/* Y-axis (Green) */}
+
+            {/* Y-axis */}
             <group>
-                <mesh position={[0, 15, 0]}>
-                    <coneGeometry args={[2, 4, 8]} />
-                    <meshBasicMaterial color="#7CFC00" />
+                <mesh position={[0, AXIS_LENGTH, 0]}>
+                    <coneGeometry args={[CONE_RADIUS, CONE_HEIGHT, SEGMENTS]} />
+                    <meshBasicMaterial color="#B9770E" />
                 </mesh>
-                <mesh position={[0, 7.5, 0]}>
-                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
-                    <meshBasicMaterial color="#7CFC00" />
+                <mesh position={[0, AXIS_LENGTH / 2, 0]}>
+                    <cylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, AXIS_LENGTH, SEGMENTS]} />
+                    <meshBasicMaterial color="#B9770E" />
                 </mesh>
-                {createTextSprite('Y', '#7CFC00', [0, 20, 0])}
+                {createTextSprite('Y', '#B9770E', [0, TEXT_DISTANCE, 0])}
             </group>
-            
-            {/* Z-axis (Blue) */}
+
+            {/* Z-axis */}
             <group>
-                <mesh position={[0, 0, 15]} rotation={[Math.PI / 2, 0, 0]}>
-                    <coneGeometry args={[2, 4, 8]} />
-                    <meshBasicMaterial color="#DA70D6" />
+                <mesh
+                    position={[0, 0, AXIS_LENGTH]}
+                    rotation={[Math.PI / 2, 0, 0]}>
+                    <coneGeometry args={[CONE_RADIUS, CONE_HEIGHT, SEGMENTS]} />
+                    <meshBasicMaterial color="#6C3483" />
                 </mesh>
-                <mesh position={[0, 0, 7.5]} rotation={[Math.PI / 2, 0, 0]}>
-                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
-                    <meshBasicMaterial color="#DA70D6" />
+                <mesh
+                    position={[0, 0, AXIS_LENGTH / 2]}
+                    rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[SHAFT_RADIUS, SHAFT_RADIUS, AXIS_LENGTH, SEGMENTS]} />
+                    <meshBasicMaterial color="#6C3483" />
                 </mesh>
-                {createTextSprite('Z', '#DA70D6', [0, 0, 20])}
+                {createTextSprite('Z', '#6C3483', [0, 0, TEXT_DISTANCE])}
             </group>
         </group>
     );
@@ -470,7 +489,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 }}
                                 placement="bottom"
                                 popupRender={(menu) => (
-                                    <div style={{backgroundColor: 'white', borderRadius: 4 }}>
+                                    <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', gap: 3, padding: '10px 0 0 15px' }}>
                                             <span style={{ userSelect: 'none' }}>Background Color: </span>
                                             <ColorPicker
@@ -483,7 +502,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 }}
                                             />
                                         </div>
-                                        {React.cloneElement(menu, {style: { boxShadow: 'none' }})}
+                                        {React.cloneElement(menu, { style: { boxShadow: 'none' } })}
                                     </div>
                                 )}
                             >
@@ -607,7 +626,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     />
                 </div>)}
 
-            <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease' }}>
+            <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease', position: 'relative' }}>
                 <Canvas
                     shadows
                     ref={canvasRef}
@@ -754,26 +773,26 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         );
                     })}
                 </Canvas>
-            </div>
 
-            {/* XYZ Axis Indicator */}
-            <div style={{
-                position: 'absolute',
-                bottom: 20,
-                left: 20,
-                width: 120,
-                height: 120,
-                zIndex: 10
-            }}>
-                <Canvas
-                    camera={{ position: [0, 0, 50], fov: 75 }}
-                    style={{ width: '100%', height: '100%' }}
-                    gl={{ alpha: true }}
-                >
-                    <ambientLight intensity={0.8} />
-                    <directionalLight position={[5, 5, 5]} intensity={1} />
-                    <AxisIndicator cameraRotation={cameraRotation} />
-                </Canvas>
+                {/* XYZ Axis Indicator - now positioned relative to the canvas container */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    left: 20,
+                    width: 120,
+                    height: 120,
+                    zIndex: 10
+                }}>
+                    <Canvas
+                        camera={{ position: [0, 0, 50], fov: 75 }}
+                        style={{ width: '100%', height: '100%' }}
+                        gl={{ alpha: true }}
+                    >
+                        <ambientLight intensity={0.8} />
+                        <directionalLight position={[5, 5, 5]} intensity={1} />
+                        <AxisIndicator cameraRotation={cameraRotation} />
+                    </Canvas>
+                </div>
             </div>
 
             {showChromosome3DDistance && (
