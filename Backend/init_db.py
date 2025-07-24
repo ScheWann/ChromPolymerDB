@@ -240,6 +240,7 @@ def initialize_tables():
             "chrid          VARCHAR(50) NOT NULL,"
             "start_value    BIGINT NOT NULL,"
             "end_value      BIGINT NOT NULL,"
+            "best_sample_id INT NOT NULL DEFAULT 0,"
             "avg_distance_vector BYTEA NOT NULL,"
             "fq_distance_vector BYTEA NOT NULL,"
             "best_vector BYTEA NOT NULL,"

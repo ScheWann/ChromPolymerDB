@@ -565,6 +565,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
                         AND start_value = %s
                         AND end_value = %s
                         AND sampleid = %s
+                        ORDER BY pid
                     """,
                     (chromosome_name, cell_line, sequences["start"], sequences["end"], sample_id),
                 )
@@ -580,17 +581,19 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
         cache_avg_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "avg_distance_data")
         cache_fq_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_data")
         cache_best_corr_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "best_corr_data")
+        cache_best_sample_id_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "best_sample_id")
         if redis_client.get(cache_avg_key) and redis_client.get(cache_fq_key):
             avg_distance_data = json.loads(redis_client.get(cache_avg_key).decode("utf-8"))
             fq_data = json.loads(redis_client.get(cache_fq_key).decode("utf-8"))
             best_corr_data = json.loads(redis_client.get(cache_best_corr_key).decode("utf-8"))
-            return avg_distance_data, fq_data, best_corr_data
+            best_sample_id = int(redis_client.get(cache_best_sample_id_key).decode("utf-8"))
+            return avg_distance_data, fq_data, best_corr_data, best_sample_id
         
         with db_conn() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     """
-                        SELECT avg_distance_vector, fq_distance_vector, best_vector
+                        SELECT avg_distance_vector, fq_distance_vector, best_vector, best_sample_id
                         FROM calc_distance
                         WHERE chrid = %s
                             AND cell_line = %s
@@ -603,6 +606,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
                 raw_avg = row["avg_distance_vector"]
                 raw_fq  = row["fq_distance_vector"]
                 raw_best = row["best_vector"]
+                best_sample_id = row["best_sample_id"]
 
                 avg_half_arr = np.frombuffer(raw_avg, dtype=np.float32)
                 best_half_arr = np.frombuffer(raw_best, dtype=np.float32)
@@ -620,8 +624,9 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
         redis_client.setex(cache_avg_key, 3600, avg_data_json)
         redis_client.setex(cache_fq_key, 3600, fq_data_json)
         redis_client.setex(cache_best_corr_key, 3600, best_corr_json)
+        redis_client.setex(cache_best_sample_id_key, 3600, best_sample_id)
 
-        return avg_full_mat.tolist(), fq_full_mat.tolist(), best_full_mat.tolist()
+        return avg_full_mat.tolist(), fq_full_mat.tolist(), best_full_mat.tolist(), best_sample_id
 
     def get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id):
         with db_conn() as conn:
@@ -676,8 +681,8 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     elif data_in_db_exist_status["position_exists"] and data_in_db_exist_status["distance_exists"]:
-        position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
-        avg_distance_matrix, fq_data, sample_distance_vector = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
+        avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
+        position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
 
         if sample_id != 0:
             sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
@@ -772,14 +777,14 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
 
             t11 = time()
-            position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id or 0)
+            avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
             t12 = time()
-            print(f"[DEBUG] Fetching position data took {t12 - t11:.4f} seconds")
+            print(f"[DEBUG] Fetching fq data took {t12 - t11:.4f} seconds")
             t13 = time()
-            avg_distance_matrix, fq_data, sample_distance_vector = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
+            position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
             t14 = time()
             redis_client.setex(progress_key, 3600, 98)
-            print(f"[DEBUG] Fetching fq data took {t14 - t13:.4f} seconds")
+            print(f"[DEBUG] Fetching position data took {t14 - t13:.4f} seconds")
             
             if sample_id != 0:
                 t15 = time()
