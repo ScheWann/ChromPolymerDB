@@ -10,6 +10,73 @@ import { Chromosome3DDistance } from './chromosome3DDistance';
 import { SimulatedFqHeatmap } from "./simulatedFqHeatmap";
 import "./Styles/chromosome3D.css";
 
+// XYZ Axis Indicator Component
+const AxisIndicator = ({ cameraRotation }) => {
+    const createTextSprite = (text, color, position) => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 64;
+        canvas.height = 64;
+        
+        context.fillStyle = color;
+        context.font = 'bold 80px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(text, 32, 32);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        
+        return (
+            <sprite position={position} scale={[6, 6, 1]}>
+                <spriteMaterial map={texture} />
+            </sprite>
+        );
+    };
+
+    return (
+        <group rotation={cameraRotation}>
+            {/* X-axis (Red) */}
+            <group>
+                <mesh position={[15, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+                    <coneGeometry args={[2, 4, 8]} />
+                    <meshBasicMaterial color="#00BFFF" />
+                </mesh>
+                <mesh position={[7.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
+                    <meshBasicMaterial color="#00BFFF" />
+                </mesh>
+                {createTextSprite('X', '#00BFFF', [20, 0, 0])}
+            </group>
+            
+            {/* Y-axis (Green) */}
+            <group>
+                <mesh position={[0, 15, 0]}>
+                    <coneGeometry args={[2, 4, 8]} />
+                    <meshBasicMaterial color="#7CFC00" />
+                </mesh>
+                <mesh position={[0, 7.5, 0]}>
+                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
+                    <meshBasicMaterial color="#7CFC00" />
+                </mesh>
+                {createTextSprite('Y', '#7CFC00', [0, 20, 0])}
+            </group>
+            
+            {/* Z-axis (Blue) */}
+            <group>
+                <mesh position={[0, 0, 15]} rotation={[Math.PI / 2, 0, 0]}>
+                    <coneGeometry args={[2, 4, 8]} />
+                    <meshBasicMaterial color="#DA70D6" />
+                </mesh>
+                <mesh position={[0, 0, 7.5]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.5, 0.5, 15, 8]} />
+                    <meshBasicMaterial color="#DA70D6" />
+                </mesh>
+                {createTextSprite('Z', '#DA70D6', [0, 0, 20])}
+            </group>
+        </group>
+    );
+};
+
 export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, isExampleMode }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
@@ -25,6 +92,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
     const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
     const [chromosome3DBackgroundColor, setChromosome3DBackgroundColor] = useState('#333333');
+    const [cameraRotation, setCameraRotation] = useState([0, 0, 0]);
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -560,6 +628,12 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         enableZoom={true}
                         enableRotate={true}
                         enablePan={true}
+                        onChange={() => {
+                            if (controlsRef.current) {
+                                const euler = new THREE.Euler().setFromQuaternion(controlsRef.current.object.quaternion);
+                                setCameraRotation([euler.x, euler.y, euler.z]);
+                            }
+                        }}
                     />
                     <ambientLight intensity={1} />
                     <directionalLight
@@ -679,6 +753,26 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             </group>
                         );
                     })}
+                </Canvas>
+            </div>
+
+            {/* XYZ Axis Indicator */}
+            <div style={{
+                position: 'absolute',
+                bottom: 20,
+                left: 20,
+                width: 120,
+                height: 120,
+                zIndex: 10
+            }}>
+                <Canvas
+                    camera={{ position: [0, 0, 50], fov: 75 }}
+                    style={{ width: '100%', height: '100%' }}
+                    gl={{ alpha: true }}
+                >
+                    <ambientLight intensity={0.8} />
+                    <directionalLight position={[5, 5, 5]} intensity={1} />
+                    <AxisIndicator cameraRotation={cameraRotation} />
                 </Canvas>
             </div>
 
