@@ -134,7 +134,8 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-    command: sh -c 'echo "$${DB_HOST}:5432:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
+      DB_PORT: ${DB_PORT}
+    command: sh -c 'echo "$${DB_HOST}:$${DB_PORT}:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
     depends_on:
       db:
         condition: service_healthy
