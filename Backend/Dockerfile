@@ -25,4 +25,8 @@ RUN chmod +x ./process.py
 RUN chmod +x ./sBIF.sh
 
 EXPOSE 5001
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
+CMD ["gunicorn", \
+    "-w", "1", \
+    "-b", "0.0.0.0:5001", \
+    "--chdir", "/chromosome/backend", \
+    "app:app"]

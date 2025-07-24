@@ -4,7 +4,7 @@ services:
       context: ./DB
       dockerfile: Dockerfile
     container_name: DB
-    command: postgres -c max_wal_size=4GB -c shared_preload_libraries=pg_cron
+    command: postgres -c max_wal_size=4GB -c shared_preload_libraries=pg_cron -c max_connections=200 -c shared_buffers=256MB
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -32,6 +32,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
     volumes:
       - ./Data:/chromosome/Data:ro
       - data_import_volume:/chromosome/import_status

@@ -40,8 +40,9 @@ REDIS_DB   = int(os.getenv("REDIS_DB", 0))
 # Create a connection pool for the PostgreSQL database
 conn_pool = ConnectionPool(
     conninfo=f"host={DB_HOST} port={DB_PORT} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
-    min_size=1,
-    max_size=20,
+    min_size=5,
+    max_size=50,
+    max_waiting=20,
 )
 
 # Create a Redis connection pool
