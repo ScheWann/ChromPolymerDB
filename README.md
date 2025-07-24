@@ -43,6 +43,12 @@ docker compose logs -f backend
 ```
 
 ### Restart Services
+If you want to restart a service **that has already been deployed on the server**, you need to add `-f docker-compose.prod.yml`, for example:
+```bash
+# Restart all service on the server
+docker compose -f docker-compose.prod.yml restart
+```
+Otherwise, using:
 ```bash
 # Restart all
 docker compose restart
