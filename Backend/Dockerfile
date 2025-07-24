@@ -26,7 +26,8 @@ RUN chmod +x ./sBIF.sh
 
 EXPOSE 5001
 CMD ["gunicorn", \
-    "-w", "1", \
+    "-w", "4", \
     "-b", "0.0.0.0:5001", \
     "--chdir", "/chromosome/backend", \
+    "--timeout", "480", \
     "app:app"]
