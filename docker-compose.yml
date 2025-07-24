@@ -31,6 +31,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
     volumes:
       - ./Data:/chromosome/Data
       - data_import_volume:/chromosome/import_status
@@ -71,6 +72,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
@@ -134,6 +136,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
     command: sh -c 'echo "$${DB_HOST}:5432:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
     depends_on:
       db:

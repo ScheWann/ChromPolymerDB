@@ -30,6 +30,7 @@ DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PORT = os.getenv("DB_PORT")
 
 # redis connection settings
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -38,7 +39,7 @@ REDIS_DB   = int(os.getenv("REDIS_DB", 0))
 
 # Create a connection pool for the PostgreSQL database
 conn_pool = ConnectionPool(
-    conninfo=f"host={DB_HOST} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
+    conninfo=f"host={DB_HOST} port={DB_PORT} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
     min_size=1,
     max_size=20,
 )
