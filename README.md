@@ -18,7 +18,7 @@
 
 5. For development, under this project folder, and run 
     ```bash
-      docker compose up -d --build
+    docker compose up -d --build
     ```
 
 # DEPLOY
