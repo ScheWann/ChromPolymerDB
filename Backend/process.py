@@ -582,6 +582,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
         cache_fq_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_data")
         cache_best_corr_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "best_corr_data")
         cache_best_sample_id_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "best_sample_id")
+
         if redis_client.get(cache_avg_key) and redis_client.get(cache_fq_key):
             avg_distance_data = json.loads(redis_client.get(cache_avg_key).decode("utf-8"))
             fq_data = json.loads(redis_client.get(cache_fq_key).decode("utf-8"))
@@ -664,6 +665,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
     print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
 
     if cached_3d_position_data is not None and cached_sample_distance_vector is not None:
+        print("Using Redis Cache Data")
         position_data = json.loads(cached_3d_position_data.decode("utf-8"))
         sample_distance_vector = json.loads(cached_sample_distance_vector.decode("utf-8"))
 
@@ -681,11 +683,16 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     elif data_in_db_exist_status["position_exists"] and data_in_db_exist_status["distance_exists"]:
+        print("Using Existing Database Data")
         avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
-        position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
 
         if sample_id != 0:
             sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
+            position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
+            print(f"Existing Database Data condition -- Using Sample {sample_id} Data")
+        else:
+            position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
+            print(f"Existing Database Data condition -- Using Best Sample {best_sample_id} Data")
         
         redis_client.setex(progress_key, 3600, 99)
         return {
@@ -695,6 +702,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     else:
+        print("Using SBIF Generated Data")
         if cell_line not in label_mapping:
             raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
         
@@ -780,20 +788,22 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
             t12 = time()
             print(f"[DEBUG] Fetching fq data took {t12 - t11:.4f} seconds")
-            t13 = time()
-            position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
-            t14 = time()
-            redis_client.setex(progress_key, 3600, 98)
-            print(f"[DEBUG] Fetching position data took {t14 - t13:.4f} seconds")
             
             if sample_id != 0:
                 t15 = time()
                 sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
+                position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
+                print(f"SBIF Generated Data condition -- Using Sample {sample_id} Data")
                 t16 = time()
                 redis_client.setex(progress_key, 3600, 99)
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
-            
-            redis_client.setex(progress_key, 3600, 99)
+            else:
+                t15 = time()
+                position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
+                print(f"SBIF Generated Data condition -- Using Best Sample {best_sample_id} Data")
+                t16 = time()
+                redis_client.setex(progress_key, 3600, 99)
+                print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
             
             return {
                 "position_data": position_data,
