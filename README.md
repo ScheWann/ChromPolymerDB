@@ -11,6 +11,7 @@
         DB_HOST=db
         DB_NAME=chromosome_db
         DB_PASSWORD=chromosome
+        DB_PORT=5432
         PGADMIN_DEFAULT_EMAIL=admin@uic.edu
         PGADMIN_DEFAULT_PASSWORD=chromosome
     ```
