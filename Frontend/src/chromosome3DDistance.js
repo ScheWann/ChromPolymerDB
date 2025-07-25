@@ -252,6 +252,11 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
             }
         }
 
+        if (beadsArray.length < 2 || !celllineName) {
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
 
         if (isExampleMode(celllineName, chromosomeName, currentChromosomeSequence)) {
@@ -278,7 +283,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     setLoading(false);
                 });
         } else {
-            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) {
+            if (!currentChromosomeSequence || !chromosomeName) {
                 setLoading(false);
                 return;
             }
