@@ -130,6 +130,88 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         image.src = url;
     };
 
+    const downloadModalImage = () => {
+        const svgElement = modalSvgRef.current;
+        if (!svgElement) return;
+
+        const scaleFactor = 5
+        const width = svgElement.clientWidth;
+        const height = svgElement.clientHeight;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width * scaleFactor;
+            canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+            ctx.drawImage(image, 0, 0);
+
+            canvas.toBlob(blob => {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "violin_plot_modal.png";
+                a.click();
+                URL.revokeObjectURL(url);
+            }, "image/png");
+        };
+        image.src = url;
+    };
+
+    const downloadModalPDF = () => {
+        const svgElement = modalSvgRef.current;
+        if (!svgElement) return;
+
+        const scaleFactor = 5;
+        const width = svgElement.clientWidth;
+        const height = svgElement.clientHeight;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width * scaleFactor;
+            canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+            ctx.drawImage(image, 0, 0);
+
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height]
+            });
+            pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+            pdf.save("violin_plot_modal.pdf");
+            URL.revokeObjectURL(url);
+        };
+        image.src = url;
+    };
+
+    const onClickModalDownloadItem = ({ key }) => {
+        if (key === '1') {
+            downloadModalImage();
+        }
+
+        if (key === '2') {
+            downloadModalPDF();
+        }
+    };
+
     const drawViolinPlot = (svgElement, plotWidth, plotHeight) => {
         if (
             !plotWidth ||
@@ -423,6 +505,28 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                                         <Spin size="large" />
                                     </div>
                                 )}
+                                <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10, display: 'flex', gap: '8px' }}>
+                                    <Tooltip
+                                        title={<span style={{ color: 'black' }}>Download the violin plot</span>}
+                                        color='white'
+                                    >
+                                        <Dropdown
+                                            menu={{
+                                                items: downloadItems,
+                                                onClick: onClickModalDownloadItem,
+                                            }}
+                                            placement="bottom"
+                                        >
+                                            <Button
+                                                style={{
+                                                    fontSize: 15,
+                                                    cursor: "pointer",
+                                                }}
+                                                icon={<DownloadOutlined />}
+                                            />
+                                        </Dropdown>
+                                    </Tooltip>
+                                </div>
                                 <svg ref={modalSvgRef}></svg>
                             </div>
                         </Modal>
