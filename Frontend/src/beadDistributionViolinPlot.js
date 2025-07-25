@@ -406,7 +406,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             width={1040}
                             centered
                         >
-                            <div style={{ width: '100%', height: '600px', overflow: 'auto', position: 'relative' }}>
+                            <div style={{ width: '100%', height: '600px', overflow: 'auto', position: 'relative', overflow: 'hidden' }}>
                                 {modalLoading && (
                                     <div style={{
                                         position: 'absolute',
