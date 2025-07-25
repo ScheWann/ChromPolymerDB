@@ -493,7 +493,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
                         <Canvas
                             shadows
-                            style={{ height: 'calc(100% - 2px)', backgroundColor: '#222' }}
+                            style={{ height: '100%', backgroundColor: '#222' }}
                             camera={{ position: [0, 0, 100], fov: 50 }}
                             onCreated={({ camera, gl, scene }) => {
                                 cameraRef.current = camera;
