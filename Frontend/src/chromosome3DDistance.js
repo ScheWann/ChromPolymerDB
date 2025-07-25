@@ -1,11 +1,32 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import jsPDF from 'jspdf';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Button, Tooltip, ColorPicker, Dropdown, Splitter } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
+
+const CameraFacingText = ({ position, children, ...props }) => {
+    const textRef = useRef();
+    const { camera } = useThree();
+
+    useFrame(() => {
+        if (textRef.current) {
+            textRef.current.quaternion.copy(camera.quaternion);
+        }
+    });
+
+    return (
+        <Text
+            ref={textRef}
+            position={position}
+            {...props}
+        >
+            {children}
+        </Text>
+    );
+};
 
 export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, isExampleMode }) => {
     const controlsRef = useRef();
@@ -499,7 +520,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         return (
                                             <group key={`${indexA}-${indexB}`}>
                                                 <Line start={positionA} end={positionB} />
-                                                <Text
+                                                <CameraFacingText
                                                     position={[midPoint.x, midPoint.y, midPoint.z]}
                                                     fontSize={10}
                                                     color="white"
@@ -507,7 +528,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                                     anchorY="middle"
                                                 >
                                                     {distance.toFixed(2)}nm
-                                                </Text>
+                                                </CameraFacingText>
                                             </group>
                                         );
                                     }
@@ -521,15 +542,15 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         <sphereGeometry args={[1, 32, 32]} />
                                         <meshStandardMaterial color={color} />
                                     </mesh>
-                                    <Text
-                                        position={[position.x, position.y, position.z]}
+                                    <CameraFacingText
+                                        position={[position.x, position.y + 5, position.z]}
                                         fontSize={10}
                                         color="#DAA520"
                                         anchorX="center"
                                         anchorY="bottom"
                                     >
                                         {key}
-                                    </Text>
+                                    </CameraFacingText>
                                 </group>
                             ))}
                         </Canvas>
