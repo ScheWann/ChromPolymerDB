@@ -389,6 +389,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 return acc;
             }, {})
         );
+        // Clear distribution data when beads are reset
+        setDistributionData({});
     };
 
     const handleResetSelect = (index) => {

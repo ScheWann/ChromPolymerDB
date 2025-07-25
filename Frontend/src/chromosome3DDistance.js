@@ -253,6 +253,14 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
 
         if (beadsArray.length < 2 || !celllineName) {
+            // Clear distribution data for this cell line when no beads are selected
+            if (beadsArray.length === 0) {
+                setDistributionData(prev => {
+                    const updated = { ...prev };
+                    delete updated[celllineName];
+                    return updated;
+                });
+            }
             setLoading(false);
             return;
         }
@@ -383,7 +391,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                 >
                     <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
                         <BeadDistributionViolinPlot
-                            selectedSphereList={selectedSphereList}
+                            selectedSphereList={selectedSphereList[celllineName] || {}}
                             distributionData={distributionData}
                             loading={loading}
                         />
