@@ -615,21 +615,18 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 )}
             </div>
 
-            {showChromosome3DDistance && (chromosomeCurrentSampleDistanceVector?.length ?? 0) > 0 ? (
-                <div style={{ aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10 }}>
-                    <CurrentChainDistanceHeatmap
-                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
-                    />
-                </div>) : (<div style={{ aspectRatio: "1", position: 'absolute', bottom: 0, right: 10, zIndex: 10 }}>
-                    <CurrentChainDistanceHeatmap
-                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
-                    />
-                </div>)}
-
             {showChromosome3DDistance ? (
                 <Splitter layout="vertical" style={{ height: '100%' }}>
-                    <Splitter.Panel defaultSize="65%" min="35%" max="70%">
+                    <Splitter.Panel defaultSize="65%" min="45%" max="70%">
                         <div style={{ height: '100%', position: 'relative' }}>
+                            {/* CurrentChainDistanceHeatmap positioned relative to the canvas panel */}
+                            {(chromosomeCurrentSampleDistanceVector?.length ?? 0) > 0 && (
+                                <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                                    <CurrentChainDistanceHeatmap
+                                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
+                                    />
+                                </div>
+                            )}
                             <Canvas
                                 shadows
                                 ref={canvasRef}
@@ -978,6 +975,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             <directionalLight position={[5, 5, 5]} intensity={1} />
                             <AxisIndicator cameraRotation={cameraRotation} />
                         </Canvas>
+                    </div>
+
+                    {/* CurrentChainDistanceHeatmap positioned relative to the canvas container */}
+                    <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                        <CurrentChainDistanceHeatmap
+                            chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
+                        />
                     </div>
                 </div>
             )}
