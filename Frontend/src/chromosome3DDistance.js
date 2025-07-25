@@ -198,9 +198,39 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     }, [chromosome3DDistanceBackgroundColor]);
 
+    const beadsArrayString = useMemo(() => {
+        return JSON.stringify(Object.keys(selectedSphereList[celllineName]).sort());
+    }, [selectedSphereList, celllineName]);
+
     useEffect(() => {
-        setLoading(true);
         const beadsArray = Object.keys(selectedSphereList[celllineName]);
+        
+        // Check if we already have data for this exact set of beads
+        const existingData = distributionData[celllineName];
+        
+        if (existingData && typeof existingData === 'object' && beadsArray.length > 0) {
+            // Generate expected categories (bead pair combinations) for current beads
+            const expectedCategories = [];
+            for (let i = 0; i < beadsArray.length; i++) {
+                for (let j = i + 1; j < beadsArray.length; j++) {
+                    expectedCategories.push(`${beadsArray[i]}-${beadsArray[j]}`);
+                }
+            }
+            
+            // Check if all expected categories exist in the existing data
+            const hasAllCategories = expectedCategories.every(category => 
+                existingData.hasOwnProperty(category) && 
+                Array.isArray(existingData[category]) && 
+                existingData[category].length > 0
+            );
+            
+            if (hasAllCategories) {
+                setLoading(false);
+                return;
+            }
+        }
+
+        setLoading(true);
 
         if (isExampleMode(celllineName, chromosomeName, currentChromosomeSequence)) {
             fetch('/api/getExistBeadDistribution', {
@@ -220,9 +250,16 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching existing bead distribution:', error);
+                    setLoading(false);
                 });
         } else {
-            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
+            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) {
+                setLoading(false);
+                return;
+            }
             fetch('/api/getBeadDistribution', {
                 method: 'POST',
                 headers: {
@@ -242,9 +279,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching bead distribution:', error);
+                    setLoading(false);
                 });
         }
-    }, [selectedSphereList, celllineName]);
+    }, [beadsArrayString, celllineName, chromosomeName, currentChromosomeSequence, isExampleMode]);
 
     useEffect(() => {
         if (controlsRef.current && center) {
