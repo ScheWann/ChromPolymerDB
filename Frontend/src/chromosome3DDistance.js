@@ -1,11 +1,32 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import jsPDF from 'jspdf';
-import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip, ColorPicker, Dropdown, Splitter } from 'antd';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Button, Tooltip, ColorPicker, Dropdown, Splitter, Slider } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
+
+const CameraFacingText = ({ position, children, ...props }) => {
+    const textRef = useRef();
+    const { camera } = useThree();
+
+    useFrame(() => {
+        if (textRef.current) {
+            textRef.current.quaternion.copy(camera.quaternion);
+        }
+    });
+
+    return (
+        <Text
+            ref={textRef}
+            position={position}
+            {...props}
+        >
+            {children}
+        </Text>
+    );
+};
 
 export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, isExampleMode }) => {
     const controlsRef = useRef();
@@ -13,6 +34,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const rendererRef = useRef();
     const [chromosome3DDistanceBackgroundColor, setChromosome3DDistanceBackgroundColor] = useState('#333333');
     const [loading, setLoading] = useState(false);
+    const [fontSize, setFontSize] = useState(10);
 
     const downloadItems = [
         {
@@ -198,9 +220,52 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     }, [chromosome3DDistanceBackgroundColor]);
 
+    const beadsArrayString = useMemo(() => {
+        return JSON.stringify(Object.keys(selectedSphereList[celllineName]).sort());
+    }, [selectedSphereList, celllineName]);
+
     useEffect(() => {
-        setLoading(true);
         const beadsArray = Object.keys(selectedSphereList[celllineName]);
+
+        // Check if we already have data for this exact set of beads
+        const existingData = distributionData[celllineName];
+
+        if (existingData && typeof existingData === 'object' && beadsArray.length > 0) {
+            // Generate expected categories (bead pair combinations) for current beads
+            const expectedCategories = [];
+            for (let i = 0; i < beadsArray.length; i++) {
+                for (let j = i + 1; j < beadsArray.length; j++) {
+                    expectedCategories.push(`${beadsArray[i]}-${beadsArray[j]}`);
+                }
+            }
+
+            // Check if all expected categories exist in the existing data
+            const hasAllCategories = expectedCategories.every(category =>
+                existingData.hasOwnProperty(category) &&
+                Array.isArray(existingData[category]) &&
+                existingData[category].length > 0
+            );
+
+            if (hasAllCategories) {
+                setLoading(false);
+                return;
+            }
+        }
+
+        if (beadsArray.length < 2 || !celllineName) {
+            // Clear distribution data for this cell line when no beads are selected
+            if (beadsArray.length === 0) {
+                setDistributionData(prev => {
+                    const updated = { ...prev };
+                    delete updated[celllineName];
+                    return updated;
+                });
+            }
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
 
         if (isExampleMode(celllineName, chromosomeName, currentChromosomeSequence)) {
             fetch('/api/getExistBeadDistribution', {
@@ -220,9 +285,16 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching existing bead distribution:', error);
+                    setLoading(false);
                 });
         } else {
-            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
+            if (!currentChromosomeSequence || !chromosomeName) {
+                setLoading(false);
+                return;
+            }
             fetch('/api/getBeadDistribution', {
                 method: 'POST',
                 headers: {
@@ -242,9 +314,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching bead distribution:', error);
+                    setLoading(false);
                 });
         }
-    }, [selectedSphereList, celllineName]);
+    }, [beadsArrayString, celllineName, chromosomeName, currentChromosomeSequence, isExampleMode]);
 
     useEffect(() => {
         if (controlsRef.current && center) {
@@ -295,7 +371,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Splitter 
+            <Splitter
                 style={{ height: '100%' }}
                 split="vertical"
                 resizerStyle={{
@@ -307,15 +383,15 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     zIndex: 1000
                 }}
             >
-                <Splitter.Panel 
-                    defaultSize="50%" 
-                    min="30%" 
+                <Splitter.Panel
+                    defaultSize="50%"
+                    min="30%"
                     max="70%"
                     style={{ overflow: 'hidden' }}
                 >
                     <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
                         <BeadDistributionViolinPlot
-                            selectedSphereList={selectedSphereList}
+                            selectedSphereList={selectedSphereList[celllineName] || {}}
                             distributionData={distributionData}
                             loading={loading}
                         />
@@ -331,6 +407,38 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             display: 'flex',
                             gap: '10px',
                         }}>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Adjust font size of distance labels</span>}
+                                color='white'
+                            >
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.9)',
+                                    padding: '0px 8px',
+                                    borderRadius: '6px',
+                                    minWidth: '120px',
+                                    maxHeight: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <span style={{ fontSize: '12px', color: '#333', fontWeight: '500' }}>Font:</span>
+                                    <Slider
+                                        min={6}
+                                        max={30}
+                                        value={fontSize}
+                                        onChange={setFontSize}
+                                        style={{ flex: 1 }}
+                                        tooltip={{ 
+                                            formatter: (value) => `${value}px`,
+                                            color: 'white',
+                                            overlayInnerStyle: { 
+                                                color: 'black',
+                                                fontWeight: '500'
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>Restore the original view</span>}
                                 color='white'
@@ -398,8 +506,8 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
                         <Canvas
                             shadows
-                            style={{ height: 'calc(100% - 2px)', backgroundColor: '#222' }}
-                            camera={{ position: [0, 0, 100], fov: 50 }}
+                            style={{ height: '100%', backgroundColor: '#222' }}
+                            camera={{ position: [0, 0, 1000], fov: 60, near: 0.1, far: 5000 }}
                             onCreated={({ camera, gl, scene }) => {
                                 cameraRef.current = camera;
                                 rendererRef.current = { gl, scene, camera };
@@ -458,15 +566,15 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         return (
                                             <group key={`${indexA}-${indexB}`}>
                                                 <Line start={positionA} end={positionB} />
-                                                <Text
+                                                <CameraFacingText
                                                     position={[midPoint.x, midPoint.y, midPoint.z]}
-                                                    fontSize={10}
+                                                    fontSize={fontSize}
                                                     color="white"
                                                     anchorX="center"
                                                     anchorY="middle"
                                                 >
                                                     {distance.toFixed(2)}nm
-                                                </Text>
+                                                </CameraFacingText>
                                             </group>
                                         );
                                     }
@@ -480,15 +588,15 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         <sphereGeometry args={[1, 32, 32]} />
                                         <meshStandardMaterial color={color} />
                                     </mesh>
-                                    <Text
-                                        position={[position.x, position.y, position.z]}
-                                        fontSize={10}
+                                    <CameraFacingText
+                                        position={[position.x, position.y + 5, position.z]}
+                                        fontSize={fontSize}
                                         color="#DAA520"
                                         anchorX="center"
                                         anchorY="bottom"
                                     >
                                         {key}
-                                    </Text>
+                                    </CameraFacingText>
                                 </group>
                             ))}
                         </Canvas>

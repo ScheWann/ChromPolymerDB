@@ -733,6 +733,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     step={fqRawcMode ? 0.1 : 1}
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
+                                    tooltip={{ 
+                                        formatter: (value) => value,
+                                        color: 'white',
+                                        overlayInnerStyle: {
+                                            color: 'black',
+                                            fontWeight: '500'
+                                        }
+                                    }}
                                 />
                                 <InputNumber
                                     size='small'

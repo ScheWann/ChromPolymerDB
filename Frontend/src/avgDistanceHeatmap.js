@@ -276,6 +276,14 @@ export const AvgDistanceHeatmap = ({ chromosomeData, chromosome3DAvgMatrixData, 
                                 max={dataMax}
                                 onChange={changeColorScale}
                                 value={colorScaleRange}
+                                tooltip={{ 
+                                    formatter: (value) => value,
+                                    color: 'white',
+                                    overlayInnerStyle: {
+                                        color: 'black',
+                                        fontWeight: '500'
+                                    }
+                                }}
                             />
                             <InputNumber
                                 size="small"

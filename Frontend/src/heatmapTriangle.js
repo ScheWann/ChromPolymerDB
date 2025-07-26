@@ -1096,7 +1096,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
         axisSvg.append('g')
             .attr("transform", "translate(2, 0)")
             .call(d3.axisBottom(transformedXScale)
-            .tickFormat(d => (d / 1e6).toFixed(1) + 'M'))
+                .tickFormat(d => (d / 1e6).toFixed(1) + 'M'))
             .selectAll("text")
             .style("text-anchor", "middle")
             .attr("dx", "0em")
@@ -1120,7 +1120,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
-                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={fqRawcMode ? 1 : 200} step={fqRawcMode ? 0.1 : 1} onChange={changeColorScale} value={colorScaleRange} />
+                    <Slider
+                        range={{ draggableTrack: true }}
+                        style={{ width: 250 }}
+                        min={0}
+                        max={fqRawcMode ? 1 : 200}
+                        step={fqRawcMode ? 0.1 : 1}
+                        onChange={changeColorScale}
+                        value={colorScaleRange}
+                        tooltip={{
+                            formatter: (value) => value,
+                            color: 'white',
+                            overlayInnerStyle: {
+                                color: 'black',
+                                fontWeight: '500'
+                            }
+                        }} 
+                    />
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch

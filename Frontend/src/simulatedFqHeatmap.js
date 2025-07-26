@@ -340,6 +340,14 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
                             onChange={changeSimulatedColorScale}
                             step={0.1}
                             style={{ height: 150 }}
+                            tooltip={{ 
+                                formatter: (value) => value,
+                                color: 'white',
+                                overlayInnerStyle: {
+                                    color: 'black',
+                                    fontWeight: '500'
+                                }
+                            }}
                         />
                         <InputNumber
                             size="small"
