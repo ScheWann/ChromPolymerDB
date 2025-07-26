@@ -2,6 +2,8 @@ import os
 import orjson
 import shutil
 import redis
+import hashlib, json as _json
+from tasks import process_chromosome_3d
 from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
 from flask_cors import CORS
 from process import (
@@ -11,8 +13,7 @@ from process import (
     chromosomes_list,
     chromosome_original_valid_sequences, 
     chromosome_merged_valid_sequences, 
-    chromosome_data, 
-    chromosome_3D_data, 
+    chromosome_data,
     comparison_cell_line_list, 
     gene_list, 
     gene_names_list_search, 
@@ -25,7 +26,6 @@ from process import (
     exist_bead_distribution, 
     exist_chromosome_3D_data
 )
-
 
 app = Flask(__name__)
 CORS(app)
@@ -106,7 +106,6 @@ def get_ChromosValidIBPData():
 def get_ExistChromosome3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
-    # return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
     payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id))
     return Response(payload, content_type='application/json')
 
@@ -117,7 +116,34 @@ def get_Chromosome3DData():
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     sample_id = request.json['sample_id']
-    return jsonify(chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id))
+
+    # Build a stable task signature to detect duplicates (same logic as in tasks.py)
+    signature_payload = {
+        "cell_line": cell_line,
+        "chromosome": chromosome_name,
+        "start": sequences["start"],
+        "end": sequences["end"],
+        "sample_id": sample_id,
+    }
+    signature = hashlib.md5(_json.dumps(signature_payload, sort_keys=True).encode()).hexdigest()
+
+    TASK_REGISTRY_HASH = "chromosome_3d_task_registry"
+
+    # If the task is already registered, return its AsyncResult instead of queuing a new one
+    existing_task_id = redis_client.hget(TASK_REGISTRY_HASH, signature)
+    if existing_task_id:
+        async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
+    else:
+        async_result = process_chromosome_3d.apply_async(
+            args=[cell_line, chromosome_name, sequences, sample_id]
+        )
+        # Store mapping so future identical requests reuse the same task
+        redis_client.hset(TASK_REGISTRY_HASH, signature, async_result.id)
+
+    # Wait for the result so the response shape stays the same for the caller.
+    result_data = async_result.get(timeout=None)
+
+    return jsonify(result_data)
 
 
 @api.route('/getComparisonCellLineList', methods=['POST'])

@@ -4,7 +4,7 @@ services:
       context: ./DB
       dockerfile: Dockerfile
     container_name: DB
-    command: postgres -c max_wal_size=4GB -c shared_preload_libraries=pg_cron
+    command: postgres -c max_wal_size=4GB -c shared_preload_libraries=pg_cron -c max_connections=200 -c shared_buffers=256MB -c maintenance_work_mem=1GB -c wal_compression=on
     restart: on-failure
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -139,6 +139,33 @@ services:
       DB_PORT: ${DB_PORT}
     command: sh -c 'echo "$${DB_HOST}:$${DB_PORT}:$${DB_NAME}:$${DB_USERNAME}:$${DB_PASSWORD}" > /root/.pgpass && chmod 600 /root/.pgpass && /usr/sbin/crond -f -l 8'
     depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - example
+
+  celery-worker:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: CeleryWorker
+    restart: on-failure
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    volumes:
+      - ./Backend:/chromosome/backend
+    command: >
+      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=4"
+    depends_on:
+      redis:
+        condition: service_started
       db:
         condition: service_healthy
     networks:
