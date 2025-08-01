@@ -55,7 +55,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             {
                 name: " ",
                 url: "https://www.encodeproject.org/files/ENCFF944OWQ/@@download/ENCFF944OWQ.bigBed",
-                format: "bigwig",
+                format: "bigBed",
             }
             
         ],
@@ -99,7 +99,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             {
                 name: " ",
                 url: "https://www.encodeproject.org/files/ENCFF700JVP/@@download/ENCFF700JVP.bigBed",
-                format: "bigwig",
+                format: "bigBed",
             }
         ],
         'IMR90': [
@@ -174,7 +174,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
             {
                 name: " ",
                 url: "https://www.encodeproject.org/files/ENCFF274NYA/@@download/ENCFF274NYA.bigBed",
-                format: "bigwig",
+                format: "bigBed",
             },
         ]
     }
