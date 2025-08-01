@@ -30,6 +30,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
     // Track table search
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
+    const [tableKey, setTableKey] = useState(0);
     const searchInput = useRef(null);
 
     const detectIgvFormat = (filename) => {
@@ -596,6 +597,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
     const handleReset = (clearFilters) => {
         clearFilters();
         setSearchText('');
+        setSearchedColumn('');
+        setTableKey(prev => prev + 1); // Force table re-render to clear all filters
     };
 
     const uploadTrackChange = (e) => {
@@ -684,6 +687,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
         setUploadTrackData({ name: "", trackUrl: "", format: "" });
         setSearchedColumn('');
         setSearchText('');
+        setTableKey(prev => prev + 1); // Reset table state when modal closes
     };
 
     const trackTableProcessing = (key, data) => {
@@ -1209,6 +1213,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                         />
                     ) : (
                         <Table
+                            key={tableKey}
                             bordered={true}
                             dataSource={trackDataSource}
                             columns={trackTableColumns}
