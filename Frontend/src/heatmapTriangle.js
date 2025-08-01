@@ -208,6 +208,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             ...getColumnSearchProps('Biosample'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -222,12 +223,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "AssayType",
             dataIndex: "AssayType",
             key: "AssayType",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.AssayType.localeCompare(b.AssayType),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('AssayType'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -242,12 +244,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Target",
             dataIndex: "Target",
             key: "Target",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Target.localeCompare(b.Target),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Target'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -261,12 +264,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "BioRep",
             dataIndex: "BioRep",
             key: "BioRep",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.BioRep.localeCompare(b.BioRep),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('BioRep'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -280,12 +284,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "TechRep",
             dataIndex: "TechRep",
             key: "TechRep",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.TechRep.localeCompare(b.TechRep),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('TechRep'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -299,12 +304,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "OutputType",
             dataIndex: "OutputType",
             key: "OutputType",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.OutputType.localeCompare(b.OutputType),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('OutputType'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -318,12 +324,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Format",
             dataIndex: "Format",
             key: "Format",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Format.localeCompare(b.Format),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Format'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -337,12 +344,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Lab",
             dataIndex: "Lab",
             key: "Lab",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Lab.localeCompare(b.Lab),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Lab'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -356,12 +364,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Accession",
             dataIndex: "Accession",
             key: "Accession",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Accession.localeCompare(b.Accession),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Accession'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -381,6 +390,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             ...getColumnSearchProps('Experiment'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -1134,9 +1144,9 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                         value={colorScaleRange}
                         tooltip={{
                             formatter: (value) => value,
-                            color: 'white',
+                            color: 'black',
                             overlayInnerStyle: {
-                                color: 'black',
+                                color: 'white',
                                 fontWeight: '500'
                             }
                         }} 
