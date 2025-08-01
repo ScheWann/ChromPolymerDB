@@ -130,7 +130,25 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 showNavigation: false,
                 showIdeogram: false,
                 panEnabled: false,
-                tracks: defaultTracks[cellLineName],
+                showCommandBar: false,
+                reference: {
+                    "id": "hg38",
+                    "name": "Human (GRCh38/hg38)",
+                    "fastaURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
+                    "indexURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai",
+                    "cytobandURL": "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/cytoBandIdeo.txt",
+                    "tracks": [
+                        {
+                            name: "RefSeq All",
+                            url: "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/ncbiRefSeq.txt.gz",
+                            format: "refgene",
+                            type: "annotation",
+                            displayMode: "collapsed",
+                            color: "blue"
+                        }
+                    ],
+                },
+                tracks: defaultTracks[cellLineName] || []
             };
 
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {
