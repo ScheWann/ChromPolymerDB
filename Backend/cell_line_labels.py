@@ -52,7 +52,7 @@ label_mapping = {
     'macrophage': 'Macrophage drived from THP-1',
     'NHA': 'Primary normal human astrocytes',
     'HPNE': 'Pancreatic Nestin-expressing cell cell line (HPNE)',
-    'Capan1': 'Pancreatic ductal adenocarcinoma cell line',
+    'Capan1': 'Pancreatic ductal adenocarcinoma cell line (Capan1)',
     'Cardiomyocyte': 'Cardiomyocytes derived from H9',
     'activated_bcells':'Activated B cells'
 }
