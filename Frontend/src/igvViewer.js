@@ -133,7 +133,7 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 format: "bigwig",
                 color: "brown"
             },
-        ]
+        ],
         'monocytes':[
             {
                 name: "DNase-seq",
