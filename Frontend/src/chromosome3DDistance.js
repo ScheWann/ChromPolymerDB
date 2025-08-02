@@ -694,7 +694,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         
                                         if (!shouldShow) return null;
                                         
-                                        const distance = positionA.distanceTo(positionB);
+                                        const distance = positionA.distanceTo(positionB) - 34.3;    // diameter of beads
                                         const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
 
                                         return (
