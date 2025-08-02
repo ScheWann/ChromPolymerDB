@@ -76,6 +76,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
     volumes:
       - ./Backend:/chromosome/backend
     build:
@@ -159,6 +161,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
     volumes:
       - ./Backend:/chromosome/backend
     command: >

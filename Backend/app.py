@@ -3,7 +3,9 @@ import orjson
 import shutil
 import redis
 import hashlib, json as _json
-from tasks import process_chromosome_3d
+from tasks import process_chromosome_3d, process_exist_chromosome_3d
+from task_utils import make_task_signature, get_task_key
+from celery_worker import celery_worker
 from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
 from flask_cors import CORS
 from process import (
@@ -118,19 +120,11 @@ def get_Chromosome3DData():
     sample_id = request.json['sample_id']
 
     # Build a stable task signature to detect duplicates (same logic as in tasks.py)
-    signature_payload = {
-        "cell_line": cell_line,
-        "chromosome": chromosome_name,
-        "start": sequences["start"],
-        "end": sequences["end"],
-        "sample_id": sample_id,
-    }
-    signature = hashlib.md5(_json.dumps(signature_payload, sort_keys=True).encode()).hexdigest()
-
-    TASK_REGISTRY_HASH = "chromosome_3d_task_registry"
+    signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
 
     # If the task is already registered, return its AsyncResult instead of queuing a new one
-    existing_task_id = redis_client.hget(TASK_REGISTRY_HASH, signature)
+    task_key = get_task_key(signature)
+    existing_task_id = redis_client.get(task_key)
     if existing_task_id:
         async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
     else:
@@ -138,7 +132,7 @@ def get_Chromosome3DData():
             args=[cell_line, chromosome_name, sequences, sample_id]
         )
         # Store mapping so future identical requests reuse the same task
-        redis_client.hset(TASK_REGISTRY_HASH, signature, async_result.id)
+        redis_client.setex(task_key, 1800, async_result.id)  # 30 minutes TTL
 
     # Wait for the result so the response shape stays the same for the caller.
     result_data = async_result.get(timeout=None)
@@ -206,6 +200,54 @@ def get_Example3DProgress():
         key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
         val = redis_client.get(key)
         return jsonify(percent=int(val) if val is not None else 0)
+
+
+@api.route('/getCeleryTaskProgress', methods=['GET'])
+def get_celery_task_progress():
+    """Get progress of a Celery task using task ID"""
+    task_id = request.args.get('task_id')
+    
+    if not task_id:
+        return jsonify(error="task_id parameter is required"), 400
+    
+    try:
+        # Get task result using Celery's AsyncResult
+        result = celery_worker.AsyncResult(task_id)
+        
+        if result.state == 'PENDING':
+            response = {
+                'state': result.state,
+                'current': 0,
+                'total': 100,
+                'status': 'Task is waiting to be processed...'
+            }
+        elif result.state == 'PROGRESS':
+            response = {
+                'state': result.state,
+                'current': result.info.get('current', 0),
+                'total': result.info.get('total', 100),
+                'status': result.info.get('status', 'Processing...')
+            }
+        elif result.state == 'SUCCESS':
+            response = {
+                'state': result.state,
+                'current': 100,
+                'total': 100,
+                'status': 'Task completed successfully',
+                'result': result.result
+            }
+        else:  # FAILURE or other states
+            response = {
+                'state': result.state,
+                'current': 0,
+                'total': 100,
+                'status': str(result.info)
+            }
+        
+        return jsonify(response)
+    
+    except Exception as e:
+        return jsonify(error=f"Failed to get task progress: {str(e)}"), 500
 
 
 @app.route('/api/clearFoldingInputFolderInputContent', methods=['POST'])

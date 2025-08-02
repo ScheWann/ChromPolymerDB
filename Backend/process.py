@@ -35,7 +35,7 @@ DB_PORT = os.getenv("DB_PORT")
 # redis connection settings
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_DB   = int(os.getenv("REDIS_DB", 2))
+REDIS_DB   = int(os.getenv("REDIS_DB", 0))
 
 # Create a connection pool for the PostgreSQL database
 # max_connections ≈ CPU cores × 2~4
@@ -364,7 +364,7 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
-def exist_chromosome_3D_data(cell_line, sample_id):
+def exist_chromosome_3D_data(cell_line, sample_id, task_instance=None):
     # Sample ID mapping for when sample_id is 0
     sample_id_mapping = {
         "GM12878": 4229,
@@ -379,9 +379,20 @@ def exist_chromosome_3D_data(cell_line, sample_id):
     if sample_id == 0:
         sample_id = sample_id_mapping.get(cell_line, sample_id)
     
-    # Establish the progress key for tracking whole progress (use original sample_id)
-    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
-    redis_client.setex(progress_key, 3600, 0)
+    def update_progress(progress_value, status="PROGRESS"):
+        """Update progress using Celery task metadata and Redis for compatibility"""
+        if task_instance:
+            # Update Celery task metadata for modern task tracking
+            task_instance.update_state(
+                state=status,
+                meta={'current': progress_value, 'total': 100, 'status': f'Processing {cell_line} example data...'}
+            )
+        
+        # Always update Redis for backward compatibility with frontend progress polling
+        progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
+        redis_client.setex(progress_key, 3600, progress_value)
+    
+    update_progress(0)
 
     def checking_existing_data(cell_line, sample_id):
         redis_3d_position_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"3d_example_{sample_id}_position_data")
@@ -439,14 +450,14 @@ def exist_chromosome_3D_data(cell_line, sample_id):
             return mat
     
     cached_3d_example_position_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
-    redis_client.setex(progress_key, 3600, 15)
+    update_progress(15)
     if cached_3d_example_position_data and cached_example_sample_distance_vector is not None:
         position_data = json.loads(cached_3d_example_position_data.decode("utf-8"))
         sample_distance_vector = json.loads(cached_example_sample_distance_vector.decode("utf-8"))
-        redis_client.setex(progress_key, 3600, 80)
+        update_progress(80)
         avg_distance_matrix = get_avg_distance_data(cell_line)
         fq_data = get_fq_data(cell_line)
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(99)
 
         return {
             "position_data": position_data,
@@ -465,17 +476,17 @@ def exist_chromosome_3D_data(cell_line, sample_id):
         position_df = fut_pos.result()
         distance_df = fut_dist.result()
         
-        redis_client.setex(progress_key, 3600, 20)
+        update_progress(20)
 
         position_data = get_position_data(cell_line, sample_id)
-        redis_client.setex(progress_key, 3600, 50)
+        update_progress(50)
 
         avg_distance_matrix = get_avg_distance_data(cell_line)
-        redis_client.setex(progress_key, 3600, 70)
+        update_progress(70)
         
         fq_data = get_fq_data(cell_line)
         sample_distance_vector = get_distance_vector_by_sample(cell_line, sample_id)
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(99)
 
         return {
                 "position_data": position_data,
@@ -488,12 +499,23 @@ def exist_chromosome_3D_data(cell_line, sample_id):
 """
 Returns the example 3D chromosome data in the given cell line, chromosome name, start, end
 """
-def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
+def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=None):
     temp_folding_input_path = "./Folding_input"
     
-    # Establish the progress key for tracking whole progress
-    progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_progress")
-    redis_client.setex(progress_key, 3600, 0)
+    def update_progress(progress_value, status="PROGRESS"):
+        """Update progress using Celery task metadata and Redis for compatibility"""
+        if task_instance:
+            # Update Celery task metadata for modern task tracking
+            task_instance.update_state(
+                state=status,
+                meta={'current': progress_value, 'total': 100, 'status': f'Processing {cell_line} data...'}
+            )
+        
+        # Always update Redis for backward compatibility with frontend progress polling
+        progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_progress")
+        redis_client.setex(progress_key, 3600, progress_value)
+    
+    update_progress(0)
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
@@ -660,44 +682,154 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
 
         return full_mat
 
-    t1 = time()
-    cached_3d_position_data, cached_sample_distance_vector = checking_existing_cache_data(chromosome_name, cell_line, sequences, sample_id)
-    data_in_db_exist_status = checking_existing_data(chromosome_name, cell_line, sequences)
-    redis_client.setex(progress_key, 3600, 5)
-    t2 = time()
-    print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
+    # t1 = time()
+    # cached_3d_position_data, cached_sample_distance_vector = checking_existing_cache_data(chromosome_name, cell_line, sequences, sample_id)
+    # data_in_db_exist_status = checking_existing_data(chromosome_name, cell_line, sequences)
+    # update_progress(5)
+    # t2 = time()
+    # print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
 
-    if cached_3d_position_data is not None and cached_sample_distance_vector is not None:
-        print("Using Redis Cache Data")
-        position_data = json.loads(cached_3d_position_data.decode("utf-8"))
-        sample_distance_vector = json.loads(cached_sample_distance_vector.decode("utf-8"))
+    # if cached_3d_position_data is not None and cached_sample_distance_vector is not None:
+    #     print("Using Redis Cache Data")
+    #     position_data = json.loads(cached_3d_position_data.decode("utf-8"))
+    #     sample_distance_vector = json.loads(cached_sample_distance_vector.decode("utf-8"))
 
-        avg_distance_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "avg_distance_data")
-        fq_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_data")
+    #     avg_distance_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "avg_distance_data")
+    #     fq_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_data")
         
-        avg_distance_matrix = json.loads(redis_client.get(avg_distance_data_cache_key).decode("utf-8"))
-        fq_data = json.loads(redis_client.get(fq_data_cache_key).decode("utf-8"))
+    #     avg_distance_matrix = json.loads(redis_client.get(avg_distance_data_cache_key).decode("utf-8"))
+    #     fq_data = json.loads(redis_client.get(fq_data_cache_key).decode("utf-8"))
 
-        redis_client.setex(progress_key, 3600, 99)
-        return {
-            "position_data": position_data,
-            "avg_distance_data": avg_distance_matrix,
-            "fq_data": fq_data,
-            "sample_distance_vector": sample_distance_vector
-        }
-    elif data_in_db_exist_status["position_exists"] and data_in_db_exist_status["distance_exists"]:
-        print("Using Existing Database Data")
+    #     update_progress(99)
+    #     return {
+    #         "position_data": position_data,
+    #         "avg_distance_data": avg_distance_matrix,
+    #         "fq_data": fq_data,
+    #         "sample_distance_vector": sample_distance_vector
+    #     }
+    # elif data_in_db_exist_status["position_exists"] and data_in_db_exist_status["distance_exists"]:
+    #     print("Using Existing Database Data")
+    #     avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
+
+    #     if sample_id != 0:
+    #         sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
+    #         position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
+    #         print(f"Existing Database Data condition -- Using Sample {sample_id} Data")
+    #     else:
+    #         position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
+    #         print(f"Existing Database Data condition -- Using Best Sample {best_sample_id} Data")
+        
+    #     update_progress(99)
+    #     return {
+    #         "position_data": position_data,
+    #         "avg_distance_data": avg_distance_matrix,
+    #         "fq_data": fq_data,
+    #         "sample_distance_vector": sample_distance_vector
+    #     }
+    # else:
+    print("Using SBIF Generated Data")
+    if cell_line not in label_mapping:
+        raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
+    
+    table_name = get_cell_line_table_name(cell_line)
+    
+    t3 = time()
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+            f"""
+                SELECT *
+                FROM {table_name}
+                WHERE chrid = %s
+                AND ibp >= %s
+                AND ibp <= %s
+                AND jbp >= %s
+                AND jbp <= %s
+            """,
+                (
+                    chromosome_name,
+                    sequences["start"],
+                    sequences["end"],
+                    sequences["start"],
+                    sequences["end"],
+                ),
+            )
+            original_data = cur.fetchall()
+    t4 = time()
+    update_progress(10)
+    print(f"[DEBUG] Fetching original data took {t4 - t3:.4f} seconds")
+    if original_data:
+        t5 = time()
+        original_df = pd.DataFrame(
+            original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"]
+        )
+
+        filtered_df = get_spe_inter(original_df)
+        fold_inputs = get_fold_inputs(filtered_df)
+
+        txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
+        custom_name = (
+            f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}"
+        )
+
+        # Ensure the custom path exists, create it if it doesn't
+        os.makedirs(temp_folding_input_path, exist_ok=True)
+
+        # Define the full path where the file will be stored
+        custom_file_path = os.path.join(
+            temp_folding_input_path, custom_name + ".txt"
+        )
+
+        # Write the file to the custom path
+        with open(custom_file_path, "w") as temp_file:
+            temp_file.write(txt_data)
+        update_progress(20)
+        t6 = time()
+        print(f"[DEBUG] Writing folding input file took {t6 - t5:.4f} seconds")
+        t7 = time()
+        script = "./sBIF.sh"
+        n_samples = 5000
+        n_samples_per_run = 100
+        result = subprocess.Popen(
+            ["bash", script, str(n_samples), str(n_samples_per_run)],
+            text=True,
+            stdout=subprocess.PIPE,
+            bufsize=1,
+        )
+        pattern = re.compile(r'^\[.*DONE\]')
+        progress_values = [50, 90, 91, 92, 93, 94, 95]
+        matches = (line.strip() for line in result.stdout if pattern.match(line))
+        for val, line in zip(progress_values, matches):
+            print(line)
+            update_progress(val)
+        t8 = time()
+        print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
+        t_remove_start = time()
+        os.remove(custom_file_path)
+        t_remove_end = time()
+        print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
+
+        t11 = time()
         avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
-
+        t12 = time()
+        print(f"[DEBUG] Fetching fq data took {t12 - t11:.4f} seconds")
+        
         if sample_id != 0:
+            t15 = time()
             sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
             position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
-            print(f"Existing Database Data condition -- Using Sample {sample_id} Data")
+            print(f"SBIF Generated Data condition -- Using Sample {sample_id} Data")
+            t16 = time()
+            update_progress(99)
+            print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
         else:
+            t15 = time()
             position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
-            print(f"Existing Database Data condition -- Using Best Sample {best_sample_id} Data")
+            print(f"SBIF Generated Data condition -- Using Best Sample {best_sample_id} Data")
+            t16 = time()
+            update_progress(99)
+            print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
         
-        redis_client.setex(progress_key, 3600, 99)
         return {
             "position_data": position_data,
             "avg_distance_data": avg_distance_matrix,
@@ -705,118 +837,8 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     else:
-        print("Using SBIF Generated Data")
-        if cell_line not in label_mapping:
-            raise ValueError(f"Cell line '{cell_line}' not found in label_mapping")
-        
-        table_name = get_cell_line_table_name(cell_line)
-        
-        t3 = time()
-        with db_conn() as conn:
-            with conn.cursor(row_factory=dict_row) as cur:
-                cur.execute(
-                f"""
-                    SELECT *
-                    FROM {table_name}
-                    WHERE chrid = %s
-                    AND ibp >= %s
-                    AND ibp <= %s
-                    AND jbp >= %s
-                    AND jbp <= %s
-                """,
-                    (
-                        chromosome_name,
-                        sequences["start"],
-                        sequences["end"],
-                        sequences["start"],
-                        sequences["end"],
-                    ),
-                )
-                original_data = cur.fetchall()
-        t4 = time()
-        redis_client.setex(progress_key, 3600, 10)
-        print(f"[DEBUG] Fetching original data took {t4 - t3:.4f} seconds")
-        if original_data:
-            t5 = time()
-            original_df = pd.DataFrame(
-                original_data, columns=["chrid", "fdr", "ibp", "jbp", "fq"]
-            )
-
-            filtered_df = get_spe_inter(original_df)
-            fold_inputs = get_fold_inputs(filtered_df)
-
-            txt_data = fold_inputs.to_csv(index=False, sep="\t", header=False)
-            custom_name = (
-                f"{cell_line}.{chromosome_name}.{sequences['start']}.{sequences['end']}"
-            )
-
-            # Ensure the custom path exists, create it if it doesn't
-            os.makedirs(temp_folding_input_path, exist_ok=True)
-
-            # Define the full path where the file will be stored
-            custom_file_path = os.path.join(
-                temp_folding_input_path, custom_name + ".txt"
-            )
-
-            # Write the file to the custom path
-            with open(custom_file_path, "w") as temp_file:
-                temp_file.write(txt_data)
-            redis_client.setex(progress_key, 3600, 20)
-            t6 = time()
-            print(f"[DEBUG] Writing folding input file took {t6 - t5:.4f} seconds")
-            t7 = time()
-            script = "./sBIF.sh"
-            n_samples = 5000
-            n_samples_per_run = 100
-            result = subprocess.Popen(
-                ["bash", script, str(n_samples), str(n_samples_per_run)],
-                text=True,
-                stdout=subprocess.PIPE,
-                bufsize=1,
-            )
-            pattern = re.compile(r'^\[.*DONE\]')
-            progress_values = [50, 90, 91, 92, 93, 94, 95]
-            matches = (line.strip() for line in result.stdout if pattern.match(line))
-            for val, line in zip(progress_values, matches):
-                print(line)
-                redis_client.setex(progress_key, 3600, val)
-            t8 = time()
-            print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
-            t_remove_start = time()
-            os.remove(custom_file_path)
-            t_remove_end = time()
-            print(f"[DEBUG] Removing folding input file took {t_remove_end - t_remove_start:.4f} seconds")
-
-            t11 = time()
-            avg_distance_matrix, fq_data, sample_distance_vector, best_sample_id = get_avg_fq_best_corr_data(cell_line, chromosome_name, sequences)
-            t12 = time()
-            print(f"[DEBUG] Fetching fq data took {t12 - t11:.4f} seconds")
-            
-            if sample_id != 0:
-                t15 = time()
-                sample_distance_vector = get_distance_vector_by_sample(cell_line, chromosome_name, sequences, sample_id)
-                position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
-                print(f"SBIF Generated Data condition -- Using Sample {sample_id} Data")
-                t16 = time()
-                redis_client.setex(progress_key, 3600, 99)
-                print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
-            else:
-                t15 = time()
-                position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
-                print(f"SBIF Generated Data condition -- Using Best Sample {best_sample_id} Data")
-                t16 = time()
-                redis_client.setex(progress_key, 3600, 99)
-                print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
-            
-            return {
-                "position_data": position_data,
-                "avg_distance_data": avg_distance_matrix,
-                "fq_data": fq_data,
-                "sample_distance_vector": sample_distance_vector
-            }
-        else:
-            redis_client.setex(progress_key, 3600, 99)
-            return []
+        update_progress(99)
+        return []
 
 
 """
