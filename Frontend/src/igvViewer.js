@@ -17,66 +17,89 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
     const defaultTracks = {
         'GM12878': [
             {
-                name: "ATAC-seq",
-                url: "https://www.encodeproject.org/files/ENCFF667MDI/@@download/ENCFF667MDI.bigWig",
+                name: "DNase-seq",
+                url: "https://www.encodeproject.org/files/ENCFF960FMM/@@download/ENCFF960FMM.bigWig",
                 format: "bigwig",
-                color: "blue",
+                color: "#79200D",
+            },
+            {
+                name: "H3K27ac",
+                url: "https://www.encodeproject.org/files/ENCFF798KYP/@@download/ENCFF798KYP.bigWig",
+                format: "bigwig",
+                color: "#E77B72"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF190RZM/@@download/ENCFF190RZM.bigWig",
+                format: "bigwig",
+                color: "#E88E33"
             },
             {
                 name: "H3K4me3",
                 url: "https://www.encodeproject.org/files/ENCFF975ARJ/@@download/ENCFF975ARJ.bigWig",
                 format: "bigwig",
-                color: "green"
-            },
-            {
-                name: "H3K27ac",
-                url: "https://www.encodeproject.org/files/ENCFF087YCU/@@download/ENCFF087YCU.bigWig",
-                format: "bigwig",
-                color: "#008788"
-            },
-            {
-                name: "H3K4me1",
-                url: "https://www.encodeproject.org/files/ENCFF836XOQ/@@download/ENCFF836XOQ.bigWig",
-                format: "bigwig",
-                color: "#008788"
+                color: "#578225"
             },
             {
                 name: "H3K27me3",
-                url: "https://www.encodeproject.org/files/ENCFF211VQW/@@download/ENCFF211VQW.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF677PYB/@@download/ENCFF677PYB.bigWig",
                 format: "bigwig",
-                color: "brown"
+                color: "#151A82"
             },
-        ],
-        'K': [
             {
-                name: "ATAC-seq",
-                url: "https://www.encodeproject.org/files/ENCFF137KFY/@@download/ENCFF137KFY.bigWig",
+                name: "RNA-seq",
+                url: "https://www.encodeproject.org/files/ENCFF782HFV/@@download/ENCFF782HFV.bigWig",
                 format: "bigwig",
-                color: "blue",
+                color: "#813BF5"
+            },
+            {
+                name: " ",
+                url: "https://www.encodeproject.org/files/ENCFF944OWQ/@@download/ENCFF944OWQ.bigBed",
+                format: "bigBed",
+            }
+            
+        ],
+        'Calu3': [
+            {
+                name: "DNase-seq",
+                url: "https://www.encodeproject.org/files/ENCFF097WPE/@@download/ENCFF097WPE.bigWig",
+                format: "bigwig",
+                color: "#79200D",
+            },
+            {
+                name: "H3K27ac",
+                url: "https://www.encodeproject.org/files/ENCFF722WOH/@@download/ENCFF722WOH.bigWig",
+                format: "bigwig",
+                color: "#E77B72"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF040YAL/@@download/ENCFF040YAL.bigWig",
+                format: "bigwig",
+                color: "#E88E33"
             },
             {
                 name: "H3K4me3",
-                url: "https://www.encodeproject.org/files/ENCFF071GML/@@download/ENCFF071GML.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF528GFC/@@download/ENCFF528GFC.bigWig",
                 format: "bigwig",
-                color: "green"
-            },
-            {
-                name: "H3K27ac",
-                url: "https://www.encodeproject.org/files/ENCFF094XCU/@@download/ENCFF094XCU.bigWig",
-                format: "bigwig",
-                color: "#008788"
-            },
-            {
-                name: "H3K4me1",
-                url: "https://www.encodeproject.org/files/ENCFF100FDI/@@download/ENCFF100FDI.bigWig",
-                format: "bigwig",
-                color: "#008788"
+                color: "#578225"
             },
             {
                 name: "H3K27me3",
-                url: "https://www.encodeproject.org/files/ENCFF366NNJ/@@download/ENCFF366NNJ.bigWig",
+                url: "https://www.encodeproject.org/files/ENCFF695JPQ/@@download/ENCFF695JPQ.bigWig",
                 format: "bigwig",
-                color: "brown"
+                color: "#151A82"
+            },
+            {
+                name: "RNA-seq",
+                url: "https://www.encodeproject.org/files/ENCFF873UUS/@@download/ENCFF873UUS.bigWig",
+                format: "bigwig",
+                color: "#813BF5"
+            },
+            {
+                name: " ",
+                url: "https://www.encodeproject.org/files/ENCFF700JVP/@@download/ENCFF700JVP.bigBed",
+                format: "bigBed",
             }
         ],
         'IMR90': [
@@ -110,6 +133,49 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 format: "bigwig",
                 color: "brown"
             },
+        ],
+        'monocytes':[
+            {
+                name: "DNase-seq",
+                url: "https://www.encodeproject.org/files/ENCFF544SIY/@@download/ENCFF544SIY.bigWig",
+                format: "bigwig",
+                color: "#79200D",
+            },
+            {
+                name: "H3K27ac",
+                url: "https://www.encodeproject.org/files/ENCFF626UTP/@@download/ENCFF626UTP.bigWig",
+                format: "bigwig",
+                color: "#E77B72"
+            },
+            {
+                name: "H3K4me1",
+                url: "https://www.encodeproject.org/files/ENCFF864HZP/@@download/ENCFF864HZP.bigWig",
+                format: "bigwig",
+                color: "#E88E33"
+            },
+            {
+                name: "H3K4me3",
+                url: "https://www.encodeproject.org/files/ENCFF296KZJ/@@download/ENCFF296KZJ.bigWig",
+                format: "bigwig",
+                color: "#578225"
+            },
+            {
+                name: "H3K27me3",
+                url: "https://www.encodeproject.org/files/ENCFF702ZRF/@@download/ENCFF702ZRF.bigWig",
+                format: "bigwig",
+                color: "#151A82"
+            },
+            {
+                name: "RNA-seq",
+                url: "https://www.encodeproject.org/files/ENCFF853SNW/@@download/ENCFF853SNW.bigWig",
+                format: "bigwig",
+                color: "#813BF5"
+            },
+            {
+                name: " ",
+                url: "https://www.encodeproject.org/files/ENCFF274NYA/@@download/ENCFF274NYA.bigBed",
+                format: "bigBed",
+            },
         ]
     }
 
@@ -130,7 +196,25 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 showNavigation: false,
                 showIdeogram: false,
                 panEnabled: false,
-                tracks: defaultTracks[cellLineName],
+                showCommandBar: false,
+                reference: {
+                    "id": "hg38",
+                    "name": "Human (GRCh38/hg38)",
+                    "fastaURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
+                    "indexURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai",
+                    "cytobandURL": "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/cytoBandIdeo.txt",
+                    "tracks": [
+                        {
+                            name: "RefSeq All",
+                            url: "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/ncbiRefSeq.txt.gz",
+                            format: "refgene",
+                            type: "annotation",
+                            displayMode: "collapsed",
+                            color: "blue"
+                        }
+                    ],
+                },
+                tracks: defaultTracks[cellLineName] || []
             };
 
             igv.createBrowser(igvDivRef.current, igvOptions).then((igvBrowser) => {

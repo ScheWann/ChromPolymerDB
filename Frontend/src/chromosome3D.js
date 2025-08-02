@@ -591,11 +591,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <span>Invalid Beads</span>
                     </div> */}
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#00FF00' }} />
+                        <div className='colorRect' style={{ backgroundColor: '#FFFFFF' }} />
                         <span>Start Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#0000FF' }} />
+                        <div className='colorRect' style={{ backgroundColor: '#000000' }} />
                         <span>End Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
@@ -686,8 +686,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                             ? isGeneBead
                                             : isGeneStart;
 
-                                    // first bead: green, last bead: blue
-                                    const originalColor = isFirst ? '#00FF00' : isLast ? '#0000FF' : null;
+                                    // first bead: white, last bead: black
+                                    const originalColor = isFirst ? '#FFFFFF' : isLast ? '#000000' : null;
 
                                     // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
 
@@ -869,8 +869,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     ? isGeneBead
                                     : isGeneStart;
 
-                            // first bead: green, last bead: blue
-                            const originalColor = isFirst ? '#00FF00' : isLast ? '#0000FF' : null;
+                            // first bead: white, last bead: black
+                            const originalColor = isFirst ? '#FFFFFF' : isLast ? '#000000' : null;
 
                             // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
 
