@@ -686,8 +686,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                             ? isGeneBead
                                             : isGeneStart;
 
-                                    // first bead: green, last bead: blue
-                                    const originalColor = isFirst ? '#00FF00' : isLast ? '#0000FF' : null;
+                                    // first bead: white, last bead: black
+                                    const originalColor = isFirst ? '#FFFFFF' : isLast ? '#000000' : null;
 
                                     // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
 
