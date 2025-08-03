@@ -178,26 +178,20 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
         print(f"[TASK {self.request.id}] Error accessing task registry: {registry_error}")
         # Continue without deduplication if Redis fails
 
-    print(f"[TASK {self.request.id}] Added to registry. Attempting to acquire signature-specific write lock …")
+    print(f"[TASK {self.request.id}] Added to registry. Starting computation without lock for different signatures...")
 
     # Initialize result variable
     result = None
     
-    # Acquire signature-specific write lock so only tasks with the same signature block each other
-    signature_lock_key = f"chromosome_3d_write_lock_{signature}"
-    lock = redis_client.lock(signature_lock_key, timeout=60 * 30, blocking_timeout=None)
+    # For expensive computation, we'll run without locking since we already have deduplication
+    # The signature-specific deduplication above already prevents duplicate work
+    print(f"[TASK {self.request.id}] Starting chromosome_3D_data computation directly...")
     try:
-        with lock:
-            print(f"[TASK {self.request.id}] Write lock acquired. Starting chromosome_3D_data computation …")
-            try:
-                result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
-                print(f"[TASK {self.request.id}] chromosome_3D_data computation finished.")
-            except Exception as e:
-                print(f"[TASK {self.request.id}] Error in chromosome_3D_data computation: {e}")
-                # Re-raise the exception to let Celery handle it properly
-                raise
+        result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
+        print(f"[TASK {self.request.id}] chromosome_3D_data computation finished.")
     except Exception as e:
-        print(f"[TASK {self.request.id}] Error acquiring lock or during computation: {e}")
+        print(f"[TASK {self.request.id}] Error in chromosome_3D_data computation: {e}")
+        # Re-raise the exception to let Celery handle it properly
         raise
     finally:
         # Clean up the registry so subsequent tasks can proceed

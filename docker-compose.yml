@@ -166,7 +166,36 @@ services:
     volumes:
       - ./Backend:/chromosome/backend
     command: >
-      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=4"
+      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=8"
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+    networks:
+      - example
+
+  celery-worker-2:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: CeleryWorker2
+    restart: on-failure
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
+    volumes:
+      - ./Backend:/chromosome/backend
+    command: >
+      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=6"
     depends_on:
       redis:
         condition: service_started
