@@ -39,11 +39,15 @@ REDIS_DB   = int(os.getenv("REDIS_DB", 0))
 
 # Create a connection pool for the PostgreSQL database
 # max_connections ≈ CPU cores × 2~4
+# For Celery workers: increased pool size and timeout to handle concurrent tasks
 conn_pool = ConnectionPool(
     conninfo=f"host={DB_HOST} port={DB_PORT} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
-    min_size=5,
-    max_size=50,
-    max_waiting=20,
+    min_size=10,          # Increased from 5 to ensure minimum connections available
+    max_size=80,          # Increased from 50 (4 celery workers × ~15-20 connections each)
+    max_waiting=100,      # Increased from 20 to handle more queued requests
+    timeout=60,           # Added explicit timeout (60 seconds) for getting connections
+    max_idle=300,         # Connections idle for 5 minutes will be closed
+    max_lifetime=3600,    # Connections older than 1 hour will be renewed
 )
 
 # Create a Redis connection pool
@@ -75,12 +79,28 @@ def get_cell_line_table_name(cell_line):
 
 
 """
-Establish a connection pool to the database.
+Establish a connection pool to the database with retry logic.
 """
 @contextmanager
 def db_conn():
-    with conn_pool.connection() as conn:
-        yield conn
+    max_retries = 3
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            with conn_pool.connection() as conn:
+                yield conn
+                return
+        except Exception as e:
+            if attempt == max_retries - 1:
+                # Last attempt failed, re-raise the exception
+                raise
+            else:
+                # Wait before retrying
+                import time
+                time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                print(f"Database connection attempt {attempt + 1} failed, retrying in {retry_delay * (attempt + 1)}s: {e}")
+                continue
 
 
 """

@@ -24,6 +24,12 @@ celery_worker.conf.update(
     enable_utc=True,
     task_track_started=True,
     worker_prefetch_multiplier=1,
+    # Connection and task timeout settings to prevent connection pool exhaustion
+    task_soft_time_limit=1800,    # 30 minutes soft limit
+    task_time_limit=2400,         # 40 minutes hard limit  
+    worker_max_tasks_per_child=10, # Restart worker after 10 tasks to prevent memory leaks
+    broker_connection_retry_on_startup=True,
+    broker_connection_retry=True,
 ) 
 
 try:
