@@ -6,7 +6,13 @@ from dotenv import load_dotenv
 
 from celery_worker import celery_worker
 from process import chromosome_3D_data, exist_chromosome_3D_data, make_redis_cache_key, redis_client, db_conn
-from task_utils import make_task_signature, get_task_key
+from task_utils import (
+    make_task_signature, 
+    get_task_key, 
+    get_user_task_queue_key, 
+    get_user_active_task_key,
+    cancel_user_pending_tasks
+)
 
 load_dotenv()
 
@@ -21,19 +27,103 @@ task_registry_redis = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 WRITE_LOCK_KEY = "chromosome_3d_write_lock"
 
 
+def revoke_pending_user_tasks(user_id: str, current_task_id: str = None):
+    """Revoke all pending Celery tasks for a user except the current one.
+    
+    Args:
+        user_id: The user identifier
+        current_task_id: The current task ID to keep (optional)
+        
+    Returns:
+        Number of tasks that were revoked
+    """
+    user_queue_key = get_user_task_queue_key(user_id)
+    
+    # Get all tasks in the user's queue
+    pending_tasks = task_registry_redis.lrange(user_queue_key, 0, -1)
+    revoked_count = 0
+    
+    for task_id_bytes in pending_tasks:
+        task_id = task_id_bytes.decode('utf-8')
+        
+        # Skip the current task
+        if current_task_id and task_id == current_task_id:
+            continue
+            
+        # Revoke the task in Celery
+        try:
+            celery_worker.control.revoke(task_id, terminate=True)
+            revoked_count += 1
+            print(f"[TASK MANAGER] Revoked task {task_id} for user {user_id}")
+        except Exception as e:
+            print(f"[TASK MANAGER] Failed to revoke task {task_id}: {e}")
+    
+    # Clean up the user's queue
+    cancel_user_pending_tasks(task_registry_redis, user_id, current_task_id)
+    
+    return revoked_count
+
+
+def get_user_task_status(user_id: str):
+    """Get the current task status for a user.
+    
+    Args:
+        user_id: The user identifier
+        
+    Returns:
+        Dictionary containing user's task status
+    """
+    user_queue_key = get_user_task_queue_key(user_id)
+    user_active_key = get_user_active_task_key(user_id)
+    
+    active_task = task_registry_redis.get(user_active_key)
+    queued_tasks = task_registry_redis.lrange(user_queue_key, 0, -1)
+    
+    return {
+        "active_task": active_task.decode('utf-8') if active_task else None,
+        "queued_tasks": [task_id.decode('utf-8') for task_id in queued_tasks],
+        "queue_length": len(queued_tasks)
+    }
+
+
 @celery_worker.task(bind=True, name="tasks.process_chromosome_3d")
-def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences: dict, sample_id: int):
+def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences: dict, sample_id: int, user_id: str = None):
     """Celery task wrapper around chromosome_3D_data.
 
     Follows the three-step logic:
     1. Check Redis cache - if exists, return immediately
     2. Check database - if exists, return immediately  
-    3. Run expensive computation with locking
+    3. Run expensive computation with locking and user-specific prioritization
+    
+    Args:
+        cell_line: The cell line name
+        chromosome_name: The chromosome name
+        sequences: Dictionary containing 'start' and 'end' keys
+        sample_id: The sample ID
+        user_id: Optional user identifier for task prioritization
     """
     signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
-    print(f"[TASK {self.request.id}] Received request – signature: {signature}")
+    print(f"[TASK {self.request.id}] Received request – signature: {signature}, user_id: {user_id}")
 
-    # Helper functions for checking cache and database
+    # Handle user-specific task prioritization
+    if user_id:
+        user_queue_key = get_user_task_queue_key(user_id)
+        user_active_key = get_user_active_task_key(user_id)
+        
+        # Check if this user has pending tasks
+        current_active_task = task_registry_redis.get(user_active_key)
+        if current_active_task:
+            current_active_task = current_active_task.decode('utf-8')
+            
+            # If this is a new task from the same user, revoke pending tasks
+            if current_active_task and current_active_task != self.request.id:
+                cancelled_count = revoke_pending_user_tasks(user_id, self.request.id)
+                if cancelled_count > 0:
+                    print(f"[TASK {self.request.id}] Revoked {cancelled_count} pending tasks for user {user_id}")
+            
+            # Set this task as the active task for the user
+            task_registry_redis.setex(user_active_key, 1800, self.request.id)  # 30 minutes TTL
+            task_registry_redis.lpush(user_queue_key, self.request.id)    # Helper functions for checking cache and database
     def check_redis_cache():
         """Check if data exists in Redis cache"""
         redis_3d_position_data_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_{sample_id}_position_data")
@@ -157,6 +247,14 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
         # Clean up the registry so subsequent tasks can proceed
         task_key = get_task_key(signature)
         task_registry_redis.delete(task_key)
+        
+        # Clean up user-specific tracking
+        if user_id:
+            user_queue_key = get_user_task_queue_key(user_id)
+            user_active_key = get_user_active_task_key(user_id)
+            task_registry_redis.lrem(user_queue_key, 1, self.request.id)
+            task_registry_redis.delete(user_active_key)
+            
         print(f"[TASK {self.request.id}] Task registry entry removed. Task completed.")
 
     return {
@@ -166,12 +264,37 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
 
 
 @celery_worker.task(bind=True, name="tasks.process_exist_chromosome_3d")
-def process_exist_chromosome_3d(self, cell_line: str, sample_id: int):
+def process_exist_chromosome_3d(self, cell_line: str, sample_id: int, user_id: str = None):
     """Celery task wrapper around exist_chromosome_3D_data.
 
-    Provides progress tracking through Celery task metadata.
+    Provides progress tracking through Celery task metadata and user-specific prioritization.
+    
+    Args:
+        cell_line: The cell line name
+        sample_id: The sample ID
+        user_id: Optional user identifier for task prioritization
     """
-    print(f"[TASK {self.request.id}] Processing existing chromosome 3D data for {cell_line}, sample {sample_id}")
+    print(f"[TASK {self.request.id}] Processing existing chromosome 3D data for {cell_line}, sample {sample_id}, user_id: {user_id}")
+    
+    # Handle user-specific task prioritization
+    if user_id:
+        user_queue_key = get_user_task_queue_key(user_id)
+        user_active_key = get_user_active_task_key(user_id)
+        
+        # Check if this user has pending tasks
+        current_active_task = task_registry_redis.get(user_active_key)
+        if current_active_task:
+            current_active_task = current_active_task.decode('utf-8')
+            
+        # If this is a new task from the same user, revoke pending tasks
+        if current_active_task and current_active_task != self.request.id:
+            cancelled_count = revoke_pending_user_tasks(user_id, self.request.id)
+            if cancelled_count > 0:
+                print(f"[TASK {self.request.id}] Revoked {cancelled_count} pending tasks for user {user_id}")
+        
+        # Set this task as the active task for the user
+        task_registry_redis.setex(user_active_key, 1800, self.request.id)  # 30 minutes TTL
+        task_registry_redis.lpush(user_queue_key, self.request.id)
     
     try:
         result = exist_chromosome_3D_data(cell_line, sample_id, task_instance=self)
@@ -180,3 +303,10 @@ def process_exist_chromosome_3d(self, cell_line: str, sample_id: int):
     except Exception as e:
         print(f"[TASK {self.request.id}] Error in exist_chromosome_3D_data: {e}")
         raise
+    finally:
+        # Clean up user-specific tracking
+        if user_id:
+            user_queue_key = get_user_task_queue_key(user_id)
+            user_active_key = get_user_active_task_key(user_id)
+            task_registry_redis.lrem(user_queue_key, 1, self.request.id)
+            task_registry_redis.delete(user_active_key)

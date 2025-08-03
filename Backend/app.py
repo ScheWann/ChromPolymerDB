@@ -3,10 +3,11 @@ import orjson
 import shutil
 import redis
 import hashlib, json as _json
-from tasks import process_chromosome_3d, process_exist_chromosome_3d
+import uuid
+from tasks import process_chromosome_3d, process_exist_chromosome_3d, get_user_task_status
 from task_utils import make_task_signature, get_task_key
 from celery_worker import celery_worker
-from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
+from flask import Flask, jsonify, request, after_this_request, Response, Blueprint, make_response
 from flask_cors import CORS
 from process import (
     gene_names_list, 
@@ -31,6 +32,31 @@ from process import (
 
 app = Flask(__name__)
 CORS(app)
+
+# Cookie configuration
+USER_ID_COOKIE = 'chrom_polymer_user_id'
+COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
+
+
+def get_or_create_user_id():
+    """Get user ID from cookie or create a new one"""
+    user_id = request.cookies.get(USER_ID_COOKIE)
+    if not user_id:
+        user_id = str(uuid.uuid4())
+    return user_id
+
+
+def set_user_cookie(response, user_id):
+    """Set user ID cookie on response"""
+    response.set_cookie(
+        USER_ID_COOKIE, 
+        user_id, 
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite='Lax'
+    )
+    return response
 
 
 # redis connection settings
@@ -108,8 +134,22 @@ def get_ChromosValidIBPData():
 def get_ExistChromosome3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
-    payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id))
-    return Response(payload, content_type='application/json')
+    
+    # Get or create user ID from cookie
+    user_id = get_or_create_user_id()
+    
+    # Use async processing with user prioritization
+    async_result = process_exist_chromosome_3d.apply_async(
+        args=[cell_line, sample_id, user_id]
+    )
+    result_data = async_result.get(timeout=None)
+    payload = orjson.dumps(result_data)
+    
+    # Create response and set cookie
+    response = Response(payload, content_type='application/json')
+    response = set_user_cookie(response, user_id)
+    
+    return response
 
 
 @api.route('/getChromosome3DData', methods=['POST'])
@@ -118,6 +158,9 @@ def get_Chromosome3DData():
     chromosome_name = request.json['chromosome_name']
     sequences = request.json['sequences']
     sample_id = request.json['sample_id']
+    
+    # Get or create user ID from cookie
+    user_id = get_or_create_user_id()
 
     # Build a stable task signature to detect duplicates (same logic as in tasks.py)
     signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
@@ -128,8 +171,9 @@ def get_Chromosome3DData():
     if existing_task_id:
         async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
     else:
+        # Include user_id in the task arguments
         async_result = process_chromosome_3d.apply_async(
-            args=[cell_line, chromosome_name, sequences, sample_id]
+            args=[cell_line, chromosome_name, sequences, sample_id, user_id]
         )
         # Store mapping so future identical requests reuse the same task
         redis_client.setex(task_key, 1800, async_result.id)  # 30 minutes TTL
@@ -137,7 +181,37 @@ def get_Chromosome3DData():
     # Wait for the result so the response shape stays the same for the caller.
     result_data = async_result.get(timeout=None)
 
-    return jsonify(result_data)
+    # Create response and set cookie
+    response = make_response(jsonify(result_data))
+    response = set_user_cookie(response, user_id)
+    
+    return response
+
+
+@api.route('/getUserTaskStatus', methods=['GET'])
+def get_user_task_status_endpoint():
+    """Get the current task status for the user (identified by cookie)."""
+    user_id = get_or_create_user_id()
+    
+    status = get_user_task_status(user_id)
+    
+    # Create response and set cookie
+    response = make_response(jsonify(status))
+    response = set_user_cookie(response, user_id)
+    
+    return response
+
+
+@api.route('/getUserId', methods=['GET'])
+def get_user_id_endpoint():
+    """Get or create the user ID for this session."""
+    user_id = get_or_create_user_id()
+    
+    # Create response and set cookie
+    response = make_response(jsonify({'user_id': user_id}))
+    response = set_user_cookie(response, user_id)
+    
+    return response
 
 
 @api.route('/getComparisonCellLineList', methods=['POST'])
