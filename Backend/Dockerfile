@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install git, curl, and other dependencies
 RUN apt-get update && apt-get install -y git cmake libzip-dev curl
 WORKDIR /chromosome
-RUN git clone https://github.com/ScheWann/sBIF.git
+RUN git clone -b OPT https://github.com/ScheWann/sBIF.git
 
 # Build sBIF
 WORKDIR /chromosome/sBIF
