@@ -124,6 +124,7 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
             # Set this task as the active task for the user
             task_registry_redis.setex(user_active_key, 1800, self.request.id)  # 30 minutes TTL
             task_registry_redis.lpush(user_queue_key, self.request.id)    # Helper functions for checking cache and database
+
     def check_redis_cache():
         """Check if data exists in Redis cache"""
         redis_3d_position_data_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_{sample_id}_position_data")
@@ -177,23 +178,11 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
     
     if cached_3d_position_data is not None and cached_sample_distance_vector is not None:
         print(f"[TASK {self.request.id}] Data found in Redis cache. Returning immediately.")
-        
-        # Get additional cached data
-        avg_distance_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "avg_distance_data")
-        fq_data_cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_data")
-        
-        position_data = json.loads(cached_3d_position_data.decode("utf-8"))
-        sample_distance_vector = json.loads(cached_sample_distance_vector.decode("utf-8"))
-        avg_distance_matrix = json.loads(redis_client.get(avg_distance_data_cache_key).decode("utf-8"))
-        fq_data = json.loads(redis_client.get(fq_data_cache_key).decode("utf-8"))
 
-        self.request.update_state(state='SUCCESS', meta={'current': 100, 'total': 100, 'status': 'Cache hit'})
+        result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
         return {
             "status": "cache_hit",
-            "position_data": position_data,
-            "avg_distance_data": avg_distance_matrix,
-            "fq_data": fq_data,
-            "sample_distance_vector": sample_distance_vector
+            **result
         }
 
     # Step 2: Check database
@@ -206,7 +195,6 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
         # Use chromosome_3D_data to process database data (it will handle the database case)
         result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
         
-        self.request.update_state(state='SUCCESS', meta={'current': 100, 'total': 100, 'status': 'Database hit'})
         return {
             "status": "database_hit",
             **result
