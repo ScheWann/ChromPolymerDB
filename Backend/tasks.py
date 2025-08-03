@@ -22,9 +22,6 @@ REDIS_DB   = int(os.getenv("REDIS_TASK_DB", 2))  # Separate DB for task registry
 
 task_registry_redis = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
-# Keys for locking
-WRITE_LOCK_KEY = "chromosome_3d_write_lock"
-
 
 def get_user_task_status(user_id: str):
     """Get the current task status for a user.
@@ -181,13 +178,14 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
         print(f"[TASK {self.request.id}] Error accessing task registry: {registry_error}")
         # Continue without deduplication if Redis fails
 
-    print(f"[TASK {self.request.id}] Added to registry. Attempting to acquire write lock …")
+    print(f"[TASK {self.request.id}] Added to registry. Attempting to acquire signature-specific write lock …")
 
     # Initialize result variable
     result = None
     
-    # Acquire global write lock so only one task writes at a time.
-    lock = redis_client.lock(WRITE_LOCK_KEY, timeout=60 * 30, blocking_timeout=None)
+    # Acquire signature-specific write lock so only tasks with the same signature block each other
+    signature_lock_key = f"chromosome_3d_write_lock_{signature}"
+    lock = redis_client.lock(signature_lock_key, timeout=60 * 30, blocking_timeout=None)
     try:
         with lock:
             print(f"[TASK {self.request.id}] Write lock acquired. Starting chromosome_3D_data computation …")
