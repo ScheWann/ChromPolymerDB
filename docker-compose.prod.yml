@@ -82,6 +82,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
     build:
       context: ./Backend
       dockerfile: Dockerfile
@@ -99,6 +101,60 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - chrompolymerdb
+
+  celery-worker:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: CeleryWorker
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
+    command: >
+      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=8"
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - chrompolymerdb
+
+  celery-worker-2:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: CeleryWorker2
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_TASK_DB: 2
+    command: >
+      sh -c "celery -A celery_worker.celery_worker worker --loglevel=info --concurrency=8"
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - chrompolymerdb
 
