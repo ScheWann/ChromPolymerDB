@@ -810,18 +810,63 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_in
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            result = subprocess.Popen(
-                ["bash", script, str(n_samples), str(n_samples_per_run)],
-                text=True,
-                stdout=subprocess.PIPE,
-                bufsize=1,
-            )
-            pattern = re.compile(r'^\[.*DONE\]')
-            progress_values = [50, 90, 91, 92, 93, 94, 95]
-            matches = (line.strip() for line in result.stdout if pattern.match(line))
-            for val, line in zip(progress_values, matches):
-                print(line)
-                update_progress(val)
+            
+            result = None
+            try:
+                result = subprocess.Popen(
+                    ["bash", script, str(n_samples), str(n_samples_per_run)],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    bufsize=1,
+                )
+                pattern = re.compile(r'^\[.*DONE\]')
+                progress_values = [50, 90, 91, 92, 93, 94, 95]
+                
+                # Process output line by line without using generator expression
+                progress_idx = 0
+                try:
+                    for line in result.stdout:
+                        line = line.strip()
+                        if pattern.match(line):
+                            print(line)
+                            if progress_idx < len(progress_values):
+                                update_progress(progress_values[progress_idx])
+                                progress_idx += 1
+                            if progress_idx >= len(progress_values):
+                                break
+                except Exception as stdout_error:
+                    print(f"[ERROR] Error reading stdout: {stdout_error}")
+                
+                # Wait for process to complete and check return code
+                return_code = result.wait()
+                if return_code != 0:
+                    stderr_output = ""
+                    try:
+                        stderr_output = result.stderr.read()
+                    except Exception:
+                        stderr_output = "Could not read stderr"
+                    raise RuntimeError(f"sBIF script failed with return code {return_code}. Error: {stderr_output}")
+                    
+            except Exception as e:
+                print(f"[ERROR] sBIF script execution failed: {e}")
+                # Clean up process if it's still running
+                if result and result.poll() is None:
+                    try:
+                        result.terminate()
+                        result.wait()
+                    except Exception:
+                        pass  # Ignore cleanup errors
+                raise
+            finally:
+                # Ensure stdout and stderr are properly closed
+                if result:
+                    try:
+                        if result.stdout:
+                            result.stdout.close()
+                    except Exception:
+                        pass
+            
             t8 = time()
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()

@@ -107,23 +107,27 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
 
     # Handle user-specific task prioritization
     if user_id:
-        user_queue_key = get_user_task_queue_key(user_id)
-        user_active_key = get_user_active_task_key(user_id)
-        
-        # Check if this user has pending tasks
-        current_active_task = task_registry_redis.get(user_active_key)
-        if current_active_task:
-            current_active_task = current_active_task.decode('utf-8')
+        try:
+            user_queue_key = get_user_task_queue_key(user_id)
+            user_active_key = get_user_active_task_key(user_id)
             
-            # If this is a new task from the same user, revoke pending tasks
-            if current_active_task and current_active_task != self.request.id:
-                cancelled_count = revoke_pending_user_tasks(user_id, self.request.id)
-                if cancelled_count > 0:
-                    print(f"[TASK {self.request.id}] Revoked {cancelled_count} pending tasks for user {user_id}")
-            
-            # Set this task as the active task for the user
-            task_registry_redis.setex(user_active_key, 1800, self.request.id)  # 30 minutes TTL
-            task_registry_redis.lpush(user_queue_key, self.request.id)    # Helper functions for checking cache and database
+            # Check if this user has pending tasks
+            current_active_task = task_registry_redis.get(user_active_key)
+            if current_active_task:
+                current_active_task = current_active_task.decode('utf-8')
+                
+                # If this is a new task from the same user, revoke pending tasks
+                if current_active_task and current_active_task != self.request.id:
+                    cancelled_count = revoke_pending_user_tasks(user_id, self.request.id)
+                    if cancelled_count > 0:
+                        print(f"[TASK {self.request.id}] Revoked {cancelled_count} pending tasks for user {user_id}")
+                
+                # Set this task as the active task for the user
+                task_registry_redis.setex(user_active_key, 1800, self.request.id)  # 30 minutes TTL
+                task_registry_redis.lpush(user_queue_key, self.request.id)
+        except Exception as user_task_error:
+            print(f"[TASK {self.request.id}] Error in user task prioritization: {user_task_error}")
+            # Continue without user prioritization if Redis fails    # Helper functions for checking cache and database
 
     def check_redis_cache():
         """Check if data exists in Redis cache"""
@@ -205,50 +209,74 @@ def process_chromosome_3d(self, cell_line: str, chromosome_name: str, sequences:
     
     # Deduplication check (idempotent): Only allow one task with this signature at a time.
     task_key = get_task_key(signature)
-    existing_task_id = task_registry_redis.get(task_key)
-    
-    if existing_task_id is not None:
-        existing_task_id = existing_task_id.decode('utf-8')
-        if existing_task_id != self.request.id:
-            print(f"[TASK {self.request.id}] Duplicate detected. Task {existing_task_id} already processing this signature. Skipping execution.")
-            return {
-                "status": "duplicate_skipped",
-                "detail": f"Task with signature {signature} already in progress by task {existing_task_id}."
-            }
+    try:
+        existing_task_id = task_registry_redis.get(task_key)
+        
+        if existing_task_id is not None:
+            existing_task_id = existing_task_id.decode('utf-8')
+            if existing_task_id != self.request.id:
+                print(f"[TASK {self.request.id}] Duplicate detected. Task {existing_task_id} already processing this signature. Skipping execution.")
+                return {
+                    "status": "duplicate_skipped",
+                    "detail": f"Task with signature {signature} already in progress by task {existing_task_id}."
+                }
+            else:
+                print(f"[TASK {self.request.id}] Same task ID found in registry, proceeding...")
         else:
-            print(f"[TASK {self.request.id}] Same task ID found in registry, proceeding...")
-    else:
-        # Register this task
-        task_registry_redis.setex(task_key, 1800, self.request.id)  # 30 minutes TTL
-        print(f"[TASK {self.request.id}] Registered in task registry.")
+            # Register this task
+            task_registry_redis.setex(task_key, 1800, self.request.id)  # 30 minutes TTL
+            print(f"[TASK {self.request.id}] Registered in task registry.")
+    except Exception as registry_error:
+        print(f"[TASK {self.request.id}] Error accessing task registry: {registry_error}")
+        # Continue without deduplication if Redis fails
 
     print(f"[TASK {self.request.id}] Added to registry. Attempting to acquire write lock …")
 
+    # Initialize result variable
+    result = None
+    
     # Acquire global write lock so only one task writes at a time.
     lock = redis_client.lock(WRITE_LOCK_KEY, timeout=60 * 30, blocking_timeout=None)
     try:
         with lock:
             print(f"[TASK {self.request.id}] Write lock acquired. Starting chromosome_3D_data computation …")
-            result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
-            print(f"[TASK {self.request.id}] chromosome_3D_data computation finished.")
+            try:
+                result = chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=self)
+                print(f"[TASK {self.request.id}] chromosome_3D_data computation finished.")
+            except Exception as e:
+                print(f"[TASK {self.request.id}] Error in chromosome_3D_data computation: {e}")
+                # Re-raise the exception to let Celery handle it properly
+                raise
+    except Exception as e:
+        print(f"[TASK {self.request.id}] Error acquiring lock or during computation: {e}")
+        raise
     finally:
         # Clean up the registry so subsequent tasks can proceed
-        task_key = get_task_key(signature)
-        task_registry_redis.delete(task_key)
-        
-        # Clean up user-specific tracking
-        if user_id:
-            user_queue_key = get_user_task_queue_key(user_id)
-            user_active_key = get_user_active_task_key(user_id)
-            task_registry_redis.lrem(user_queue_key, 1, self.request.id)
-            task_registry_redis.delete(user_active_key)
+        try:
+            task_key = get_task_key(signature)
+            task_registry_redis.delete(task_key)
             
-        print(f"[TASK {self.request.id}] Task registry entry removed. Task completed.")
+            # Clean up user-specific tracking
+            if user_id:
+                user_queue_key = get_user_task_queue_key(user_id)
+                user_active_key = get_user_active_task_key(user_id)
+                task_registry_redis.lrem(user_queue_key, 1, self.request.id)
+                task_registry_redis.delete(user_active_key)
+                
+            print(f"[TASK {self.request.id}] Task registry entry removed. Task completed.")
+        except Exception as cleanup_error:
+            print(f"[TASK {self.request.id}] Error during cleanup: {cleanup_error}")
+            # Don't re-raise cleanup errors
 
-    return {
-        "status": "computed",
-        **result
-    } 
+    # Only return result if computation was successful
+    if result is not None:
+        return {
+            "status": "computed",
+            **result
+        }
+    else:
+        # This should not happen if exceptions are properly raised, but just in case
+        raise RuntimeError("Task completed but no result was generated") 
 
 
 @celery_worker.task(bind=True, name="tasks.process_exist_chromosome_3d")

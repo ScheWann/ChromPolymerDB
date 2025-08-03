@@ -132,60 +132,82 @@ def get_ChromosValidIBPData():
 
 @api.route('/getExistChromosome3DData', methods=['POST'])
 def get_ExistChromosome3DData():
-    cell_line = request.json['cell_line']
-    sample_id = request.json['sample_id']
+    try:
+        cell_line = request.json['cell_line']
+        sample_id = request.json['sample_id']
+        
+        # Get or create user ID from cookie
+        user_id = get_or_create_user_id()
+        
+        # Use async processing with user prioritization
+        async_result = process_exist_chromosome_3d.apply_async(
+            args=[cell_line, sample_id, user_id]
+        )
+        
+        try:
+            result_data = async_result.get(timeout=None)
+        except Exception as task_error:
+            app.logger.error(f"Task execution error in getExistChromosome3DData: {task_error}")
+            raise
+            
+        payload = orjson.dumps(result_data)
+        
+        # Create response and set cookie
+        response = Response(payload, content_type='application/json')
+        response = set_user_cookie(response, user_id)
+        
+        return response
     
-    # Get or create user ID from cookie
-    user_id = get_or_create_user_id()
-    
-    # Use async processing with user prioritization
-    async_result = process_exist_chromosome_3d.apply_async(
-        args=[cell_line, sample_id, user_id]
-    )
-    result_data = async_result.get(timeout=None)
-    payload = orjson.dumps(result_data)
-    
-    # Create response and set cookie
-    response = Response(payload, content_type='application/json')
-    response = set_user_cookie(response, user_id)
-    
-    return response
+    except Exception as e:
+        app.logger.error(f"Error in getExistChromosome3DData: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 @api.route('/getChromosome3DData', methods=['POST'])
 def get_Chromosome3DData():
-    cell_line = request.json['cell_line']
-    chromosome_name = request.json['chromosome_name']
-    sequences = request.json['sequences']
-    sample_id = request.json['sample_id']
+    try:
+        cell_line = request.json['cell_line']
+        chromosome_name = request.json['chromosome_name']
+        sequences = request.json['sequences']
+        sample_id = request.json['sample_id']
+        
+        # Get or create user ID from cookie
+        user_id = get_or_create_user_id()
+
+        # Build a stable task signature to detect duplicates (same logic as in tasks.py)
+        signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
+
+        # If the task is already registered, return its AsyncResult instead of queuing a new one
+        task_key = get_task_key(signature)
+        existing_task_id = redis_client.get(task_key)
+        if existing_task_id:
+            async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
+        else:
+            # Include user_id in the task arguments
+            async_result = process_chromosome_3d.apply_async(
+                args=[cell_line, chromosome_name, sequences, sample_id, user_id]
+            )
+            # Store mapping so future identical requests reuse the same task
+            redis_client.setex(task_key, 1800, async_result.id)  # 30 minutes TTL
+
+        # Wait for the result so the response shape stays the same for the caller.
+        try:
+            result_data = async_result.get(timeout=None)
+        except Exception as task_error:
+            app.logger.error(f"Task execution error: {task_error}")
+            # Clean up task key on failure
+            redis_client.delete(task_key)
+            raise
+
+        # Create response and set cookie
+        response = make_response(jsonify(result_data))
+        response = set_user_cookie(response, user_id)
+        
+        return response
     
-    # Get or create user ID from cookie
-    user_id = get_or_create_user_id()
-
-    # Build a stable task signature to detect duplicates (same logic as in tasks.py)
-    signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
-
-    # If the task is already registered, return its AsyncResult instead of queuing a new one
-    task_key = get_task_key(signature)
-    existing_task_id = redis_client.get(task_key)
-    if existing_task_id:
-        async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
-    else:
-        # Include user_id in the task arguments
-        async_result = process_chromosome_3d.apply_async(
-            args=[cell_line, chromosome_name, sequences, sample_id, user_id]
-        )
-        # Store mapping so future identical requests reuse the same task
-        redis_client.setex(task_key, 1800, async_result.id)  # 30 minutes TTL
-
-    # Wait for the result so the response shape stays the same for the caller.
-    result_data = async_result.get(timeout=None)
-
-    # Create response and set cookie
-    response = make_response(jsonify(result_data))
-    response = set_user_cookie(response, user_id)
-    
-    return response
+    except Exception as e:
+        app.logger.error(f"Error in getChromosome3DData: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 @api.route('/getUserTaskStatus', methods=['GET'])

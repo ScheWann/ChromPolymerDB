@@ -30,6 +30,11 @@ celery_worker.conf.update(
     worker_max_tasks_per_child=10, # Restart worker after 10 tasks to prevent memory leaks
     broker_connection_retry_on_startup=True,
     broker_connection_retry=True,
+    # Additional settings to handle generator cleanup and prevent connection issues
+    task_reject_on_worker_lost=True,   # Reject tasks if worker connection is lost
+    task_acks_late=True,               # Only acknowledge tasks after completion
+    worker_disable_rate_limits=True,   # Disable rate limiting to prevent queue buildup
+    result_expires=3600,               # Results expire after 1 hour
 ) 
 
 try:
