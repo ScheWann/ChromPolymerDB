@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
-import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown } from 'antd';
+import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown, Splitter } from 'antd';
 import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './chromosome3DDistance';
@@ -389,6 +389,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 return acc;
             }, {})
         );
+        // Clear distribution data when beads are reset
+        setDistributionData({});
     };
 
     const handleResetSelect = (index) => {
@@ -589,11 +591,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <span>Invalid Beads</span>
                     </div> */}
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#00FF00' }} />
+                        <div className='colorRect' style={{ backgroundColor: '#FFFFFF' }} />
                         <span>Start Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
-                        <div className='colorRect' style={{ backgroundColor: '#0000FF' }} />
+                        <div className='colorRect' style={{ backgroundColor: '#000000' }} />
                         <span>End Bead</span>
                     </div>
                     <div className='colorLegendWrapper'>
@@ -615,198 +617,374 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 )}
             </div>
 
-            {showChromosome3DDistance && chromosomeCurrentSampleDistanceVector.length > 0 ? (
-                <div style={{ aspectRatio: "1", position: 'absolute', bottom: "calc(35% + 10px)", right: 10, zIndex: 10 }}>
-                    <CurrentChainDistanceHeatmap
-                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
-                    />
-                </div>) : (<div style={{ aspectRatio: "1", position: 'absolute', bottom: 0, right: 10, zIndex: 10 }}>
-                    <CurrentChainDistanceHeatmap
-                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
-                    />
-                </div>)}
-
-            <div style={{ height: showChromosome3DDistance ? '65%' : '100%', transition: 'height 0.3s ease', position: 'relative' }}>
-                <Canvas
-                    shadows
-                    ref={canvasRef}
-                    camera={{ position: [0, 0, 230], fov: 75, onUpdate: self => self.updateProjectionMatrix() }}
-                    style={{ width: '100%', height: '100%', backgroundColor: '#333' }}
-                    onCreated={({ gl, scene, camera }) => {
-                        rendererRef.current = { gl, scene, camera };
-                    }}
-                    gl={{
-                        antialias: true,
-                        powerPreference: "high-performance",
-                        toneMapping: THREE.ACESFilmicToneMapping,
-                        colorSpace: THREE.SRGBColorSpace
-                    }}
-                >
-                    <OrbitControls
-                        ref={controlsRef}
-                        enableZoom={true}
-                        enableRotate={true}
-                        enablePan={true}
-                        onChange={() => {
-                            if (controlsRef.current) {
-                                const euler = new THREE.Euler().setFromQuaternion(controlsRef.current.object.quaternion);
-                                setCameraRotation([euler.x, euler.y, euler.z]);
-                            }
-                        }}
-                    />
-                    <ambientLight intensity={1} />
-                    <directionalLight
-                        position={[10, 20, 10]}
-                        intensity={3}
-                        castShadow
-                    />
-                    <spotLight
-                        position={[30, 50, 50]}
-                        angle={0.3}
-                        penumbra={1}
-                        intensity={3}
-                        castShadow
-                    />
-                    {coordinates.map((coord, index) => {
-                        const isFirst = index === 0;
-                        const isLast = index === coordinates.length - 1;
-                        // const isValid = processedChromosomeData[index].isValid;
-                        const isGeneBead = processedChromosomeData[index].isGeneBead;
-                        const orientation = processedChromosomeData[index].orientation;
-
-                        const isGeneStart = orientation === "plus"
-                            ? geneBeadSeq[0] === processedChromosomeData[index].marker
-                            : geneBeadSeq[geneBeadSeq.length - 1] === processedChromosomeData[index].marker;
-
-                        // Gene beads shows control
-                        const geneBeadRender =
-                            geneBeadSeq.length > 0 && isFullGeneVisible
-                                ? isGeneBead
-                                : isGeneStart;
-
-                        // first bead: green, last bead: blue
-                        const originalColor = isFirst ? '#00FF00' : isLast ? '#0000FF' : null;
-
-                        // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
-
-                        // const geneBeadColor = isValid
-                        //     ? '#FFD700' // gold
-                        //     : isFirst
-                        //         ? blendIfInvalid('#00FF00') // mix green and white
-                        //         : isLast
-                        //             ? blendIfInvalid('#0000FF') // mix blue and white
-                        //             : blendIfInvalid('#FFD700'); // mix gold and white
-
-                        const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
-                            (hoveredIndex === index || selectedIndex === index
-                                ? '#E25822'
-                                : isFirst || isLast
-                                    ? originalColor
-                                    : '#00BFFF');
-
-                        const validColor = geneBeadRender ? '#FFD700' : baseColor;
-
-                        const beadMarker = processedChromosomeData[index].marker;
-                        const isInInputRange =
-                            inputPositions.start !== null &&
-                            inputPositions.end !== null &&
-                            beadMarker >= inputPositions.start &&
-                            beadMarker <= inputPositions.end;
-                        // const currentColor = geneBeadRender
-                        //     ? geneBeadColor
-                        //     : isValid
-                        //         ? validColor
-                        //         : isFirst
-                        //             ? blendIfInvalid('#00FF00') // invalid start bead mix green and white
-                        //             : isLast
-                        //                 ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
-                        //                 : '#FFFFFF';  // default invalid bead color
-
-                        const currentColor = isInInputRange ? '#E25822' : validColor;
-
-                        return (
-                            <group
-                                key={index}
-                                position={coord}
-                                onPointerOver={(e) => {
-                                    e.stopPropagation();
-                                    if (hoveredIndex !== index) {
-                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
-                                        setShowBeadInfo(true);
-                                        setHoveredIndex(index);
-                                    }
+            {showChromosome3DDistance ? (
+                <Splitter layout="vertical" style={{ height: '100%' }}>
+                    <Splitter.Panel defaultSize="65%" min="45%" max="70%">
+                        <div style={{ height: '100%', position: 'relative' }}>
+                            {/* CurrentChainDistanceHeatmap positioned relative to the canvas panel */}
+                            {(chromosomeCurrentSampleDistanceVector?.length ?? 0) > 0 && (
+                                <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                                    <CurrentChainDistanceHeatmap
+                                        chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
+                                    />
+                                </div>
+                            )}
+                            <Canvas
+                                shadows
+                                ref={canvasRef}
+                                camera={{ position: [0, 0, 230], fov: 75, onUpdate: self => self.updateProjectionMatrix() }}
+                                style={{ width: '100%', height: '100%', backgroundColor: '#333' }}
+                                onCreated={({ gl, scene, camera }) => {
+                                    rendererRef.current = { gl, scene, camera };
                                 }}
-                                onPointerOut={(e) => {
-                                    e.stopPropagation();
-                                    if (hoveredIndex === index) {
-                                        setShowBeadInfo(false);
-                                        setHoveredIndex(null);
-                                    }
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedIndex(index);
-                                }}
-                                onDoubleClick={(e) => {
-                                    e.stopPropagation();
-                                    handleResetSelect(index);
+                                gl={{
+                                    antialias: true,
+                                    powerPreference: "high-performance",
+                                    toneMapping: THREE.ACESFilmicToneMapping,
+                                    colorSpace: THREE.SRGBColorSpace
                                 }}
                             >
-                                {/* Sphere Mesh */}
-                                <mesh>
-                                    <sphereGeometry args={[2.8, 32, 32]} />
-                                    <meshStandardMaterial
-                                        receiveShadow
-                                        castShadow
-                                        color={currentColor}
-                                        metalness={0.3}
-                                        roughness={0.1}
-                                        emissiveIntensity={0.3}
-                                    />
-                                </mesh>
-                                {/* Outline Mesh */}
-                                {/* <mesh>
-                                    <sphereGeometry args={[3, 32, 32]} />
-                                    <meshBasicMaterial color="white" side={THREE.BackSide} />
-                                </mesh> */}
-                            </group>
-                        );
-                    })}
-                </Canvas>
+                                <OrbitControls
+                                    ref={controlsRef}
+                                    enableZoom={true}
+                                    enableRotate={true}
+                                    enablePan={true}
+                                    onChange={() => {
+                                        if (controlsRef.current) {
+                                            const euler = new THREE.Euler().setFromQuaternion(controlsRef.current.object.quaternion);
+                                            setCameraRotation([euler.x, euler.y, euler.z]);
+                                        }
+                                    }}
+                                />
+                                <ambientLight intensity={1} />
+                                <directionalLight
+                                    position={[10, 20, 10]}
+                                    intensity={3}
+                                    castShadow
+                                />
+                                <spotLight
+                                    position={[30, 50, 50]}
+                                    angle={0.3}
+                                    penumbra={1}
+                                    intensity={3}
+                                    castShadow
+                                />
+                                {coordinates.map((coord, index) => {
+                                    const isFirst = index === 0;
+                                    const isLast = index === coordinates.length - 1;
+                                    // const isValid = processedChromosomeData[index].isValid;
+                                    const isGeneBead = processedChromosomeData[index].isGeneBead;
+                                    const orientation = processedChromosomeData[index].orientation;
 
-                {/* XYZ Axis Indicator - now positioned relative to the canvas container */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: 20,
-                    left: 20,
-                    width: 120,
-                    height: 120,
-                    zIndex: 10
-                }}>
+                                    const isGeneStart = orientation === "plus"
+                                        ? geneBeadSeq[0] === processedChromosomeData[index].marker
+                                        : geneBeadSeq[geneBeadSeq.length - 1] === processedChromosomeData[index].marker;
+
+                                    // Gene beads shows control
+                                    const geneBeadRender =
+                                        geneBeadSeq.length > 0 && isFullGeneVisible
+                                            ? isGeneBead
+                                            : isGeneStart;
+
+                                    // first bead: white, last bead: black
+                                    const originalColor = isFirst ? '#FFFFFF' : isLast ? '#000000' : null;
+
+                                    // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
+
+                                    // const geneBeadColor = isValid
+                                    //     ? '#FFD700' // gold
+                                    //     : isFirst
+                                    //         ? blendIfInvalid('#00FF00') // mix green and white
+                                    //         : isLast
+                                    //             ? blendIfInvalid('#0000FF') // mix blue and white
+                                    //             : blendIfInvalid('#FFD700'); // mix gold and white
+
+                                    const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
+                                        (hoveredIndex === index || selectedIndex === index
+                                            ? '#E25822'
+                                            : isFirst || isLast
+                                                ? originalColor
+                                                : '#00BFFF');
+
+                                    const validColor = geneBeadRender ? '#FFD700' : baseColor;
+
+                                    const beadMarker = processedChromosomeData[index].marker;
+                                    const isInInputRange =
+                                        inputPositions.start !== null &&
+                                        inputPositions.end !== null &&
+                                        beadMarker >= inputPositions.start &&
+                                        beadMarker <= inputPositions.end;
+                                    // const currentColor = geneBeadRender
+                                    //     ? geneBeadColor
+                                    //     : isValid
+                                    //         ? validColor
+                                    //         : isFirst
+                                    //             ? blendIfInvalid('#00FF00') // invalid start bead mix green and white
+                                    //             : isLast
+                                    //                 ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
+                                    //                 : '#FFFFFF';  // default invalid bead color
+
+                                    const currentColor = isInInputRange ? '#E25822' : validColor;
+
+                                    return (
+                                        <group
+                                            key={index}
+                                            position={coord}
+                                            onPointerOver={(e) => {
+                                                e.stopPropagation();
+                                                if (hoveredIndex !== index) {
+                                                    setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                                    setShowBeadInfo(true);
+                                                    setHoveredIndex(index);
+                                                }
+                                            }}
+                                            onPointerOut={(e) => {
+                                                e.stopPropagation();
+                                                if (hoveredIndex === index) {
+                                                    setShowBeadInfo(false);
+                                                    setHoveredIndex(null);
+                                                }
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedIndex(index);
+                                            }}
+                                            onDoubleClick={(e) => {
+                                                e.stopPropagation();
+                                                handleResetSelect(index);
+                                            }}
+                                        >
+                                            {/* Sphere Mesh */}
+                                            <mesh>
+                                                <sphereGeometry args={[2.8, 32, 32]} />
+                                                <meshStandardMaterial
+                                                    receiveShadow
+                                                    castShadow
+                                                    color={currentColor}
+                                                    metalness={0.3}
+                                                    roughness={0.1}
+                                                    emissiveIntensity={0.3}
+                                                />
+                                            </mesh>
+                                            {/* Outline Mesh */}
+                                            {/* <mesh>
+                                                <sphereGeometry args={[3, 32, 32]} />
+                                                <meshBasicMaterial color="white" side={THREE.BackSide} />
+                                            </mesh> */}
+                                        </group>
+                                    );
+                                })}
+                            </Canvas>
+
+                            {/* XYZ Axis Indicator - now positioned relative to the canvas container */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: 20,
+                                left: 20,
+                                width: 120,
+                                height: 120,
+                                zIndex: 10
+                            }}>
+                                <Canvas
+                                    camera={{ position: [0, 0, 50], fov: 75 }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    gl={{ alpha: true }}
+                                >
+                                    <ambientLight intensity={0.8} />
+                                    <directionalLight position={[5, 5, 5]} intensity={1} />
+                                    <AxisIndicator cameraRotation={cameraRotation} />
+                                </Canvas>
+                            </div>
+                        </div>
+                    </Splitter.Panel>
+                    <Splitter.Panel defaultSize="35%" min="35%" max="70%">
+                        <Chromosome3DDistance
+                            celllineName={celllineName}
+                            chromosomeName={chromosomeName}
+                            currentChromosomeSequence={currentChromosomeSequence}
+                            setShowChromosome3DDistance={setShowChromosome3DDistance}
+                            selectedSphereList={selectedSphereList}
+                            distributionData={distributionData}
+                            setDistributionData={setDistributionData}
+                            isExampleMode={isExampleMode}
+                        />
+                    </Splitter.Panel>
+                </Splitter>
+            ) : (
+                <div style={{ height: '100%', position: 'relative' }}>
                     <Canvas
-                        camera={{ position: [0, 0, 50], fov: 75 }}
-                        style={{ width: '100%', height: '100%' }}
-                        gl={{ alpha: true }}
+                        shadows
+                        ref={canvasRef}
+                        camera={{ position: [0, 0, 230], fov: 75, onUpdate: self => self.updateProjectionMatrix() }}
+                        style={{ width: '100%', height: '100%', backgroundColor: '#333' }}
+                        onCreated={({ gl, scene, camera }) => {
+                            rendererRef.current = { gl, scene, camera };
+                        }}
+                        gl={{
+                            antialias: true,
+                            powerPreference: "high-performance",
+                            toneMapping: THREE.ACESFilmicToneMapping,
+                            colorSpace: THREE.SRGBColorSpace
+                        }}
                     >
-                        <ambientLight intensity={0.8} />
-                        <directionalLight position={[5, 5, 5]} intensity={1} />
-                        <AxisIndicator cameraRotation={cameraRotation} />
-                    </Canvas>
-                </div>
-            </div>
+                        <OrbitControls
+                            ref={controlsRef}
+                            enableZoom={true}
+                            enableRotate={true}
+                            enablePan={true}
+                            onChange={() => {
+                                if (controlsRef.current) {
+                                    const euler = new THREE.Euler().setFromQuaternion(controlsRef.current.object.quaternion);
+                                    setCameraRotation([euler.x, euler.y, euler.z]);
+                                }
+                            }}
+                        />
+                        <ambientLight intensity={1} />
+                        <directionalLight
+                            position={[10, 20, 10]}
+                            intensity={3}
+                            castShadow
+                        />
+                        <spotLight
+                            position={[30, 50, 50]}
+                            angle={0.3}
+                            penumbra={1}
+                            intensity={3}
+                            castShadow
+                        />
+                        {coordinates.map((coord, index) => {
+                            const isFirst = index === 0;
+                            const isLast = index === coordinates.length - 1;
+                            // const isValid = processedChromosomeData[index].isValid;
+                            const isGeneBead = processedChromosomeData[index].isGeneBead;
+                            const orientation = processedChromosomeData[index].orientation;
 
-            {showChromosome3DDistance && (
-                <div style={{ height: '35%', marginTop: 2 }}>
-                    <Chromosome3DDistance
-                        celllineName={celllineName}
-                        chromosomeName={chromosomeName}
-                        currentChromosomeSequence={currentChromosomeSequence}
-                        setShowChromosome3DDistance={setShowChromosome3DDistance}
-                        selectedSphereList={selectedSphereList}
-                        distributionData={distributionData}
-                        setDistributionData={setDistributionData}
-                        isExampleMode={isExampleMode}
-                    />
+                            const isGeneStart = orientation === "plus"
+                                ? geneBeadSeq[0] === processedChromosomeData[index].marker
+                                : geneBeadSeq[geneBeadSeq.length - 1] === processedChromosomeData[index].marker;
+
+                            // Gene beads shows control
+                            const geneBeadRender =
+                                geneBeadSeq.length > 0 && isFullGeneVisible
+                                    ? isGeneBead
+                                    : isGeneStart;
+
+                            // first bead: white, last bead: black
+                            const originalColor = isFirst ? '#FFFFFF' : isLast ? '#000000' : null;
+
+                            // const blendIfInvalid = (baseColor) => blendColors(baseColor, '#FFFFFF');
+
+                            // const geneBeadColor = isValid
+                            //     ? '#FFD700' // gold
+                            //     : isFirst
+                            //         ? blendIfInvalid('#00FF00') // mix green and white
+                            //         : isLast
+                            //             ? blendIfInvalid('#0000FF') // mix blue and white
+                            //             : blendIfInvalid('#FFD700'); // mix gold and white
+
+                            const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
+                                (hoveredIndex === index || selectedIndex === index
+                                    ? '#E25822'
+                                    : isFirst || isLast
+                                        ? originalColor
+                                        : '#00BFFF');
+
+                            const validColor = geneBeadRender ? '#FFD700' : baseColor;
+
+                            const beadMarker = processedChromosomeData[index].marker;
+                            const isInInputRange =
+                                inputPositions.start !== null &&
+                                inputPositions.end !== null &&
+                                beadMarker >= inputPositions.start &&
+                                beadMarker <= inputPositions.end;
+                            // const currentColor = geneBeadRender
+                            //     ? geneBeadColor
+                            //     : isValid
+                            //         ? validColor
+                            //         : isFirst
+                            //             ? blendIfInvalid('#00FF00') // invalid start bead mix green and white
+                            //             : isLast
+                            //                 ? blendIfInvalid('#0000FF') // invalid end bead mix blue and white
+                            //                 : '#FFFFFF';  // default invalid bead color
+
+                            const currentColor = isInInputRange ? '#E25822' : validColor;
+
+                            return (
+                                <group
+                                    key={index}
+                                    position={coord}
+                                    onPointerOver={(e) => {
+                                        e.stopPropagation();
+                                        if (hoveredIndex !== index) {
+                                            setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                            setShowBeadInfo(true);
+                                            setHoveredIndex(index);
+                                        }
+                                    }}
+                                    onPointerOut={(e) => {
+                                        e.stopPropagation();
+                                        if (hoveredIndex === index) {
+                                            setShowBeadInfo(false);
+                                            setHoveredIndex(null);
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedIndex(index);
+                                    }}
+                                    onDoubleClick={(e) => {
+                                        e.stopPropagation();
+                                        handleResetSelect(index);
+                                    }}
+                                >
+                                    {/* Sphere Mesh */}
+                                    <mesh>
+                                        <sphereGeometry args={[2.8, 32, 32]} />
+                                        <meshStandardMaterial
+                                            receiveShadow
+                                            castShadow
+                                            color={currentColor}
+                                            metalness={0.3}
+                                            roughness={0.1}
+                                            emissiveIntensity={0.3}
+                                        />
+                                    </mesh>
+                                    {/* Outline Mesh */}
+                                    {/* <mesh>
+                                        <sphereGeometry args={[3, 32, 32]} />
+                                        <meshBasicMaterial color="white" side={THREE.BackSide} />
+                                    </mesh> */}
+                                </group>
+                            );
+                        })}
+                    </Canvas>
+
+                    {/* XYZ Axis Indicator - now positioned relative to the canvas container */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 20,
+                        left: 20,
+                        width: 120,
+                        height: 120,
+                        zIndex: 10
+                    }}>
+                        <Canvas
+                            camera={{ position: [0, 0, 50], fov: 75 }}
+                            style={{ width: '100%', height: '100%' }}
+                            gl={{ alpha: true }}
+                        >
+                            <ambientLight intensity={0.8} />
+                            <directionalLight position={[5, 5, 5]} intensity={1} />
+                            <AxisIndicator cameraRotation={cameraRotation} />
+                        </Canvas>
+                    </div>
+
+                    {/* CurrentChainDistanceHeatmap positioned relative to the canvas container */}
+                    <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                        <CurrentChainDistanceHeatmap
+                            chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
+                        />
+                    </div>
                 </div>
             )}
         </div>

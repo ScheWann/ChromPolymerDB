@@ -2,7 +2,12 @@ import os
 import orjson
 import shutil
 import redis
-from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
+import hashlib, json as _json
+import uuid
+from tasks import process_chromosome_3d, process_exist_chromosome_3d, get_user_task_status
+from task_utils import make_task_signature, get_task_key
+from celery_worker import celery_worker
+from flask import Flask, jsonify, request, after_this_request, Response, Blueprint, make_response
 from flask_cors import CORS
 from process import (
     gene_names_list, 
@@ -11,8 +16,7 @@ from process import (
     chromosomes_list,
     chromosome_original_valid_sequences, 
     chromosome_merged_valid_sequences, 
-    chromosome_data, 
-    chromosome_3D_data, 
+    chromosome_data,
     comparison_cell_line_list, 
     gene_list, 
     gene_names_list_search, 
@@ -26,9 +30,33 @@ from process import (
     exist_chromosome_3D_data
 )
 
-
 app = Flask(__name__)
 CORS(app)
+
+# Cookie configuration
+USER_ID_COOKIE = 'chrom_polymer_user_id'
+COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
+
+
+def get_or_create_user_id():
+    """Get user ID from cookie or create a new one"""
+    user_id = request.cookies.get(USER_ID_COOKIE)
+    if not user_id:
+        user_id = str(uuid.uuid4())
+    return user_id
+
+
+def set_user_cookie(response, user_id):
+    """Set user ID cookie on response"""
+    response.set_cookie(
+        USER_ID_COOKIE, 
+        user_id, 
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite='Lax'
+    )
+    return response
 
 
 # redis connection settings
@@ -104,20 +132,108 @@ def get_ChromosValidIBPData():
 
 @api.route('/getExistChromosome3DData', methods=['POST'])
 def get_ExistChromosome3DData():
-    cell_line = request.json['cell_line']
-    sample_id = request.json['sample_id']
-    # return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
-    payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id))
-    return Response(payload, content_type='application/json')
+    try:
+        cell_line = request.json['cell_line']
+        sample_id = request.json['sample_id']
+        
+        # Get or create user ID from cookie
+        user_id = get_or_create_user_id()
+        
+        # Use async processing with user prioritization
+        async_result = process_exist_chromosome_3d.apply_async(
+            args=[cell_line, sample_id, user_id]
+        )
+        
+        try:
+            result_data = async_result.get(timeout=None)
+        except Exception as task_error:
+            app.logger.error(f"Task execution error in getExistChromosome3DData: {task_error}")
+            raise
+            
+        payload = orjson.dumps(result_data)
+        
+        # Create response and set cookie
+        response = Response(payload, content_type='application/json')
+        response = set_user_cookie(response, user_id)
+        
+        return response
+    
+    except Exception as e:
+        app.logger.error(f"Error in getExistChromosome3DData: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 @api.route('/getChromosome3DData', methods=['POST'])
 def get_Chromosome3DData():
-    cell_line = request.json['cell_line']
-    chromosome_name = request.json['chromosome_name']
-    sequences = request.json['sequences']
-    sample_id = request.json['sample_id']
-    return jsonify(chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id))
+    try:
+        cell_line = request.json['cell_line']
+        chromosome_name = request.json['chromosome_name']
+        sequences = request.json['sequences']
+        sample_id = request.json['sample_id']
+        
+        # Get or create user ID from cookie
+        user_id = get_or_create_user_id()
+
+        # Build a stable task signature to detect duplicates (same logic as in tasks.py)
+        signature = make_task_signature(cell_line, chromosome_name, sequences, sample_id)
+
+        # If the task is already registered, return its AsyncResult instead of queuing a new one
+        task_key = get_task_key(signature)
+        existing_task_id = redis_client.get(task_key)
+        if existing_task_id:
+            async_result = process_chromosome_3d.AsyncResult(existing_task_id.decode())
+        else:
+            # Include user_id in the task arguments
+            async_result = process_chromosome_3d.apply_async(
+                args=[cell_line, chromosome_name, sequences, sample_id, user_id]
+            )
+            # Store mapping so future identical requests reuse the same task
+            redis_client.setex(task_key, 1800, async_result.id)  # 30 minutes TTL
+
+        # Wait for the result so the response shape stays the same for the caller.
+        try:
+            result_data = async_result.get(timeout=None)
+        except Exception as task_error:
+            app.logger.error(f"Task execution error: {task_error}")
+            # Clean up task key on failure
+            redis_client.delete(task_key)
+            raise
+
+        # Create response and set cookie
+        response = make_response(jsonify(result_data))
+        response = set_user_cookie(response, user_id)
+        
+        return response
+    
+    except Exception as e:
+        app.logger.error(f"Error in getChromosome3DData: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+
+@api.route('/getUserTaskStatus', methods=['GET'])
+def get_user_task_status_endpoint():
+    """Get the current task status for the user (identified by cookie)."""
+    user_id = get_or_create_user_id()
+    
+    status = get_user_task_status(user_id)
+    
+    # Create response and set cookie
+    response = make_response(jsonify(status))
+    response = set_user_cookie(response, user_id)
+    
+    return response
+
+
+@api.route('/getUserId', methods=['GET'])
+def get_user_id_endpoint():
+    """Get or create the user ID for this session."""
+    user_id = get_or_create_user_id()
+    
+    # Create response and set cookie
+    response = make_response(jsonify({'user_id': user_id}))
+    response = set_user_cookie(response, user_id)
+    
+    return response
 
 
 @api.route('/getComparisonCellLineList', methods=['POST'])
@@ -180,6 +296,54 @@ def get_Example3DProgress():
         key = f"{cell_line}:{chromosome_name}:{start}:{end}:{sample_id}_progress"
         val = redis_client.get(key)
         return jsonify(percent=int(val) if val is not None else 0)
+
+
+@api.route('/getCeleryTaskProgress', methods=['GET'])
+def get_celery_task_progress():
+    """Get progress of a Celery task using task ID"""
+    task_id = request.args.get('task_id')
+    
+    if not task_id:
+        return jsonify(error="task_id parameter is required"), 400
+    
+    try:
+        # Get task result using Celery's AsyncResult
+        result = celery_worker.AsyncResult(task_id)
+        
+        if result.state == 'PENDING':
+            response = {
+                'state': result.state,
+                'current': 0,
+                'total': 100,
+                'status': 'Task is waiting to be processed...'
+            }
+        elif result.state == 'PROGRESS':
+            response = {
+                'state': result.state,
+                'current': result.info.get('current', 0),
+                'total': result.info.get('total', 100),
+                'status': result.info.get('status', 'Processing...')
+            }
+        elif result.state == 'SUCCESS':
+            response = {
+                'state': result.state,
+                'current': 100,
+                'total': 100,
+                'status': 'Task completed successfully',
+                'result': result.result
+            }
+        else:  # FAILURE or other states
+            response = {
+                'state': result.state,
+                'current': 0,
+                'total': 100,
+                'status': str(result.info)
+            }
+        
+        return jsonify(response)
+    
+    except Exception as e:
+        return jsonify(error=f"Failed to get task progress: {str(e)}"), 500
 
 
 @app.route('/api/clearFoldingInputFolderInputContent', methods=['POST'])

@@ -1,11 +1,32 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import jsPDF from 'jspdf';
-import { Canvas } from '@react-three/fiber';
-import { Button, Tooltip, ColorPicker, Dropdown, Splitter } from 'antd';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Button, Tooltip, ColorPicker, Dropdown, Splitter, Slider, Modal, Checkbox, Space } from 'antd';
 import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
-import { RollbackOutlined, CaretUpOutlined, DownloadOutlined } from "@ant-design/icons";
+import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, SettingOutlined } from "@ant-design/icons";
+
+const CameraFacingText = ({ position, children, ...props }) => {
+    const textRef = useRef();
+    const { camera } = useThree();
+
+    useFrame(() => {
+        if (textRef.current) {
+            textRef.current.quaternion.copy(camera.quaternion);
+        }
+    });
+
+    return (
+        <Text
+            ref={textRef}
+            position={position}
+            {...props}
+        >
+            {children}
+        </Text>
+    );
+};
 
 export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDistance, celllineName, chromosomeName, currentChromosomeSequence, distributionData, setDistributionData, isExampleMode }) => {
     const controlsRef = useRef();
@@ -13,6 +34,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const rendererRef = useRef();
     const [chromosome3DDistanceBackgroundColor, setChromosome3DDistanceBackgroundColor] = useState('#333333');
     const [loading, setLoading] = useState(false);
+    const [fontSize, setFontSize] = useState(10);
+    const [pairFilterModalVisible, setPairFilterModalVisible] = useState(false);
+    const [selectedPairs, setSelectedPairs] = useState({});
+    const [hasUserModifiedPairs, setHasUserModifiedPairs] = useState(false);
 
     const downloadItems = [
         {
@@ -53,6 +78,69 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         box.getCenter(calculatedCenter);
         return calculatedCenter;
     }, [spheresData]);
+
+    // Generate all possible pairs from current beads
+    const allPossiblePairs = useMemo(() => {
+        const beadsArray = Object.keys(selectedSphereList[celllineName] || {});
+        const pairs = [];
+        for (let i = 0; i < beadsArray.length; i++) {
+            for (let j = i + 1; j < beadsArray.length; j++) {
+                // Use smaller number first to match server convention
+                const bead1 = parseInt(beadsArray[i]);
+                const bead2 = parseInt(beadsArray[j]);
+                const smaller = Math.min(bead1, bead2);
+                const larger = Math.max(bead1, bead2);
+                pairs.push(`${smaller}-${larger}`);
+            }
+        }
+
+        return pairs;
+    }, [selectedSphereList, celllineName]);
+
+    // Initialize selectedPairs when allPossiblePairs changes
+    useEffect(() => {
+        setSelectedPairs(prev => {
+            const newSelectedPairs = {};
+            allPossiblePairs.forEach(pair => {
+                newSelectedPairs[pair] = prev[pair] !== undefined ? prev[pair] : true;
+            });
+            
+            // Only update if the set of pairs has changed
+            const prevPairs = Object.keys(prev);
+            const hasChanges = allPossiblePairs.length !== prevPairs.length || allPossiblePairs.some(pair => !prevPairs.includes(pair));
+
+            // Reset user modification flag when bead selection changes
+            if (hasChanges) {
+                setHasUserModifiedPairs(false);
+            }
+            
+            return hasChanges ? newSelectedPairs : prev;
+        });
+    }, [allPossiblePairs]);
+
+    // Filter distribution data based on selected pairs
+    const filteredDistributionData = useMemo(() => {
+        if (!distributionData[celllineName]) return {};
+        
+        // Only apply filtering if user has actually modified the default selections
+        if (!hasUserModifiedPairs) {
+            return distributionData; // Show all pairs - original behavior
+        }
+        
+        // Apply filtering only when user has made modifications
+        const filtered = {};
+        Object.keys(distributionData[celllineName]).forEach(pairKey => {
+            if (selectedPairs[pairKey]) {
+                filtered[pairKey] = distributionData[celllineName][pairKey];
+            }
+        });
+        
+        // Preserve the original structure but replace the specific cell line data
+        return {
+            ...distributionData,
+            [celllineName]: filtered
+        };
+    }, [distributionData, celllineName, selectedPairs, hasUserModifiedPairs]);
 
     const flipY = (buffer, width, height) => {
         const bytesPerRow = width * 4;
@@ -198,9 +286,52 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     }, [chromosome3DDistanceBackgroundColor]);
 
+    const beadsArrayString = useMemo(() => {
+        return JSON.stringify(Object.keys(selectedSphereList[celllineName]).sort());
+    }, [selectedSphereList, celllineName]);
+
     useEffect(() => {
-        setLoading(true);
         const beadsArray = Object.keys(selectedSphereList[celllineName]);
+
+        // Check if we already have data for this exact set of beads
+        const existingData = distributionData[celllineName];
+
+        if (existingData && typeof existingData === 'object' && beadsArray.length > 0) {
+            // Generate expected categories (bead pair combinations) for current beads
+            const expectedCategories = [];
+            for (let i = 0; i < beadsArray.length; i++) {
+                for (let j = i + 1; j < beadsArray.length; j++) {
+                    expectedCategories.push(`${beadsArray[i]}-${beadsArray[j]}`);
+                }
+            }
+
+            // Check if all expected categories exist in the existing data
+            const hasAllCategories = expectedCategories.every(category =>
+                existingData.hasOwnProperty(category) &&
+                Array.isArray(existingData[category]) &&
+                existingData[category].length > 0
+            );
+
+            if (hasAllCategories) {
+                setLoading(false);
+                return;
+            }
+        }
+
+        if (beadsArray.length < 2 || !celllineName) {
+            // Clear distribution data for this cell line when no beads are selected
+            if (beadsArray.length === 0) {
+                setDistributionData(prev => {
+                    const updated = { ...prev };
+                    delete updated[celllineName];
+                    return updated;
+                });
+            }
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
 
         if (isExampleMode(celllineName, chromosomeName, currentChromosomeSequence)) {
             fetch('/api/getExistBeadDistribution', {
@@ -220,9 +351,16 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching existing bead distribution:', error);
+                    setLoading(false);
                 });
         } else {
-            if (beadsArray.length < 2 || !currentChromosomeSequence || !celllineName || !chromosomeName) return;
+            if (!currentChromosomeSequence || !chromosomeName) {
+                setLoading(false);
+                return;
+            }
             fetch('/api/getBeadDistribution', {
                 method: 'POST',
                 headers: {
@@ -242,9 +380,13 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                         [celllineName]: data
                     }));
                     setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching bead distribution:', error);
+                    setLoading(false);
                 });
         }
-    }, [selectedSphereList, celllineName]);
+    }, [beadsArrayString, celllineName, chromosomeName, currentChromosomeSequence, isExampleMode]);
 
     useEffect(() => {
         if (controlsRef.current && center) {
@@ -271,6 +413,49 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     };
 
+    const handlePairFilterModalOpen = () => {
+        setPairFilterModalVisible(true);
+    };
+
+    const handlePairFilterModalClose = () => {
+        setPairFilterModalVisible(false);
+    };
+
+    const handlePairSelectionChange = (pairKey, checked) => {
+        setHasUserModifiedPairs(true);
+        setSelectedPairs(prev => ({
+            ...prev,
+            [pairKey]: checked
+        }));
+    };
+
+    const handleSelectAllPairs = () => {
+        setHasUserModifiedPairs(true);
+        const newSelectedPairs = {};
+        allPossiblePairs.forEach(pair => {
+            newSelectedPairs[pair] = true;
+        });
+        setSelectedPairs(newSelectedPairs);
+    };
+
+    const handleDeselectAllPairs = () => {
+        setHasUserModifiedPairs(true);
+        const newSelectedPairs = {};
+        allPossiblePairs.forEach(pair => {
+            newSelectedPairs[pair] = false;
+        });
+        setSelectedPairs(newSelectedPairs);
+    };
+
+    const handleResetToDefault = () => {
+        setHasUserModifiedPairs(false);
+        const newSelectedPairs = {};
+        allPossiblePairs.forEach(pair => {
+            newSelectedPairs[pair] = true;
+        });
+        setSelectedPairs(newSelectedPairs);
+    };
+
     const Line = ({ start, end }) => {
         const geometryRef = useRef();
         useEffect(() => {
@@ -295,7 +480,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Splitter 
+            <Splitter
                 style={{ height: '100%' }}
                 split="vertical"
                 resizerStyle={{
@@ -307,16 +492,16 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                     zIndex: 1000
                 }}
             >
-                <Splitter.Panel 
-                    defaultSize="50%" 
-                    min="30%" 
+                <Splitter.Panel
+                    defaultSize="50%"
+                    min="30%"
                     max="70%"
                     style={{ overflow: 'hidden' }}
                 >
                     <div style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}>
                         <BeadDistributionViolinPlot
-                            selectedSphereList={selectedSphereList}
-                            distributionData={distributionData}
+                            selectedSphereList={selectedSphereList[celllineName] || {}}
+                            distributionData={filteredDistributionData}
                             loading={loading}
                         />
                     </div>
@@ -331,6 +516,51 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             display: 'flex',
                             gap: '10px',
                         }}>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Adjust font size of distance labels</span>}
+                                color='white'
+                            >
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.9)',
+                                    padding: '0px 8px',
+                                    borderRadius: '6px',
+                                    minWidth: '120px',
+                                    maxHeight: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <span style={{ fontSize: '12px', color: '#333', fontWeight: '500' }}>Font:</span>
+                                    <Slider
+                                        min={6}
+                                        max={30}
+                                        value={fontSize}
+                                        onChange={setFontSize}
+                                        style={{ flex: 1 }}
+                                        tooltip={{ 
+                                            formatter: (value) => `${value}px`,
+                                            color: 'white',
+                                            overlayInnerStyle: { 
+                                                color: 'black',
+                                                fontWeight: '500'
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Filter which bead pairs to display</span>}
+                                color='white'
+                            >
+                                <Button
+                                    style={{
+                                        fontSize: 15,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<SettingOutlined />}
+                                    onClick={handlePairFilterModalOpen}
+                                />
+                            </Tooltip>
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>Restore the original view</span>}
                                 color='white'
@@ -398,8 +628,8 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
 
                         <Canvas
                             shadows
-                            style={{ height: 'calc(100% - 2px)', backgroundColor: '#222' }}
-                            camera={{ position: [0, 0, 100], fov: 50 }}
+                            style={{ height: '100%', backgroundColor: '#222' }}
+                            camera={{ position: [0, 0, 1000], fov: 60, near: 0.1, far: 5000 }}
                             onCreated={({ camera, gl, scene }) => {
                                 cameraRef.current = camera;
                                 rendererRef.current = { gl, scene, camera };
@@ -449,24 +679,36 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                 </group>
                             ))}
 
-                            {spheresData.map(({ position: positionA }, indexA) => (
-                                spheresData.map(({ position: positionB }, indexB) => {
+                            {spheresData.map(({ position: positionA, key: keyA }, indexA) => (
+                                spheresData.map(({ position: positionB, key: keyB }, indexB) => {
                                     if (indexA < indexB) {
-                                        const distance = positionA.distanceTo(positionB);
+                                        // Use smaller number first to match server convention
+                                        const bead1 = parseInt(keyA);
+                                        const bead2 = parseInt(keyB);
+                                        const smaller = Math.min(bead1, bead2);
+                                        const larger = Math.max(bead1, bead2);
+                                        const pairKey = `${smaller}-${larger}`;
+                                        
+                                        // Show all pairs if user hasn't modified selections, otherwise filter by selection
+                                        const shouldShow = !hasUserModifiedPairs || selectedPairs[pairKey];
+                                        
+                                        if (!shouldShow) return null;
+                                        
+                                        const distance = positionA.distanceTo(positionB) - 34.3;    // diameter of beads
                                         const midPoint = new THREE.Vector3().addVectors(positionA, positionB).multiplyScalar(0.5);
 
                                         return (
                                             <group key={`${indexA}-${indexB}`}>
                                                 <Line start={positionA} end={positionB} />
-                                                <Text
+                                                <CameraFacingText
                                                     position={[midPoint.x, midPoint.y, midPoint.z]}
-                                                    fontSize={10}
+                                                    fontSize={fontSize}
                                                     color="white"
                                                     anchorX="center"
                                                     anchorY="middle"
                                                 >
                                                     {distance.toFixed(2)}nm
-                                                </Text>
+                                                </CameraFacingText>
                                             </group>
                                         );
                                     }
@@ -480,21 +722,63 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         <sphereGeometry args={[1, 32, 32]} />
                                         <meshStandardMaterial color={color} />
                                     </mesh>
-                                    <Text
-                                        position={[position.x, position.y, position.z]}
-                                        fontSize={10}
+                                    <CameraFacingText
+                                        position={[position.x, position.y + 5, position.z]}
+                                        fontSize={fontSize}
                                         color="#DAA520"
                                         anchorX="center"
                                         anchorY="bottom"
                                     >
                                         {key}
-                                    </Text>
+                                    </CameraFacingText>
                                 </group>
                             ))}
                         </Canvas>
                     </div>
                 </Splitter.Panel>
             </Splitter>
+
+            {/* Pair Filter Modal */}
+            <Modal
+                title="Filter Bead Pairs"
+                open={pairFilterModalVisible}
+                onCancel={handlePairFilterModalClose}
+                footer={[
+                    <Button key="selectAll" onClick={handleSelectAllPairs}>
+                        Select All
+                    </Button>,
+                    <Button key="deselectAll" onClick={handleDeselectAllPairs}>
+                        Deselect All
+                    </Button>,
+                    <Button key="close" type="primary" onClick={handlePairFilterModalClose}>
+                        Close
+                    </Button>
+                ]}
+                width={400}
+            >
+                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <p style={{ marginBottom: '16px', color: '#666' }}>
+                        Select which bead pairs to display in the visualization and violin plot.
+                        {!hasUserModifiedPairs && <span style={{ color: '#52c41a', fontWeight: 'bold' }}> Currently showing all pairs (default behavior).</span>}
+                    </p>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        {allPossiblePairs.map(pairKey => (
+                            <Checkbox
+                                key={pairKey}
+                                checked={selectedPairs[pairKey] || false}
+                                onChange={(e) => handlePairSelectionChange(pairKey, e.target.checked)}
+                            >
+                                Bead pair: {pairKey}
+                            </Checkbox>
+                        ))}
+                        {allPossiblePairs.length === 0 && (
+                            <p style={{ color: '#999', fontStyle: 'italic' }}>
+                                No bead pairs available. Please select at least 2 beads to see pairs.
+                            </p>
+                        )}
+                    </Space>
+                </div>
+            </Modal>
         </div>
     );
 };

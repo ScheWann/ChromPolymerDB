@@ -38,11 +38,16 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_DB   = int(os.getenv("REDIS_DB", 0))
 
 # Create a connection pool for the PostgreSQL database
+# max_connections ≈ CPU cores × 2~4
+# For Celery workers: increased pool size and timeout to handle concurrent tasks
 conn_pool = ConnectionPool(
     conninfo=f"host={DB_HOST} port={DB_PORT} dbname={DB_NAME} user={DB_USERNAME} password={DB_PASSWORD}",
-    min_size=5,
-    max_size=50,
-    max_waiting=20,
+    min_size=10,          # Increased from 5 to ensure minimum connections available
+    max_size=80,          # Increased from 50 (4 celery workers × ~15-20 connections each)
+    max_waiting=100,      # Increased from 20 to handle more queued requests
+    timeout=60,           # Added explicit timeout (60 seconds) for getting connections
+    max_idle=300,         # Connections idle for 5 minutes will be closed
+    max_lifetime=3600,    # Connections older than 1 hour will be renewed
 )
 
 # Create a Redis connection pool
@@ -74,12 +79,28 @@ def get_cell_line_table_name(cell_line):
 
 
 """
-Establish a connection pool to the database.
+Establish a connection pool to the database with retry logic.
 """
 @contextmanager
 def db_conn():
-    with conn_pool.connection() as conn:
-        yield conn
+    max_retries = 3
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            with conn_pool.connection() as conn:
+                yield conn
+                return
+        except Exception as e:
+            if attempt == max_retries - 1:
+                # Last attempt failed, re-raise the exception
+                raise
+            else:
+                # Wait before retrying
+                import time
+                time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                print(f"Database connection attempt {attempt + 1} failed, retrying in {retry_delay * (attempt + 1)}s: {e}")
+                continue
 
 
 """
@@ -363,7 +384,7 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
-def exist_chromosome_3D_data(cell_line, sample_id):
+def exist_chromosome_3D_data(cell_line, sample_id, task_instance=None):
     # Sample ID mapping for when sample_id is 0
     sample_id_mapping = {
         "GM12878": 4229,
@@ -378,9 +399,20 @@ def exist_chromosome_3D_data(cell_line, sample_id):
     if sample_id == 0:
         sample_id = sample_id_mapping.get(cell_line, sample_id)
     
-    # Establish the progress key for tracking whole progress (use original sample_id)
-    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
-    redis_client.setex(progress_key, 3600, 0)
+    def update_progress(progress_value, status="PROGRESS"):
+        """Update progress using Celery task metadata and Redis for compatibility"""
+        if task_instance:
+            # Update Celery task metadata for modern task tracking
+            task_instance.update_state(
+                state=status,
+                meta={'current': progress_value, 'total': 100, 'status': f'Processing {cell_line} example data...'}
+            )
+        
+        # Always update Redis for backward compatibility with frontend progress polling
+        progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
+        redis_client.setex(progress_key, 3600, progress_value)
+    
+    update_progress(0)
 
     def checking_existing_data(cell_line, sample_id):
         redis_3d_position_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"3d_example_{sample_id}_position_data")
@@ -438,14 +470,14 @@ def exist_chromosome_3D_data(cell_line, sample_id):
             return mat
     
     cached_3d_example_position_data, cached_example_sample_distance_vector = checking_existing_data(cell_line, sample_id)
-    redis_client.setex(progress_key, 3600, 15)
+    update_progress(15)
     if cached_3d_example_position_data and cached_example_sample_distance_vector is not None:
         position_data = json.loads(cached_3d_example_position_data.decode("utf-8"))
         sample_distance_vector = json.loads(cached_example_sample_distance_vector.decode("utf-8"))
-        redis_client.setex(progress_key, 3600, 80)
+        update_progress(80)
         avg_distance_matrix = get_avg_distance_data(cell_line)
         fq_data = get_fq_data(cell_line)
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(99)
 
         return {
             "position_data": position_data,
@@ -464,17 +496,17 @@ def exist_chromosome_3D_data(cell_line, sample_id):
         position_df = fut_pos.result()
         distance_df = fut_dist.result()
         
-        redis_client.setex(progress_key, 3600, 20)
+        update_progress(20)
 
         position_data = get_position_data(cell_line, sample_id)
-        redis_client.setex(progress_key, 3600, 50)
+        update_progress(50)
 
         avg_distance_matrix = get_avg_distance_data(cell_line)
-        redis_client.setex(progress_key, 3600, 70)
+        update_progress(70)
         
         fq_data = get_fq_data(cell_line)
         sample_distance_vector = get_distance_vector_by_sample(cell_line, sample_id)
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(99)
 
         return {
                 "position_data": position_data,
@@ -487,12 +519,23 @@ def exist_chromosome_3D_data(cell_line, sample_id):
 """
 Returns the example 3D chromosome data in the given cell line, chromosome name, start, end
 """
-def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
+def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id, task_instance=None):
     temp_folding_input_path = "./Folding_input"
     
-    # Establish the progress key for tracking whole progress
-    progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_progress")
-    redis_client.setex(progress_key, 3600, 0)
+    def update_progress(progress_value, status="PROGRESS"):
+        """Update progress using Celery task metadata and Redis for compatibility"""
+        if task_instance:
+            # Update Celery task metadata for modern task tracking
+            task_instance.update_state(
+                state=status,
+                meta={'current': progress_value, 'total': 100, 'status': f'Processing {cell_line} data...'}
+            )
+        
+        # Always update Redis for backward compatibility with frontend progress polling
+        progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_progress")
+        redis_client.setex(progress_key, 3600, progress_value)
+    
+    update_progress(0)
 
     def get_spe_inter(hic_data, alpha=0.05):
         """Filter Hi-C data for significant interactions based on the alpha threshold."""
@@ -662,7 +705,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
     t1 = time()
     cached_3d_position_data, cached_sample_distance_vector = checking_existing_cache_data(chromosome_name, cell_line, sequences, sample_id)
     data_in_db_exist_status = checking_existing_data(chromosome_name, cell_line, sequences)
-    redis_client.setex(progress_key, 3600, 5)
+    update_progress(5)
     t2 = time()
     print(f"[DEBUG] Checking existing data took {t2 - t1:.4f} seconds")
 
@@ -677,7 +720,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
         avg_distance_matrix = json.loads(redis_client.get(avg_distance_data_cache_key).decode("utf-8"))
         fq_data = json.loads(redis_client.get(fq_data_cache_key).decode("utf-8"))
 
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(100)
         return {
             "position_data": position_data,
             "avg_distance_data": avg_distance_matrix,
@@ -696,7 +739,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
             print(f"Existing Database Data condition -- Using Best Sample {best_sample_id} Data")
         
-        redis_client.setex(progress_key, 3600, 99)
+        update_progress(100)
         return {
             "position_data": position_data,
             "avg_distance_data": avg_distance_matrix,
@@ -733,7 +776,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
                 )
                 original_data = cur.fetchall()
         t4 = time()
-        redis_client.setex(progress_key, 3600, 10)
+        update_progress(10)
         print(f"[DEBUG] Fetching original data took {t4 - t3:.4f} seconds")
         if original_data:
             t5 = time()
@@ -760,25 +803,70 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
             # Write the file to the custom path
             with open(custom_file_path, "w") as temp_file:
                 temp_file.write(txt_data)
-            redis_client.setex(progress_key, 3600, 20)
+            update_progress(20)
             t6 = time()
             print(f"[DEBUG] Writing folding input file took {t6 - t5:.4f} seconds")
             t7 = time()
             script = "./sBIF.sh"
             n_samples = 5000
             n_samples_per_run = 100
-            result = subprocess.Popen(
-                ["bash", script, str(n_samples), str(n_samples_per_run)],
-                text=True,
-                stdout=subprocess.PIPE,
-                bufsize=1,
-            )
-            pattern = re.compile(r'^\[.*DONE\]')
-            progress_values = [50, 90, 91, 92, 93, 94, 95]
-            matches = (line.strip() for line in result.stdout if pattern.match(line))
-            for val, line in zip(progress_values, matches):
-                print(line)
-                redis_client.setex(progress_key, 3600, val)
+            
+            result = None
+            try:
+                result = subprocess.Popen(
+                    ["bash", script, str(n_samples), str(n_samples_per_run)],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    bufsize=1,
+                )
+                pattern = re.compile(r'^\[.*DONE\]')
+                progress_values = [50, 90, 91, 92, 93, 94, 95]
+                
+                # Process output line by line without using generator expression
+                progress_idx = 0
+                try:
+                    for line in result.stdout:
+                        line = line.strip()
+                        if pattern.match(line):
+                            print(line)
+                            if progress_idx < len(progress_values):
+                                update_progress(progress_values[progress_idx])
+                                progress_idx += 1
+                            if progress_idx >= len(progress_values):
+                                break
+                except Exception as stdout_error:
+                    print(f"[ERROR] Error reading stdout: {stdout_error}")
+                
+                # Wait for process to complete and check return code
+                return_code = result.wait()
+                if return_code != 0:
+                    stderr_output = ""
+                    try:
+                        stderr_output = result.stderr.read()
+                    except Exception:
+                        stderr_output = "Could not read stderr"
+                    raise RuntimeError(f"sBIF script failed with return code {return_code}. Error: {stderr_output}")
+                    
+            except Exception as e:
+                print(f"[ERROR] sBIF script execution failed: {e}")
+                # Clean up process if it's still running
+                if result and result.poll() is None:
+                    try:
+                        result.terminate()
+                        result.wait()
+                    except Exception:
+                        pass  # Ignore cleanup errors
+                raise
+            finally:
+                # Ensure stdout and stderr are properly closed
+                if result:
+                    try:
+                        if result.stdout:
+                            result.stdout.close()
+                    except Exception:
+                        pass
+            
             t8 = time()
             print(f"[DEBUG] Running folding script took {t8 - t7:.4f} seconds")
             t_remove_start = time()
@@ -797,14 +885,14 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
                 position_data = get_position_data(chromosome_name, cell_line, sequences, sample_id)
                 print(f"SBIF Generated Data condition -- Using Sample {sample_id} Data")
                 t16 = time()
-                redis_client.setex(progress_key, 3600, 99)
+                update_progress(100)
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
             else:
                 t15 = time()
                 position_data = get_position_data(chromosome_name, cell_line, sequences, best_sample_id)
                 print(f"SBIF Generated Data condition -- Using Best Sample {best_sample_id} Data")
                 t16 = time()
-                redis_client.setex(progress_key, 3600, 99)
+                update_progress(100)
                 print(f"[DEBUG] Finding best chain sample took {t16 - t15:.4f} seconds")
             
             return {
@@ -814,7 +902,7 @@ def chromosome_3D_data(cell_line, chromosome_name, sequences, sample_id):
                 "sample_distance_vector": sample_distance_vector
             }
         else:
-            redis_client.setex(progress_key, 3600, 99)
+            update_progress(100)
             return []
 
 
@@ -1093,7 +1181,7 @@ def bead_distribution(cell_line, chromosome_name, sequences, indices):
             in_row_offset = j - i - 1
             idx = row_offset + in_row_offset
 
-            dist_val = float(dist_vec[idx])
+            dist_val = float(dist_vec[idx]) - 34.3   # diameter of beads
             distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions
@@ -1129,7 +1217,7 @@ def exist_bead_distribution(cell_line, indices):
             in_row_offset = j - i - 1
             idx = row_offset + in_row_offset
 
-            dist_val = float(dist_vec[idx])
+            dist_val = float(dist_vec[idx]) - 34.3   # diameter of beads
             distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions

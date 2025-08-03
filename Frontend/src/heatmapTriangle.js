@@ -30,6 +30,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
     // Track table search
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
+    const [tableKey, setTableKey] = useState(0);
     const searchInput = useRef(null);
 
     const detectIgvFormat = (filename) => {
@@ -207,6 +208,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             ...getColumnSearchProps('Biosample'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -221,12 +223,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "AssayType",
             dataIndex: "AssayType",
             key: "AssayType",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.AssayType.localeCompare(b.AssayType),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('AssayType'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -241,12 +244,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Target",
             dataIndex: "Target",
             key: "Target",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Target.localeCompare(b.Target),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Target'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -260,12 +264,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "BioRep",
             dataIndex: "BioRep",
             key: "BioRep",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.BioRep.localeCompare(b.BioRep),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('BioRep'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -279,12 +284,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "TechRep",
             dataIndex: "TechRep",
             key: "TechRep",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.TechRep.localeCompare(b.TechRep),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('TechRep'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -298,12 +304,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "OutputType",
             dataIndex: "OutputType",
             key: "OutputType",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.OutputType.localeCompare(b.OutputType),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('OutputType'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -317,12 +324,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Format",
             dataIndex: "Format",
             key: "Format",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Format.localeCompare(b.Format),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Format'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -336,12 +344,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Lab",
             dataIndex: "Lab",
             key: "Lab",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Lab.localeCompare(b.Lab),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Lab'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -355,12 +364,13 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             title: "Accession",
             dataIndex: "Accession",
             key: "Accession",
-            width: 120,
+            width: 150,
             sorter: (a, b) => a.Accession.localeCompare(b.Accession),
             sortDirections: ["ascend", "descend"],
             ...getColumnSearchProps('Accession'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -380,6 +390,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             ...getColumnSearchProps('Experiment'),
             onHeaderCell: () => ({
                 style: {
+                    width: 150,
                     fontSize: "12px",
                     fontWeight: "bold",
                     textAlign: "center",
@@ -596,6 +607,8 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
     const handleReset = (clearFilters) => {
         clearFilters();
         setSearchText('');
+        setSearchedColumn('');
+        setTableKey(prev => prev + 1); // Force table re-render to clear all filters
     };
 
     const uploadTrackChange = (e) => {
@@ -684,6 +697,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
         setUploadTrackData({ name: "", trackUrl: "", format: "" });
         setSearchedColumn('');
         setSearchText('');
+        setTableKey(prev => prev + 1); // Reset table state when modal closes
     };
 
     const trackTableProcessing = (key, data) => {
@@ -1096,7 +1110,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
         axisSvg.append('g')
             .attr("transform", "translate(2, 0)")
             .call(d3.axisBottom(transformedXScale)
-            .tickFormat(d => (d / 1e6).toFixed(1) + 'M'))
+                .tickFormat(d => (d / 1e6).toFixed(1) + 'M'))
             .selectAll("text")
             .style("text-anchor", "middle")
             .attr("dx", "0em")
@@ -1120,7 +1134,23 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                 <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ marginRight: 5 }}>Scale: </span>
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[0]} min={0} max={200} onChange={changeColorByInput("min")} />
-                    <Slider range={{ draggableTrack: true }} style={{ width: 250 }} min={0} max={fqRawcMode ? 1 : 200} step={fqRawcMode ? 0.1 : 1} onChange={changeColorScale} value={colorScaleRange} />
+                    <Slider
+                        range={{ draggableTrack: true }}
+                        style={{ width: 250 }}
+                        min={0}
+                        max={fqRawcMode ? 1 : 200}
+                        step={fqRawcMode ? 0.1 : 1}
+                        onChange={changeColorScale}
+                        value={colorScaleRange}
+                        tooltip={{
+                            formatter: (value) => value,
+                            color: 'black',
+                            overlayInnerStyle: {
+                                color: 'white',
+                                fontWeight: '500'
+                            }
+                        }} 
+                    />
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
                 <Switch
@@ -1193,6 +1223,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                         />
                     ) : (
                         <Table
+                            key={tableKey}
                             bordered={true}
                             dataSource={trackDataSource}
                             columns={trackTableColumns}

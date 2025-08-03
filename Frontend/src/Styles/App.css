@@ -137,6 +137,15 @@ body {
   line-height: normal !important;
 }
 
+.ant-splitter-bar-dragger {
+  background-color: white !important;
+  height: 2px !important;
+}
+
+.ant-splitter-panel {
+  padding: 0 !important;
+}
+
 /* Improved horizontal scrolling for 3D chromosome components */
 .chromosome3d-scroll-container {
   scrollbar-width: thin;

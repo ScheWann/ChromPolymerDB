@@ -25,6 +25,8 @@ RUN chmod +x ./process.py
 RUN chmod +x ./sBIF.sh
 
 EXPOSE 5001
+
+# Gunicorn's worker count ≈ CPU cores × 2~4
 CMD ["gunicorn", \
     "-w", "4", \
     "-b", "0.0.0.0:5001", \
