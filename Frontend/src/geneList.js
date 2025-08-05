@@ -77,7 +77,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             //     return;
             // }
 
-            const margin = { top: 20, right: 1, bottom: 0, left: 60 };
+            const margin = { top: 20, right: 20, bottom: 0, left: 60 };
 
             let width = containerSize.width;
             let height = containerSize.height;
@@ -217,7 +217,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             } else if (range >= 1000000 && range <= 10000000) {
                 tickCount = Math.max(Math.floor(range / 50000), 5);
             } else {
-                tickCount = 30;
+                tickCount = 50;
             }
 
             tickCount = Math.min(tickCount, 30);

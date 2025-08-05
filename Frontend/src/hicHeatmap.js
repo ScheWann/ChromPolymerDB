@@ -281,7 +281,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 1, bottom: 45, left: 60 };
+        const margin = { top: 45, right: 20, bottom: 25, left: 60 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
@@ -377,7 +377,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             tickCount = 30;
         }
 
-        tickCount = Math.min(tickCount, 30);
+        tickCount = Math.min(tickCount, 80);
 
         // X-axis
         axisSvg.append('g')
@@ -394,10 +394,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     return d;
                 }))
             .selectAll("text")
-            .style("text-anchor", "end")
-            .attr("transform", "rotate(-45)")
-            .attr("dx", "-1em")
-            .attr("dy", "0em");
+            .style("text-anchor", "center")
+            .attr("dx", "0em")
+            .attr("dy", "1em");
 
         // Y-axis
         axisSvg.append('g')
