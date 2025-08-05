@@ -116,24 +116,76 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 .range([margin.left, minDimension - margin.right]);
 
             // Calculate height based on the number of layers
-            const layerHeight = 20;
+            const layerHeight = 35; // Increased to accommodate text below rectangles
 
-            // Calculate gene ranges and prevent overlap
+            // Helper function to estimate text width more accurately
+            const estimateTextWidth = (text, fontSize = 10) => {
+                if (!text) return 0;
+                // Create a temporary text element to measure actual width
+                const tempText = svg.append("text")
+                    .style("font-size", `${fontSize}px`)
+                    .style("font-family", "Arial, sans-serif")
+                    .style("visibility", "hidden")
+                    .text(text);
+                const textWidth = tempText.node().getBBox().width;
+                tempText.remove();
+                return textWidth + 4; // Add small padding
+            };
+
+            // Calculate gene ranges and prevent overlap (considering both rectangles and text)
             const layers = [];
-            genesToRender.forEach((gene) => {
+            
+            // First, calculate text bounds for all genes
+            const genesWithTextBounds = genesToRender.map((gene) => {
+                const geneText = gene.symbol || gene.gene_name || '';
+                const textWidth = estimateTextWidth(geneText);
+                const geneCenterPixels = xScaleLinear((gene.displayStart + gene.displayEnd) / 2);
+                const textStart = geneCenterPixels - textWidth / 2;
+                const textEnd = geneCenterPixels + textWidth / 2;
+                
+                return {
+                    ...gene,
+                    textStart,
+                    textEnd,
+                    textWidth,
+                    geneCenterPixels
+                };
+            });
+
+            // Sort genes by start position to process them in order
+            genesWithTextBounds.sort((a, b) => a.displayStart - b.displayStart);
+
+            genesWithTextBounds.forEach((gene) => {
                 let placed = false;
+
                 for (const layer of layers) {
-                    if (
-                        !layer.some(
-                            (g) => g.displayStart < gene.displayEnd && g.displayEnd > gene.displayStart
-                        )
-                    ) {
+                    const hasOverlap = layer.some((g) => {
+                        // Check rectangle overlap in pixel space
+                        const geneRectStart = xScaleLinear(gene.displayStart);
+                        const geneRectEnd = xScaleLinear(gene.displayEnd);
+                        const gRectStart = xScaleLinear(g.displayStart);
+                        const gRectEnd = xScaleLinear(g.displayEnd);
+                        const rectOverlap = geneRectStart < gRectEnd && geneRectEnd > gRectStart;
+                        
+                        // Check text overlap with minimum spacing buffer
+                        const minSpacing = 8; // Minimum pixels between text labels
+                        const textOverlap = (gene.textStart - minSpacing) < g.textEnd && (gene.textEnd + minSpacing) > g.textStart;
+                        
+                        // If either rectangles or text overlap, there's a conflict
+                        return rectOverlap || textOverlap;
+                    });
+
+                    if (!hasOverlap) {
                         layer.push(gene);
                         placed = true;
                         break;
                     }
                 }
-                if (!placed) layers.push([gene]);
+                
+                // If no existing layer can accommodate this gene, create a new layer
+                if (!placed) {
+                    layers.push([gene]);
+                }
             });
 
             // Store the initial height once
@@ -141,7 +193,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 initialHeightRef.current = height;
             }
 
-            const geneListHeight = (layers.length - 1) * layerHeight + (layerHeight - 4) + margin.top;
+            const geneListHeight = (layers.length - 1) * layerHeight + layerHeight + margin.top;
             // const epigeneticTrackHeight = Object.keys(epigeneticTrackData).length * (layerHeight + 10) + (Object.keys(epigeneticTrackData).length - 1) * 4;
             
             // Check if scrolling is needed based on total height
@@ -190,8 +242,9 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
 
             // Gene sequences
             layers.forEach((layer, layerIndex) => {
+                // Draw gene rectangles
                 svg
-                    .selectAll(`.gene-layer-${layerIndex}`)
+                    .selectAll(`.gene-rect-layer-${layerIndex}`)
                     .data(layer)
                     .enter()
                     .append("rect")
@@ -199,8 +252,8 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     .attr("x", (d) => xScaleLinear(d.displayStart))
                     .attr("y", margin.top + layerIndex * layerHeight)
                     .attr("width", (d) => xScaleLinear(d.displayEnd) - xScaleLinear(d.displayStart))
-                    .attr("height", layerHeight - 4)
-                    .attr("fill", (d) => (d.symbol === geneName ? "#ff5733" : "#69b3a2"))
+                    .attr("height", 16) // Fixed height for rectangles
+                    .attr("fill", "#69b3a2")
                     .attr("stroke", "#333")
                     .attr("stroke-width", 0.2)
                     .style("transition", "all 0.3s ease")
@@ -235,10 +288,65 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                                 <strong>End:</strong> ${d.displayEnd}
                             `)
                             .style("left", `${event.pageX + 10}px`)
-                            .style("top", `${event.pageY - 20}px`);
+                            .style("top", `${event.pageY - 120}px`);
                     })
                     .on("mouseout", (event) => {
                         d3.select(event.target).style("stroke-width", 0.2);
+                        const tooltip = d3.select(tooltipRef.current);
+                        tooltip.style("opacity", 0).style("visibility", "hidden");
+                    });
+
+                // Draw gene labels below rectangles
+                svg
+                    .selectAll(`.gene-text-layer-${layerIndex}`)
+                    .data(layer)
+                    .enter()
+                    .append("text")
+                    .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
+                    .attr("x", (d) => xScaleLinear((d.displayStart + d.displayEnd) / 2))
+                    .attr("y", margin.top + layerIndex * layerHeight + 16 + 12) // Below rectangle + some spacing
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "10px")
+                    .style("font-family", "Arial, sans-serif")
+                    .style("fill", (d) => (d.symbol === geneName ? "#ff5733" : "#333"))
+                    .style("font-weight", (d) => (d.symbol === geneName ? "bold" : "normal"))
+                    .style("cursor", "pointer")
+                    .text((d) => d.symbol || d.gene_name || '')
+                    .on("click", (event, d) => {
+                        if (clickTimeout) clearTimeout(clickTimeout);
+
+                        clickTimeout = setTimeout(() => {
+                            setGeneName(d.symbol);
+                            fetchChromosomeSizeByGeneName(d.symbol);
+                            clickTimeout = null;
+                        }, 100);
+                    })
+                    .on("dblclick", (event, d) => {
+                        if (clickTimeout) {
+                            clearTimeout(clickTimeout);
+                            clickTimeout = null;
+                        }
+                        event.stopPropagation();
+                        setGeneName(null);
+                        setGeneSize({ start: null, end: null });
+                    })
+                    .on("mouseover", (event, d) => {
+                        d3.select(event.target).style("font-weight", "bold");
+
+                        const tooltip = d3.select(tooltipRef.current);
+                        tooltip.style("opacity", 0.8)
+                            .style("visibility", "visible")
+                            .html(`
+                                <strong>Gene Symbol:</strong> ${d.symbol || d.gene_name}<br>
+                                <strong>Chromosome:</strong> Chr ${d.chromosome}<br>
+                                <strong>Start:</strong> ${d.displayStart}<br>
+                                <strong>End:</strong> ${d.displayEnd}
+                            `)
+                            .style("left", `${event.pageX + 10}px`)
+                            .style("top", `${event.pageY - 20}px`);
+                    })
+                    .on("mouseout", (event, d) => {
+                        d3.select(event.target).style("font-weight", (d.symbol === geneName ? "bold" : "normal"));
                         const tooltip = d3.select(tooltipRef.current);
                         tooltip.style("opacity", 0).style("visibility", "hidden");
                     });
