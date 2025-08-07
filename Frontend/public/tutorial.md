@@ -57,7 +57,6 @@ After examining the 2D contact information, users can click ![small](./tutorial_
 
 - The Sample 0 (Ens.Rep.) shows the most representative single-cell structure (highest correlation with average), and users can switch among all available structures or examine specific samples by entering a sample ID.
 - Download 5,000 single-cell 3D chromatin chains, including positional coordinates and beads-to-beads distance matrices.
-- Add an additional cell sample to do comparison.
 - The upper panel shows the tool buttons:
    - Regions of interest for beads selection.
    - Switch button to switch the TSS of the gene and whole selected gene.
@@ -76,7 +75,12 @@ After examining the 2D contact information, users can click ![small](./tutorial_
 ![large](./tutorial_images/generate_distance.png)
 ![large](./tutorial_images/3D_distance.png)
 
-- The tool buttons:
+- The tool buttons on the left:
+   - Zoom in
+   - Download the figure
+- The tool buttons on the right:
+   - Adjust the Font size
+   - Select which bead pair to show
    - Restore the original view.
    - Download the selected beads and their distance.
    - Collapse the distance window.
@@ -86,7 +90,7 @@ After examining the 2D contact information, users can click ![small](./tutorial_
 
 ### 2D interaction pattern comparision
 
-By clicking the + on the right of the data query bar. Users can select other cell samples to do the FoldRec interactions comparision.
+By clicking the + on the right of the data query bar. Users can Add Heatmap comparision to select other cell samples to do the FoldRec interactions comparision.
 
 ![large-pro](./tutorial_images/FoldRec_comparision_data_query.png)
 
@@ -94,7 +98,7 @@ By clicking the + on the right of the data query bar. Users can select other cel
 
 ### 3D chromatin structures comparision 
 
-By clicking the + on the right of the chromatin structure window. Users can select other cell samples to do the chromatin struction comparision.
+By clicking the + on the right of the data query bar. Users can select other cell samples from the dropbox to do the chromatin struction comparision.
 
 ![large-pro](./tutorial_images/chromatin_structure_comparision.png)
 
