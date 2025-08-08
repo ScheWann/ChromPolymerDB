@@ -51,7 +51,13 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 
 
 ## Exploring the 3D single-cell chromatin structures
-After examining the 2D contact information, users can click ![small](./tutorial_images/3D_Structure.png) to generate the 3D single-cell chromatin structures of the corresponding locus.
+
+- Here we consistant with IMR90 chr8:127,600,000-128,300,000 as an example. Examine the MYC gene promoter-enhancer interactions in 3D chromatin conformations
+
+- After examining the 2D contact information, users can click ![small](./tutorial_images/3D_Structure.png) to generate the 3D single-cell chromatin structures of the corresponding locus.
+
+- From the Expand heatmap view, uesers can get the enhancer location information based on the epigenict tracks data. Then, users can type in the enhancer genomic location information to the search box on the top right to annotate the enhancer beads.
+
 
 ![large](./tutorial_images/single_cell_conformation.png)
 
