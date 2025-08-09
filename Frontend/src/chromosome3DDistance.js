@@ -341,7 +341,9 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                 },
                 body: JSON.stringify({
                     cell_line: celllineName,
-                    indices: beadsArray
+                    indices: beadsArray,
+                    chromosome_name: chromosomeName,
+                    sequences: currentChromosomeSequence
                 })
             })
                 .then(res => res.json())

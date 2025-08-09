@@ -95,11 +95,15 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
     }, []);
 
     const onClickExampleDataItem = ({ key }) => {
-        setCellLineName(key);
-        setChromosomeName('chr8');
-        setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
-        setStartInputValue('127300000');
-        setEndInputValue('128300000');
+        // Find the example data item by key
+        const exampleItem = exampleDataItems.find(item => item.key === key);
+        if (exampleItem) {
+            setCellLineName(exampleItem.cellLine);
+            setChromosomeName(exampleItem.chromosome);
+            setSelectedChromosomeSequence({ start: exampleItem.start, end: exampleItem.end });
+            setStartInputValue(exampleItem.start.toString());
+            setEndInputValue(exampleItem.end.toString());
+        }
     }
 
     return (

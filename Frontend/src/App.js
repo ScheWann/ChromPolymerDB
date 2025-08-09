@@ -42,20 +42,60 @@ function App() {
   const [tempSampleId, setTempSampleId] = useState(null);
   const [exampleDataItems, setExampleDataItems] = useState([
     {
-      key: 'GM12878',
+      key: 'GM12878-chr8-127300000-128300000',
       label: 'GM12878-Chr8-127300000-128300000',
+      cellLine: 'GM12878',
+      chromosome: 'chr8',
+      start: 127300000,
+      end: 128300000
     },
     {
-      key: 'IMR90',
+      key: 'GM12878-chr8-127200000-127750000',
+      label: 'GM12878-Chr8-127200000-127750000',
+      cellLine: 'GM12878',
+      chromosome: 'chr8',
+      start: 127200000,
+      end: 127750000
+    },
+    {
+      key: 'IMR90-chr8-127300000-128300000',
       label: 'IMR90-Chr8-127300000-128300000',
+      cellLine: 'IMR90',
+      chromosome: 'chr8',
+      start: 127300000,
+      end: 128300000
     },
     {
-      key: 'NHEK',
-      label: 'NHEK-Chr8-127300000-128300000',
+      key: 'Calu3-chr8-127200000-127750000',
+      label: 'Calu3-Chr8-127200000-127750000',
+      cellLine: 'Calu3',
+      chromosome: 'chr8',
+      start: 127200000,
+      end: 127750000
+    },
+    {
+      key: 'monocytes-chr8-127200000-127750000',
+      label: 'Monocytes-Chr8-127200000-127750000',
+      cellLine: 'monocytes',
+      chromosome: 'chr8',
+      start: 127200000,
+      end: 127750000
     }
   ])
+  
+  // Create dropdown-safe items (without extra properties that cause React warnings)
+  const dropdownExampleDataItems = exampleDataItems.map(({ key, label }) => ({ key, label }));
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
-  const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM12878": 4229, "IMR90": 1201, "NHEK": 4225 }); // Example data best sample ID
+  // const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM12878": 4229, "IMR90": 1201, "NHEK": 4225 }); // Example data best sample ID
+  const [exampleDataSet, setExampleDataSet] = useState({
+    "GM12878-chr8-127300000-128300000": 4229,
+    "GM12878-chr8-127200000-127750000": 4193,
+    "IMR90-chr8-127300000-128300000": 1201,
+    // "NHEK-chr8-127300000-128300000": 4225,
+    "Calu3-chr8-127200000-127750000": 1422,
+    "monocytes-chr8-127200000-127750000": 2805
+  });
+
   const [ChromosomeDataSpinnerProgress, setChromosomeDataSpinnerProgress] = useState(0);
 
   // Heatmap Comparison settings
@@ -313,12 +353,8 @@ function App() {
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
-    const validCellLines = ['GM12878', 'IMR90', 'NHEK'];
-    const isMainCellLineOK = validCellLines.includes(cellLineName);
-    const isChromosomeOK = chromosomeName === 'chr8';
-    const isSequenceOK = selectedChromosomeSequence.start === 127300000 && selectedChromosomeSequence.end === 128300000;
-
-    return isMainCellLineOK && isChromosomeOK && isSequenceOK;
+    const exampleKey = `${cellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}`;
+    return exampleDataSet.hasOwnProperty(exampleKey);
   }
 
   // fetch 3D chromosome data progress
@@ -497,7 +533,12 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cell_line: cellLineName, sample_id: apiSampleID })
+        body: JSON.stringify({ 
+          cell_line: cellLineName, 
+          sample_id: apiSampleID, 
+          sequences: selectedChromosomeSequence,
+          chromosome_name: chromosomeName 
+        })
       })
         .then(res => res.json())
         .then(data => {
@@ -1268,13 +1309,17 @@ function App() {
   }
 
   const onClickExampleDataItem = ({ key }) => {
-    setCellLineName(key);
-    setChromosomeName('chr8');
-    setSelectedChromosomeSequence({ start: 127300000, end: 128300000 });
-    setStartInputValue('127300000');
-    setEndInputValue('128300000');
-    setHeatmapLoading(true);
-    setDistributionData({});
+    // Find the example data item by key
+    const exampleItem = exampleDataItems.find(item => item.key === key);
+    if (exampleItem) {
+      setCellLineName(exampleItem.cellLine);
+      setChromosomeName(exampleItem.chromosome);
+      setSelectedChromosomeSequence({ start: exampleItem.start, end: exampleItem.end });
+      setStartInputValue(exampleItem.start.toString());
+      setEndInputValue(exampleItem.end.toString());
+      setHeatmapLoading(true);
+      setDistributionData({});
+    }
   }
 
   const onClickAddItems = ({ key }) => {
@@ -1598,8 +1643,8 @@ function App() {
     if (component) {
       if (isExampleMode(cellLine, chromosomeName, selectedChromosomeSequence)) {
         // In example mode, use the best sample ID for fetching data
-        const bestSampleID = exampleDataBestSampleID[cellLine];
-        fetchExistChromos3DData(false, bestSampleID, cellLine, componentId);
+        const bestSampleID = exampleDataSet[`${cellLine}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}`];
+        fetchExistChromos3DData(false, bestSampleID, cellLine,componentId);
       } else {
         // In non-example mode, use the component's current sample ID
         progressPolling(cellLine, chromosomeName, selectedChromosomeSequence, component.sampleID, false);
@@ -1687,7 +1732,7 @@ function App() {
             </Tooltip>
           </div>
 
-          <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow >
+          <Dropdown menu={{ items: dropdownExampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow >
             <Button className='exampleData' size='small' type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end" style={{ marginLeft: 10, zIndex: 10 }} />
           </Dropdown>
 
@@ -1870,7 +1915,7 @@ function App() {
                   cellLineName={cellLineName}
                   chromosomeName={chromosomeName}
                   chromosomeData={chromosomeData}
-                  exampleDataBestSampleID={exampleDataBestSampleID}
+                  exampleDataSet={exampleDataSet}
                   isExampleMode={isExampleMode}
                   progressPolling={progressPolling}
                   fetchExistChromos3DData={fetchExistChromos3DData}
@@ -1908,7 +1953,7 @@ function App() {
                 cellLineName={cellLineName}
                 chromosomeName={chromosomeName}
                 chromosomeData={[]}
-                exampleDataBestSampleID={exampleDataBestSampleID}
+                exampleDataSet={exampleDataSet}
                 isExampleMode={isExampleMode}
                 progressPolling={progressPolling}
                 fetchExistChromos3DData={fetchExistChromos3DData}

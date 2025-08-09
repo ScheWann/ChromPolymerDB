@@ -363,28 +363,35 @@ def chromosome_valid_ibp_data(cell_line, chromosome_name, sequences):
 """
 Returns the existing 3D chromosome data in the given cell line, chromosome name, start, end(IMR-chr8-127300000-128300000)
 """
-def exist_chromosome_3D_data(cell_line, sample_id):
-    # Sample ID mapping for when sample_id is 0
-    sample_id_mapping = {
-        "GM12878": 4229,
-        "IMR90": 1201,
-        "NHEK": 4225
+def exist_chromosome_3D_data(cell_line, sample_id, sequences, chromosome_name="chr8"):
+    # Dynamic sample ID mapping based on unique example data set identifiers
+    # This will eventually be replaced by a database lookup or configuration
+    example_data_set = {
+        "GM12878-chr8-127300000-128300000": 4229,
+        "IMR90-chr8-127300000-128300000": 1201,
+        # "NHEK-chr8-127300000-128300000": 4225,
+        "Calu3-chr8-127200000-127750000": 1422,
+        "GM12878-chr8-127200000-127750000": 4193,
+        "monocytes-chr8-127200000-127750000": 2805
     }
     
     # Keep the original sample_id for progress key
     original_sample_id = sample_id
     
+    # Create the example data key for this specific cell line and sequence
+    example_key = f"{cell_line}-{chromosome_name}-{sequences['start']}-{sequences['end']}"
+    
     # Use mapped sample_id if sample_id is 0, otherwise keep the passed sample_id
-    if sample_id == 0:
-        sample_id = sample_id_mapping.get(cell_line, sample_id)
+    if sample_id == 0 and example_key in example_data_set:
+        sample_id = example_data_set[example_key]
     
     # Establish the progress key for tracking whole progress (use original sample_id)
-    progress_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"exist_{original_sample_id}_progress")
+    progress_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"exist_{original_sample_id}_progress")
     redis_client.setex(progress_key, 3600, 0)
 
     def checking_existing_data(cell_line, sample_id):
-        redis_3d_position_data_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"3d_example_{sample_id}_position_data")
-        redis_sample_distance_vector_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"{sample_id}_example_distance_vector")
+        redis_3d_position_data_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_example_{sample_id}_position_data")
+        redis_sample_distance_vector_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sample_id}_example_distance_vector")
 
         cached_3d_example_position_data = redis_client.get(redis_3d_position_data_key)
         cached_example_sample_distance_vector = redis_client.get(redis_sample_distance_vector_key)
@@ -392,7 +399,7 @@ def exist_chromosome_3D_data(cell_line, sample_id):
         return cached_3d_example_position_data, cached_example_sample_distance_vector
     
     def get_position_data(cell_line, sid):
-        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"3d_example_{sid}_position_data")
+        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"3d_example_{sid}_position_data")
         records = position_df[position_df['sampleid'] == sid].to_dict(orient='records')
         
         data_json = json.dumps(records, ensure_ascii=False, default=str)
@@ -401,8 +408,8 @@ def exist_chromosome_3D_data(cell_line, sample_id):
         return records
     
     def get_fq_data(cell_line):
-        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "fq_example_data")
-        full_distance_matrix = np.load(f"./example_data/{cell_line}_chr8_127300000_128300000_fq_matrix.npy")
+        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "fq_example_data")
+        full_distance_matrix = np.load(f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_fq_matrix.npy")
         
         data_json = json.dumps(full_distance_matrix.tolist(), ensure_ascii=False)
         redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
@@ -410,12 +417,12 @@ def exist_chromosome_3D_data(cell_line, sample_id):
         return full_distance_matrix.tolist()
 
     def get_avg_distance_data(cell_line):
-        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, "avg_distance_example_data")
+        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], "avg_distance_example_data")
 
         if redis_client.get(cache_key):
             return json.loads(redis_client.get(cache_key).decode("utf-8"))
         else:
-            full_distance_matrix = np.load(f"./example_data/{cell_line}_chr8_127300000_128300000_avg_distance_matrix.npy")
+            full_distance_matrix = np.load(f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_avg_distance_matrix.npy")
             
             data_json = json.dumps(full_distance_matrix.tolist(), ensure_ascii=False)
             redis_client.setex(cache_key, 3600, data_json.encode("utf-8"))
@@ -423,7 +430,7 @@ def exist_chromosome_3D_data(cell_line, sample_id):
             return full_distance_matrix.tolist()
 
     def get_distance_vector_by_sample(cell_line, sid):
-        cache_key = make_redis_cache_key(cell_line, "chr8", 127300000, 128300000, f"{sid}_example_distance_vector")
+        cache_key = make_redis_cache_key(cell_line, chromosome_name, sequences["start"], sequences["end"], f"{sid}_example_distance_vector")
         
         if redis_client.get(cache_key):
             vec = json.loads(redis_client.get(cache_key).decode("utf-8"))
@@ -454,8 +461,8 @@ def exist_chromosome_3D_data(cell_line, sample_id):
             "sample_distance_vector": sample_distance_vector
         }
     else:
-        pos_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_position.feather"
-        dist_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_distance.feather"
+        pos_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_position.feather"
+        dist_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_distance.feather"
 
         with ThreadPoolExecutor(max_workers=10) as pool:
             fut_pos  = pool.submit(read_feather_pa, pos_path)
@@ -1102,14 +1109,14 @@ def bead_distribution(cell_line, chromosome_name, sequences, indices):
 """
 Return the distribution of selected beads from existing 3D chromosome data
 """
-def exist_bead_distribution(cell_line, indices):
+def exist_bead_distribution(cell_line, indices, chromosome_name="chr8", sequences={"start": 127300000, "end": 128300000}):
     indices = [int(idx) for idx in indices]
 
     distributions: dict[str, list[float]] = {
         f"{i}-{j}": [] for i, j in combinations(indices, 2)
     }
 
-    distance_path = f"./example_data/{cell_line}_chr8_127300000_128300000_original_distance.feather"
+    distance_path = f"./example_data/{cell_line}_{chromosome_name}_{sequences['start']}_{sequences['end']}_original_distance.feather"
 
     with ThreadPoolExecutor(max_workers=10) as pool:
         fut_dist = pool.submit(read_feather_pa, distance_path)

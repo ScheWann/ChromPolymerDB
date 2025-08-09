@@ -106,8 +106,9 @@ def get_ChromosValidIBPData():
 def get_ExistChromosome3DData():
     cell_line = request.json['cell_line']
     sample_id = request.json['sample_id']
-    # return jsonify(exist_chromosome_3d_data(cell_line, sample_id))
-    payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id))
+    sequences = request.json['sequences']
+    chromosome_name = request.json.get('chromosome_name', 'chr8')  # Default to chr8 for backward compatibility
+    payload = orjson.dumps(exist_chromosome_3D_data(cell_line, sample_id, sequences, chromosome_name))
     return Response(payload, content_type='application/json')
 
 
@@ -160,7 +161,9 @@ def get_BeadDistribution():
 def get_ExistBeadDistribution():
     cell_line = request.json['cell_line']
     indices = request.json['indices']
-    return jsonify(exist_bead_distribution(cell_line, indices))
+    chromosome_name = request.json.get('chromosome_name', 'chr8')  # Default to chr8 for backward compatibility
+    sequences = request.json.get('sequences', {"start": 127300000, "end": 128300000})  # Default for backward compatibility
+    return jsonify(exist_bead_distribution(cell_line, indices, chromosome_name, sequences))
 
 
 @api.route('/getExample3DProgress', methods=['GET'])
