@@ -415,7 +415,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 right: 10,
                 zIndex: 10,
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                pointerEvents: 'none'
             }}>
                 {/* Container for buttons */}
                 <div style={{
@@ -425,14 +426,14 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     flexWrap: 'wrap',
                 }}>
                     {/* location selection and gene switch function */}
-                    <div className='buttonGroup'>
+                    <div className='buttonGroup' style={{ pointerEvents: 'auto' }}>
                         <span style={{ color: 'white', userSelect: 'none' }}>Locations: </span>
                         <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.start} controls={false} placeholder='start' onChange={value => handleInputLocation(value, 'start')} />
                         <span style={{ color: 'white', userSelect: 'none' }}>~</span>
                         <InputNumber size='small' min={selectedChromosomeSequence.start} max={selectedChromosomeSequence.end} value={inputPositions.end} controls={false} placeholder='end' onChange={value => handleInputLocation(value, 'end')} />
                     </div>
                     {/* icon control group */}
-                    <div className='buttonGroup'>
+                    <div className='buttonGroup' style={{ pointerEvents: 'auto' }}>
                         <Switch
                             checkedChildren="Genes"
                             unCheckedChildren="Promoter"
@@ -580,7 +581,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     padding: 5,
                     borderRadius: 3,
                     gap: 5,
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    pointerEvents: 'auto'
                 }}>
                     <div className='colorLegendWrapper'>
                         <div className='colorRect' style={{ backgroundColor: '#00BFFF' }} />
@@ -609,7 +611,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 </div>
                 {/* Beads hover on information */}
                 {showBeadInfo && (
-                    <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`} style={{ userSelect: 'none' }}>
+                    <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`} style={{ userSelect: 'none', pointerEvents: 'auto' }}>
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
                         <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
                         <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
