@@ -52,11 +52,11 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 format: "bigwig",
                 color: "#813BF5"
             },
-            {
-                name: " ",
-                url: "https://www.encodeproject.org/files/ENCFF944OWQ/@@download/ENCFF944OWQ.bigBed",
-                format: "bigBed",
-            }
+            // {
+            //     name: " ",
+            //     url: "https://www.encodeproject.org/files/ENCFF944OWQ/@@download/ENCFF944OWQ.bigBed",
+            //     format: "bigBed",
+            // }
             
         ],
         'Calu3': [
@@ -96,11 +96,11 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 format: "bigwig",
                 color: "#813BF5"
             },
-            {
-                name: " ",
-                url: "https://www.encodeproject.org/files/ENCFF700JVP/@@download/ENCFF700JVP.bigBed",
-                format: "bigBed",
-            }
+            // {
+            //     name: " ",
+            //     url: "https://www.encodeproject.org/files/ENCFF700JVP/@@download/ENCFF700JVP.bigBed",
+            //     format: "bigBed",
+            // }
         ],
         'IMR90': [
             {
@@ -171,11 +171,11 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
                 format: "bigwig",
                 color: "#813BF5"
             },
-            {
-                name: " ",
-                url: "https://www.encodeproject.org/files/ENCFF274NYA/@@download/ENCFF274NYA.bigBed",
-                format: "bigBed",
-            },
+            // {
+            //     name: " ",
+            //     url: "https://www.encodeproject.org/files/ENCFF274NYA/@@download/ENCFF274NYA.bigBed",
+            //     format: "bigBed",
+            // },
         ]
     }
 
