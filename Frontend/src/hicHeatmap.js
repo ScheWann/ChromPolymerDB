@@ -281,7 +281,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         const parentWidth = containerSize.width;
         const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 20, bottom: 25, left: 60 };
+        const margin = { top: 45, right: 20, bottom: 40, left: 60 };
 
         setMinDimension(Math.min(parentWidth, parentHeight));
         const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
@@ -386,17 +386,21 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
                 .tickFormat(d => {
                     if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(3)}M`;
+                        return `${(d / 1000000).toFixed(1)}M`;
                     }
                     if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(3)}W`;
+                        return `${(d / 10000).toFixed(1)}W`;
                     }
                     return d;
                 }))
             .selectAll("text")
-            .style("text-anchor", "center")
-            .attr("dx", "0em")
-            .attr("dy", "1em");
+            // .style("text-anchor", "center")
+            // .attr("dx", "0em")
+            // .attr("dy", "1em");
+            .style("text-anchor", "end")
+            .attr("transform", "rotate(-45)")
+            .attr("dx", "-1em")
+            .attr("dy", "0em");
 
         // Y-axis
         axisSvg.append('g')
@@ -405,10 +409,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
                 .tickFormat(d => {
                     if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(3)}M`;
+                        return `${(d / 1000000).toFixed(1)}M`;
                     }
                     if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(3)}W`;
+                        return `${(d / 10000).toFixed(1)}W`;
                     }
                     return d;
                 }));
