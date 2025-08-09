@@ -185,7 +185,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>3D physical distance</Tag>
                 </Card>
 
-                <img src='graphical_abstract.png' style={{ width: '75%', marginTop: 30 }}></img>
+                <img src='graphical_abstract.png' style={{ width: '100%', marginTop: 30 }}></img>
                 {/* <Title level={5}>Data Coverage</Title> */}
 
                 {/* <div
