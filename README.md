@@ -84,3 +84,12 @@ Take GM12878-chr8-127300000-128300000 as an example
 psql -U admin -d chromosome_db \
   --command "\copy (SELECT * FROM public.distance WHERE cell_line = 'GM12878' AND chrid = 'chr8' AND start_value = 127300000 AND end_value = 128300000) TO '/opt/GM12878_chr8_127300000_128300000_original_distance.csv' WITH (FORMAT csv, HEADER, DELIMITER ',', QUOTE '\"', ESCAPE '''');"
 ```
+
+If your Docker is running on the server, you need to download this file from the container to your server
+```bash
+# Exit DB Container
+exit
+
+# Run
+docker cp <container>:/path/in/container /path/on/host
+```
