@@ -803,6 +803,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     igvMountStatus={igvMountStatus}
                                     changeColorByInput={changeColorByInput}
                                     changeColorScale={changeColorScale}
+                                    isExampleMode={isExampleMode}
                                 />
                             </Modal>
 

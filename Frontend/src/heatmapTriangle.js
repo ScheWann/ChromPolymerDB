@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input, Upload } from 'antd';
+import { Button, Tooltip, Switch, Dropdown, Modal, Table, Spin, InputNumber, Space, Slider, Input, Upload, notification } from 'antd';
 import { DownloadOutlined, SearchOutlined, RedoOutlined } from "@ant-design/icons";
 import { IgvViewer } from './igvViewer.js';
 import Highlighter from 'react-highlight-words';
@@ -8,7 +8,7 @@ import "./Styles/heatmapTriangle.css";
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from "jspdf";
 
-export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosomeSequence, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus }) => {
+export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosomeSequence, totalChromosomeSequences, currentChromosomeData, changeColorByInput, fqRawcMode, colorScaleRange, changeColorScale, igvMountStatus, isExampleMode }) => {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const axisSvgRef = useRef(null);
@@ -841,6 +841,21 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             observer.disconnect();
         };
     }, []);
+
+    // Show notification for example mode
+    useEffect(() => {
+        if (isExampleMode(cellLineName, chromosomeName, currentChromosomeSequence) && igvMountStatus) {
+            notification.info({
+                message: 'Example Data',
+                description: 'Selected IGV tracks are preloaded to illustrate this example.',
+                    placement: 'topRight',
+                    duration: 3,
+                    style: {
+                        zIndex: 9999
+                    }
+                });
+            }
+    }, [isExampleMode, igvMountStatus, cellLineName, chromosomeName, currentChromosomeSequence]);
 
     useEffect(() => {
         if (!containerSize.width && !containerSize.height) return;
