@@ -1695,6 +1695,20 @@ function App() {
         open={isTourOpen}
         onClose={() => setIsTourOpen(false)}
         steps={steps}
+        mask={{
+          style: {
+            boxShadow: 'inset 0 0 15px #fff',
+          },
+        }}
+        closeIcon={
+            <span style={{ 
+              color: '#1890ff',
+              fontWeight: 'bold',
+              width: 'auto',
+              height: 'auto',
+              lineHeight: '1'
+            }}>Skip</span>
+        }
       />
 
       {/* Header Section */}
