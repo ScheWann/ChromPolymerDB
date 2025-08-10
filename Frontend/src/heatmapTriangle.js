@@ -849,7 +849,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                 message: 'Example Data',
                 description: 'Selected IGV tracks are preloaded to illustrate this example.',
                     placement: 'topRight',
-                    duration: 3,
+                    duration: 6,
                     style: {
                         zIndex: 9999
                     }
