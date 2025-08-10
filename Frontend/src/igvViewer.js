@@ -104,34 +104,42 @@ export const IgvViewer = ({ refreshIGV, setRefreshIGV, trackKey, selectedTrackDa
         ],
         'IMR90': [
             {
-                name: "ATAC-seq",
-                url: "https://www.encodeproject.org/files/ENCFF770EAV/@@download/ENCFF770EAV.bigWig",
+                name: "DNase-seq",
+                url: "https://www.encodeproject.org/files/ENCFF971HXR/@@download/ENCFF971HXR.bigWig",
                 format: "bigwig",
-                color: "blue",
+                color: "#79200D",
             },
-            {
-                name: "H3K4me3",
-                url: "https://www.encodeproject.org/files/ENCFF811ZFE/@@download/ENCFF811ZFE.bigWig",
-                format: "bigwig",
-                color: "green"
-            },
+
             {
                 name: "H3K27ac",
                 url: "https://www.encodeproject.org/files/ENCFF803HKN/@@download/ENCFF803HKN.bigWig",
                 format: "bigwig",
-                color: "#008788"
+                color: "#E77B72"
             },
             {
                 name: "H3K4me1",
                 url: "https://www.encodeproject.org/files/ENCFF756VSW/@@download/ENCFF756VSW.bigWig",
                 format: "bigwig",
-                color: "#008788"
+                color: "#E88E33"
+            },
+
+            {
+                name: "H3K4me3",
+                url: "https://www.encodeproject.org/files/ENCFF811ZFE/@@download/ENCFF811ZFE.bigWig",
+                format: "bigwig",
+                color: "#578225"
             },
             {
                 name: "H3K27me3",
                 url: "https://www.encodeproject.org/files/ENCFF525KFC/@@download/ENCFF525KFC.bigWig",
                 format: "bigwig",
-                color: "brown"
+                color: "#151A82"
+            },
+            {
+                name: "RNA-seq",
+                url: "https://www.encodeproject.org/files/ENCFF188MTB/@@download/ENCFF188MTB.bigWig",
+                format: "bigwig",
+                color: "#813BF5"
             },
         ],
         'monocytes':[
