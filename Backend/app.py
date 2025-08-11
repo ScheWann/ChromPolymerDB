@@ -51,7 +51,7 @@ def set_user_cookie(response, user_id):
        user_id,
        max_age=COOKIE_MAX_AGE,
        httponly=True,
-       secure=False,  # Set to True in production with HTTPS
+       secure=True,  # Set to True in production with HTTPS
        samesite='Lax'
    )
    return response
