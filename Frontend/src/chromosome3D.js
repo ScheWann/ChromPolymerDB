@@ -1081,7 +1081,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
-                    <span><strong style={{ color: '#3182bd' }}> Multi-beads distance calculation are also supported by selected the beads users are interested in</strong></span>
+                    <span><strong style={{ color: '#3182bd' }}> Distances across multiple beads are supported; just select as many as beads you want to analyze</strong></span>
                 </div>
             </Drawer>
         </div>

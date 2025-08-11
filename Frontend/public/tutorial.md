@@ -1,6 +1,6 @@
 # ChromPolymerDB Tutorial
 
-The three-dimensional (3D) organization of chromatin is well known to play an essential role in a wide range of biological functions. A deeper understanding of chromatin structures is crucial for decoding critical biology processes. To support the exploration of chromatin architecture, we developed ChromPolymerDB, a publicly accessible, high-resolution database of single-cell 3D chromatin structures reconstructed using polymer physics-based modeling of Hi-C data. This database covers a substantial number of single-cell chromatin structures at 5 kb resolution across 50 diverse human cell types and experimental conditions. It provides an interactive web interface with integrated spatial and structural analysis tools, enables multi-omics integration with gene expression, epigenetic marks, and other regulatory elements, and allows comparative analysis to identify structural rewiring events—such as enhancer hub emergence or loop remodeling—across conditions, developmental stages, or disease states. These innovations make ChromPolymerDB a powerful tool for researchers investigating the interplay between chromatin architecture and gene regulation and performing comparative 3D genomics.
+The three-dimensional (3D) organization of chromatin plays a critical role in regulating gene expression and genomic processes like DNA replication, repair, and genome stability. Although these processes occur at the level of individual cells, most chromatin structure data are derived from population-averaged assays, such as Hi-C, obscuring the heterogeneity of single cell conformations. To address this limitation, we developed a polymer physics-based modelling framework -sequential Bayesian Inference Framework (sBIF) – that deconvolves bulk Hi-C data to reconstruct single-cell 3D chromatin conformations.  To support a broader use of sBIF, we created  ChromPolymerDB, a publicly accessible, high-resolution database of single-cell chromatin structures inferred by sBIF. The database contains ~108  reconstructed single cell structures at 5 kb resolution , spanning over 60,000 genomic loci across 50 human cell types and experimental conditions. ChromPolymerDB features an interactive web interface with tools for 3D structural analysis and multi-omics integration. Users can explore  associations between chromatin conformation and gene expression, epigenetic modifications, and regulatory elements. The platform also supports comparative analyses to identify structural changes across cell types, developmental stages, or disease contexts. ChromPolymerDB offers a unique resource for researchers studying the relationship between genome architecture and gene regulation, and for advancing comparative 3D genomics.
 
 
 ## Querying the Data
@@ -75,10 +75,25 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 - The middle panel displays one of the simulated 3D single-cell chromatin structure. Users may interact with the model by clicking and dragging to examine its spatial organization.
 - The lower right panel showed the distance heatmap of this 3D single-cell chromatin structure.
 
-#### After selecting beads and clicking ![small](./tutorial_images/generate_distance_logo.png), the pairwise 3D distance and the distribution among 5,000 simulated structures of selected beads will show up.
-- We disabled this button until minimum number of beads selection is made. 
+### 3D distance analysis
+1. Select **first bead** you are interested in.
+   ![Chromosome 3D tutorial](./Distance_step1.png)
 
-![large](./tutorial_images/generate_distance.png)
+2. Change selected bead **color**  
+   ![Chromosome 3D tutorial](./Distance_step2.png)
+
+3. Select **second bead** you are interested in  
+   ![Chromosome 3D tutorial](./Distance_step3.png)
+
+4. Change selected bead **color**  
+   ![Chromosome 3D tutorial](./Distance_step4.png)
+5. Click **Generate Distance** button  
+   ![Chromosome 3D tutorial](./Distance_step5.png)
+
+
+- We disabled this button until minimum number of beads selection is made. 
+- **Distances across multiple beads are supported; just select as many beads as you want to analyze.**
+
 ![large](./tutorial_images/3D_distance.png)
 
 - The tool buttons on the left:
