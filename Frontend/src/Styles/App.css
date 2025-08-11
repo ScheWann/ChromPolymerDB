@@ -146,6 +146,10 @@ body {
   padding: 0 !important;
 }
 
+.ant-tour-close {
+  width: auto !important;
+}
+
 /* Improved horizontal scrolling for 3D chromosome components */
 .chromosome3d-scroll-container {
   scrollbar-width: thin;

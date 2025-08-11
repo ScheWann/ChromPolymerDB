@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
 }
 
 .custom-button {
@@ -15,6 +15,7 @@
     color: #aaa;
     cursor: not-allowed;
     opacity: 0.6;
+    pointer-events: none;
 }
 
 .beadInfoText {
