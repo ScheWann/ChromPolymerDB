@@ -22,6 +22,7 @@ export const TutorialDrawer = ({ visible, onClose }) => {
     return (
         <Drawer
             size="large"
+            width="100%"
             title="Tutorial"
             closable={{ 'aria-label': 'Close Button' }}
             onClose={onClose}

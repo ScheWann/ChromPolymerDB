@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { jsPDF } from "jspdf";
 import { OrbitControls } from '@react-three/drei';
-import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown, Splitter, Tour } from 'antd';
+import { Button, Tooltip, ColorPicker, Switch, InputNumber, Modal, Dropdown, Splitter, Drawer } from 'antd';
 import { RollbackOutlined, ClearOutlined, DownloadOutlined, AreaChartOutlined } from "@ant-design/icons";
 import { CurrentChainDistanceHeatmap } from './currentChainDistanceHeatmap';
 import { Chromosome3DDistance } from './chromosome3DDistance';
@@ -102,12 +102,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const controlsRef = useRef();
     const rendererRef = useRef();
 
-    // Tour related refs and state
+    // Drawer (tutorial) related refs and state
     const canvasContainerRef = useRef();
     const colorPickerRef = useRef();
     const generateDistanceRef = useRef();
-    const [tourOpen, setTourOpen] = useState(false);
-    const [tourCurrent, setTourCurrent] = useState(0);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const [showChromosome3DDistance, setShowChromosome3DDistance] = useState(false);
@@ -120,24 +119,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [chromosome3DBackgroundColor, setChromosome3DBackgroundColor] = useState('#333333');
     const [cameraRotation, setCameraRotation] = useState([0, 0, 0]);
 
-    // Tour steps configuration
-    const tourSteps = [
-        {
-            title: 'Select Beads',
-            description: 'Select beads by clicking on them in the 3D visualization.',
-            target: () => canvasContainerRef.current,
-        },
-        {
-            title: 'Change beads color',
-            description: 'Use this color picker to change the color of selected beads.',
-            target: () => colorPickerRef.current,
-        },
-        {
-            title: 'Generate Distance',
-            description: 'After selecting at least two beads, click this button to generate distance calculations.',
-            target: () => generateDistanceRef.current,
-        },
-    ];
+    // (Replaced tour with a simple Drawer tutorial showing an image)
 
     const step = 5000;
     const newStart = Math.ceil(selectedChromosomeSequence.start / step) * step;
@@ -597,8 +579,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     if (beadCount < 2) {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setTourOpen(true);
-                                        setTourCurrent(0);
+                                        setDrawerOpen(true);
                                     }
                                 }}
                                 style={{
@@ -1047,29 +1028,29 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 </div>
             )}
 
-            {/* Tour Component */}
-            <Tour
-                open={tourOpen}
-                onClose={() => setTourOpen(false)}
-                steps={tourSteps}
-                current={tourCurrent}
-                onChange={setTourCurrent}
-                mask={{
-                    style: {
-                        boxShadow: 'inset 0 0 15px #fff',
-                    },
-                }}
-                closeIcon={
-                    <span style={{
-                        color: '#1890ff',
-                        fontWeight: 'bold',
-                        width: 'auto',
-                        height: 'auto',
-                        lineHeight: '1'
-                    }}>Skip</span>
-                }
-                zIndex={10000}
-            />
+            {/* Tutorial Drawer */}
+            <Drawer
+                title="How to Generate Distances"
+                placement="left"
+                width="40.5%"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                styles={{ body: { padding: 16 } }}
+            >
+                <div ref={canvasContainerRef} style={{ display: 'none' }} />
+                <div ref={colorPickerRef} style={{ display: 'none' }} />
+                <div ref={generateDistanceRef} style={{ display: 'none' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
+                    <span>1. Select at least <strong style={{ color: '#3182bd' }}>two</strong> beads</span>
+                    <span>2. Change selected beads <strong style={{ color: '#3182bd' }}>color</strong></span>
+                    <span>3. Click <strong style={{ color: '#3182bd' }}>"Generate Distances"</strong> button</span>
+                </div>
+                <img
+                    src="/chromosome3D_tutorial.png"
+                    alt="Chromosome 3D tutorial"
+                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                />
+            </Drawer>
         </div>
     );
 };
