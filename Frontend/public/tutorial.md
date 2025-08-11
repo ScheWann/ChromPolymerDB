@@ -124,7 +124,7 @@ By clicking the + on the right of the data query bar. Users can select other cel
 ![large-pro](./tutorial_images/chromatin_structure_comparision.png)
 
 
-## Structure data analysis
+## Downstream structure data analysis
 
 Both bead structure data (position data) and bead distance data of the selected region can be downloaded and used for downstream analysis. Please check the following codes for more details.
 
