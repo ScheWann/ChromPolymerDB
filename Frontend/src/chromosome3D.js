@@ -1046,7 +1046,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <img
                     src="/Distance_step1.png"
                     alt="Chromosome 3D tutorial"
-                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
                     <span>2. Change selected bead <strong style={{ color: '#3182bd' }}>color</strong></span>
@@ -1054,7 +1054,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <img
                     src="/Distance_step2.png"
                     alt="Chromosome 3D tutorial"
-                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
                     <span>3. Select <strong style={{ color: '#3182bd' }}>Second bead</strong> you are interested in</span>
@@ -1062,7 +1062,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <img
                     src="/Distance_step3.png"
                     alt="Chromosome 3D tutorial"
-                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
                     <span>4. Change selected bead <strong style={{ color: '#3182bd' }}>color</strong></span>
@@ -1070,18 +1070,18 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <img
                     src="/Distance_step4.png"
                     alt="Chromosome 3D tutorial"
-                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
-                    <span>5. Click <strong style={{ color: '#3182bd' }}>Generate Distance</strong>button</span>
+                    <span>5. Click <strong style={{ color: '#3182bd' }}>Generate Distance</strong> button</span>
                 </div>
                 <img
                     src="/Distance_step5.png"
                     alt="Chromosome 3D tutorial"
-                    style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                    style={{ width: '70%', height: 'auto', borderRadius: 4 }}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '12px' }}>
-                    <span>Multi-beads distance calculation are also supported by selected the beads users are interested in</span>
+                    <span><strong style={{ color: '#3182bd' }}> Multi-beads distance calculation are also supported by selected the beads users are interested in</strong></span>
                 </div>
             </Drawer>
         </div>
