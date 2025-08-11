@@ -108,8 +108,9 @@ function App() {
   const [chromosome3DComponents, setChromosome3DComponents] = useState([]); // Array of component configs
   const [chromosome3DComponentIndex, setChromosome3DComponentIndex] = useState(1); // Next component index
 
-  // Tour visibility state
-  const [isTourOpen, setIsTourOpen] = useState(true);
+  // Tour visibility state - start as false until we check server
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [tourStatusChecked, setTourStatusChecked] = useState(false);
 
   // Check if scroll buttons should be visible
   const [showScrollButtons, setShowScrollButtons] = useState(false);
@@ -350,6 +351,61 @@ function App() {
       }
     }
   }, [totalChromosomeSequences, totalOriginalChromosomeValidSequences]);
+
+  // Check tour status on app load
+  useEffect(() => {
+    checkTourStatus();
+  }, []);
+
+  // Function to check if user has seen tour before
+  const checkTourStatus = async () => {
+    try {
+      const response = await fetch('/api/getTourStatus');
+      const data = await response.json();
+      
+      // Show tour only if user has never seen it before
+      const shouldShowTour = !data.tour_seen;
+      setIsTourOpen(shouldShowTour);
+      setTourStatusChecked(true);
+      
+      // If we're showing the tour for the first time, mark it as seen immediately
+      if (shouldShowTour) {
+        markTourSeen();
+      }
+      
+      console.log('Tour status:', {
+        tour_seen: data.tour_seen,
+        is_new_user: data.is_new_user,
+        showing_tour: shouldShowTour
+      });
+    } catch (error) {
+      console.error('Error checking tour status:', error);
+      // Default to showing tour if there's an error
+      setIsTourOpen(true);
+      setTourStatusChecked(true);
+    }
+  };
+
+  // Function to mark tour as seen (called immediately when tour is shown)
+  const markTourSeen = async () => {
+    try {
+      await fetch('/api/setTourSeen', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      console.log('Tour marked as seen');
+    } catch (error) {
+      console.error('Error marking tour as seen:', error);
+    }
+  };
+
+  // Handle tour close (no need to call API since it's already marked as seen)
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    // No need to call markTourSeen() here since it's already called when tour is first shown
+  };
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
@@ -1690,26 +1746,15 @@ function App() {
     <div className="App">
       {contextHolder}
 
-      {/* Tour Component */}
-      <Tour
-        open={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
-        steps={steps}
-        mask={{
-          style: {
-            boxShadow: 'inset 0 0 15px #fff',
-          },
-        }}
-        closeIcon={
-            <span style={{ 
-              color: '#1890ff',
-              fontWeight: 'bold',
-              width: 'auto',
-              height: 'auto',
-              lineHeight: '1'
-            }}>Skip</span>
-        }
-      />
+      {/* Tour Component - only render after status is checked */}
+      {tourStatusChecked && (
+        <Tour
+          open={isTourOpen}
+          onClose={handleTourClose}
+          onFinish={handleTourClose} // Also handle when user completes all steps
+          steps={steps}
+        />
+      )}
 
       {/* Header Section */}
       <div className="controlHeader">

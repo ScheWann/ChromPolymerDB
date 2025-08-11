@@ -2,8 +2,9 @@ import os
 import orjson
 import shutil
 import redis
-from flask import Flask, jsonify, request, after_this_request, Response, Blueprint
+from flask import Flask, jsonify, request, after_this_request, Response, Blueprint, make_response
 from flask_cors import CORS
+import uuid
 from process import (
     gene_names_list, 
     cell_lines_list, 
@@ -29,6 +30,31 @@ from process import (
 
 app = Flask(__name__)
 CORS(app)
+
+# Cookie configuration
+USER_ID_COOKIE = 'chrom_polymer_user_id'
+COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
+
+
+def get_or_create_user_id():
+   """Get user ID from cookie or create a new one"""
+   user_id = request.cookies.get(USER_ID_COOKIE)
+   if not user_id:
+       user_id = str(uuid.uuid4())
+   return user_id
+
+
+def set_user_cookie(response, user_id):
+   """Set user ID cookie on response"""
+   response.set_cookie(
+       USER_ID_COOKIE,
+       user_id,
+       max_age=COOKIE_MAX_AGE,
+       httponly=True,
+       secure=False,  # Set to True in production with HTTPS
+       samesite='Lax'
+   )
+   return response
 
 
 # redis connection settings
@@ -233,6 +259,42 @@ def downloadFullChromosome3DPositionData():
             return response
     return csv_file
 
+
+@api.route('/getTourStatus', methods=['GET'])
+def get_tour_status():
+   """Get whether the user has seen the tour before"""
+   user_id = get_or_create_user_id()
+  
+   # Check if user has seen tour before (stored in Redis)
+   tour_seen = redis_client.get(f"tour_seen:{user_id}")
+  
+   response_data = {
+       'tour_seen': tour_seen is not None and tour_seen.decode() == 'true',
+       'user_id': user_id,
+       'is_new_user': tour_seen is None  # True if this is the first time we see this user
+   }
+  
+   response = make_response(jsonify(response_data))
+   response = set_user_cookie(response, user_id)
+  
+   return response
+
+
+
+
+@api.route('/setTourSeen', methods=['POST'])
+def set_tour_seen():
+   """Mark the tour as seen for this user (first time only)"""
+   user_id = get_or_create_user_id()
+  
+   # Store tour seen status in Redis (expires in 1 year)
+   # This gets set the moment the tour is shown, not when completed
+   redis_client.setex(f"tour_seen:{user_id}", 60 * 60 * 24 * 365, 'true')
+  
+   response = make_response(jsonify({'status': 'success', 'user_id': user_id}))
+   response = set_user_cookie(response, user_id)
+  
+   return response
 
 app.register_blueprint(api)
 
