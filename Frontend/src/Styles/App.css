@@ -150,6 +150,38 @@ body {
   width: auto !important;
 }
 
+.custom-input-number .ant-input-number {
+  border: 1px solid #999 !important;
+}
+
+.custom-input-number .ant-input-number:hover {
+  border-color: #999 !important;
+}
+
+.custom-input-number .ant-input-number-focused {
+  border-color: #999 !important;
+  box-shadow: 0 0 0 2px rgba(153, 153, 153, 0.2) !important;
+}
+
+.custom-input-number .ant-input-number-group-addon {
+  border: 1px solid #999 !important;
+  border-left: 0 !important;
+}
+
+.custom-input-number .ant-input-number-group-addon:hover {
+  border-color: #999 !important;
+  border-left: 0 !important;
+}
+
+.custom-input-number .ant-input-number-group.ant-input-number-group-compact .ant-input-number-group-addon {
+  border-color: #999 !important;
+}
+
+.custom-input-number .ant-input-number-focused + .ant-input-number-group-addon,
+.custom-input-number .ant-input-number-group-addon {
+  border-color: #999 !important;
+}
+
 /* Improved horizontal scrolling for 3D chromosome components */
 .chromosome3d-scroll-container {
   scrollbar-width: thin;

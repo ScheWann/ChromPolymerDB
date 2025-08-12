@@ -2116,7 +2116,19 @@ function App() {
                               title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
                               color='white'
                             >
-                              <InputNumber style={{ width: 120 }} size='small' min={1} max={5000} addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} value={tempSampleId} onChange={setTempSampleId} />
+                              <InputNumber 
+                                className="custom-input-number"
+                                style={{ 
+                                  width: 120, 
+                                  borderRadius: 6
+                                }} 
+                                size='small' 
+                                min={1} 
+                                max={5000} 
+                                addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} 
+                                value={tempSampleId} 
+                                onChange={setTempSampleId} 
+                              />
                             </Tooltip>
                           </div>
                           <Tooltip
@@ -2135,6 +2147,7 @@ function App() {
                                   fontSize: 15,
                                   cursor: "pointer",
                                   marginRight: 5,
+                                  border: '1px solid #999',
                                 }}
                                 disabled={Object.keys(chromosome3DExampleData).length === 0 || chromosome3DLoading}
                                 size="small"
