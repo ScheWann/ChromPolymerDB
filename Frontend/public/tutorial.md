@@ -134,4 +134,4 @@ Both bead structure data (position data) and bead distance data of the selected 
 
 - [Position data to PDB files for structure visualization via PyMol](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/scr/position_data_visualizaion.ipynb)
 
-## [HiC data resource](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/HiC_data_info.xlsx)
+## [HiC data resource](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/Hi-C_info.xlsx)
