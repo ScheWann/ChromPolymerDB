@@ -1342,6 +1342,8 @@ function App() {
   const returnIntroPage = () => {
     setCellLineName(null);
     setChromosomeName(null);
+    setStartInputValue(null);
+    setEndInputValue(null);
     setChromosomeSize({ start: 0, end: 0 });
     setSelectedChromosomeSequence({ start: 0, end: 0 });
     setChromosomeData([]);
