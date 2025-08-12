@@ -90,7 +90,6 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                     beforeUpload={(file) => {
                         const fileURL = URL.createObjectURL(file);
                         const format = detectIgvFormat(file.name);
-                        console.log(file.name, fileURL, format, '////')
                         setUploadTrackData({
                             name: file.name,
                             trackUrl: fileURL,

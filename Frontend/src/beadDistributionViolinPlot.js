@@ -36,7 +36,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const handleModalAfterOpen = () => {
         // Draw the plot after the modal is fully opened
         if (modalSvgRef.current) {
-            console.log('Drawing modal violin plot...');
             const modalWidth = 1000;
             const modalHeight = 600;
             drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight);

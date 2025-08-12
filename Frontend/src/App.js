@@ -372,12 +372,6 @@ function App() {
       if (shouldShowTour) {
         markTourSeen();
       }
-      
-      console.log('Tour status:', {
-        tour_seen: data.tour_seen,
-        is_new_user: data.is_new_user,
-        showing_tour: shouldShowTour
-      });
     } catch (error) {
       console.error('Error checking tour status:', error);
       // Default to showing tour if there's an error
@@ -395,7 +389,6 @@ function App() {
           'Content-Type': 'application/json',
         }
       });
-      console.log('Tour marked as seen');
     } catch (error) {
       console.error('Error marking tour as seen:', error);
     }

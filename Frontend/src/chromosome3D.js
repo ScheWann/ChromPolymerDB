@@ -119,6 +119,20 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [chromosome3DBackgroundColor, setChromosome3DBackgroundColor] = useState('#333333');
     const [cameraRotation, setCameraRotation] = useState([0, 0, 0]);
 
+    // Function to open the ColorPicker programmatically
+    const [colorPickerOpen, setColorPickerOpen] = useState(false);
+    
+    const openColorPicker = () => {
+        setColorPickerOpen(true);
+    };
+
+    // Close ColorPicker when selectedIndex changes to null
+    useEffect(() => {
+        if (selectedIndex === null) {
+            setColorPickerOpen(false);
+        }
+    }, [selectedIndex]);
+
     // (Replaced tour with a simple Drawer tutorial showing an image)
 
     const step = 5000;
@@ -460,8 +474,20 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 <ColorPicker
                                     value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
                                     disabled={selectedIndex === null}
+                                    open={colorPickerOpen && selectedIndex !== null}
+                                    onOpenChange={(open) => setColorPickerOpen(open)}
                                     presets={presetColors}
+                                    allowClear
                                     onChange={handleColorChange}
+                                    onClear={() => {
+                                        if (selectedIndex !== null) {
+                                            // Create a color object that mimics the Ant Design color object
+                                            const defaultColorObject = {
+                                                toHexString: () => '#00BFFF'
+                                            };
+                                            handleColorChange(defaultColorObject);
+                                        }
+                                    }}
                                 />
                             </div>
                         </Tooltip>
@@ -785,6 +811,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setSelectedIndex(index);
+                                                    // Automatically open the ColorPicker after a short delay
+                                                    setTimeout(() => {
+                                                        openColorPicker();
+                                                    }, 100);
                                                 }}
                                                 onDoubleClick={(e) => {
                                                     e.stopPropagation();
@@ -970,6 +1000,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedIndex(index);
+                                            // Automatically open the ColorPicker after a short delay
+                                            setTimeout(() => {
+                                                openColorPicker();
+                                            }, 100);
                                         }}
                                         onDoubleClick={(e) => {
                                             e.stopPropagation();
