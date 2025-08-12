@@ -2169,10 +2169,10 @@ function App() {
                               }
                               color='white'
                             >
-                              <span>Sample {sampleId} (Ens.Rep.)</span>
+                              <span>Sample #{sampleId} (Ens.Rep.)</span>
                             </Tooltip>
                           )
-                          : `Sample ${sampleId}`;
+                          : `Sample #${sampleId}`;
                         return {
                           label: label,
                           key: sampleId,
