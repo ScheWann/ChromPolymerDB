@@ -126,6 +126,49 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         setColorPickerOpen(true);
     };
 
+    // Function to get the default color for a bead based on its position and properties
+    const getDefaultBeadColor = (index) => {
+        if (!processedChromosomeData || !processedChromosomeData[index]) {
+            return '#00BFFF'; // fallback to blue
+        }
+
+        const isFirst = index === 0;
+        const isLast = index === processedChromosomeData.length - 1;
+        const isGeneBead = processedChromosomeData[index].isGeneBead;
+        const orientation = processedChromosomeData[index].orientation;
+
+        const isGeneStart = orientation === "plus"
+            ? geneBeadSeq[0] === processedChromosomeData[index].marker
+            : geneBeadSeq[geneBeadSeq.length - 1] === processedChromosomeData[index].marker;
+
+        // Gene beads shows control
+        const geneBeadRender =
+            geneBeadSeq.length > 0 && isFullGeneVisible
+                ? isGeneBead
+                : isGeneStart;
+
+        // Check if bead is in input range
+        const beadMarker = processedChromosomeData[index].marker;
+        const isInInputRange =
+            inputPositions.start !== null &&
+            inputPositions.end !== null &&
+            beadMarker >= inputPositions.start &&
+            beadMarker <= inputPositions.end;
+
+        // Return the appropriate default color based on bead type
+        if (isInInputRange) {
+            return '#E25822'; // orange for input range
+        } else if (geneBeadRender) {
+            return '#FFD700'; // gold for gene beads
+        } else if (isFirst) {
+            return '#FFFFFF'; // white for first bead
+        } else if (isLast) {
+            return '#000000'; // black for last bead
+        } else {
+            return '#00BFFF'; // blue for regular beads
+        }
+    };
+
     // Close ColorPicker when selectedIndex changes to null
     useEffect(() => {
         if (selectedIndex === null) {
@@ -481,9 +524,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     onChange={handleColorChange}
                                     onClear={() => {
                                         if (selectedIndex !== null) {
+                                            // Get the appropriate default color for this bead
+                                            const defaultColor = getDefaultBeadColor(selectedIndex);
                                             // Create a color object that mimics the Ant Design color object
                                             const defaultColorObject = {
-                                                toHexString: () => '#00BFFF'
+                                                toHexString: () => defaultColor
                                             };
                                             handleColorChange(defaultColorObject);
                                         }
