@@ -463,7 +463,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
             // Reset the sphere's color
             setSelectedSphereList((prev) => {
                 const updatedList = { ...prev };
-                delete updatedList[index];
+                if (updatedList[celllineName]) {
+                    updatedList[celllineName] = { ...updatedList[celllineName] };
+                    delete updatedList[celllineName][index];
+                }
                 return updatedList;
             });
         } else {
@@ -814,7 +817,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                     ? originalColor
                                                     : '#00BFFF');
 
-                                        const validColor = geneBeadRender ? '#FFD700' : baseColor;
+                                        // If user has selected a custom color, use it; otherwise use gene bead color or base color
+                                        const validColor = selectedSphereList[celllineName]?.[index]?.color || 
+                                            (geneBeadRender ? '#FFD700' : baseColor);
 
                                         const beadMarker = processedChromosomeData[index].marker;
                                         const isInInputRange =
@@ -1003,7 +1008,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                             ? originalColor
                                             : '#00BFFF');
 
-                                const validColor = geneBeadRender ? '#FFD700' : baseColor;
+                                // If user has selected a custom color, use it; otherwise use gene bead color or base color
+                                const validColor = selectedSphereList[celllineName]?.[index]?.color || 
+                                    (geneBeadRender ? '#FFD700' : baseColor);
 
                                 const beadMarker = processedChromosomeData[index].marker;
                                 const isInInputRange =
