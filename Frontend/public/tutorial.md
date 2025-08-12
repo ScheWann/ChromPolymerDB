@@ -77,18 +77,18 @@ Here we take IMR90 chr8:127,600,000-128,300,000 as an example.
 
 ### 3D distance analysis
 1. Select **first bead** you are interested in.
-   ![Chromosome 3D tutorial](./Distance_step1.png)
+   ![large](./Distance_step1.png)
 
 2. Change selected bead **color**  
-   ![Chromosome 3D tutorial](./Distance_step2.png)
+   ![large](./Distance_step2.png)
 
 3. Select **second bead** you are interested in  
-   ![Chromosome 3D tutorial](./Distance_step3.png)
+   ![large](./Distance_step3.png)
 
 4. Change selected bead **color**  
-   ![Chromosome 3D tutorial](./Distance_step4.png)
+   ![large](./Distance_step4.png)
 5. Click **Generate Distance** button  
-   ![Chromosome 3D tutorial](./Distance_step5.png)
+   ![large](./Distance_step5.png)
 
 
 - We disabled this button until minimum number of beads selection is made. 
