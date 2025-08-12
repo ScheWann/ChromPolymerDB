@@ -2183,7 +2183,7 @@ function App() {
                             ) : (
                               <Chromosome3D
                                 formatNumber={formatNumber}
-                                celllineName={chromosome3DCellLineName}
+                                celllineName={cellLineName}
                                 chromosomeName={chromosomeName}
                                 currentChromosomeSequence={currentChromosomeSequence}
                                 geneSize={geneSize}

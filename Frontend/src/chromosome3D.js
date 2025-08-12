@@ -810,16 +810,32 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         //             ? blendIfInvalid('#0000FF') // mix blue and white
                                         //             : blendIfInvalid('#FFD700'); // mix gold and white
 
-                                        const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
-                                            (hoveredIndex === index || selectedIndex === index
-                                                ? '#E25822'
-                                                : isFirst || isLast
-                                                    ? originalColor
-                                                    : '#00BFFF');
-
-                                        // If user has selected a custom color, use it; otherwise use gene bead color or base color
-                                        const validColor = selectedSphereList[celllineName]?.[index]?.color || 
-                                            (geneBeadRender ? '#FFD700' : baseColor);
+                                        // Determine the appropriate color with proper priority:
+                                        // 1. Custom user color (highest priority)
+                                        // 2. Hover/selected state
+                                        // 3. Gene bead default color
+                                        // 4. Regular bead colors (first/last/default)
+                                        
+                                        let validColor;
+                                        if (selectedSphereList[celllineName]?.[index]?.color) {
+                                            // User has set a custom color - use it
+                                            validColor = selectedSphereList[celllineName][index].color;
+                                        } else if (hoveredIndex === index || selectedIndex === index) {
+                                            // No custom color but hovering/selected - use hover color
+                                            validColor = '#E25822';
+                                        } else if (geneBeadRender) {
+                                            // No custom color, not hovering, but is gene bead - use gene color
+                                            validColor = '#FFD700';
+                                        } else if (isFirst) {
+                                            // Regular first bead
+                                            validColor = '#FFFFFF';
+                                        } else if (isLast) {
+                                            // Regular last bead
+                                            validColor = '#000000';
+                                        } else {
+                                            // Regular bead
+                                            validColor = '#00BFFF';
+                                        }
 
                                         const beadMarker = processedChromosomeData[index].marker;
                                         const isInInputRange =
@@ -1001,16 +1017,32 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 //             ? blendIfInvalid('#0000FF') // mix blue and white
                                 //             : blendIfInvalid('#FFD700'); // mix gold and white
 
-                                const baseColor = selectedSphereList[celllineName]?.[index]?.color ||
-                                    (hoveredIndex === index || selectedIndex === index
-                                        ? '#E25822'
-                                        : isFirst || isLast
-                                            ? originalColor
-                                            : '#00BFFF');
-
-                                // If user has selected a custom color, use it; otherwise use gene bead color or base color
-                                const validColor = selectedSphereList[celllineName]?.[index]?.color || 
-                                    (geneBeadRender ? '#FFD700' : baseColor);
+                                // Determine the appropriate color with proper priority:
+                                // 1. Custom user color (highest priority)
+                                // 2. Hover/selected state
+                                // 3. Gene bead default color
+                                // 4. Regular bead colors (first/last/default)
+                                
+                                let validColor;
+                                if (selectedSphereList[celllineName]?.[index]?.color) {
+                                    // User has set a custom color - use it
+                                    validColor = selectedSphereList[celllineName][index].color;
+                                } else if (hoveredIndex === index || selectedIndex === index) {
+                                    // No custom color but hovering/selected - use hover color
+                                    validColor = '#E25822';
+                                } else if (geneBeadRender) {
+                                    // No custom color, not hovering, but is gene bead - use gene color
+                                    validColor = '#FFD700';
+                                } else if (isFirst) {
+                                    // Regular first bead
+                                    validColor = '#FFFFFF';
+                                } else if (isLast) {
+                                    // Regular last bead
+                                    validColor = '#000000';
+                                } else {
+                                    // Regular bead
+                                    validColor = '#00BFFF';
+                                }
 
                                 const beadMarker = processedChromosomeData[index].marker;
                                 const isInInputRange =
