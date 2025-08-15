@@ -12,8 +12,15 @@
     DB_NAME=chromosome_db
     DB_PASSWORD=chromosome
     DB_PORT=5432
+
     PGADMIN_DEFAULT_EMAIL=admin@uic.edu
     PGADMIN_DEFAULT_PASSWORD=chromosome
+
+    REDIS_HOST=redis
+    REDIS_PORT=6379
+    REDIS_DB=0
+    REDIS_BROKER_DB=1
+    REDIS_TASK_DB=2
     ```
 
 5. For development, under this project folder, and run 
