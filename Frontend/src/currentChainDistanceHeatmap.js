@@ -9,6 +9,8 @@ export const CurrentChainDistanceHeatmap = ({
     const containerRef = useRef(null);
     const svgRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const rectsRef = useRef(null);
+    const colorScaleRef = useRef(null);
 
     const uniqueGradientId = useMemo(() => `legend-gradient-current-distance-${Math.random().toString(36).substr(2, 9)}`, []);
     useEffect(() => {
@@ -31,6 +33,7 @@ export const CurrentChainDistanceHeatmap = ({
         return () => resizeObserver.disconnect();
     }, []);
 
+    // Build heatmap once per data/size change
     useEffect(() => {
         if (!dimensions.width || !chromosomeCurrentSampleDistanceVector) return;
 
@@ -68,44 +71,27 @@ export const CurrentChainDistanceHeatmap = ({
 
         const colorScale = d3.scaleSequential(t => d3.interpolateReds(1 - t))
             .domain([minValue, maxValue * 0.4]);
+        colorScaleRef.current = colorScale;
 
-        heatmap.selectAll()
-            .data(chromosomeCurrentSampleDistanceVector)
-            .enter().selectAll("rect")
-            .data((row, i) => row.map((value, j) => ({ value, i, j })))
+        const dataFlat = chromosomeCurrentSampleDistanceVector.flatMap((row, i) => row.map((value, j) => ({ value, i, j })));
+
+        const rects = heatmap.selectAll("rect")
+            .data(dataFlat)
             .enter().append("rect")
             .attr("x", d => xScale(String(d.j)))
             .attr("y", d => yScale(String(d.i)))
             .attr("width", xScale.bandwidth())
             .attr("height", yScale.bandwidth())
-            .attr("fill", d => {
-                // Check if this cell should be highlighted
-                const isHighlighted = hoveredHeatmapCoord && 
-                    (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                
-                if (isHighlighted) {
-                    return '#E25822'; // Highlight color
-                }
-                return colorScale(d.value);
-            })
-            .attr("stroke", d => {
-                // Add stroke for highlighted cells
-                const isHighlighted = hoveredHeatmapCoord && 
-                    (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                return isHighlighted ? '#FFF' : 'none';
-            })
-            .attr("stroke-width", d => {
-                const isHighlighted = hoveredHeatmapCoord && 
-                    (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                return isHighlighted ? 2 : 0;
-            })
+            .attr("fill", d => colorScale(d.value))
             .style("cursor", "pointer")
             .on("mouseover", function(event, d) {
                 onHeatmapHover(d.i, d.j);
             })
-            .on("mouseout", function(event, d) {
+            .on("mouseout", function() {
                 onHeatmapHover(null, null);
             });
+
+        rectsRef.current = rects;
 
         const legend = svg.append("g")
             .attr("transform", `translate(0, ${size + 5})`);
@@ -142,7 +128,26 @@ export const CurrentChainDistanceHeatmap = ({
             .style("font-size", "10px")
             .text(maxValue.toFixed(2));
 
-    }, [chromosomeCurrentSampleDistanceVector, dimensions, hoveredHeatmapCoord]);
+    }, [chromosomeCurrentSampleDistanceVector, dimensions]);
+
+    // Lightweight highlight update without rebuilding SVG
+    useEffect(() => {
+        if (!rectsRef.current || !colorScaleRef.current) return;
+        const colorScale = colorScaleRef.current;
+        rectsRef.current
+            .attr("fill", d => {
+                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                return isHighlighted ? '#E25822' : colorScale(d.value);
+            })
+            .attr("stroke", d => {
+                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                return isHighlighted ? '#FFF' : 'none';
+            })
+            .attr("stroke-width", d => {
+                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                return isHighlighted ? 2 : 0;
+            });
+    }, [hoveredHeatmapCoord]);
 
     return (
         <div ref={containerRef} style={{ width: '100%', height: 'auto' }}>

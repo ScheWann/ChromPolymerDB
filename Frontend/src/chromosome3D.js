@@ -122,6 +122,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     // Shared hover state for bidirectional highlighting
     const [hoveredHeatmapCoord, setHoveredHeatmapCoord] = useState(null);
     const [hoveredBeadFromHeatmap, setHoveredBeadFromHeatmap] = useState(null);
+    // Throttle/guard refs for smoother interaction
+    const lastHoveredBeadIndexRef = useRef(null);
+    const lastHoveredHeatmapCoordRef = useRef({ row: null, col: null });
+    const beadHoverRafRef = useRef(null);
+    const heatmapHoverRafRef = useRef(null);
 
     // Function to open the ColorPicker programmatically
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -479,24 +484,37 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
     // Handler for heatmap hover events
     const handleHeatmapHover = (row, col) => {
-        if (row !== null && col !== null) {
-            setHoveredHeatmapCoord({ row, col });
-            const { beadIndex1, beadIndex2 } = mapHeatmapCoordToBead(row, col);
-            setHoveredBeadFromHeatmap({ beadIndex1, beadIndex2 });
-        } else {
-            setHoveredHeatmapCoord(null);
-            setHoveredBeadFromHeatmap(null);
-        }
+        const prev = lastHoveredHeatmapCoordRef.current;
+        if (prev && prev.row === row && prev.col === col) return;
+        lastHoveredHeatmapCoordRef.current = { row, col };
+
+        if (heatmapHoverRafRef.current) cancelAnimationFrame(heatmapHoverRafRef.current);
+        heatmapHoverRafRef.current = requestAnimationFrame(() => {
+            if (row !== null && col !== null) {
+                setHoveredHeatmapCoord({ row, col });
+                const { beadIndex1, beadIndex2 } = mapHeatmapCoordToBead(row, col);
+                setHoveredBeadFromHeatmap({ beadIndex1, beadIndex2 });
+            } else {
+                setHoveredHeatmapCoord(null);
+                setHoveredBeadFromHeatmap(null);
+            }
+        });
     };
 
     // Handler for 3D bead hover events
     const handle3DBeadHover = (beadIndex) => {
-        if (beadIndex !== null) {
-            const heatmapCoord = mapBeadToHeatmapCoord(beadIndex);
-            setHoveredHeatmapCoord(heatmapCoord);
-        } else {
-            setHoveredHeatmapCoord(null);
-        }
+        if (lastHoveredBeadIndexRef.current === beadIndex) return;
+        lastHoveredBeadIndexRef.current = beadIndex;
+
+        if (beadHoverRafRef.current) cancelAnimationFrame(beadHoverRafRef.current);
+        beadHoverRafRef.current = requestAnimationFrame(() => {
+            if (beadIndex !== null) {
+                const heatmapCoord = mapBeadToHeatmapCoord(beadIndex);
+                setHoveredHeatmapCoord(heatmapCoord);
+            } else {
+                setHoveredHeatmapCoord(null);
+            }
+        });
     };
 
     const handleResetSelect = (index) => {
