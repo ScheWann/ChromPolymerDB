@@ -1,16 +1,42 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Spin, Empty, Dropdown, Tooltip, Button, Modal } from 'antd';
 import { DownloadOutlined, ExpandOutlined } from "@ant-design/icons";
 import jsPDF from 'jspdf';
 import * as d3 from 'd3';
 
-export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading }) => {
+export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, chromosomeName, currentChromosomeSequence, cellLineName }) => {
     const containerRef = useRef();
     const svgRef = useRef();
     const modalSvgRef = useRef();
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
+
+    // Calculate bead information for display
+    const beadInfo = useMemo(() => {
+        if (!chromosomeName || !currentChromosomeSequence || Object.keys(selectedSphereList).length === 0) {
+            return null;
+        }
+
+        const step = 5000; // Each bead represents a 5000bp range
+        const newStart = currentChromosomeSequence.start;
+        const beadIndices = Object.keys(selectedSphereList).map(key => parseInt(key)).sort((a, b) => a - b);
+        
+        // Calculate each bead's individual range
+        const beadRanges = beadIndices.map(index => {
+            const startCoord = newStart + index * step;
+            const endCoord = startCoord + step;
+            return `${index}: ${startCoord}-${endCoord}`;
+        });
+        
+        const displayText = `${chromosomeName} ${beadRanges.join(', ')}`;
+        
+        return {
+            chromosome: chromosomeName,
+            beadRanges: beadRanges,
+            displayText: displayText
+        };
+    }, [chromosomeName, currentChromosomeSequence, selectedSphereList]);
 
     const downloadItems = [
         {
@@ -481,7 +507,16 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                         </div>
                         <svg ref={svgRef}></svg>
                         <Modal
-                            title="Bead Distribution Violin Plot"
+                            title={
+                                <div>
+                                    <div>Bead Distribution Violin Plot</div>
+                                    {beadInfo && (
+                                        <div style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
+                                            {beadInfo.displayText}
+                                        </div>
+                                    )}
+                                </div>
+                            }
                             open={isModalVisible}
                             onCancel={handleModalCancel}
                             afterOpenChange={(open) => {

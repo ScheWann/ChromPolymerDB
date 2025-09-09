@@ -523,6 +523,9 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                             selectedSphereList={selectedSphereList[celllineName] || {}}
                             distributionData={filteredDistributionData}
                             loading={loading}
+                            chromosomeName={chromosomeName}
+                            currentChromosomeSequence={currentChromosomeSequence}
+                            cellLineName={celllineName}
                         />
                     </div>
                 </Splitter.Panel>
