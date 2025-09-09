@@ -599,6 +599,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         }
                         color='white'
                         placement="bottomLeft"
+                        overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
                     >
                         <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer"}}>
                             {!comparisonHeatmapId && (
