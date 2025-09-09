@@ -793,7 +793,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <div style={{ height: '100%', position: 'relative' }}>
                             {/* CurrentChainDistanceHeatmap positioned relative to the canvas panel */}
                             {(chromosomeCurrentSampleDistanceVector?.length ?? 0) > 0 && (
-                                <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                                <div style={{ width: 200, aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
                                     <CurrentChainDistanceHeatmap
                                         chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                                         onHeatmapHover={handleHeatmapHover}
@@ -1212,7 +1212,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     </div>
 
                     {/* CurrentChainDistanceHeatmap positioned relative to the canvas container */}
-                    <div style={{ aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                    <div style={{ width: 200, aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
                         <CurrentChainDistanceHeatmap
                             chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                             onHeatmapHover={handleHeatmapHover}
