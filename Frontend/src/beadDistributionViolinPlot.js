@@ -61,7 +61,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         if (modalSvgRef.current) {
             const modalWidth = 1000;
             const modalHeight = 600;
-            drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight);
+            drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight, true);
             // Turn off loading after plot is drawn
             setTimeout(() => {
                 setModalLoading(false);
@@ -234,7 +234,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         }
     };
 
-    const drawViolinPlot = (svgElement, plotWidth, plotHeight) => {
+    const drawViolinPlot = (svgElement, plotWidth, plotHeight, isModal = false) => {
         if (
             !plotWidth ||
             !plotHeight ||
@@ -250,7 +250,9 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", plotWidth)
             .attr("height", plotHeight);
 
-        const margin = { top: 20, right: 20, bottom: 25, left: 45 },
+        const margin = isModal
+            ? { top: 30, right: 30, bottom: 60, left: 60 }
+            : { top: 20, right: 20, bottom: 25, left: 45 },
             width = plotWidth - margin.left - margin.right,
             height = plotHeight - margin.top - margin.bottom;
 
@@ -394,44 +396,73 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         });
 
         const xAxis = d3.axisBottom(xScale);
-
-        g.append("g")
-            .attr("transform", `translate(0,${height})`)
-            .call(xAxis);
-
         const yAxis = d3.axisLeft(yScale).ticks(5);
 
-        g.append("g").call(yAxis);
+        // Apply axis with styling based on modal state
+        const xAxisGroup = g.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(xAxis);
+        
+        const yAxisGroup = g.append("g")
+            .call(yAxis);
 
-        svg.append("text")
-            .attr("transform", `translate(${margin.left + width}, ${margin.top + height + margin.bottom - 5})`)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "12px")
-            .text("Beads");
+        // Style axis text based on modal state
+        const axisFontSize = isModal ? "16px" : "12px";
+        xAxisGroup.selectAll("text").style("font-size", axisFontSize);
+        yAxisGroup.selectAll("text").style("font-size", axisFontSize);
 
-        svg.append("text")
-            .attr("transform", `translate(${margin.left / 3}, ${margin.top + height / 2})rotate(-90)`)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "12px")
-            .text("Distance");
+        const labelFontSize = isModal ? "18px" : "12px";
+        
+        if (isModal) {
+            const xLabelY = margin.top + height + 40;
+            svg.append("text")
+                .attr("transform", `translate(${margin.left + width / 2}, ${xLabelY})`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", labelFontSize)
+                .text("Beads");
+        } else {
+            svg.append("text")
+                .attr("transform", `translate(${margin.left + width}, ${margin.top + height + margin.bottom - 5})`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", labelFontSize)
+                .text("Beads");
+        }
+
+        if (isModal) {
+            svg.append("text")
+                .attr("transform", `translate(${margin.left - 45}, ${margin.top + height / 2})rotate(-90)`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", labelFontSize)
+                .text("Distance");
+        } else {
+            svg.append("text")
+                .attr("transform", `translate(${margin.left / 3.5}, ${margin.top + height / 2})rotate(-90)`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", labelFontSize)
+                .text("Distance");
+        }
 
         // legend
         const legend = svg.append("g")
             .attr("transform", `translate(${margin.left + margin.right}, ${margin.top})`);
 
+        const legendFontSize = isModal ? "14px" : "10px";
+        const legendSpacing = isModal ? 20 : 15;
+        const legendRectSize = isModal ? 16 : 12;
+
         distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
-                .attr("transform", `translate(-15, ${index * 15})`);
+                .attr("transform", `translate(-15, ${index * legendSpacing})`);
 
             legendRow.append("rect")
-                .attr("width", 12)
-                .attr("height", 12)
+                .attr("width", legendRectSize)
+                .attr("height", legendRectSize)
                 .attr("fill", colorScale(cellLine));
 
             legendRow.append("text")
-                .attr("x", 15)
-                .attr("y", 9)
-                .attr("font-size", "10px")
+                .attr("x", legendRectSize + 3)
+                .attr("y", legendRectSize - 3)
+                .attr("font-size", legendFontSize)
                 .text(cellLine);
         });
     };
@@ -457,7 +488,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     }, []);
 
     useEffect(() => {
-        drawViolinPlot(svgRef.current, dimensions.width, dimensions.height);
+        drawViolinPlot(svgRef.current, dimensions.width, dimensions.height, false);
     }, [dimensions, distributionData, selectedSphereList, loading]);
 
     return (
@@ -506,9 +537,9 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                         <Modal
                             title={
                                 <div>
-                                    <div>Bead Distribution Violin Plot</div>
+                                    <div style={{ fontSize: '18px' }}>Bead Distribution Violin Plot</div>
                                     {beadInfo && (
-                                        <div style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
+                                        <div style={{ fontSize: '16px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
                                             <strong>{beadInfo.chromosome}</strong> {' '}
                                             {beadInfo.beadRanges.map((bead, index) => (
                                                 <span key={bead.index}>
