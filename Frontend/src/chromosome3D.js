@@ -112,7 +112,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [showChromosome3DDistance, setShowChromosome3DDistance] = useState(false);
     const [geneBeadSeq, setGeneBeadSeq] = useState([]);
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
-    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null })
+    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null, beadIndex: null })
     const [showBeadInfo, setShowBeadInfo] = useState(false)
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
     const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
@@ -782,6 +782,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
                         <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
                         <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
+                        <div className='beadInfoText'>Bead Index: {beadInfo.beadIndex}</div>
                     </div>
                 )}
             </div>
@@ -927,7 +928,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 onPointerOver={(e) => {
                                                     e.stopPropagation();
                                                     if (hoveredIndex !== index) {
-                                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index });
                                                         setShowBeadInfo(true);
                                                         setHoveredIndex(index);
                                                         handle3DBeadHover(index);
@@ -1140,7 +1141,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         onPointerOver={(e) => {
                                             e.stopPropagation();
                                             if (hoveredIndex !== index) {
-                                                setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step });
+                                                setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index });
                                                 setShowBeadInfo(true);
                                                 setHoveredIndex(index);
                                                 handle3DBeadHover(index);
