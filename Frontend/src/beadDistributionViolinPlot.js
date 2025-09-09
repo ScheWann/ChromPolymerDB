@@ -579,7 +579,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
 
     useEffect(() => {
         drawViolinPlot(svgRef.current, dimensions.width, dimensions.height, false);
-    }, [dimensions, distributionData, selectedSphereList, loading]);
+    }, [dimensions, distributionData, selectedSphereList, loading, pValuesByCategory]);
 
     return (
         <div ref={containerRef} style={{ width: "100%", height: "100%", position: "relative" }}>
