@@ -1,0 +1,23 @@
+[
+    {
+        "id": "NHEK",
+        "name": "Epidermal keratinocytes cell line (NHEK)",
+        "system": "Circulatory System",
+        "source": "4DN",
+        "Accession": "AAAAABBBBBB"
+    },
+    {
+        "id": "GM12878",
+        "name": "B lymphoblastoid cell line (GM12878)",
+        "system": "Circulatory System",
+        "source": "4DN",
+        "Accession": "CCCCCDDDDDD"
+    },
+    {
+        "id": "IMR90",
+        "name": "Lung fibroblasts cell line (IMR-90)",
+        "system": "Circulatory System",
+        "source": "4DN",
+        "Accession": "EEEEEEFFFFF"
+    }
+]

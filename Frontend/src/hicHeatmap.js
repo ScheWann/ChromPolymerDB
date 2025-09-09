@@ -24,6 +24,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [currentChromosomeData, setCurrentChromosomeData] = useState(independentHeatmapData);
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
     const [fqRawcMode, setFqRawcMode] = useState(true);
+    const [sourceRecords, setSourceRecords] = useState([]);
 
     const modalStyles = {
         body: {
@@ -277,6 +278,44 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             observer.disconnect();
         };
     }, []);
+
+    // Load dataset metadata from public/source.json (robust to non-array JSON)
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/source.json')
+            .then(async (res) => {
+                const text = await res.text();
+                try {
+                    const parsed = JSON.parse(text);
+                    if (!cancelled) setSourceRecords(Array.isArray(parsed) ? parsed : [parsed]);
+                } catch (e) {
+                    try {
+                        const parsed = JSON.parse(`[${text}]`);
+                        if (!cancelled) setSourceRecords(Array.isArray(parsed) ? parsed : []);
+                    } catch (e2) {
+                        console.error('Failed to parse /source.json', e2);
+                    }
+                }
+            })
+            .catch((err) => console.error('Failed to load /source.json', err));
+        return () => { cancelled = true; };
+    }, []);
+
+    const matchedSource = React.useMemo(() => {
+        if (!sourceRecords || sourceRecords.length === 0) return null;
+        const candidates = [
+            chromosomeName,
+            independentHeatmapCellLine || cellLineName,
+            cellLineName,
+        ].filter(Boolean);
+        for (const key of candidates) {
+            const found = sourceRecords.find(
+                (r) => String(r.id).toLowerCase() === String(key).toLowerCase()
+            );
+            if (found) return found;
+        }
+        return null;
+    }, [sourceRecords, chromosomeName, independentHeatmapCellLine, cellLineName]);
 
     useEffect(() => {
         if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;
@@ -536,19 +575,45 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 <div style={{
                     position: 'absolute', top: 0, right: 0, zIndex: 10, display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between', padding: "5px 0 5px 0", borderBottom: "1px solid #eaeaea", alignItems: 'center'
                 }}>
-                    <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10 }}>
-                        {!comparisonHeatmapId && (
-                            <>
-                                <span style={{ marginRight: 3 }}>{cellLineName}</span>
-                                <span style={{ marginRight: 3 }}>-</span>
-                            </>
-                        )}
-                        <span style={{ marginRight: 3 }}>{chromosomeName}</span>
-                        <span style={{ marginRight: 3 }}>:</span>
-                        <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
-                        <span style={{ marginRight: 5 }}>~</span>
-                        <span>{formatNumber(currentChromosomeSequence.end)}</span>
-                    </div>
+                    <Tooltip
+                        title={
+                            matchedSource ? (
+                                <div style={{ color: 'black' }}>
+                                    <div>
+                                        <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
+                                    </div>
+                                    {matchedSource.system && (
+                                        <div>System: {matchedSource.system}</div>
+                                    )}
+                                    {(matchedSource.source || matchedSource.Accession) && (
+                                        <div>
+                                            {matchedSource.source}
+                                            {matchedSource.source && matchedSource.Accession ? ': ' : ''}
+                                            {matchedSource.Accession}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <span style={{ color: 'black' }}>No metadata found</span>
+                            )
+                        }
+                        color='white'
+                        placement="bottomLeft"
+                    >
+                        <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer"}}>
+                            {!comparisonHeatmapId && (
+                                <>
+                                    <span style={{ marginRight: 3 }}>{cellLineName}</span>
+                                    <span style={{ marginRight: 3 }}>-</span>
+                                </>
+                            )}
+                            <span style={{ marginRight: 3 }}>{chromosomeName}</span>
+                            <span style={{ marginRight: 3 }}>:</span>
+                            <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
+                            <span style={{ marginRight: 5 }}>~</span>
+                            <span>{formatNumber(currentChromosomeSequence.end)}</span>
+                        </div>
+                    </Tooltip>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                         <Tooltip
                             title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
