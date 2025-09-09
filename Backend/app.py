@@ -24,7 +24,8 @@ from process import (
     download_full_chromosome_3D_position_data,
     bead_distribution,
     exist_bead_distribution, 
-    exist_chromosome_3D_data
+    exist_chromosome_3D_data,
+    bead_distribution_pvalues
 )
 
 
@@ -190,6 +191,12 @@ def get_ExistBeadDistribution():
     chromosome_name = request.json.get('chromosome_name', 'chr8')  # Default to chr8 for backward compatibility
     sequences = request.json.get('sequences', {"start": 127300000, "end": 128300000})  # Default for backward compatibility
     return jsonify(exist_bead_distribution(cell_line, indices, chromosome_name, sequences))
+
+
+@api.route('/getBeadDistributionPValues', methods=['POST'])
+def get_BeadDistributionPValues():
+    groups = request.json
+    return jsonify(bead_distribution_pvalues(groups))
 
 
 @api.route('/getExample3DProgress', methods=['GET'])

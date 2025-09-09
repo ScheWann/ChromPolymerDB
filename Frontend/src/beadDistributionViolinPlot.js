@@ -11,6 +11,8 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
+    const [pValuesByCategory, setPValuesByCategory] = useState({});
+    const [pLoading, setPLoading] = useState(false);
 
     // Calculate bead information for display
     const beadInfo = useMemo(() => {
@@ -233,6 +235,41 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             downloadModalPDF();
         }
     };
+
+    // Fetch p-values from backend when we have multiple groups
+    useEffect(() => {
+        const distKeys = Object.keys(distributionData || {});
+        if (distKeys.length < 2) {
+            setPValuesByCategory({});
+            return;
+        }
+        setPLoading(true);
+        // Sanitize payload (ensure arrays of numbers)
+        const payload = {};
+        distKeys.forEach(g => {
+            payload[g] = {};
+            const cats = distributionData[g] || {};
+            Object.keys(cats).forEach(cat => {
+                const arr = Array.isArray(cats[cat]) ? cats[cat].filter(v => Number.isFinite(v)) : [];
+                payload[g][cat] = arr;
+            });
+        });
+
+        fetch('/api/getBeadDistributionPValues', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            setPValuesByCategory(data || {});
+            setPLoading(false);
+        })
+        .catch(() => {
+            setPValuesByCategory({});
+            setPLoading(false);
+        });
+    }, [distributionData]);
 
     const drawViolinPlot = (svgElement, plotWidth, plotHeight, isModal = false) => {
         if (
@@ -470,6 +507,54 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("font-weight", "bold")
                 .text(cellLine);
         });
+
+        // ===============================
+        // Significance lines and stars
+        // ===============================
+        const starFontSize = isModal ? "16px" : "10px";
+        const starSpacing = isModal ? 18 : 12;
+        const baseY = 6;
+
+        if (Object.keys(pValuesByCategory || {}).length > 0 && numKeys >= 2) {
+            categories.forEach(category => {
+                const overlayGroup = g.append("g")
+                    .attr("transform", `translate(${xScale(category)},0)`);
+
+                let pairIdx = 0;
+                for (let a = 0; a < numKeys - 1; a++) {
+                    for (let b = a + 1; b < numKeys; b++) {
+                        const gA = distKeys[a];
+                        const gB = distKeys[b];
+                        const key = gA <= gB ? `${gA}|${gB}` : `${gB}|${gA}`;
+                        const pmap = pValuesByCategory[category] || {};
+                        const p = pmap[key];
+                        const ySig = baseY + pairIdx * starSpacing;
+                        const centerA = a * segmentWidth + segmentWidth / 2;
+                        const centerB = b * segmentWidth + segmentWidth / 2;
+                        overlayGroup.append("line")
+                            .attr("x1", centerA)
+                            .attr("x2", centerB)
+                            .attr("y1", ySig)
+                            .attr("y2", ySig)
+                            .attr("stroke", "#555")
+                            .attr("stroke-width", 1);
+                        if (p !== null && p !== undefined && Number.isFinite(p)) {
+                            const stars = p < 0.001 ? "***" : (p < 0.01 ? "**" : (p < 0.05 ? "*" : ""));
+                            if (stars) {
+                                overlayGroup.append("text")
+                                    .attr("x", (centerA + centerB) / 2)
+                                    .attr("y", ySig - 2)
+                                    .attr("text-anchor", "middle")
+                                    .attr("font-size", starFontSize)
+                                    .attr("font-weight", "bold")
+                                    .text(stars);
+                            }
+                        }
+                        pairIdx += 1;
+                    }
+                }
+            });
+        }
     };
 
 

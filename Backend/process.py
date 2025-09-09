@@ -20,6 +20,7 @@ from time import time
 import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
 from cell_line_labels import label_mapping
+from scipy.stats import ttest_ind
 
 
 load_dotenv()
@@ -1140,3 +1141,58 @@ def exist_bead_distribution(cell_line, indices, chromosome_name="chr8", sequence
             distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions
+
+
+"""
+Compute pairwise Welch's t-test p-values between groups for each bead pair category
+Input format:
+{
+    "GroupA": { "i-j": [vals...], ... },
+    "GroupB": { "i-j": [vals...], ... },
+    ...
+}
+Returns:
+{
+    "i-j": { "GroupA|GroupB": pvalue, ... },
+    ...
+}
+"""
+def bead_distribution_pvalues(distribution_groups: dict) -> dict:
+    if not isinstance(distribution_groups, dict) or len(distribution_groups) < 2:
+        return {}
+
+    group_names = list(distribution_groups.keys())
+    # Collect all categories present in at least one group
+    categories: set[str] = set()
+    for g in group_names:
+        if isinstance(distribution_groups[g], dict):
+            categories.update(distribution_groups[g].keys())
+
+    result: dict[str, dict[str, float]] = {}
+
+    for category in categories:
+        pair_to_p: dict[str, float] = {}
+        for i in range(len(group_names) - 1):
+            for j in range(i + 1, len(group_names)):
+                g1 = group_names[i]
+                g2 = group_names[j]
+                arr1 = distribution_groups.get(g1, {}).get(category, []) or []
+                arr2 = distribution_groups.get(g2, {}).get(category, []) or []
+
+                # Need at least 2 observations per group for t-test
+                if len(arr1) >= 2 and len(arr2) >= 2:
+                    stat, p = ttest_ind(arr1, arr2, equal_var=False, nan_policy='omit')
+                    # Ensure p is a plain float for JSON serialization
+                    try:
+                        p_val = float(p)
+                    except Exception:
+                        p_val = None
+                else:
+                    p_val = None
+
+                key = f"{g1}|{g2}" if g1 <= g2 else f"{g2}|{g1}"
+                pair_to_p[key] = p_val
+        if pair_to_p:
+            result[category] = pair_to_p
+
+    return result
