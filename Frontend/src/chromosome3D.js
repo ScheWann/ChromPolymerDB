@@ -469,16 +469,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         setDistributionData({});
     };
 
-    // Coordinate mapping functions for bidirectional highlighting
     const mapHeatmapCoordToBead = (row, col) => {
-        // The heatmap coordinates (row, col) correspond to bead indices
-        // Assuming the heatmap matrix represents distances between consecutive beads
-        return { beadIndex1: row, beadIndex2: col };
+        return row;
     };
 
     const mapBeadToHeatmapCoord = (beadIndex) => {
-        // When hovering over a bead, we want to highlight all related positions in the heatmap
-        // This could be the row and column corresponding to that bead index
         return { row: beadIndex, col: beadIndex };
     };
 
@@ -492,11 +487,24 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         heatmapHoverRafRef.current = requestAnimationFrame(() => {
             if (row !== null && col !== null) {
                 setHoveredHeatmapCoord({ row, col });
-                const { beadIndex1, beadIndex2 } = mapHeatmapCoordToBead(row, col);
-                setHoveredBeadFromHeatmap({ beadIndex1, beadIndex2 });
+                const beadIndex = mapHeatmapCoordToBead(row, col);
+                setHoveredBeadFromHeatmap(beadIndex);
+
+                if (processedChromosomeData && processedChromosomeData[row]) {
+                    setBeadInfo({ 
+                        chr: processedChromosomeData[row].chrid, 
+                        seq_start: newStart + row * step, 
+                        seq_end: newStart + row * step + step, 
+                        beadIndex: row 
+                    });
+                    setShowBeadInfo(true);
+                    setHoveredIndex(row);
+                }
             } else {
                 setHoveredHeatmapCoord(null);
                 setHoveredBeadFromHeatmap(null);
+                setShowBeadInfo(false);
+                setHoveredIndex(null);
             }
         });
     };
@@ -511,8 +519,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
             if (beadIndex !== null) {
                 const heatmapCoord = mapBeadToHeatmapCoord(beadIndex);
                 setHoveredHeatmapCoord(heatmapCoord);
+                // Clear heatmap-triggered bead highlighting since we're now hovering directly on a bead
+                setHoveredBeadFromHeatmap(null);
             } else {
                 setHoveredHeatmapCoord(null);
+                setHoveredBeadFromHeatmap(null);
             }
         });
     };
@@ -879,8 +890,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         // 4. Regular bead colors (first/last/default)
                                         
                                         // Check if this bead is highlighted from heatmap hover
-                                        const isHighlightedFromHeatmap = hoveredBeadFromHeatmap && 
-                                            (hoveredBeadFromHeatmap.beadIndex1 === index || hoveredBeadFromHeatmap.beadIndex2 === index);
+                                        const isHighlightedFromHeatmap = hoveredBeadFromHeatmap === index;
 
                                         let validColor;
                                         if (selectedSphereList[celllineName]?.[index]?.color) {
@@ -1092,8 +1102,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 // 4. Regular bead colors (first/last/default)
                                 
                                 // Check if this bead is highlighted from heatmap hover
-                                const isHighlightedFromHeatmap = hoveredBeadFromHeatmap && 
-                                    (hoveredBeadFromHeatmap.beadIndex1 === index || hoveredBeadFromHeatmap.beadIndex2 === index);
+                                const isHighlightedFromHeatmap = hoveredBeadFromHeatmap === index;
 
                                 let validColor;
                                 if (selectedSphereList[celllineName]?.[index]?.color) {
@@ -1212,13 +1221,15 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                     </div>
 
                     {/* CurrentChainDistanceHeatmap positioned relative to the canvas container */}
-                    <div style={{ width: 200, aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
-                        <CurrentChainDistanceHeatmap
-                            chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
-                            onHeatmapHover={handleHeatmapHover}
-                            hoveredHeatmapCoord={hoveredHeatmapCoord}
-                        />
-                    </div>
+                    {(chromosomeCurrentSampleDistanceVector?.length ?? 0) > 0 && (
+                        <div style={{ width: 200, aspectRatio: "1", position: 'absolute', bottom: 10, right: 10, zIndex: 10 }}>
+                            <CurrentChainDistanceHeatmap
+                                chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
+                                onHeatmapHover={handleHeatmapHover}
+                                hoveredHeatmapCoord={hoveredHeatmapCoord}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 

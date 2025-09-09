@@ -83,13 +83,58 @@ export const CurrentChainDistanceHeatmap = ({
             .attr("width", xScale.bandwidth())
             .attr("height", yScale.bandwidth())
             .attr("fill", d => colorScale(d.value))
-            .style("cursor", "pointer")
-            .on("mouseover", function(event, d) {
-                onHeatmapHover(d.i, d.j);
-            })
-            .on("mouseout", function() {
-                onHeatmapHover(null, null);
-            });
+            .style("cursor", "pointer");
+
+        // Add invisible overlay for better mouse detection
+        const overlay = heatmap.append("rect")
+            .attr("width", cellSize * numCols)
+            .attr("height", cellSize * numRows)
+            .attr("fill", "transparent")
+            .style("cursor", "pointer");
+
+        let currentHoveredCell = null;
+
+        // Mouse move handler for the entire heatmap area
+        const handleMouseMove = function(event) {
+            const [mouseX, mouseY] = d3.pointer(event, this);
+            
+            // Calculate which cell the mouse is over
+            const col = Math.floor(mouseX / cellSize);
+            const row = Math.floor((cellSize * numRows - mouseY) / cellSize);
+            
+            // Check bounds
+            if (col >= 0 && col < numCols && row >= 0 && row < numRows) {
+                // Limit hover interaction to around the diagonal
+                // Only allow hover if the distance from diagonal is within a reasonable range
+                const diagonalDistance = Math.abs(row - col);
+                const maxDiagonalDistance = Math.min(numRows, numCols) * 0.05;
+                
+                if (diagonalDistance <= maxDiagonalDistance) {
+                    const newCell = { row, col };
+                    
+                    // Only trigger if we've moved to a different cell
+                    if (!currentHoveredCell || currentHoveredCell.row !== row || currentHoveredCell.col !== col) {
+                        currentHoveredCell = newCell;
+                        onHeatmapHover(row, col);
+                    }
+                } else {
+                    if (currentHoveredCell) {
+                        currentHoveredCell = null;
+                        onHeatmapHover(null, null);
+                    }
+                }
+            }
+        };
+
+        const handleMouseLeave = function() {
+            currentHoveredCell = null;
+            onHeatmapHover(null, null);
+        };
+
+        // Attach events to the overlay
+        overlay
+            .on("mousemove", handleMouseMove)
+            .on("mouseleave", handleMouseLeave);
 
         rectsRef.current = rects;
 
