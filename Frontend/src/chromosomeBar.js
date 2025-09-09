@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import "./Styles/chromosomeBar.css";
 
-export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences, setStartInputValue, setEndInputValue }) => {
+export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setSelectedChromosomeSequence, totalChromosomeSequences, startRef, endRef, formatNumber, totalOriginalChromosomeValidSequences, setStartInputValue, setEndInputValue, chromosomeName }) => {
     const svgRef = useRef();
     const parentRef = useRef();
     // const [tooltip, setTooltip] = useState({ visible: false, minStart: 0, maxEnd: 0, left: 0, top: 0 });
@@ -275,7 +275,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 .attr('font-size', '12px')
                 .attr('font-weight', 'bold')
                 .attr('fill', '#333')
-                .text(`${min_start}`);
+                .text(`${chromosomeName ? `${chromosomeName}: ${formatNumber(min_start)}` : `${formatNumber(min_start)}`}`);
 
             svg.append('text')
                 .attr('x', width + margin.left)
@@ -284,7 +284,7 @@ export const ChromosomeBar = ({ chromosomeSize, selectedChromosomeSequence, setS
                 .attr('font-size', '12px')
                 .attr('font-weight', 'bold')
                 .attr('fill', '#333')
-                .text(`${formatNumber(max_end)}`);
+                .text(`${chromosomeName ? `${chromosomeName}: ${formatNumber(max_end)}` : `${formatNumber(max_end)}`}`);
         }
     }, [totalChromosomeSequences, selectedChromosomeSequence, chromosomeSize, parentSize, totalOriginalChromosomeValidSequences]);
 

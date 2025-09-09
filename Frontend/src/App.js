@@ -1931,6 +1931,7 @@ function App() {
           chromosomeSize={chromosomeSize}
           totalChromosomeSequences={totalChromosomeSequences}
           totalOriginalChromosomeValidSequences={totalOriginalChromosomeValidSequences}
+          chromosomeName={chromosomeName}
         />
       </div>
 
