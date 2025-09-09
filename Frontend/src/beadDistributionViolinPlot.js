@@ -237,7 +237,13 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         // distributionData 的 keys
         const distKeys = Object.keys(distributionData);
         if (distKeys.length === 0) return;
-        const categories = Object.keys(distributionData[distKeys[0]]);
+        const categories = Object.keys(distributionData[distKeys[0]])
+            .sort((a, b) => {
+                // Convert to numbers for proper numerical sorting
+                const numA = parseInt(a, 10);
+                const numB = parseInt(b, 10);
+                return numA - numB;
+            });
 
         const xScale = d3.scaleBand()
             .domain(categories)
