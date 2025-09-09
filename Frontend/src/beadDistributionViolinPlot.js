@@ -26,15 +26,12 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const beadRanges = beadIndices.map(index => {
             const startCoord = newStart + index * step;
             const endCoord = startCoord + step;
-            return `${index}: ${startCoord}-${endCoord}`;
+            return { index, startCoord, endCoord };
         });
-        
-        const displayText = `${chromosomeName} ${beadRanges.join(', ')}`;
         
         return {
             chromosome: chromosomeName,
-            beadRanges: beadRanges,
-            displayText: displayText
+            beadRanges: beadRanges
         };
     }, [chromosomeName, currentChromosomeSequence, selectedSphereList]);
 
@@ -512,7 +509,15 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                                     <div>Bead Distribution Violin Plot</div>
                                     {beadInfo && (
                                         <div style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginTop: '4px' }}>
-                                            {beadInfo.displayText}
+                                            <strong>{beadInfo.chromosome}</strong> {' '}
+                                            {beadInfo.beadRanges.map((bead, index) => (
+                                                <span key={bead.index}>
+                                                    <strong>{bead.index}</strong>: {bead.startCoord.toLocaleString()}-{bead.endCoord.toLocaleString()}
+                                                    {index < beadInfo.beadRanges.length - 1 && (
+                                                        <span style={{ margin: '0 8px' }}>  |  </span>
+                                                    )}
+                                                </span>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
