@@ -6,6 +6,7 @@ import { Button, Tooltip, ColorPicker, Dropdown, Splitter, Slider, Modal, Checkb
 import { Text, OrbitControls } from '@react-three/drei';
 import { BeadDistributionViolinPlot } from './beadDistributionViolinPlot';
 import { RollbackOutlined, CaretUpOutlined, DownloadOutlined, SettingOutlined } from "@ant-design/icons";
+import "./Styles/chromosome3D.css";
 
 const CameraFacingText = ({ position, children, ...props }) => {
     const textRef = useRef();
@@ -38,6 +39,10 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
     const [pairFilterModalVisible, setPairFilterModalVisible] = useState(false);
     const [selectedPairs, setSelectedPairs] = useState({});
     const [hasUserModifiedPairs, setHasUserModifiedPairs] = useState(false);
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null });
+    const [showBeadInfo, setShowBeadInfo] = useState(false);
+
 
     const downloadItems = [
         {
@@ -50,16 +55,29 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
         }
     ]
 
+    // Calculate genomic coordinates for beads
+    const step = 5000;
+    const newStart = useMemo(() => {
+        if (!currentChromosomeSequence?.start) return 0;
+        return Math.ceil(currentChromosomeSequence.start / step) * step;
+    }, [currentChromosomeSequence]);
+
     const spheresData = useMemo(() => {
         return Object.entries(selectedSphereList[celllineName]).map(([key, { position, color }]) => {
             const { x, y, z } = position;
+            const beadIndex = parseInt(key);
+            const seq_start = newStart + beadIndex * step;
+            const seq_end = seq_start + step;
             return {
                 key,
+                beadIndex,
                 position: new THREE.Vector3(x, y, z),
                 color,
+                seq_start,
+                seq_end,
             };
         });
-    }, [selectedSphereList]);
+    }, [selectedSphereList, newStart]);
 
     const center = useMemo(() => {
         if (spheresData.length === 0) return new THREE.Vector3();
@@ -662,8 +680,30 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                 castShadow
                             />
 
-                            {spheresData.map(({ position, color }, index) => (
-                                <group key={index} position={position}>
+                            {spheresData.map(({ position, color, seq_start, seq_end }, index) => (
+                                <group 
+                                    key={index} 
+                                    position={position}
+                                    onPointerOver={(e) => {
+                                        e.stopPropagation();
+                                        if (hoveredIndex !== index) {
+                                            setBeadInfo({ 
+                                                chr: chromosomeName, 
+                                                seq_start: seq_start, 
+                                                seq_end: seq_end 
+                                            });
+                                            setShowBeadInfo(true);
+                                            setHoveredIndex(index);
+                                        }
+                                    }}
+                                    onPointerOut={(e) => {
+                                        e.stopPropagation();
+                                        if (hoveredIndex === index) {
+                                            setShowBeadInfo(false);
+                                            setHoveredIndex(null);
+                                        }
+                                    }}
+                                >
                                     <mesh>
                                         <sphereGeometry args={[2.5, 32, 32]} />
                                         <meshStandardMaterial
@@ -736,6 +776,21 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                 </group>
                             ))}
                         </Canvas>
+
+                        {/* Beads hover information */}
+                        {showBeadInfo && (
+                            <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`} style={{ 
+                                position: 'absolute',
+                                top: 40,
+                                right: 10,
+                                userSelect: 'none', 
+                                pointerEvents: 'auto' 
+                            }}>
+                                <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
+                                <div className='beadInfoText'>Start: {beadInfo.seq_start}</div>
+                                <div className='beadInfoText'>End: {beadInfo.seq_end}</div>
+                            </div>
+                        )}
                     </div>
                 </Splitter.Panel>
             </Splitter>
