@@ -407,23 +407,25 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .call(yAxis);
 
         // Style axis text based on modal state
-        const axisFontSize = isModal ? "16px" : "12px";
+        const axisFontSize = isModal ? "18px" : "12px";
         xAxisGroup.selectAll("text").style("font-size", axisFontSize);
         yAxisGroup.selectAll("text").style("font-size", axisFontSize);
 
-        const labelFontSize = isModal ? "18px" : "12px";
+        const labelFontSize = isModal ? "20px" : "12px";
         
         if (isModal) {
-            const xLabelY = margin.top + height + 40;
+            const xLabelY = margin.top + height + 45;
             svg.append("text")
                 .attr("transform", `translate(${margin.left + width / 2}, ${xLabelY})`)
                 .attr("text-anchor", "middle")
+                .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)
                 .text("Beads");
         } else {
             svg.append("text")
                 .attr("transform", `translate(${margin.left + width}, ${margin.top + height + margin.bottom - 5})`)
                 .attr("text-anchor", "middle")
+                .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)
                 .text("Beads");
         }
@@ -432,12 +434,14 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             svg.append("text")
                 .attr("transform", `translate(${margin.left - 45}, ${margin.top + height / 2})rotate(-90)`)
                 .attr("text-anchor", "middle")
+                .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)
                 .text("Distance");
         } else {
             svg.append("text")
                 .attr("transform", `translate(${margin.left / 3.5}, ${margin.top + height / 2})rotate(-90)`)
                 .attr("text-anchor", "middle")
+                .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)
                 .text("Distance");
         }
@@ -446,9 +450,9 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const legend = svg.append("g")
             .attr("transform", `translate(${margin.left + margin.right}, ${margin.top})`);
 
-        const legendFontSize = isModal ? "14px" : "10px";
-        const legendSpacing = isModal ? 20 : 15;
-        const legendRectSize = isModal ? 16 : 12;
+        const legendFontSize = isModal ? "18px" : "10px";
+        const legendSpacing = isModal ? 25 : 15;
+        const legendRectSize = isModal ? 18 : 12;
 
         distKeys.forEach((cellLine, index) => {
             const legendRow = legend.append("g")
@@ -463,6 +467,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("x", legendRectSize + 3)
                 .attr("y", legendRectSize - 3)
                 .attr("font-size", legendFontSize)
+                .attr("font-weight", "bold")
                 .text(cellLine);
         });
     };
