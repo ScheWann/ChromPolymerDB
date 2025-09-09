@@ -376,7 +376,7 @@ export const MergedCellLinesHeatmap = ({ cellLineName, chromosomeName, totalChro
                     tooltip={{ 
                         formatter: (value) => value,
                         color: 'white',
-                        overlayInnerStyle: {
+                        overlayInnerProps: {
                             color: 'black',
                             fontWeight: '500'
                         }

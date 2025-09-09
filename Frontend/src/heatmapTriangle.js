@@ -1159,7 +1159,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                         tooltip={{
                             formatter: (value) => value,
                             color: 'black',
-                            overlayInnerStyle: {
+                            overlayInnerProps: {
                                 color: 'white',
                                 fontWeight: '500'
                             }

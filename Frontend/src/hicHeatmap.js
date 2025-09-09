@@ -807,7 +807,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     tooltip={{ 
                                         formatter: (value) => value,
                                         color: 'white',
-                                        overlayInnerStyle: {
+                                        overlayInnerProps: {
                                             color: 'black',
                                             fontWeight: '500'
                                         }

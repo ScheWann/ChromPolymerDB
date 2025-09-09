@@ -343,7 +343,7 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
                             tooltip={{ 
                                 formatter: (value) => value,
                                 color: 'white',
-                                overlayInnerStyle: {
+                                overlayInnerProps: {
                                     color: 'black',
                                     fontWeight: '500'
                                 }
