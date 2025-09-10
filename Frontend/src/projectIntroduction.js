@@ -201,7 +201,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                 
                 {/* News and Updates Timeline */}
                 <Title level={5} style={{ marginTop: 30 }}>News and Updates</Title>
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <Timeline
                         mode="alternate"
                         className="project-intro-timeline"
