@@ -554,7 +554,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 position: 'absolute',
                 top: 10,
                 right: 10,
-                zIndex: 10,
+                zIndex: 20,
                 display: 'flex',
                 flexDirection: 'column',
                 pointerEvents: 'none'
