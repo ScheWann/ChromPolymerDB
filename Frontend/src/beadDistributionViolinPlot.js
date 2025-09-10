@@ -515,7 +515,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const starSpacing = isModal ? 18 : 12;
         const baseY = 6;
 
-        if (Object.keys(pValuesByCategory || {}).length > 0 && numKeys >= 2) {
+        if (isModal && Object.keys(pValuesByCategory || {}).length > 0 && numKeys >= 2) {
             categories.forEach(category => {
                 const overlayGroup = g.append("g")
                     .attr("transform", `translate(${xScale(category)},0)`);
