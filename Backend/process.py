@@ -1101,7 +1101,7 @@ def bead_distribution(cell_line, chromosome_name, sequences, indices):
             in_row_offset = j - i - 1
             idx = row_offset + in_row_offset
 
-            dist_val = float(dist_vec[idx]) - 34.3   # diameter of beads
+            dist_val = max(0.0, float(dist_vec[idx]) - 34.3)   # diameter of beads
             distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions
@@ -1137,7 +1137,7 @@ def exist_bead_distribution(cell_line, indices, chromosome_name="chr8", sequence
             in_row_offset = j - i - 1
             idx = row_offset + in_row_offset
 
-            dist_val = float(dist_vec[idx]) - 34.3   # diameter of beads
+            dist_val = max(0.0, float(dist_vec[idx]) - 34.3)   # diameter of beads
             distributions[f"{i}-{j}"].append(dist_val)
 
     return distributions
