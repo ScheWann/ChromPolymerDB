@@ -20,7 +20,7 @@ from time import time
 import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
 from cell_line_labels import label_mapping
-from scipy.stats import ttest_ind
+from scipy.stats import mannwhitneyu
 
 
 load_dotenv()
@@ -1144,7 +1144,7 @@ def exist_bead_distribution(cell_line, indices, chromosome_name="chr8", sequence
 
 
 """
-Compute pairwise Welch's t-test p-values between groups for each bead pair category
+Compute pairwise Mann–Whitney U test p-values between groups for each bead pair category
 Input format:
 {
     "GroupA": { "i-j": [vals...], ... },
@@ -1179,11 +1179,15 @@ def bead_distribution_pvalues(distribution_groups: dict) -> dict:
                 arr1 = distribution_groups.get(g1, {}).get(category, []) or []
                 arr2 = distribution_groups.get(g2, {}).get(category, []) or []
 
-                # Need at least 2 observations per group for t-test
-                if len(arr1) >= 2 and len(arr2) >= 2:
-                    stat, p = ttest_ind(arr1, arr2, equal_var=False, nan_policy='omit')
-                    # Ensure p is a plain float for JSON serialization
+                # Clean arrays: drop NaNs and non-finite values
+                a1 = [float(x) for x in arr1 if x is not None and np.isfinite(x)]
+                a2 = [float(x) for x in arr2 if x is not None and np.isfinite(x)]
+
+                # Need at least 1 observation per group for Mann–Whitney U (but 2+ preferred)
+                if len(a1) >= 1 and len(a2) >= 1:
                     try:
+                        # Two-sided test, use asymptotic method (SciPy 1.15+)
+                        stat, p = mannwhitneyu(a1, a2, alternative='two-sided', method='asymptotic')
                         p_val = float(p)
                     except Exception:
                         p_val = None
