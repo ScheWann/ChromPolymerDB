@@ -118,9 +118,13 @@ export const CurrentChainDistanceHeatmap = ({
                         onHeatmapHover(row, col);
                     }
                 } else {
-                    if (currentHoveredCell) {
-                        currentHoveredCell = null;
-                        onHeatmapHover(null, null);
+                    // Allow hovering anywhere on the heatmap, not just near diagonal
+                    const newCell = { row, col };
+                    
+                    // Only trigger if we've moved to a different cell
+                    if (!currentHoveredCell || currentHoveredCell.row !== row || currentHoveredCell.col !== col) {
+                        currentHoveredCell = newCell;
+                        onHeatmapHover(row, col);
                     }
                 }
             }
@@ -181,16 +185,40 @@ export const CurrentChainDistanceHeatmap = ({
         const colorScale = colorScaleRef.current;
         rectsRef.current
             .attr("fill", d => {
-                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                return isHighlighted ? '#E25822' : colorScale(d.value);
+                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                
+                if (isExactMatch) {
+                    return '#E25822'; // Orange for the exact hovered cell
+                } else if (isRowOrColMatch) {
+                    return '#FFB366'; // Lighter orange for related cells (same row or column)
+                } else {
+                    return colorScale(d.value);
+                }
             })
             .attr("stroke", d => {
-                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                return isHighlighted ? '#FFF' : 'none';
+                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                
+                if (isExactMatch) {
+                    return '#FFF';
+                } else if (isRowOrColMatch) {
+                    return '#333';
+                } else {
+                    return 'none';
+                }
             })
             .attr("stroke-width", d => {
-                const isHighlighted = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
-                return isHighlighted ? 2 : 0;
+                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                
+                if (isExactMatch) {
+                    return 3;
+                } else if (isRowOrColMatch) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             });
     }, [hoveredHeatmapCoord]);
 
