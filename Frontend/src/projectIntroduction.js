@@ -27,6 +27,8 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
     const chartRef = useRef(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [timelineItems, setTimelineItems] = useState([]);
+    // Create dropdown-safe items (avoid passing unknown props like `cellLine` to DOM)
+    const dropdownItems = exampleDataItems.map(({ key, label }) => ({ key, label }));
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -173,7 +175,7 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         visible={drawerVisible}
                         onClose={() => setDrawerVisible(false)}
                     />
-                    <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
+                    <Dropdown menu={{ items: dropdownItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
                             Example Data
                         </Button>
