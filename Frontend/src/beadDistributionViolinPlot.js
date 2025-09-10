@@ -539,7 +539,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             .attr("stroke", "#555")
                             .attr("stroke-width", 1);
                         if (p !== null && p !== undefined && Number.isFinite(p)) {
-                            //     const stars = p < 0.001 ? "***" : (p < 0.01 ? "**" : (p < 0.05 ? "*" : ""));
+                            //     const stars = p < 0.001 ? "***" : (p < 0.01 ? "**" : (p < 0.05 ? "*" : "n.s."));
                             //     if (stars) {
                             //         overlayGroup.append("text")
                             //             .attr("x", (centerA + centerB) / 2)
