@@ -794,12 +794,21 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 {showBeadInfo && (
                     <div className={`beadInfoContainer ${showBeadInfo ? 'show' : 'hide'}`} style={{ userSelect: 'none', pointerEvents: 'auto' }}>
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
-                        <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
-                        <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
                         {beadInfo.pairedBeadIndex !== null && beadInfo.pairedBeadIndex !== beadInfo.beadIndex ? (
-                            <div className='beadInfoText'>Bead Indices: {beadInfo.beadIndex}, {beadInfo.pairedBeadIndex}</div>
+                            <>
+                                <div className='beadInfoText'>Bead 1 Index: {beadInfo.beadIndex}</div>
+                                <div className='beadInfoText'>Bead 1 Start: {formatNumber(beadInfo.seq_start)}</div>
+                                <div className='beadInfoText'>Bead 1 End: {formatNumber(beadInfo.seq_end)}</div>
+                                <div className='beadInfoText'>Bead 2 Index: {beadInfo.pairedBeadIndex}</div>
+                                <div className='beadInfoText'>Bead 2 Start: {formatNumber(newStart + beadInfo.pairedBeadIndex * step)}</div>
+                                <div className='beadInfoText'>Bead 2 End: {formatNumber(newStart + beadInfo.pairedBeadIndex * step + step)}</div>
+                            </>
                         ) : (
-                            <div className='beadInfoText'>Bead Index: {beadInfo.beadIndex}</div>
+                            <>
+                                <div className='beadInfoText'>Bead Index: {beadInfo.beadIndex}</div>
+                                <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
+                                <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
+                            </>
                         )}
                     </div>
                 )}
