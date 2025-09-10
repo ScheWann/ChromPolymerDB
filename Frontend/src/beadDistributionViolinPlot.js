@@ -23,14 +23,14 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const step = 5000; // Each bead represents a 5000bp range
         const newStart = currentChromosomeSequence.start;
         const beadIndices = Object.keys(selectedSphereList).map(key => parseInt(key)).sort((a, b) => a - b);
-        
+
         // Calculate each bead's individual range
         const beadRanges = beadIndices.map(index => {
             const startCoord = newStart + index * step;
             const endCoord = startCoord + step;
             return { index, startCoord, endCoord };
         });
-        
+
         return {
             chromosome: chromosomeName,
             beadRanges: beadRanges
@@ -260,15 +260,15 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
-        .then(data => {
-            setPValuesByCategory(data || {});
-            setPLoading(false);
-        })
-        .catch(() => {
-            setPValuesByCategory({});
-            setPLoading(false);
-        });
+            .then(res => res.json())
+            .then(data => {
+                setPValuesByCategory(data || {});
+                setPLoading(false);
+            })
+            .catch(() => {
+                setPValuesByCategory({});
+                setPLoading(false);
+            });
     }, [distributionData]);
 
     const drawViolinPlot = (svgElement, plotWidth, plotHeight, isModal = false) => {
@@ -439,7 +439,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const xAxisGroup = g.append("g")
             .attr("transform", `translate(0,${height})`)
             .call(xAxis);
-        
+
         const yAxisGroup = g.append("g")
             .call(yAxis);
 
@@ -449,7 +449,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         yAxisGroup.selectAll("text").style("font-size", axisFontSize);
 
         const labelFontSize = isModal ? "20px" : "12px";
-        
+
         if (isModal) {
             const xLabelY = margin.top + height + 45;
             svg.append("text")
@@ -539,16 +539,25 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             .attr("stroke", "#555")
                             .attr("stroke-width", 1);
                         if (p !== null && p !== undefined && Number.isFinite(p)) {
-                            const stars = p < 0.001 ? "***" : (p < 0.01 ? "**" : (p < 0.05 ? "*" : ""));
-                            if (stars) {
-                                overlayGroup.append("text")
-                                    .attr("x", (centerA + centerB) / 2)
-                                    .attr("y", ySig - 2)
-                                    .attr("text-anchor", "middle")
-                                    .attr("font-size", starFontSize)
-                                    .attr("font-weight", "bold")
-                                    .text(stars);
-                            }
+                            //     const stars = p < 0.001 ? "***" : (p < 0.01 ? "**" : (p < 0.05 ? "*" : ""));
+                            //     if (stars) {
+                            //         overlayGroup.append("text")
+                            //             .attr("x", (centerA + centerB) / 2)
+                            //             .attr("y", ySig - 2)
+                            //             .attr("text-anchor", "middle")
+                            //             .attr("font-size", starFontSize)
+                            //             .attr("font-weight", "bold")
+                            //             .text(stars);
+                            //     }
+                            // }
+                            const label = p.toPrecision(3);
+                            overlayGroup.append("text")
+                                .attr("x", (centerA + centerB) / 2)
+                                .attr("y", ySig - 2)
+                                .attr("text-anchor", "middle")
+                                .attr("font-size", starFontSize)
+                                .attr("font-weight", "bold")
+                                .text(label);
                         }
                         pairIdx += 1;
                     }
