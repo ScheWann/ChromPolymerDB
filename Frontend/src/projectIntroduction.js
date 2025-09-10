@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Typography, Card, Tag, Button, Dropdown, Drawer } from 'antd';
-import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined } from '@ant-design/icons';
+import { Typography, Card, Tag, Button, Dropdown, Timeline } from 'antd';
+import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { TutorialDrawer } from './tutorial.js';
 
 const data = [
@@ -26,6 +26,7 @@ const { Title, Text } = Typography;
 export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setStartInputValue, setEndInputValue }) => {
     const chartRef = useRef(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [timelineItems, setTimelineItems] = useState([]);
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -94,6 +95,15 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
         };
     }, []);
 
+    useEffect(() => {
+        fetch('/timeline.json')
+            .then(res => res.json())
+            .then(json => {
+                const sorted = [...json].sort((a, b) => new Date(b.label) - new Date(a.label));
+                setTimelineItems(sorted);
+            })
+    }, []);
+
     const onClickExampleDataItem = ({ key }) => {
         // Find the example data item by key
         const exampleItem = exampleDataItems.find(item => item.key === key);
@@ -131,15 +141,15 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                         </Title>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                             <span style={{ fontWeight: 'bold' }}>Tutorial: </span>
-                                <ProfileOutlined
-                                    className='projectTutorial'
-                                    style={{
-                                        fontSize: '28px',
-                                        color: '#333',
-                                        transition: 'color 0.3s'
-                                    }}
-                                    onClick={() => setDrawerVisible(true)}
-                                />
+                            <ProfileOutlined
+                                className='projectTutorial'
+                                style={{
+                                    fontSize: '28px',
+                                    color: '#333',
+                                    transition: 'color 0.3s'
+                                }}
+                                onClick={() => setDrawerVisible(true)}
+                            />
                         </div>
                     </div>
                 }
@@ -147,23 +157,22 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                 header={{ padding: '0 24px', background: '#fff' }}
                 body={{ padding: 24 }}
             >
+                {/* Introduction Text */}
                 <div style={{ width: "100%", textAlign: 'left', marginBottom: '10px' }}>
                     <Text style={{ fontSize: '1rem', lineHeight: 1.5 }}>
-                    The three-dimensional (3D) organization of chromatin plays a critical role in regulating gene expression and genomic processes like DNA replication, repair, and genome stability. Although these processes occur at the individual-cell level, most chromatin structure data are derived from population-averaged assays, such as Hi-C, obscuring the heterogeneity of single-cell conformations. To address this limitation, we developed a polymer physics-based modelling framework, the Sequential Bayesian Inference Framework (sBIF), that deconvolutes bulk Hi-C data to reconstruct single-cell 3D chromatin conformations. To support a broader use of sBIF, we created ChromPolymerDB, a publicly accessible, high-resolution database of single-cell chromatin structures inferred by sBIF. The database contains ~108 reconstructed 5 kb-resolution single cell structures, spanning over 60,000 genomic loci across 50 human cell types and experimental conditions. ChromPolymerDB features an interactive web interface with tools for 3D structural analysis and multi-omics integration. Users can explore associations between chromatin conformation and gene expression, epigenetic modifications, and regulatory elements. The platform also supports comparative analyses to identify structural changes across cell types, developmental stages, or disease contexts. ChromPolymerDB offers a unique resource for researchers studying the relationship between genome architecture and gene regulation, and for advancing comparative 3D genomics. 
+                        The three-dimensional (3D) organization of chromatin plays a critical role in regulating gene expression and genomic processes like DNA replication, repair, and genome stability. Although these processes occur at the individual-cell level, most chromatin structure data are derived from population-averaged assays, such as Hi-C, obscuring the heterogeneity of single-cell conformations. To address this limitation, we developed a polymer physics-based modelling framework, the Sequential Bayesian Inference Framework (sBIF), that deconvolutes bulk Hi-C data to reconstruct single-cell 3D chromatin conformations. To support a broader use of sBIF, we created ChromPolymerDB, a publicly accessible, high-resolution database of single-cell chromatin structures inferred by sBIF. The database contains ~108 reconstructed 5 kb-resolution single cell structures, spanning over 60,000 genomic loci across 50 human cell types and experimental conditions. ChromPolymerDB features an interactive web interface with tools for 3D structural analysis and multi-omics integration. Users can explore associations between chromatin conformation and gene expression, epigenetic modifications, and regulatory elements. The platform also supports comparative analyses to identify structural changes across cell types, developmental stages, or disease contexts. ChromPolymerDB offers a unique resource for researchers studying the relationship between genome architecture and gene regulation, and for advancing comparative 3D genomics.
                     </Text>
                 </div>
 
+                {/* Tutorial and Example Data Buttons */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Button style={{ width: "30%", color: 'white', backgroundColor: '#9d4edd', border: 'none' }} color='pink' variant="outlined" icon={<ProfileOutlined />} iconPosition="end" onClick={() => setDrawerVisible(true)} >
                         Tutorial
                     </Button>
-
                     <TutorialDrawer
                         visible={drawerVisible}
                         onClose={() => setDrawerVisible(false)}
                     />
-
-                    {/* example data showing button */}
                     <Dropdown menu={{ items: exampleDataItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
                             Example Data
@@ -171,8 +180,8 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     </Dropdown>
                 </div>
 
+                {/* Key Features */}
                 <Title level={5}>Key Features</Title>
-
                 <Card
                     variant="outlined"
                     style={{ background: '#f0f5ff', width: '100%' }}
@@ -185,9 +194,25 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     <Tag color='cyan' style={{ fontSize: 15, padding: "5px 10px 5px 10px", marginBottom: 5 }}>3D physical distance</Tag>
                 </Card>
 
+                {/* Graphical Abstract */}
                 <img src='graphical_abstract.png' style={{ width: '100%', marginTop: 30 }}></img>
-                {/* <Title level={5}>Data Coverage</Title> */}
+                
+                {/* News and Updates Timeline */}
+                <Title level={5} style={{ marginTop: 30 }}>News and Updates</Title>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                    <Timeline
+                        mode="alternate"
+                        className="project-intro-timeline"
+                        style={{ width: '50%', marginTop: 20 }}
+                        items={timelineItems.map(it => ({
+                            color: it.color,
+                            label: <span className="timeline-item-label">{it.label}</span>,
+                                children: <div className="timeline-item-card">{it.text}</div>
+                            }))}
+                        />
+                </div>
 
+                {/* <Title level={5}>Data Coverage</Title> */}
                 {/* <div
                     ref={chartRef}
                     style={{
