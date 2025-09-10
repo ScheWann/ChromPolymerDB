@@ -112,7 +112,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [showChromosome3DDistance, setShowChromosome3DDistance] = useState(false);
     const [geneBeadSeq, setGeneBeadSeq] = useState([]);
     const [isFullGeneVisible, setIsFullGeneVisible] = useState(true);
-    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null, beadIndex: null })
+    const [beadInfo, setBeadInfo] = useState({ chr: null, seq_start: null, seq_end: null, beadIndex: null, pairedBeadIndex: null })
     const [showBeadInfo, setShowBeadInfo] = useState(false)
     const [inputPositions, setInputPositions] = useState({ start: null, end: null });
     const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
@@ -491,13 +491,14 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 const beadIndices = mapHeatmapCoordToBeads(row, col);
                 setHoveredBeadsFromHeatmap(beadIndices);
 
-                // Show info for the primary bead (row index)
+                // Show info for the primary bead (row index) and paired bead (col index)
                 if (processedChromosomeData && processedChromosomeData[row]) {
                     setBeadInfo({ 
                         chr: processedChromosomeData[row].chrid, 
                         seq_start: newStart + row * step, 
                         seq_end: newStart + row * step + step, 
-                        beadIndex: row 
+                        beadIndex: row,
+                        pairedBeadIndex: col
                     });
                     setShowBeadInfo(true);
                     setHoveredIndex(row);
@@ -795,7 +796,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                         <div className='beadInfoText'>Chromosome: {beadInfo.chr}</div>
                         <div className='beadInfoText'>Start: {formatNumber(beadInfo.seq_start)}</div>
                         <div className='beadInfoText'>End: {formatNumber(beadInfo.seq_end)}</div>
-                        <div className='beadInfoText'>Bead Index: {beadInfo.beadIndex}</div>
+                        {beadInfo.pairedBeadIndex !== null && beadInfo.pairedBeadIndex !== beadInfo.beadIndex ? (
+                            <div className='beadInfoText'>Bead Indices: {beadInfo.beadIndex}, {beadInfo.pairedBeadIndex}</div>
+                        ) : (
+                            <div className='beadInfoText'>Bead Index: {beadInfo.beadIndex}</div>
+                        )}
                     </div>
                 )}
             </div>
@@ -940,7 +945,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 onPointerOver={(e) => {
                                                     e.stopPropagation();
                                                     if (hoveredIndex !== index) {
-                                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index });
+                                                        setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index, pairedBeadIndex: null });
                                                         setShowBeadInfo(true);
                                                         setHoveredIndex(index);
                                                         handle3DBeadHover(index);
@@ -1152,7 +1157,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         onPointerOver={(e) => {
                                             e.stopPropagation();
                                             if (hoveredIndex !== index) {
-                                                setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index });
+                                                setBeadInfo({ chr: processedChromosomeData[index].chrid, seq_start: newStart + index * step, seq_end: newStart + index * step + step, beadIndex: index, pairedBeadIndex: null });
                                                 setShowBeadInfo(true);
                                                 setHoveredIndex(index);
                                                 handle3DBeadHover(index);
