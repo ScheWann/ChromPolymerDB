@@ -696,6 +696,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
+                                    size='small'
                                     icon={<ExpandOutlined />}
                                     onClick={showModal}
                                 />
@@ -716,6 +717,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                                             fontSize: 15,
                                             cursor: "pointer",
                                         }}
+                                        size='small'
                                         icon={<DownloadOutlined />}
                                     />
                                 </Dropdown>

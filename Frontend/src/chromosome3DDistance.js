@@ -548,7 +548,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                     padding: '0px 8px',
                                     borderRadius: '6px',
                                     minWidth: '100px',
-                                    maxHeight: '32px',
+                                    maxHeight: '24px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '8px'
@@ -580,6 +580,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
+                                    size='small'
                                     icon={<SettingOutlined />}
                                     onClick={handlePairFilterModalOpen}
                                 />
@@ -593,6 +594,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
+                                    size='small'
                                     icon={<RollbackOutlined />}
                                     onClick={resetView}
                                 />
@@ -606,6 +608,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         items: downloadItems,
                                         onClick: onClickDownloadItem,
                                     }}
+                                    size='small'
                                     placement="bottom"
                                     popupRender={(menu) => (
                                         <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
@@ -630,6 +633,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                             fontSize: 15,
                                             cursor: "pointer",
                                         }}
+                                        size='small'
                                         icon={<DownloadOutlined />}
                                     />
                                 </Dropdown>
@@ -643,6 +647,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
+                                    size='small'
                                     icon={<CaretUpOutlined />}
                                     onClick={() => setShowChromosome3DDistance(false)}
                                 />

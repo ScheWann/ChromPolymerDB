@@ -589,8 +589,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             title={<span style={{ color: 'black' }}>Change the color of selected bead</span>}
                             color='white'
                         >
-                            <div ref={colorPickerRef}>
+                            <div ref={colorPickerRef} style={{ height: '24px' }}>
                                 <ColorPicker
+                                    size='small'
                                     value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
                                     disabled={selectedIndex === null}
                                     open={colorPickerOpen && selectedIndex !== null}
@@ -621,6 +622,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     fontSize: 15,
                                     cursor: "pointer",
                                 }}
+                                size='small'
                                 icon={<ClearOutlined />}
                                 onClick={resetSelectedBead}
                             />
@@ -634,6 +636,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     fontSize: 15,
                                     cursor: "pointer",
                                 }}
+                                size='small'
                                 icon={<RollbackOutlined />}
                                 onClick={resetView}
                             />
@@ -647,6 +650,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     items: downloadItems,
                                     onClick: onClickDownloadItem,
                                 }}
+                                size='small'
                                 placement="bottom"
                                 popupRender={(menu) => (
                                     <div style={{ backgroundColor: 'white', borderRadius: 4 }}>
@@ -671,6 +675,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         fontSize: 15,
                                         cursor: "pointer",
                                     }}
+                                    size='small'
                                     icon={<DownloadOutlined />}
                                 />
                             </Dropdown>
@@ -684,6 +689,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     fontSize: 15,
                                     cursor: "pointer",
                                 }}
+                                size='small'
                                 icon={<AreaChartOutlined />}
                                 onClick={() => setOpenAvgMatrixModal(true)}
                             />
@@ -737,6 +743,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 <Button
                                     className={`custom-button ${Object.keys(selectedSphereList[celllineName] || {}).length < 2 ? 'disabled' : ''}`}
                                     disabled={Object.keys(selectedSphereList[celllineName] || {}).length < 2}
+                                    size='small'
                                     onClick={(e) => {
                                         if (Object.keys(selectedSphereList[celllineName] || {}).length >= 2) {
                                             setShowChromosome3DDistance(true);
