@@ -11,6 +11,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [modalLoading, setModalLoading] = useState(false);
+    const [modalDimensions, setModalDimensions] = useState({ width: 1000, height: 600 });
     const [pValuesByCategory, setPValuesByCategory] = useState({});
     const [pLoading, setPLoading] = useState(false);
 
@@ -61,8 +62,14 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
     const handleModalAfterOpen = () => {
         // Draw the plot after the modal is fully opened
         if (modalSvgRef.current) {
-            const modalWidth = 1000;
-            const modalHeight = 600;
+            // Get the actual container dimensions to ensure consistency
+            const modalContainer = modalSvgRef.current.parentElement;
+            const modalWidth = modalContainer ? modalContainer.clientWidth : 1000;
+            const modalHeight = modalContainer ? modalContainer.clientHeight : 600;
+            
+            // Update modal dimensions state
+            setModalDimensions({ width: modalWidth, height: modalHeight });
+            
             drawViolinPlot(modalSvgRef.current, modalWidth, modalHeight, true);
             // Turn off loading after plot is drawn
             setTimeout(() => {
@@ -313,10 +320,12 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const g = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
+        // Use consistent padding for both main and modal views
+        const padding = isModal ? 0.15 : 0.2;
         const xScale = d3.scaleBand()
             .domain(categories)
             .range([0, width])
-            .padding(0.2);
+            .padding(padding);
 
         const colorScale = d3.scaleOrdinal()
             .domain(distKeys)
@@ -638,6 +647,34 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         };
     }, []);
 
+    // Modal resize observer
+    useEffect(() => {
+        if (!isModalVisible) return;
+        
+        const modalObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                if (entry.contentRect && modalSvgRef.current) {
+                    const newDimensions = {
+                        width: entry.contentRect.width,
+                        height: entry.contentRect.height,
+                    };
+                    setModalDimensions(newDimensions);
+                    // Redraw the plot with new dimensions
+                    drawViolinPlot(modalSvgRef.current, newDimensions.width, newDimensions.height, true);
+                }
+            }
+        });
+        
+        const modalContainer = modalSvgRef.current?.parentElement;
+        if (modalContainer) {
+            modalObserver.observe(modalContainer);
+        }
+        
+        return () => {
+            if (modalContainer) modalObserver.unobserve(modalContainer);
+        };
+    }, [isModalVisible, distributionData, selectedSphereList, pValuesByCategory]);
+
     useEffect(() => {
         drawViolinPlot(svgRef.current, dimensions.width, dimensions.height, false);
     }, [dimensions, distributionData, selectedSphereList, loading, pValuesByCategory]);
@@ -715,7 +752,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                             width={1040}
                             centered
                         >
-                            <div style={{ width: '100%', height: '600px', overflow: 'auto', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ width: '1000px', height: '600px', position: 'relative', overflow: 'hidden' }}>
                                 {modalLoading && (
                                     <div style={{
                                         position: 'absolute',
