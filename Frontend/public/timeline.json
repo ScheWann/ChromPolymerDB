@@ -1,27 +1,7 @@
 [
     {   
         "color": "red",
-        "text": "Project conceived and architecture drafted",
-        "label": "2025-09-01"
-    },
-    {
-        "color": "blue",
-        "text": "sBIF integration and backend APIs implemented",
-        "label": "2024-01-01"
-    },
-    {
-        "color": "blue",
-        "text": "Frontend visualizations prototyped (3D, heatmaps, tracks)",
-        "label": "2024-01-01"
-    },
-    {
-        "color": "blue",
-        "text": "Initial dataset ingestion and validation",
-        "label": "2024-01-01"
-    },
-    {
-        "color": "blue",
-        "text": "Public beta and documentation (upcoming)",
-        "label": "2024-01-01"
+        "text": "Database v1.0 launched",
+        "label": "2025-08-01"
     }
 ]
