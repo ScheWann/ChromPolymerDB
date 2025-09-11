@@ -761,7 +761,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                 <div style={{
                     border: "1px solid #ccc",
                     display: "flex",
-                    marginTop: 15,
+                    marginTop: 5,
                     backgroundColor: "white",
                     flexDirection: "column",
                     marginLeft: "auto",
