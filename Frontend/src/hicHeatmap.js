@@ -739,9 +739,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <Tooltip
                             title={
                                 <span style={{ color: 'black' }}>
-                                    Generate 3D chromosome structure based on in view.<br />
-                                    <span style={{ color: '#3457D5', fontWeight: 'bold' }}>Note:</span> The chromosome structure generated within
-                                    <span style={{ color: '#3457D5', fontWeight: 'bold' }}> 8 minutes </span> is the same.
+                                    Generate 3D chromosome structure for shown locus.<br />
                                 </span>
                             }
                             color='white'
