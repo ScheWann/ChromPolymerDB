@@ -5,7 +5,8 @@ export const CurrentChainDistanceHeatmap = ({
     chromosomeCurrentSampleDistanceVector, 
     onHeatmapHover = () => {},
     onHeatmapClick = () => {},
-    hoveredHeatmapCoord = null 
+    hoveredHeatmapCoord = null,
+    clickedHeatmapCoord = null 
 }) => {
     const containerRef = useRef(null);
     const svgRef = useRef(null);
@@ -201,42 +202,60 @@ export const CurrentChainDistanceHeatmap = ({
         const colorScale = colorScaleRef.current;
         rectsRef.current
             .attr("fill", d => {
-                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
-                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i && clickedHeatmapCoord.col === d.j);
+                const isRowOrColClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i || clickedHeatmapCoord.col === d.j);
                 
-                if (isExactMatch) {
+                if (isExactClick) {
+                    return '#8E44AD'; // Purple for the exact clicked cell
+                } else if (isRowOrColClick) {
+                    return '#BB8FCE'; // Light purple for clicked row/column
+                } else if (isExactHover) {
                     return '#E25822'; // Orange for the exact hovered cell
-                } else if (isRowOrColMatch) {
+                } else if (isRowOrColHover) {
                     return '#FFB366'; // Lighter orange for related cells (same row or column)
                 } else {
                     return colorScale(d.value);
                 }
             })
             .attr("stroke", d => {
-                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
-                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i && clickedHeatmapCoord.col === d.j);
+                const isRowOrColClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i || clickedHeatmapCoord.col === d.j);
                 
-                if (isExactMatch) {
+                if (isExactClick) {
                     return '#FFF';
-                } else if (isRowOrColMatch) {
+                } else if (isRowOrColClick) {
+                    return '#444';
+                } else if (isExactHover) {
+                    return '#FFF';
+                } else if (isRowOrColHover) {
                     return '#333';
                 } else {
                     return 'none';
                 }
             })
             .attr("stroke-width", d => {
-                const isExactMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
-                const isRowOrColMatch = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i && hoveredHeatmapCoord.col === d.j);
+                const isRowOrColHover = hoveredHeatmapCoord && (hoveredHeatmapCoord.row === d.i || hoveredHeatmapCoord.col === d.j);
+                const isExactClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i && clickedHeatmapCoord.col === d.j);
+                const isRowOrColClick = clickedHeatmapCoord && (clickedHeatmapCoord.row === d.i || clickedHeatmapCoord.col === d.j);
                 
-                if (isExactMatch) {
+                if (isExactClick) {
+                    return 4;
+                } else if (isRowOrColClick) {
+                    return 2;
+                } else if (isExactHover) {
                     return 3;
-                } else if (isRowOrColMatch) {
+                } else if (isRowOrColHover) {
                     return 1;
                 } else {
                     return 0;
                 }
             });
-    }, [hoveredHeatmapCoord]);
+    }, [hoveredHeatmapCoord, clickedHeatmapCoord]);
 
     return (
         <div ref={containerRef} style={{ width: '100%', height: 'auto' }}>
