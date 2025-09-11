@@ -288,7 +288,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("height", plotHeight);
 
         const margin = isModal
-            ? { top: 30, right: 30, bottom: 60, left: 60 }
+            ? { top: 30, right: 30, bottom: 100, left: 60 }
             : { top: 20, right: 20, bottom: 25, left: 45 },
             width = plotWidth - margin.left - margin.right,
             height = plotHeight - margin.top - margin.bottom;
@@ -451,10 +451,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const labelFontSize = isModal ? "20px" : "12px";
 
         if (isModal) {
-            const xLabelY = margin.top + height + 45;
+            const xLabelY = margin.top + height + 23;
             svg.append("text")
-                .attr("transform", `translate(${margin.left + width / 2}, ${xLabelY})`)
-                .attr("text-anchor", "middle")
+                .attr("transform", `translate(${margin.left + width + 23}, ${xLabelY})`)
+                .attr("text-anchor", "end")
                 .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)
                 .text("Beads");
@@ -484,29 +484,57 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         }
 
         // legend
-        const legend = svg.append("g")
-            .attr("transform", `translate(${margin.left + margin.right}, ${margin.top})`);
-
         const legendFontSize = isModal ? "18px" : "10px";
         const legendSpacing = isModal ? 25 : 15;
         const legendRectSize = isModal ? 18 : 12;
 
-        distKeys.forEach((cellLine, index) => {
-            const legendRow = legend.append("g")
-                .attr("transform", `translate(-15, ${index * legendSpacing})`);
+        if (isModal) {
+            // For modal: place legend under x-axis in a single horizontal row
+            const legend = svg.append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top + height + 35})`);
 
-            legendRow.append("rect")
-                .attr("width", legendRectSize)
-                .attr("height", legendRectSize)
-                .attr("fill", colorScale(cellLine));
+            const legendItemWidth = 150; // Approximate width per legend item
+            const totalLegendWidth = distKeys.length * legendItemWidth;
+            const startX = (width - totalLegendWidth) / 2; // Center the legend horizontally
 
-            legendRow.append("text")
-                .attr("x", legendRectSize + 3)
-                .attr("y", legendRectSize - 3)
-                .attr("font-size", legendFontSize)
-                .attr("font-weight", "bold")
-                .text(cellLine);
-        });
+            distKeys.forEach((cellLine, index) => {
+                const legendRow = legend.append("g")
+                    .attr("transform", `translate(${startX + index * legendItemWidth}, 0)`);
+
+                legendRow.append("rect")
+                    .attr("width", legendRectSize)
+                    .attr("height", legendRectSize)
+                    .attr("fill", colorScale(cellLine));
+
+                legendRow.append("text")
+                    .attr("x", legendRectSize + 5)
+                    .attr("y", legendRectSize - 3)
+                    .attr("font-size", legendFontSize)
+                    .attr("font-weight", "bold")
+                    .text(cellLine);
+            });
+        } else {
+            // For regular view: keep the vertical legend on the right
+            const legend = svg.append("g")
+                .attr("transform", `translate(${margin.left + margin.right}, ${margin.top})`);
+
+            distKeys.forEach((cellLine, index) => {
+                const legendRow = legend.append("g")
+                    .attr("transform", `translate(-15, ${index * legendSpacing})`);
+
+                legendRow.append("rect")
+                    .attr("width", legendRectSize)
+                    .attr("height", legendRectSize)
+                    .attr("fill", colorScale(cellLine));
+
+                legendRow.append("text")
+                    .attr("x", legendRectSize + 3)
+                    .attr("y", legendRectSize - 3)
+                    .attr("font-size", legendFontSize)
+                    .attr("font-weight", "bold")
+                    .text(cellLine);
+            });
+        }
 
         // ===============================
         // Significance lines and stars
