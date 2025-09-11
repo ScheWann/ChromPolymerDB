@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 export const CurrentChainDistanceHeatmap = ({ 
     chromosomeCurrentSampleDistanceVector, 
     onHeatmapHover = () => {},
+    onHeatmapClick = () => {},
     hoveredHeatmapCoord = null 
 }) => {
     const containerRef = useRef(null);
@@ -130,6 +131,20 @@ export const CurrentChainDistanceHeatmap = ({
             }
         };
 
+        // Click handler for the entire heatmap area
+        const handleClick = function(event) {
+            const [mouseX, mouseY] = d3.pointer(event, this);
+            
+            // Calculate which cell was clicked
+            const col = Math.floor(mouseX / cellSize);
+            const row = Math.floor((cellSize * numRows - mouseY) / cellSize);
+            
+            // Check bounds
+            if (col >= 0 && col < numCols && row >= 0 && row < numRows) {
+                onHeatmapClick(row, col);
+            }
+        };
+
         const handleMouseLeave = function() {
             currentHoveredCell = null;
             onHeatmapHover(null, null);
@@ -138,6 +153,7 @@ export const CurrentChainDistanceHeatmap = ({
         // Attach events to the overlay
         overlay
             .on("mousemove", handleMouseMove)
+            .on("click", handleClick)
             .on("mouseleave", handleMouseLeave);
 
         rectsRef.current = rects;

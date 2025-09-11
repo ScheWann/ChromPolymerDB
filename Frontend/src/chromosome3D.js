@@ -131,6 +131,11 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     // Function to open the ColorPicker programmatically
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
     
+    // State for managing multiple color pickers when heatmap is clicked
+    const [heatmapClickedBeads, setHeatmapClickedBeads] = useState([]);
+    const [activeColorPickerIndex, setActiveColorPickerIndex] = useState(0);
+    const [isProcessingHeatmapClick, setIsProcessingHeatmapClick] = useState(false);
+    
     const openColorPicker = () => {
         setColorPickerOpen(true);
     };
@@ -184,6 +189,17 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
             setColorPickerOpen(false);
         }
     }, [selectedIndex]);
+
+    // Cleanup heatmap click processing when component unmounts or data changes
+    useEffect(() => {
+        return () => {
+            if (isProcessingHeatmapClick) {
+                setIsProcessingHeatmapClick(false);
+                setHeatmapClickedBeads([]);
+                setActiveColorPickerIndex(0);
+            }
+        };
+    }, [chromosomeCurrentSampleDistanceVector]); // Reset when heatmap data changes
 
     // (Replaced tour with a simple Drawer tutorial showing an image)
 
@@ -512,6 +528,33 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
         });
     };
 
+    // Handler for heatmap click events
+    const handleHeatmapClick = (row, col) => {
+        if (row === null || col === null || isProcessingHeatmapClick) return;
+        
+        // Get the bead indices that correspond to this heatmap cell
+        const beadIndices = mapHeatmapCoordToBeads(row, col);
+        
+        // Filter out duplicate indices (when row === col)
+        const uniqueBeadIndices = [...new Set(beadIndices)];
+        
+        // Filter out invalid bead indices
+        const validBeadIndices = uniqueBeadIndices.filter(index => 
+            index >= 0 && index < processedChromosomeData.length
+        );
+        
+        if (validBeadIndices.length === 0) return;
+        
+        // Set up sequential color picker opening
+        setHeatmapClickedBeads(validBeadIndices);
+        setActiveColorPickerIndex(0);
+        setIsProcessingHeatmapClick(true);
+        
+        // Select the first bead and open its color picker
+        setSelectedIndex(validBeadIndices[0]);
+        setColorPickerOpen(true);
+    };
+
     // Handler for 3D bead hover events
     const handle3DBeadHover = (beadIndex) => {
         if (lastHoveredBeadIndexRef.current === beadIndex) return;
@@ -595,10 +638,40 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
                                     disabled={selectedIndex === null}
                                     open={colorPickerOpen && selectedIndex !== null}
-                                    onOpenChange={(open) => setColorPickerOpen(open)}
+                                    onOpenChange={(open) => {
+                                        setColorPickerOpen(open);
+                                        // If color picker is closed during heatmap click processing, stop the process
+                                        if (!open && isProcessingHeatmapClick) {
+                                            setIsProcessingHeatmapClick(false);
+                                            setHeatmapClickedBeads([]);
+                                            setActiveColorPickerIndex(0);
+                                        }
+                                    }}
                                     presets={presetColors}
                                     allowClear
-                                    onChange={handleColorChange}
+                                    onChange={(color) => {
+                                        handleColorChange(color);
+                                        
+                                        // If we're processing a heatmap click, automatically proceed to next bead
+                                        if (isProcessingHeatmapClick && heatmapClickedBeads.length > 0) {
+                                            const nextIndex = activeColorPickerIndex + 1;
+                                            
+                                            if (nextIndex < heatmapClickedBeads.length) {
+                                                // Move to next bead
+                                                setActiveColorPickerIndex(nextIndex);
+                                                setSelectedIndex(heatmapClickedBeads[nextIndex]);
+                                                // Keep color picker open for the next bead
+                                                setTimeout(() => setColorPickerOpen(true), 100);
+                                            } else {
+                                                // Finished with all beads
+                                                setIsProcessingHeatmapClick(false);
+                                                setHeatmapClickedBeads([]);
+                                                setActiveColorPickerIndex(0);
+                                                setColorPickerOpen(false);
+                                                setSelectedIndex(null);
+                                            }
+                                        }
+                                    }}
                                     onClear={() => {
                                         if (selectedIndex !== null) {
                                             // Get the appropriate default color for this bead
@@ -608,6 +681,26 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 toHexString: () => defaultColor
                                             };
                                             handleColorChange(defaultColorObject);
+                                            
+                                            // Handle sequential processing for clear action too
+                                            if (isProcessingHeatmapClick && heatmapClickedBeads.length > 0) {
+                                                const nextIndex = activeColorPickerIndex + 1;
+                                                
+                                                if (nextIndex < heatmapClickedBeads.length) {
+                                                    // Move to next bead
+                                                    setActiveColorPickerIndex(nextIndex);
+                                                    setSelectedIndex(heatmapClickedBeads[nextIndex]);
+                                                    // Keep color picker open for the next bead
+                                                    setTimeout(() => setColorPickerOpen(true), 100);
+                                                } else {
+                                                    // Finished with all beads
+                                                    setIsProcessingHeatmapClick(false);
+                                                    setHeatmapClickedBeads([]);
+                                                    setActiveColorPickerIndex(0);
+                                                    setColorPickerOpen(false);
+                                                    setSelectedIndex(null);
+                                                }
+                                            }
                                         }
                                     }}
                                 />
@@ -831,6 +924,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     <CurrentChainDistanceHeatmap
                                         chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                                         onHeatmapHover={handleHeatmapHover}
+                                        onHeatmapClick={handleHeatmapClick}
                                         hoveredHeatmapCoord={hoveredHeatmapCoord}
                                     />
                                 </div>
@@ -1249,6 +1343,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             <CurrentChainDistanceHeatmap
                                 chromosomeCurrentSampleDistanceVector={chromosomeCurrentSampleDistanceVector}
                                 onHeatmapHover={handleHeatmapHover}
+                                onHeatmapClick={handleHeatmapClick}
                                 hoveredHeatmapCoord={hoveredHeatmapCoord}
                             />
                         </div>
