@@ -582,9 +582,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     <div>
                                         <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
                                     </div>
-                                    {matchedSource.system && (
+                                    {/* {matchedSource.system && (
                                         <div>System: {matchedSource.system}</div>
-                                    )}
+                                    )} */}
                                     {(matchedSource.source || matchedSource.Accession) && (
                                         <div>
                                             {matchedSource.source}
