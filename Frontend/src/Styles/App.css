@@ -90,7 +90,7 @@ body {
   height:calc(100% - 115px);
   border: 1px solid #eaeaea;
   border-radius: 8px;
-  overflow-x: scroll;
+  /* overflow-x: scroll; */
   overflow-y: hidden;
 }
 

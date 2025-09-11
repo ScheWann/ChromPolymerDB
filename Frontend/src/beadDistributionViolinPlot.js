@@ -287,15 +287,6 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             .attr("width", plotWidth)
             .attr("height", plotHeight);
 
-        const margin = isModal
-            ? { top: 30, right: 30, bottom: 100, left: 60 }
-            : { top: 20, right: 20, bottom: 25, left: 45 },
-            width = plotWidth - margin.left - margin.right,
-            height = plotHeight - margin.top - margin.bottom;
-
-        const g = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
         // distributionData 的 keys
         const distKeys = Object.keys(distributionData);
         if (distKeys.length === 0) return;
@@ -306,6 +297,21 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 const numB = parseInt(b, 10);
                 return numA - numB;
             });
+
+        // Calculate dynamic bottom margin for non-modal based on number of categories
+        const categoryCount = categories.length;
+        const needsRotatedLabels = !isModal && categoryCount > 6;
+        const dynamicBottomMargin = !isModal ? 
+            (needsRotatedLabels ? 60 : Math.max(40, categoryCount * 2 + 25)) : 100;
+        
+        const margin = isModal
+            ? { top: 30, right: 30, bottom: 100, left: 60 }
+            : { top: 20, right: 20, bottom: dynamicBottomMargin, left: 45 },
+            width = plotWidth - margin.left - margin.right,
+            height = plotHeight - margin.top - margin.bottom;
+
+        const g = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const xScale = d3.scaleBand()
             .domain(categories)
@@ -443,9 +449,25 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         const yAxisGroup = g.append("g")
             .call(yAxis);
 
-        // Style axis text based on modal state
+        // Style axis text based on modal state and category count
         const axisFontSize = isModal ? "18px" : "12px";
-        xAxisGroup.selectAll("text").style("font-size", axisFontSize);
+        const xAxisText = xAxisGroup.selectAll("text");
+        
+        if (needsRotatedLabels) {
+            // Rotate x-axis labels for better readability when there are many categories
+            xAxisText
+                .style("text-anchor", "end")
+                .style("font-size", "10px")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-45)");
+        } else if (!isModal && categoryCount > 4) {
+            // For moderate number of categories, reduce font size
+            xAxisText.style("font-size", "10px");
+        } else {
+            xAxisText.style("font-size", axisFontSize);
+        }
+        
         yAxisGroup.selectAll("text").style("font-size", axisFontSize);
 
         const labelFontSize = isModal ? "20px" : "12px";
@@ -459,8 +481,10 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
                 .attr("font-size", labelFontSize)
                 .text("Beads");
         } else {
+            // Calculate label position based on whether labels are rotated and margin size
+            const labelOffset = needsRotatedLabels ? 15 : 8;
             svg.append("text")
-                .attr("transform", `translate(${margin.left + width}, ${margin.top + height + margin.bottom - 5})`)
+                .attr("transform", `translate(${margin.left + width / 2}, ${margin.top + height + margin.bottom - labelOffset})`)
                 .attr("text-anchor", "middle")
                 .attr("font-weight", "bold")
                 .attr("font-size", labelFontSize)

@@ -547,7 +547,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                     background: 'rgba(255, 255, 255, 0.9)',
                                     padding: '0px 8px',
                                     borderRadius: '6px',
-                                    minWidth: '120px',
+                                    minWidth: '100px',
                                     maxHeight: '32px',
                                     display: 'flex',
                                     alignItems: 'center',
