@@ -96,6 +96,40 @@ const AxisIndicator = ({ cameraRotation }) => {
     );
 };
 
+// Bead Index Label Component
+const BeadIndexLabel = ({ beadIndex, position }) => {
+    const textTexture = useMemo(() => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 128;
+
+        // Clear canvas with transparent background
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Add background for better readability
+        context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add text
+        context.fillStyle = '#FFFFFF';
+        context.font = '60px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(`# ${beadIndex}`, canvas.width / 2, canvas.height / 2);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        return texture;
+    }, [beadIndex]);
+
+    return (
+        <sprite position={position} scale={[20, 10, 1]}>
+            <spriteMaterial map={textTexture} />
+        </sprite>
+    );
+};
+
 export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpData, selectedChromosomeSequence, geneSize, formatNumber, celllineName, chromosomeName, currentChromosomeSequence, chromosomefqData, chromosomeCurrentSampleDistanceVector, selectedIndex, setSelectedIndex, selectedSphereList, setSelectedSphereList, handleColorChange, distributionData, setDistributionData, isExampleMode }) => {
     const scaleFactor = 0.15;
     const canvasRef = useRef();
@@ -1179,6 +1213,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                         emissiveIntensity={0.3}
                                                     />
                                                 </mesh>
+                                                {/* Bead Index Label - shown when hovered from heatmap */}
+                                                {isHighlightedFromHeatmap && (
+                                                    <BeadIndexLabel 
+                                                        beadIndex={index} 
+                                                        position={[currentRadius + 8, currentRadius + 8, 0]} 
+                                                    />
+                                                )}
                                                 {/* Outline Mesh */}
                                                 {/* <mesh>
                                                 <sphereGeometry args={[3, 32, 32]} />
@@ -1398,6 +1439,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 emissiveIntensity={0.3}
                                             />
                                         </mesh>
+                                        {/* Bead Index Label - shown when hovered from heatmap */}
+                                        {isHighlightedFromHeatmap && (
+                                            <BeadIndexLabel
+                                                beadIndex={index}
+                                                position={[currentRadius + 8, currentRadius + 8, 0]}
+                                            />
+                                        )}
                                         {/* Outline Mesh */}
                                         {/* <mesh>
                                         <sphereGeometry args={[3, 32, 32]} />
