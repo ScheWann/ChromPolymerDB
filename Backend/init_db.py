@@ -727,25 +727,8 @@ def insert_non_random_HiC_data():
     process_non_random_hic_index()
 
 
-# Main execution - check for command line arguments
-if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "--bintu-only":
-        # Only insert Bintu data
-        print("Running Bintu data insertion only...")
-        insert_bintu_data_only()
-    else:
-        # Run full initialization
-        initialize_tables()
-        process_position_index()
-        process_distance_index()
-        insert_data()
-        insert_non_random_HiC_data()
-else:
-    # When imported as module, run full initialization
-    initialize_tables()
-    process_position_index()
-    process_distance_index()
-    insert_data()
-    insert_non_random_HiC_data()
+initialize_tables()
+process_position_index()
+process_distance_index()
+insert_data()
+insert_non_random_HiC_data()
