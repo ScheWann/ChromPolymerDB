@@ -138,9 +138,9 @@ def initialize_tables():
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "cell_id VARCHAR(50) NOT NULL,"
             "segment_index INT NOT NULL DEFAULT 0,"
-            "Z INT DEFAULT NULL,"
-            "Y INT DEFAULT NULL,"
-            "X INT DEFAULT NULL,"
+            "Z BIGINT DEFAULT NULL,"
+            "Y BIGINT DEFAULT NULL,"
+            "X BIGINT DEFAULT NULL,"
             "UNIQUE(cell_id, segment_index)"
             ");"
         )
@@ -510,6 +510,10 @@ def process_bintu_data(cur):
                 
                 # Convert cell_id to string format
                 df['cell_id'] = df['cell_id'].astype(str)
+                
+                # Handle NaN values in Z, Y, X columns - convert to None for NULL in database
+                for col in ['Z', 'Y', 'X']:
+                    df[col] = df[col].where(pd.notna(df[col]), None)
                 
                 # Prepare data for insertion
                 df = df[['cell_line', 'chrid', 'start_value', 'end_value', 'cell_id', 'segment_index', 'Z', 'Y', 'X']]

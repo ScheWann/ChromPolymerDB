@@ -4,6 +4,7 @@
 /Backend/venv
 /Backend/__pycache__
 /Backend/example_data
+/Backend/Bintu
 /Backend/Folding_input
 /Backend/new_cell_line
 .env
