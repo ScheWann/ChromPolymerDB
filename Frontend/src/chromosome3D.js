@@ -106,11 +106,11 @@ const BeadIndexLabel = ({ beadIndex, position }) => {
 
         // Clear canvas with transparent background
         context.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         // Add background for better readability
         context.fillStyle = 'rgba(0, 0, 0, 0.8)';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Add text
         context.fillStyle = '#FFFFFF';
         context.font = '60px Arial';
@@ -152,7 +152,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     const [openAvgMatrixModal, setOpenAvgMatrixModal] = useState(false);
     const [chromosome3DBackgroundColor, setChromosome3DBackgroundColor] = useState('#333333');
     const [cameraRotation, setCameraRotation] = useState([0, 0, 0]);
-    
+
     // Shared hover state for bidirectional highlighting
     const [hoveredHeatmapCoord, setHoveredHeatmapCoord] = useState(null);
     const [hoveredBeadsFromHeatmap, setHoveredBeadsFromHeatmap] = useState([]);
@@ -166,12 +166,12 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
     // Function to open the ColorPicker programmatically
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
-    
+
     // State for managing multiple color pickers when heatmap is clicked
     const [heatmapClickedBeads, setHeatmapClickedBeads] = useState([]);
     const [activeColorPickerIndex, setActiveColorPickerIndex] = useState(0);
     const [isProcessingHeatmapClick, setIsProcessingHeatmapClick] = useState(false);
-    
+
     const openColorPicker = () => {
         setColorPickerOpen(true);
     };
@@ -565,10 +565,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                 // Show info for the primary bead (row index) and paired bead (col index)
                 if (processedChromosomeData && processedChromosomeData[row]) {
-                    setBeadInfo({ 
-                        chr: processedChromosomeData[row].chrid, 
-                        seq_start: newStart + row * step, 
-                        seq_end: newStart + row * step + step, 
+                    setBeadInfo({
+                        chr: processedChromosomeData[row].chrid,
+                        seq_start: newStart + row * step,
+                        seq_end: newStart + row * step + step,
                         beadIndex: row,
                         pairedBeadIndex: col
                     });
@@ -587,28 +587,28 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
     // Handler for heatmap click events
     const handleHeatmapClick = (row, col) => {
         if (row === null || col === null || isProcessingHeatmapClick) return;
-        
+
         // Set clicked coordinates for visual feedback
         setClickedHeatmapCoord({ row, col });
-        
+
         // Get the bead indices that correspond to this heatmap cell
         const beadIndices = mapHeatmapCoordToBeads(row, col);
-        
+
         // Filter out duplicate indices (when row === col)
         const uniqueBeadIndices = [...new Set(beadIndices)];
-        
+
         // Filter out invalid bead indices
-        const validBeadIndices = uniqueBeadIndices.filter(index => 
+        const validBeadIndices = uniqueBeadIndices.filter(index =>
             index >= 0 && index < processedChromosomeData.length
         );
-        
+
         if (validBeadIndices.length === 0) return;
-        
+
         // Set up sequential color picker opening
         setHeatmapClickedBeads(validBeadIndices);
         setActiveColorPickerIndex(0);
         setIsProcessingHeatmapClick(true);
-        
+
         // Select the first bead and open its color picker
         setSelectedIndex(validBeadIndices[0]);
         setColorPickerOpen(true);
@@ -687,47 +687,87 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                             }}
                             onChange={() => setIsFullGeneVisible(!isFullGeneVisible)}
                         />
-                        <Tooltip
-                            title={
-                                isProcessingHeatmapClick ? (
-                                    <span style={{ color: 'black' }}>
-                                        Setting colors for heatmap beads ({activeColorPickerIndex + 1} of {heatmapClickedBeads.length})
-                                        <br />
-                                        Current bead index: {selectedIndex}
-                                        <br />
-                                        <em>Press <strong>ESC</strong> to cancel</em>
-                                    </span>
-                                ) : (
-                                    <span style={{ color: 'black' }}>Change the color of selected bead</span>
-                                )
-                            }
-                            color='white'
-                        >
-                            <div ref={colorPickerRef} style={{ height: '24px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <ColorPicker
-                                    size='small'
-                                    value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
-                                    disabled={selectedIndex === null}
-                                    open={colorPickerOpen && selectedIndex !== null}
-                                    onOpenChange={(open) => {
-                                        setColorPickerOpen(open);
-                                        // If color picker is closed during heatmap click processing, stop the process
-                                        if (!open && isProcessingHeatmapClick) {
+                        <div ref={colorPickerRef} style={{ height: '24px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <ColorPicker
+                                size='small'
+                                value={selectedSphereList[celllineName]?.[selectedIndex]?.color || '#00BFFF'}
+                                disabled={selectedIndex === null}
+                                open={colorPickerOpen && selectedIndex !== null}
+                                onOpenChange={(open) => {
+                                    setColorPickerOpen(open);
+                                    // If color picker is closed during heatmap click processing, stop the process
+                                    if (!open && isProcessingHeatmapClick) {
+                                        setIsProcessingHeatmapClick(false);
+                                        setHeatmapClickedBeads([]);
+                                        setActiveColorPickerIndex(0);
+                                        setClickedHeatmapCoord(null);
+                                    }
+                                }}
+                                presets={presetColors}
+                                allowClear
+                                panelRender={panel => (
+                                    <div className="custom-panel">
+                                        <div
+                                            style={{
+                                                fontSize: 12,
+                                                color: 'rgba(0, 0, 0, 0.88)',
+                                                lineHeight: '20px',
+                                                marginBottom: 8,
+                                            }}
+                                        >
+                                            {isProcessingHeatmapClick ? (
+                                                <span>
+                                                    Setting colors for heatmap beads <strong>({activeColorPickerIndex + 1} of {heatmapClickedBeads.length})</strong>
+                                                    <br />
+                                                    Current bead index: <strong>{selectedIndex}</strong>
+                                                    <br />
+                                                    <em>Press <strong>ESC</strong> to cancel</em>
+                                                </span>
+                                            ) : (
+                                                <span>Change the color of selected bead</span>
+                                            )}
+                                        </div>
+                                        {panel}
+                                    </div>
+                                )}
+                                onChange={(color) => {
+                                    handleColorChange(color);
+
+                                    // If we're processing a heatmap click, automatically proceed to next bead
+                                    if (isProcessingHeatmapClick && heatmapClickedBeads.length > 0) {
+                                        const nextIndex = activeColorPickerIndex + 1;
+
+                                        if (nextIndex < heatmapClickedBeads.length) {
+                                            // Move to next bead
+                                            setActiveColorPickerIndex(nextIndex);
+                                            setSelectedIndex(heatmapClickedBeads[nextIndex]);
+                                            // Keep color picker open for the next bead
+                                            setTimeout(() => setColorPickerOpen(true), 100);
+                                        } else {
+                                            // Finished with all beads
                                             setIsProcessingHeatmapClick(false);
                                             setHeatmapClickedBeads([]);
                                             setActiveColorPickerIndex(0);
+                                            setColorPickerOpen(false);
+                                            setSelectedIndex(null);
                                             setClickedHeatmapCoord(null);
                                         }
-                                    }}
-                                    presets={presetColors}
-                                    allowClear
-                                    onChange={(color) => {
-                                        handleColorChange(color);
-                                        
-                                        // If we're processing a heatmap click, automatically proceed to next bead
+                                    }
+                                }}
+                                onClear={() => {
+                                    if (selectedIndex !== null) {
+                                        // Get the appropriate default color for this bead
+                                        const defaultColor = getDefaultBeadColor(selectedIndex);
+                                        // Create a color object that mimics the Ant Design color object
+                                        const defaultColorObject = {
+                                            toHexString: () => defaultColor
+                                        };
+                                        handleColorChange(defaultColorObject);
+
+                                        // Handle sequential processing for clear action too
                                         if (isProcessingHeatmapClick && heatmapClickedBeads.length > 0) {
                                             const nextIndex = activeColorPickerIndex + 1;
-                                            
+
                                             if (nextIndex < heatmapClickedBeads.length) {
                                                 // Move to next bead
                                                 setActiveColorPickerIndex(nextIndex);
@@ -744,78 +784,10 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 setClickedHeatmapCoord(null);
                                             }
                                         }
-                                    }}
-                                    onClear={() => {
-                                        if (selectedIndex !== null) {
-                                            // Get the appropriate default color for this bead
-                                            const defaultColor = getDefaultBeadColor(selectedIndex);
-                                            // Create a color object that mimics the Ant Design color object
-                                            const defaultColorObject = {
-                                                toHexString: () => defaultColor
-                                            };
-                                            handleColorChange(defaultColorObject);
-                                            
-                                            // Handle sequential processing for clear action too
-                                            if (isProcessingHeatmapClick && heatmapClickedBeads.length > 0) {
-                                                const nextIndex = activeColorPickerIndex + 1;
-                                                
-                                                if (nextIndex < heatmapClickedBeads.length) {
-                                                    // Move to next bead
-                                                    setActiveColorPickerIndex(nextIndex);
-                                                    setSelectedIndex(heatmapClickedBeads[nextIndex]);
-                                                    // Keep color picker open for the next bead
-                                                    setTimeout(() => setColorPickerOpen(true), 100);
-                                                } else {
-                                                    // Finished with all beads
-                                                    setIsProcessingHeatmapClick(false);
-                                                    setHeatmapClickedBeads([]);
-                                                    setActiveColorPickerIndex(0);
-                                                    setColorPickerOpen(false);
-                                                    setSelectedIndex(null);
-                                                    setClickedHeatmapCoord(null);
-                                                }
-                                            }
-                                        }
-                                    }}
-                                />
-                                {/* Skip button for heatmap click processing */}
-                                {/* {isProcessingHeatmapClick && (
-                                    <Button
-                                        size="small"
-                                        type="text"
-                                        style={{ 
-                                            color: '#fff', 
-                                            height: '20px', 
-                                            padding: '0 4px',
-                                            fontSize: '10px',
-                                            border: '1px solid #666'
-                                        }}
-                                        onClick={() => {
-                                            // Skip to next bead without changing current bead's color
-                                            const nextIndex = activeColorPickerIndex + 1;
-                                            
-                                            if (nextIndex < heatmapClickedBeads.length) {
-                                                // Move to next bead
-                                                setActiveColorPickerIndex(nextIndex);
-                                                setSelectedIndex(heatmapClickedBeads[nextIndex]);
-                                                // Keep color picker open for the next bead
-                                                setTimeout(() => setColorPickerOpen(true), 100);
-                                            } else {
-                                                // Finished with all beads
-                                                setIsProcessingHeatmapClick(false);
-                                                setHeatmapClickedBeads([]);
-                                                setActiveColorPickerIndex(0);
-                                                setColorPickerOpen(false);
-                                                setSelectedIndex(null);
-                                                setClickedHeatmapCoord(null);
-                                            }
-                                        }}
-                                    >
-                                        Skip
-                                    </Button>
-                                )} */}
-                            </div>
-                        </Tooltip>
+                                    }
+                                }}
+                            />
+                        </div>
                         <Tooltip
                             title={<span style={{ color: 'black' }}>Clear the bead selections</span>}
                             color='white'
@@ -1117,9 +1089,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         // 2. Hover/selected state
                                         // 3. Gene bead default color
                                         // 4. Regular bead colors (first/last/default)
-                                        
-                                // Check if this bead is highlighted from heatmap hover
-                                const isHighlightedFromHeatmap = hoveredBeadsFromHeatmap.includes(index);
+
+                                        // Check if this bead is highlighted from heatmap hover
+                                        const isHighlightedFromHeatmap = hoveredBeadsFromHeatmap.includes(index);
 
                                         let validColor;
                                         if (selectedSphereList[celllineName]?.[index]?.color) {
@@ -1163,8 +1135,8 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         // Calculate sphere radius based on hover state
                                         const baseRadius = 2.8;
                                         const enlargedRadius = baseRadius * 3;
-                                        const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap) 
-                                            ? enlargedRadius 
+                                        const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap)
+                                            ? enlargedRadius
                                             : baseRadius;
 
                                         return (
@@ -1215,9 +1187,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                                 </mesh>
                                                 {/* Bead Index Label - shown when hovered from heatmap */}
                                                 {isHighlightedFromHeatmap && (
-                                                    <BeadIndexLabel 
-                                                        beadIndex={index} 
-                                                        position={[currentRadius + 8, currentRadius + 8, 0]} 
+                                                    <BeadIndexLabel
+                                                        beadIndex={index}
+                                                        position={[currentRadius + 8, currentRadius + 8, 0]}
                                                     />
                                                 )}
                                                 {/* Outline Mesh */}
@@ -1343,7 +1315,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 // 2. Hover/selected state
                                 // 3. Gene bead default color
                                 // 4. Regular bead colors (first/last/default)
-                                
+
                                 // Check if this bead is highlighted from heatmap hover
                                 const isHighlightedFromHeatmap = hoveredBeadsFromHeatmap.includes(index);
 
@@ -1388,9 +1360,9 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                                 // Calculate sphere radius based on hover state
                                 const baseRadius = 2.8;
-                                const enlargedRadius = baseRadius * 1.4; // 40% increase
-                                const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap) 
-                                    ? enlargedRadius 
+                                const enlargedRadius = baseRadius * 1.5;
+                                const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap)
+                                    ? enlargedRadius
                                     : baseRadius;
 
                                 return (
