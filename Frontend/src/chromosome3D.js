@@ -975,6 +975,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                 <div className='beadInfoText'>Bead 1 Index: {beadInfo.beadIndex}</div>
                                 <div className='beadInfoText'>Bead 1 Start: {formatNumber(beadInfo.seq_start)}</div>
                                 <div className='beadInfoText'>Bead 1 End: {formatNumber(beadInfo.seq_end)}</div>
+                                <br></br>
                                 <div className='beadInfoText'>Bead 2 Index: {beadInfo.pairedBeadIndex}</div>
                                 <div className='beadInfoText'>Bead 2 Start: {formatNumber(newStart + beadInfo.pairedBeadIndex * step)}</div>
                                 <div className='beadInfoText'>Bead 2 End: {formatNumber(newStart + beadInfo.pairedBeadIndex * step + step)}</div>
