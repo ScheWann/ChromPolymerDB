@@ -1134,7 +1134,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                                         // Calculate sphere radius based on hover state
                                         const baseRadius = 2.8;
-                                        const enlargedRadius = baseRadius * 3;
+                                        const enlargedRadius = baseRadius * 1.5;
                                         const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap)
                                             ? enlargedRadius
                                             : baseRadius;
