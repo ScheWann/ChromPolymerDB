@@ -1125,6 +1125,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                                         const currentColor = isInInputRange ? '#E25822' : validColor;
 
+                                        // Calculate sphere radius based on hover state
+                                        const baseRadius = 2.8;
+                                        const enlargedRadius = baseRadius * 3;
+                                        const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap) 
+                                            ? enlargedRadius 
+                                            : baseRadius;
+
                                         return (
                                             <group
                                                 key={index}
@@ -1161,7 +1168,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                             >
                                                 {/* Sphere Mesh */}
                                                 <mesh>
-                                                    <sphereGeometry args={[2.8, 32, 32]} />
+                                                    <sphereGeometry args={[currentRadius, 32, 32]} />
                                                     <meshStandardMaterial
                                                         receiveShadow
                                                         castShadow
@@ -1337,6 +1344,13 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
 
                                 const currentColor = isInInputRange ? '#E25822' : validColor;
 
+                                // Calculate sphere radius based on hover state
+                                const baseRadius = 2.8;
+                                const enlargedRadius = baseRadius * 1.4; // 40% increase
+                                const currentRadius = (hoveredIndex === index || selectedIndex === index || isHighlightedFromHeatmap) 
+                                    ? enlargedRadius 
+                                    : baseRadius;
+
                                 return (
                                     <group
                                         key={index}
@@ -1373,7 +1387,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                     >
                                         {/* Sphere Mesh */}
                                         <mesh>
-                                            <sphereGeometry args={[2.8, 32, 32]} />
+                                            <sphereGeometry args={[currentRadius, 32, 32]} />
                                             <meshStandardMaterial
                                                 receiveShadow
                                                 castShadow
