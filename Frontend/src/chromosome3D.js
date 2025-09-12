@@ -717,7 +717,7 @@ export const Chromosome3D = ({ chromosome3DExampleData, validChromosomeValidIbpD
                                         >
                                             {isProcessingHeatmapClick ? (
                                                 <span>
-                                                    Setting colors for heatmap beads <strong>({activeColorPickerIndex + 1} of {heatmapClickedBeads.length})</strong>
+                                                    Setting colors for <strong>{activeColorPickerIndex === 0 ? 'first' : 'second'}</strong> heatmap bead
                                                     <br />
                                                     Current bead index: <strong>{selectedIndex}</strong>
                                                     <br />
