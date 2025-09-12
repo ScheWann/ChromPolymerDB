@@ -16,7 +16,6 @@ DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 ROOT_DIR = "../Data"
-EXAMPLE_DIR = './example_data'
 
 def get_db_connection(database=None):
     try:
@@ -127,6 +126,28 @@ def initialize_tables():
         print("gene table created successfully.")
     else:
         print("gene table already exists, skipping creation.")
+
+    if not table_exists(cur, "bintu"):
+        print("Creating bintu table...")
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS bintu ("
+            "bid serial PRIMARY KEY,"
+            "cell_line VARCHAR(50) NOT NULL,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "start_value BIGINT NOT NULL DEFAULT 0,"
+            "end_value BIGINT NOT NULL DEFAULT 0,"
+            "cell_id VARCHAR(50) NOT NULL,"
+            "segment_index INT NOT NULL DEFAULT 0,"
+            "Z INT DEFAULT NULL,"
+            "Y INT DEFAULT NULL,"
+            "X INT DEFAULT NULL,"
+            "UNIQUE(cell_id, segment_index)"
+            ");"
+        )
+        conn.commit()
+        print("bintu table created successfully.")
+    else:
+        print("bintu table already exists, skipping creation.")
 
     # Create separate tables for each cell line
     create_cell_line_tables()
@@ -428,6 +449,108 @@ def process_valid_regions_data(cur):
                 print(f"file {filename} error: {e}")
 
 
+def process_bintu_data(cur):
+    """Process and insert Bintu data from all CSV files in the Bintu folder."""
+    folder_path = os.path.join(ROOT_DIR, "Bintu")
+    
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".csv"):
+            file_path = os.path.join(folder_path, filename)
+            
+            try:
+                # Parse filename to extract metadata
+                # Format: {cell_line}_chr{chrid}-{start}-{end}Mb.csv or similar
+                base_name = filename.replace('.csv', '')
+                print(f"Processing file: {filename}")
+                
+                # Handle special cases like HCT116_chr21-28-30Mb_untreated.csv
+                if '_untreated' in base_name:
+                    base_name = base_name.replace('_untreated', '')
+                
+                # Split by underscore to get cell_line and chromosome info
+                parts = base_name.split('_')
+                cell_line = parts[0]
+                
+                # Extract chromosome and position info from the second part
+                chr_pos_part = parts[1]  # e.g., "chr21-28-30Mb" or "chr21-18.6-20.6Mb"
+                
+                # Extract chromosome ID
+                chr_parts = chr_pos_part.split('-')
+                chrid = chr_parts[0]  # e.g., "chr21"
+                
+                # Extract start and end values (in Mb, need to convert to bp)
+                # Handle decimal values like 18.6Mb
+                start_mb = float(chr_parts[1])  # e.g., 28 or 18.6
+                end_mb = float(chr_parts[2].replace('Mb', ''))  # e.g., 30 or 20.6
+                
+                start_value = int(start_mb * 1000000)  # Convert to base pairs
+                end_value = int(end_mb * 1000000)
+                
+                print(f"Parsed: cell_line={cell_line}, chrid={chrid}, start={start_value}, end={end_value}")
+                
+                # Read the CSV file, skipping the header comment line
+                df = pd.read_csv(file_path, skiprows=1)
+                
+                # Rename columns to match our database schema
+                # CSV has: Chromosome index, Segment index, Z, X, Y
+                # DB expects: cell_id, segment_index, Z, Y, X (note Y and X are swapped)
+                df = df.rename(columns={
+                    'Chromosome index': 'cell_id', 
+                    'Segment index': 'segment_index',
+                    'Z': 'Z',
+                    'X': 'Y',  # X in CSV becomes Y in DB
+                    'Y': 'X'   # Y in CSV becomes X in DB
+                })
+                
+                # Add the metadata columns
+                df['cell_line'] = cell_line
+                df['chrid'] = chrid
+                df['start_value'] = start_value
+                df['end_value'] = end_value
+                
+                # Convert cell_id to string format
+                df['cell_id'] = df['cell_id'].astype(str)
+                
+                # Prepare data for insertion
+                df = df[['cell_line', 'chrid', 'start_value', 'end_value', 'cell_id', 'segment_index', 'Z', 'Y', 'X']]
+                
+                query = """
+                    INSERT INTO bintu (cell_line, chrid, start_value, end_value, cell_id, segment_index, Z, Y, X)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (cell_id, segment_index) DO NOTHING;
+                """
+                
+                data_to_insert = df.to_records(index=False).tolist()
+                cur.executemany(query, data_to_insert)
+                
+                print(f"{filename}: inserted {len(df)} records for {cell_line} {chrid} ({start_mb}-{end_mb}Mb)")
+                
+            except Exception as e:
+                print(f"Error processing file {filename}: {e}")
+
+
+def insert_bintu_data_only():
+    """Standalone function to insert only Bintu data - useful for testing."""
+    conn = get_db_connection(database=DB_NAME)
+    if conn is None:
+        print("Failed to connect to database")
+        return
+    
+    cur = conn.cursor()
+    
+    # Insert Bintu data
+    if not data_exists(cur, "bintu"):
+        print("Inserting Bintu data...")
+        process_bintu_data(cur)
+        conn.commit()
+        print("Bintu data inserted successfully.")
+    else:
+        print("Bintu data already exists, skipping insertion.")
+    
+    cur.close()
+    conn.close()
+
+
 def process_non_random_hic_index():
     """Create indexes on all cell line tables for faster search."""
     conn = get_db_connection(database=DB_NAME)
@@ -552,6 +675,14 @@ def insert_data():
     else:
         print("valid regions data already exists, skipping insertion.")
 
+    # Insert Bintu data only if the table is empty
+    if not data_exists(cur, "bintu"):
+        print("Inserting Bintu data...")
+        process_bintu_data(cur)
+        print("Bintu data inserted successfully.")
+    else:
+        print("Bintu data already exists, skipping insertion.")
+
     # Insert epigenetic track data only if the table is empty
     # if not data_exists(cur, "epigenetic_track"):
     #     print("Inserting epigenetic track data...")
@@ -596,8 +727,25 @@ def insert_non_random_HiC_data():
     process_non_random_hic_index()
 
 
-initialize_tables()
-process_position_index()
-process_distance_index()
-insert_data()
-insert_non_random_HiC_data()
+# Main execution - check for command line arguments
+if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "--bintu-only":
+        # Only insert Bintu data
+        print("Running Bintu data insertion only...")
+        insert_bintu_data_only()
+    else:
+        # Run full initialization
+        initialize_tables()
+        process_position_index()
+        process_distance_index()
+        insert_data()
+        insert_non_random_HiC_data()
+else:
+    # When imported as module, run full initialization
+    initialize_tables()
+    process_position_index()
+    process_distance_index()
+    insert_data()
+    insert_non_random_HiC_data()
