@@ -20,7 +20,7 @@ from time import time
 import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
 from cell_line_labels import label_mapping
-from scipy.stats import mannwhitneyu
+from scipy.stats import ttest_ind
 
 
 load_dotenv()
@@ -1144,7 +1144,7 @@ def exist_bead_distribution(cell_line, indices, chromosome_name="chr8", sequence
 
 
 """
-Compute pairwise Mann–Whitney U test p-values between groups for each bead pair category
+Compute pairwise t-test p-values between groups for each bead pair category
 Input format:
 {
     "GroupA": { "i-j": [vals...], ... },
@@ -1170,6 +1170,8 @@ def bead_distribution_pvalues(distribution_groups: dict) -> dict:
 
     result: dict[str, dict[str, float]] = {}
 
+    MIN_P_VALUE = 1e-300
+
     for category in categories:
         pair_to_p: dict[str, float] = {}
         for i in range(len(group_names) - 1):
@@ -1183,14 +1185,31 @@ def bead_distribution_pvalues(distribution_groups: dict) -> dict:
                 a1 = [float(x) for x in arr1 if x is not None and np.isfinite(x)]
                 a2 = [float(x) for x in arr2 if x is not None and np.isfinite(x)]
 
-                # Need at least 1 observation per group for Mann–Whitney U (but 2+ preferred)
-                if len(a1) >= 1 and len(a2) >= 1:
-                    try:
-                        # Two-sided test, use asymptotic method (SciPy 1.15+)
-                        stat, p = mannwhitneyu(a1, a2, alternative='two-sided', method='asymptotic')
-                        p_val = float(p)
-                    except Exception:
-                        p_val = None
+                # Need at least 2 observations per group for t-test
+                if len(a1) >= 2 and len(a2) >= 2:
+                    # Check if all values in either group are the same (zero variance)
+                    a1_array = np.array(a1)
+                    a2_array = np.array(a2)
+                    var1 = np.var(a1_array, ddof=1) if len(a1_array) > 1 else 0
+                    var2 = np.var(a2_array, ddof=1) if len(a2_array) > 1 else 0
+                    
+                    # If both groups have zero variance (all same values), p-value = 1
+                    if var1 == 0 and var2 == 0:
+                        p_val = 1.0
+                    else:
+                        try:
+                            # Two-sample independent t-test
+                            stat, p = ttest_ind(a1, a2, equal_var=False)
+                            p_val = float(p)
+                            
+                            # Check for NaN or invalid p-value
+                            if np.isnan(p_val) or not np.isfinite(p_val):
+                                p_val = None
+                            # Replace 0.0 p-values with extremely small value
+                            elif p_val == 0.0:
+                                p_val = MIN_P_VALUE
+                        except Exception:
+                            p_val = None
                 else:
                     p_val = None
 
