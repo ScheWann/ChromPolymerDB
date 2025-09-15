@@ -3,6 +3,7 @@ import { Spin, Empty, Dropdown, Tooltip, Button, Modal } from 'antd';
 import { DownloadOutlined, ExpandOutlined } from "@ant-design/icons";
 import jsPDF from 'jspdf';
 import * as d3 from 'd3';
+import { getBeadDistributionPValues } from './utils/pvaluesClient';
 
 export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereList, loading, chromosomeName, currentChromosomeSequence, cellLineName }) => {
     const containerRef = useRef();
@@ -262,12 +263,7 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
             });
         });
 
-        fetch('/api/getBeadDistributionPValues', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
+        getBeadDistributionPValues(payload)
             .then(data => {
                 setPValuesByCategory(data || {});
                 setPLoading(false);
