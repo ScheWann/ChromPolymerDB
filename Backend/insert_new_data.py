@@ -191,9 +191,9 @@ def create_bintu_table(cur):
             "end_value BIGINT NOT NULL DEFAULT 0,"
             "cell_id VARCHAR(50) NOT NULL,"
             "segment_index INT NOT NULL DEFAULT 0,"
-            "Z BIGINT DEFAULT NULL,"
-            "Y BIGINT DEFAULT NULL,"
-            "X BIGINT DEFAULT NULL,"
+            "Z FLOAT DEFAULT NULL,"
+            "Y FLOAT DEFAULT NULL,"
+            "X FLOAT DEFAULT NULL,"
             "UNIQUE(cell_id, segment_index)"
             ");"
         )
