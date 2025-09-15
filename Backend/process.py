@@ -1219,3 +1219,45 @@ def bead_distribution_pvalues(distribution_groups: dict) -> dict:
             result[category] = pair_to_p
 
     return result
+
+
+"""
+Cluster cells from the bintu table and return options suitable for Antd selector
+"""
+def get_bintu_cell_clusters():
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Query to get unique combinations of cell_line, chrid, start_value, end_value
+            # and count the number of cells in each cluster
+            cur.execute(
+                """
+                SELECT 
+                    cell_line,
+                    chrid,
+                    start_value,
+                    end_value,
+                    COUNT(DISTINCT cell_id) as cell_count,
+                    ARRAY_AGG(DISTINCT cell_id ORDER BY cell_id) as cell_ids
+                FROM bintu
+                GROUP BY cell_line, chrid, start_value, end_value
+                ORDER BY cell_line, chrid, start_value, end_value
+                """
+            )
+            rows = cur.fetchall()
+    
+    options = []
+    for row in rows:
+        # Create value: cell_line_chrid_start_value_end_value
+        value = f"{row['cell_line']}_{row['chrid']}_{row['start_value']}_{row['end_value']}"
+        
+        # Create label in format like "A549_chr21-28-30Mb"
+        start_mb = row['start_value'] // 1000000
+        end_mb = row['end_value'] // 1000000
+        label = f"{row['cell_line']}_{row['chrid']}-{start_mb}-{end_mb}Mb"
+        
+        options.append({
+            "value": value,
+            "label": label
+        })
+    
+    return options

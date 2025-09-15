@@ -191,8 +191,19 @@ function App() {
 
   const addItems = [
     {
-      key: 'heatmap',
+      key: 'heatmapCollection',
       label: 'Add Heatmap Comparison',
+      disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
+      children: [
+        {
+          key: 'nonRandomHiCHeatmap',
+          label: 'Add non-random HiC Heatmap',
+        },
+        {
+          key: 'bintuHeatmap',
+          label: 'Add Bintu Heatmap',
+        },
+      ]
     },
     {
       key: 'chromosome3d',
@@ -1374,7 +1385,7 @@ function App() {
   }
 
   const onClickAddItems = ({ key }) => {
-    if (key === 'heatmap') {
+    if (key === 'nonRandomHiCHeatmap') {
       addNewComparisonHeatmap();
     } else if (key === 'chromosome3d') {
       handleAddChromosome3D();
