@@ -563,7 +563,7 @@ export const Chromosome3DDistance = ({ selectedSphereList, setShowChromosome3DDi
                                         tooltip={{ 
                                             formatter: (value) => `${value}px`,
                                             color: 'white',
-                                            overlayInnerProps: { 
+                                            overlayInnerStyle: { 
                                                 color: 'black',
                                                 fontWeight: '500'
                                             }

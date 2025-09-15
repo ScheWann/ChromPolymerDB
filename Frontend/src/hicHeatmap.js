@@ -599,7 +599,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         }
                         color='white'
                         placement="bottomLeft"
-                        overlayInnerProps={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
+                        overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
                     >
                         <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer"}}>
                             {!comparisonHeatmapId && (
@@ -805,7 +805,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     tooltip={{ 
                                         formatter: (value) => value,
                                         color: 'white',
-                                        overlayInnerProps: {
+                                        overlayInnerStyle: {
                                             color: 'black',
                                             fontWeight: '500'
                                         }

@@ -233,7 +233,6 @@ def process_valid_regions_data(cur):
 
 def process_bintu_data(cur):
     """Process and insert Bintu data from all CSV files in the Bintu folder."""
-    # folder_path = os.path.join(NEW_DATA_DIR, "Bintu")
     folder_path = "./Bintu"
 
     if not os.path.exists(folder_path):
