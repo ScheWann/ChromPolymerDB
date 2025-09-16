@@ -36,14 +36,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     }, [chromosomeData, isBintuMode]);
 
-    // Debug first row for Bintu
-    useEffect(() => {
-        if (isBintuMode && independentHeatmapData && independentHeatmapData.length) {
-            // eslint-disable-next-line no-console
-            console.debug('[BintuHeatmap] Received rows:', independentHeatmapData.length, 'Example:', independentHeatmapData[0]);
-        }
-    }, [isBintuMode, independentHeatmapData]);
-
     const modalStyles = {
         body: {
             overflowY: 'auto',
@@ -727,34 +719,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         </div>
                     </Tooltip>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                        {isBintuMode && (
-                            <>
-                                <Select
-                                    placeholder="Cluster"
-                                    size='small'
-                                    style={{ width: 150 }}
-                                    value={selectedBintuCluster}
-                                    onChange={setSelectedBintuCluster}
-                                    options={bintuCellClusters}
-                                    optionFilterProp='label'
-                                />
-                                <InputNumber
-                                    size='small'
-                                    style={{ width: 90 }}
-                                    min={1}
-                                    placeholder='Cell ID'
-                                    value={tempBintuCellId}
-                                    onChange={setTempBintuCellId}
-                                />
-                                <Button
-                                    type='primary'
-                                    size='small'
-                                    disabled={!selectedBintuCluster || !tempBintuCellId}
-                                    loading={bintuHeatmapLoading}
-                                    onClick={handleBintuHeatmapSubmit}
-                                >Load</Button>
-                            </>
-                        )}
                         {!isBintuMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
@@ -842,12 +806,41 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     style={{
                                         fontSize: 12,
                                         cursor: 'pointer',
-                                        marginRight: 5
                                     }}
                                     icon={<MinusOutlined />}
                                     onClick={closeBintuHeatmap}
                                 />
                             </Tooltip>
+                        )}
+                        {isBintuMode && (
+                            <>
+                                <Select
+                                    placeholder="Cluster"
+                                    size='small'
+                                    style={{ width: 150 }}
+                                    value={selectedBintuCluster}
+                                    onChange={setSelectedBintuCluster}
+                                    options={bintuCellClusters}
+                                    optionFilterProp='label'
+                                />
+                                <InputNumber
+                                    size='small'
+                                    style={{ width: 90 }}
+                                    min={1}
+                                    placeholder='Cell ID'
+                                    value={tempBintuCellId}
+                                    onChange={setTempBintuCellId}
+                                />
+                                <Button
+                                    color='primary'
+                                    size='small'
+                                    variant="outlined"
+                                    style={{ marginRight: 5 }}
+                                    disabled={!selectedBintuCluster || !tempBintuCellId}
+                                    loading={bintuHeatmapLoading}
+                                    onClick={handleBintuHeatmapSubmit}
+                                >Load</Button>
+                            </>
                         )}
                         {comparisonHeatmapId && !isBintuMode && (
                             <>
