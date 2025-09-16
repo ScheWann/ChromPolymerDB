@@ -2125,11 +2125,11 @@ function App() {
                       setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
                       setChromosome3DExampleID={() => {}} // Disabled for Bintu
                       setChromosome3DLoading={() => {}} // Disabled for Bintu
-                      setGeneName={setGeneName}
-                      geneName={geneName}
-                      geneSize={geneSize}
-                      setChromosome3DExampleData={() => {}} // Disabled for Bintu 3D
-                      setGeneSize={setGeneSize}
+                      setGeneName={() => {}} // Disabled for Bintu
+                      geneName={''}
+                      geneSize={{start: 0, end: 0}}
+                      setChromosome3DExampleData={() => {}} // Disabled for Bintu
+                      setGeneSize={() => {}} // Disabled for Bintu
                       setSelectedSphereLists={() => {}} // Disabled for Bintu
                       removeComparisonHeatmap={() => {}} // Disabled for Bintu
                       setChromosome3DCellLineName={() => {}} // Disabled for Bintu
@@ -2170,11 +2170,11 @@ function App() {
                       setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
                       setChromosome3DExampleID={() => {}} // Disabled for Bintu
                       setChromosome3DLoading={() => {}} // Disabled for Bintu
-                      setGeneName={setGeneName}
-                      geneName={geneName}
-                      geneSize={geneSize}
-                      setChromosome3DExampleData={() => {}} // Disabled for Bintu 3D
-                      setGeneSize={setGeneSize}
+                      setGeneName={() => {}} // Disabled for Bintu
+                      geneName={''}
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => {}} // Disabled for Bintu
+                      setGeneSize={() => {}} // Disabled for Bintu
                       setSelectedSphereLists={() => {}} // Disabled for Bintu
                       removeComparisonHeatmap={() => {}} // Disabled for Bintu
                       setChromosome3DCellLineName={() => {}} // Disabled for Bintu
