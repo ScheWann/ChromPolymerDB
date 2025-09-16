@@ -2202,8 +2202,8 @@ function App() {
               </div>
             )}
 
-            {/* Original Heatmap */}
-            {(heatmapLoading || chromosomeData.length === 0) ? (
+            {/* Original Hi-C Heatmap: show spinner only when actually loading; otherwise render only if data exists */}
+            {heatmapLoading ? (
               <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
             ) : (
               chromosomeData.length > 0 && (
