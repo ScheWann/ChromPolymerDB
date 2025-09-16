@@ -194,7 +194,7 @@ def create_bintu_table(cur):
             "Z FLOAT DEFAULT NULL,"
             "Y FLOAT DEFAULT NULL,"
             "X FLOAT DEFAULT NULL,"
-            "UNIQUE(cell_id, segment_index)"
+            "UNIQUE(cell_line, chrid, start_value, end_value, cell_id, segment_index)"
             ");"
         )
         print("bintu table created successfully.")
@@ -255,52 +255,41 @@ def process_bintu_data(cur):
                 # Handle special cases like HCT116_chr21-28-30Mb_untreated.csv
                 if '_untreated' in base_name:
                     base_name = base_name.replace('_untreated', '')
-                
-                # Split by underscore to get cell_line and chromosome info
+
                 parts = base_name.split('_')
                 cell_line = parts[0]
-                
-                # Extract chromosome and position info from the second part
-                chr_pos_part = parts[1]  # e.g., "chr21-28-30Mb" or "chr21-18.6-20.6Mb"
-                
-                # Extract chromosome ID
+
+                chr_pos_part = parts[1]
+
                 chr_parts = chr_pos_part.split('-')
-                chrid = chr_parts[0]  # e.g., "chr21"
+                chrid = chr_parts[0]
                 
                 # Extract start and end values (in Mb, need to convert to bp)
                 # Handle decimal values like 18.6Mb
-                start_mb = float(chr_parts[1])  # e.g., 28 or 18.6
-                end_mb = float(chr_parts[2].replace('Mb', ''))  # e.g., 30 or 20.6
-                
-                start_value = int(start_mb * 1000000)  # Convert to base pairs
+                # e.g., 28 or 18.6
+                start_mb = float(chr_parts[1])
+                end_mb = float(chr_parts[2].replace('Mb', ''))
+
+                start_value = int(start_mb * 1000000)
                 end_value = int(end_mb * 1000000)
                 
                 print(f"Parsed: cell_line={cell_line}, chrid={chrid}, start={start_value}, end={end_value}")
-                
-                # Read the CSV file, skipping the header comment line
+
                 df = pd.read_csv(file_path, skiprows=1)
-                
-                # Rename columns to match our database schema
-                # CSV has: Chromosome index, Segment index, Z, X, Y
-                # DB expects: cell_id, segment_index, Z, Y, X (note Y and X are swapped)
+
                 df = df.rename(columns={
                     'Chromosome index': 'cell_id', 
                     'Segment index': 'segment_index',
                     'Z': 'Z',
-                    'X': 'Y',  # X in CSV becomes Y in DB
-                    'Y': 'X'   # Y in CSV becomes X in DB
+                    'X': 'Y',
+                    'Y': 'X'
                 })
                 
-                # Add the metadata columns
                 df['cell_line'] = cell_line
                 df['chrid'] = chrid
                 df['start_value'] = start_value
                 df['end_value'] = end_value
                 
-                # Convert cell_id to string format
-                df['cell_id'] = df['cell_id'].astype(str)
-                
-                # Handle NaN values in Z, Y, X columns - convert to None for NULL in database
                 for col in ['Z', 'Y', 'X']:
                     df[col] = df[col].where(pd.notna(df[col]), None)
                 
@@ -310,7 +299,7 @@ def process_bintu_data(cur):
                 query = """
                     INSERT INTO bintu (cell_line, chrid, start_value, end_value, cell_id, segment_index, Z, Y, X)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (cell_id, segment_index) DO NOTHING;
+                    ON CONFLICT (cell_line, chrid, start_value, end_value, cell_id, segment_index) DO NOTHING;
                 """
                 
                 data_to_insert = df.to_records(index=False).tolist()
