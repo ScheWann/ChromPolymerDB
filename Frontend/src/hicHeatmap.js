@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined, CloseOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
@@ -9,7 +9,7 @@ import * as d3 from 'd3';
 
 export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList, isBintuMode = false, bintuStep = 30000, 
     // Bintu control props
-    selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false }) => {
+    selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -587,31 +587,33 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('fill', '#333')
             .text(gradientMax);
 
-        // Brush for selecting range
-        const brushSvg = d3.select(brushSvgRef.current)
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom);
+        // Brush for selecting range (disabled in Bintu mode)
+        if (!isBintuMode) {
+            const brushSvg = d3.select(brushSvgRef.current)
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom);
 
-        brushSvg.selectAll('*').remove();
+            brushSvg.selectAll('*').remove();
 
-        brushSvg.append('g')
-            .attr('class', 'brush')
-            .call(d3.brushX()
-                .extent([[margin.left, margin.top], [width + margin.left, height + margin.top]])
-                .on('end', ({ selection }) => {
-                    if (!selection) {
-                        setCurrentChromosomeSequence(selectedChromosomeSequence);
-                        return;
-                    }
+            brushSvg.append('g')
+                .attr('class', 'brush')
+                .call(d3.brushX()
+                    .extent([[margin.left, margin.top], [width + margin.left, height + margin.top]])
+                    .on('end', ({ selection }) => {
+                        if (!selection) {
+                            setCurrentChromosomeSequence(selectedChromosomeSequence);
+                            return;
+                        }
 
-                    const [x0, x1] = selection;
-                    const brushedX = axisValues.filter(val => {
-                        const pos = margin.left + xScale(val) + xScale.bandwidth() / 2;
-                        return pos >= x0 && pos <= x1;
-                    });
-                    setCurrentChromosomeSequence({ start: brushedX[0], end: brushedX[brushedX.length - 1] });
-                })
-            );
+                        const [x0, x1] = selection;
+                        const brushedX = axisValues.filter(val => {
+                            const pos = margin.left + xScale(val) + xScale.bandwidth() / 2;
+                            return pos >= x0 && pos <= x1;
+                        });
+                        setCurrentChromosomeSequence({ start: brushedX[0], end: brushedX[brushedX.length - 1] });
+                    })
+                );
+        }
 
         let adjustedGeneStart, adjustedGeneEnd;
 
@@ -646,6 +648,25 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             axisSvg.selectAll('.gene-line').remove();
         }
     }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
+
+    const closeBintuHeatmap = () => {
+        console.log('Closing Bintu heatmap');
+        // if (!isBintuMode) return;
+        // if (comparisonHeatmapId && removeComparisonHeatmap) {
+        //     removeComparisonHeatmap(comparisonHeatmapId);
+        //     return;
+        // }
+        // if (typeof onCloseBintuHeatmap === 'function') {
+        //     onCloseBintuHeatmap();
+        //     return;
+        // }
+        // try {
+        //     window.location.assign('/projectIntroduction');
+        // } catch (e) {
+        //     // best-effort fallback
+        //     window.location.href = '/projectIntroduction';
+        // }
+    };
 
     return (
         <div className='heatmapContainer' style={{ display: 'flex', flexDirection: 'column', width: '40vw', minWidth: '40vw', height: '100%', position: 'relative' }}>
@@ -686,15 +707,23 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer"}}>
                             {!comparisonHeatmapId && (
                                 <>
-                                    <span style={{ marginRight: 3 }}>{cellLineName}</span>
-                                    <span style={{ marginRight: 3 }}>-</span>
+                                    <span style={{ marginRight: 3 }}>{isBintuMode ? 'Bintu' : cellLineName}</span>
+                                    {/* Show dash only when not in Bintu pre-selection state */}
+                                    {(!isBintuMode || (selectedBintuCluster && tempBintuCellId)) && (
+                                        <span style={{ marginRight: 3 }}>-</span>
+                                    )}
                                 </>
                             )}
-                            <span style={{ marginRight: 3 }}>{chromosomeName}</span>
-                            <span style={{ marginRight: 3 }}>:</span>
-                            <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
-                            <span style={{ marginRight: 5 }}>~</span>
-                            <span>{formatNumber(currentChromosomeSequence.end)}</span>
+                            {/* Hide chromosome and range when Bintu selection not made yet */}
+                            {(!isBintuMode || (selectedBintuCluster && tempBintuCellId)) && (
+                                <>
+                                    <span style={{ marginRight: 3 }}>{chromosomeName}</span>
+                                    <span style={{ marginRight: 3 }}>:</span>
+                                    <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
+                                    <span style={{ marginRight: 5 }}>~</span>
+                                    <span>{formatNumber(currentChromosomeSequence.end)}</span>
+                                </>
+                            )}
                         </div>
                     </Tooltip>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
@@ -744,7 +773,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
-                        {!comparisonHeatmapId && (
+                        {!comparisonHeatmapId && !isBintuMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>FoldRec interactions pairwise comparison</span>}
                                 color='white'
@@ -760,6 +789,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
+                        {!isBintuMode && (
                         <Tooltip
                             title={<span style={{ color: 'black' }}>Restore the original heatmap</span>}
                             color='white'
@@ -774,6 +804,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 onClick={() => setCurrentChromosomeSequence(selectedChromosomeSequence)}
                             />
                         </Tooltip>
+                        )}
+                        {!isBintuMode && (
                         <Tooltip
                             title={<span style={{ color: 'black' }}>Expand the heatmap view</span>}
                             color='white'
@@ -789,6 +821,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 onClick={openHalfHeatMapModal}
                             />
                         </Tooltip>
+                        )}
+                        {isBintuMode && (
+                            <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
+                                <Button
+                                    size='small'
+                                    style={{ fontSize: 12, cursor: 'pointer' }}
+                                    icon={<CloseOutlined />}
+                                    onClick={closeBintuHeatmap}
+                                />
+                            </Tooltip>
+                        )}
                         <Tooltip
                             title={<span style={{ color: 'black' }}>Download non-random interaction data</span>}
                             color='white'
@@ -803,7 +846,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 onClick={download}
                             />
                         </Tooltip>
-                        {comparisonHeatmapId && (
+                        {comparisonHeatmapId && !isBintuMode && (
                             <>
                                 <Tooltip
                                     title={
@@ -872,7 +915,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <>
                             <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                             <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
-                            <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
+                            {!isBintuMode && (
+                                <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
+                            )}
                             <svg
                                 ref={colorScaleRef}
                                 style={{
