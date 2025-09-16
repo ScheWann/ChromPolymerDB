@@ -7,7 +7,7 @@ import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList, isBintuMode = false, bintuStep = 30000, 
+export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList, isBintuMode = false, bintuStep = 30000,
     // Bintu control props
     selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap }) => {
     const canvasRef = useRef(null);
@@ -112,9 +112,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         if (cell_line && chromosomeName && selectedChromosomeSequence) {
             // Use the correct sequence based on context
             const sequenceToUse = componentId ? selectedChromosomeSequence : currentChromosomeSequence;
-            
+
             // Use the correct cache key pattern
-            const cacheKey = componentId 
+            const cacheKey = componentId
                 ? `${cell_line}-COMPARISON-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`
                 : `${cell_line}-${chromosomeName}-${sequenceToUse.start}-${sequenceToUse.end}-${sample_id}`;
 
@@ -203,7 +203,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             setSelectedChromosomeSequence(currentChromosomeSequence);
             setSelectedSphereLists({ [cellLineName]: {} });
         }
-        
+
         // If this is the main heatmap (not a comparison), use the existing global 3D system
         if (!comparisonHeatmapId) {
             if (!isExampleMode(independentHeatmapCellLine, chromosomeName, currentChromosomeSequence)) {
@@ -441,7 +441,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const cellHeight = yScale.bandwidth();
 
                 let fillColor;
-                
+
                 if (isBintuMode) {
                     const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
                     if (!hasData(ibp, jbp)) {
@@ -554,8 +554,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('y2', '0%');
 
         const numStops = 10;
-    const gradientMin = legendDomain[0];
-    const gradientMax = legendDomain[1];
+        const gradientMin = legendDomain[0];
+        const gradientMax = legendDomain[1];
         for (let i = 0; i <= numStops; i++) {
             const t = i / numStops;
             gradient.append('stop')
@@ -704,7 +704,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         placement="bottomLeft"
                         overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
                     >
-                        <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer"}}>
+                        <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer" }}>
                             {!comparisonHeatmapId && (
                                 <>
                                     <span style={{ marginRight: 3 }}>{isBintuMode ? 'Bintu' : cellLineName}</span>
@@ -732,11 +732,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 <Select
                                     placeholder="Cluster"
                                     size='small'
-                                    style={{ minWidth: 130 }}
+                                    style={{ width: 150 }}
                                     value={selectedBintuCluster}
                                     onChange={setSelectedBintuCluster}
                                     options={bintuCellClusters}
-                                    showSearch
                                     optionFilterProp='label'
                                 />
                                 <InputNumber
@@ -790,45 +789,35 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Tooltip>
                         )}
                         {!isBintuMode && (
-                        <Tooltip
-                            title={<span style={{ color: 'black' }}>Restore the original heatmap</span>}
-                            color='white'
-                        >
-                            <Button
-                                size='small'
-                                style={{
-                                    fontSize: 12,
-                                    cursor: "pointer",
-                                }}
-                                icon={<RollbackOutlined />}
-                                onClick={() => setCurrentChromosomeSequence(selectedChromosomeSequence)}
-                            />
-                        </Tooltip>
-                        )}
-                        {!isBintuMode && (
-                        <Tooltip
-                            title={<span style={{ color: 'black' }}>Expand the heatmap view</span>}
-                            color='white'
-                        >
-                            <Button
-                                size='small'
-                                style={{
-                                    fontSize: 12,
-                                    cursor: "pointer",
-                                }}
-                                disabled={independentHeatmapData.length === 0}
-                                icon={<FullscreenOutlined />}
-                                onClick={openHalfHeatMapModal}
-                            />
-                        </Tooltip>
-                        )}
-                        {isBintuMode && (
-                            <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Restore the original heatmap</span>}
+                                color='white'
+                            >
                                 <Button
                                     size='small'
-                                    style={{ fontSize: 12, cursor: 'pointer' }}
-                                    icon={<CloseOutlined />}
-                                    onClick={closeBintuHeatmap}
+                                    style={{
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                    }}
+                                    icon={<RollbackOutlined />}
+                                    onClick={() => setCurrentChromosomeSequence(selectedChromosomeSequence)}
+                                />
+                            </Tooltip>
+                        )}
+                        {!isBintuMode && (
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Expand the heatmap view</span>}
+                                color='white'
+                            >
+                                <Button
+                                    size='small'
+                                    style={{
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                    }}
+                                    disabled={independentHeatmapData.length === 0}
+                                    icon={<FullscreenOutlined />}
+                                    onClick={openHalfHeatMapModal}
                                 />
                             </Tooltip>
                         )}
@@ -846,14 +835,28 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 onClick={download}
                             />
                         </Tooltip>
+                        {isBintuMode && (
+                            <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
+                                <Button
+                                    size='small'
+                                    style={{ 
+                                        fontSize: 12,
+                                        cursor: 'pointer',
+                                        marginRight: 5
+                                    }}
+                                    icon={<MinusOutlined />}
+                                    onClick={closeBintuHeatmap}
+                                />
+                            </Tooltip>
+                        )}
                         {comparisonHeatmapId && !isBintuMode && (
                             <>
                                 <Tooltip
                                     title={
                                         <span style={{ color: 'black' }}>
                                             Generate a new heatmap based on the comparison cell line<br />
-                                            {independentHeatmapCellLine ? 
-                                                <>Selected: <span style={{ color: '#3457D5', fontWeight: 'bold' }}>{cellLineList.find(cl => cl.value === independentHeatmapCellLine)?.label || independentHeatmapCellLine}</span></> : 
+                                            {independentHeatmapCellLine ?
+                                                <>Selected: <span style={{ color: '#3457D5', fontWeight: 'bold' }}>{cellLineList.find(cl => cl.value === independentHeatmapCellLine)?.label || independentHeatmapCellLine}</span></> :
                                                 <>Selected: <span style={{ color: '#3457D5', fontWeight: 'bold' }}>None</span></>
                                             }
                                         </span>
@@ -962,7 +965,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     step={fqRawcMode ? 0.1 : 1}
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
-                                    tooltip={{ 
+                                    tooltip={{
                                         formatter: (value) => value,
                                         color: 'white',
                                         overlayInnerStyle: {
