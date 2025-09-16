@@ -477,26 +477,22 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         axisSvg.selectAll('*').remove();
 
-        // Calculate the range of the current chromosome sequence
-        const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
+        // Compute a sensible number of ticks based on available space and bin count
+        const nBins = axisValues.length;
+        const maxXTicks = Math.min(nBins, Math.max(8, Math.floor(width / 45)));   // ~1 label per 45px
+        const maxYTicks = Math.min(nBins, Math.max(8, Math.floor(height / 30)));  // ~1 label per 30px
 
-        // Dynamically determine the tick count based on the range
-        let tickCount;
-        if (range < 1000000) {
-            tickCount = Math.max(Math.floor(range / 20000), 5);
-        } else if (range >= 1000000 && range <= 10000000) {
-            tickCount = Math.max(Math.floor(range / 50000), 5);
-        } else {
-            tickCount = 30;
-        }
+        const xTickStep = Math.max(1, Math.ceil(nBins / maxXTicks));
+        const yTickStep = Math.max(1, Math.ceil(nBins / maxYTicks));
 
-        tickCount = Math.min(tickCount, 80);
+        const xTicks = axisValues.filter((_, i) => i % xTickStep === 0 || i === nBins - 1);
+        const yTicks = axisValues.filter((_, i) => i % yTickStep === 0 || i === nBins - 1);
 
         // X-axis
         axisSvg.append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top + height})`)
             .call(d3.axisBottom(xScale)
-                .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
+                .tickValues(xTicks)
                 .tickFormat(d => {
                     if (d >= 1000000) {
                         return `${(d / 1000000).toFixed(1)}M`;
@@ -519,7 +515,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         axisSvg.append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`)
             .call(d3.axisLeft(yScale)
-                .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
+                .tickValues(yTicks)
                 .tickFormat(d => {
                     if (d >= 1000000) {
                         return `${(d / 1000000).toFixed(1)}M`;
