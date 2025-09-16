@@ -362,13 +362,25 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         const { start, end } = currentChromosomeSequence;
         const step = isBintuMode ? bintuStep : 5000;
-        const adjustedStart = Math.floor(start / step) * step;
-        const adjustedEnd = Math.ceil(end / step) * step;
-
-        const axisValues = Array.from(
-            { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
-            (_, i) => adjustedStart + i * step
-        );
+        
+        let axisValues;
+        if (isBintuMode) {
+            // For Bintu mode, use actual data positions instead of creating a continuous range
+            const allPositions = new Set();
+            zoomedChromosomeData.forEach(d => {
+                allPositions.add(d.x);
+                allPositions.add(d.y);
+            });
+            axisValues = Array.from(allPositions).sort((a, b) => a - b);
+        } else {
+            // For regular mode, use the continuous range approach
+            const adjustedStart = Math.floor(start / step) * step;
+            const adjustedEnd = Math.ceil(end / step) * step;
+            axisValues = Array.from(
+                { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
+                (_, i) => adjustedStart + i * step
+            );
+        }
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
@@ -416,11 +428,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
 
         const hasData = (ibp, jbp) => {
-            const inRange = totalChromosomeSequences.some(seq =>
-                ibp >= seq.start && ibp <= seq.end &&
-                jbp >= seq.start && jbp <= seq.end
-            );
-            return inRange;
+            if (isBintuMode) {
+                // For Bintu mode, check if we have actual data at these positions
+                return dataMap.has(`X:${ibp}, Y:${jbp}`) || dataMap.has(`X:${jbp}, Y:${ibp}`);
+            } else {
+                // For regular mode, check if positions are in valid ranges
+                const inRange = totalChromosomeSequences.some(seq =>
+                    ibp >= seq.start && ibp <= seq.end &&
+                    jbp >= seq.start && jbp <= seq.end
+                );
+                return inRange;
+            }
         };
 
         // Draw heatmap using Canvas
@@ -436,13 +454,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
                 if (isBintuMode) {
                     const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
-                    if (!hasData(ibp, jbp)) {
-                        fillColor = 'white';
-                    } else if (!data) {
+                    if (!data) {
                         fillColor = 'white';
                     } else {
-                        // Use distance value for coloring (closer distances = darker colors)
+                        // Use distance value for coloring
                         fillColor = colorScale(data.value);
+                        drewColorRef.current = true;
                     }
                 } else {
                     const { fq, fdr, rawc } = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
@@ -451,7 +468,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
                 context.fillStyle = fillColor;
                 context.fillRect(x, y, cellWidth, cellHeight);
-                if (isBintuMode && fillColor !== 'white') drewColorRef.current = true;
             });
         });
 
@@ -460,12 +476,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             // eslint-disable-next-line no-console
             console.debug('[BintuHeatmap] Fallback paint engaged.');
             zoomedChromosomeData.forEach(d => {
-                const gx = Math.floor(d.x / bintuStep) * bintuStep;
-                const gy = Math.floor(d.y / bintuStep) * bintuStep;
-                if (!xScale(gx) && xScale(gx) !== 0) return;
-                if (!yScale(gy) && yScale(gy) !== 0) return;
-                const x = margin.left + xScale(gx);
-                const y = margin.top + yScale(gy);
+                // Use the exact data positions since our axis now uses actual positions
+                if (!xScale(d.x) && xScale(d.x) !== 0) return;
+                if (!yScale(d.y) && yScale(d.y) !== 0) return;
+                const x = margin.left + xScale(d.x);
+                const y = margin.top + yScale(d.y);
                 context.fillStyle = colorScale(Math.min(d.value, 1000));
                 context.fillRect(x, y, xScale.bandwidth(), yScale.bandwidth());
             });
