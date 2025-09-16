@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize }) => {
+export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000 }) => {
     const svgRef = useRef();
     const containerRef = useRef();
     const [scrollEnabled, setScrollEnabled] = useState(false);
@@ -86,7 +86,6 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             svg.selectAll("*").remove();
 
             const { start, end } = currentChromosomeSequence;
-            const step = 5000;
             const adjustedStart = Math.floor(start / step) * step;
             const adjustedEnd = Math.ceil(end / step) * step;
 

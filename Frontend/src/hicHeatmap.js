@@ -839,7 +839,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
                                 <Button
                                     size='small'
-                                    style={{ 
+                                    style={{
                                         fontSize: 12,
                                         cursor: 'pointer',
                                         marginRight: 5
@@ -1072,6 +1072,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     setCurrentChromosomeSequence={setCurrentChromosomeSequence}
                     setGeneName={setGeneName}
                     setGeneSize={setGeneSize}
+                    // Use Bintu step size if in Bintu mode
+                    step={isBintuMode ? bintuStep : 5000}
                 />
             )}
         </div>

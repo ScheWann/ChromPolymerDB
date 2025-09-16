@@ -13,6 +13,7 @@ function App() {
   const [geneNameList, setGeneNameList] = useState([]);
   const [cellLineList, setCellLineList] = useState([]);
   const [geneList, setGeneList] = useState([]);
+  const [bintuGeneList, setBintuGeneList] = useState([]);
   const [chromosList, setChromosList] = useState([]);
   const [cellLineName, setCellLineName] = useState(null);
   const [geneName, setGeneName] = useState(null);
@@ -82,7 +83,7 @@ function App() {
       end: 127750000
     }
   ])
-  
+
   // Create dropdown-safe items (without extra properties that cause React warnings)
   const dropdownExampleDataItems = exampleDataItems.map(({ key, label }) => ({ key, label }));
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
@@ -384,12 +385,12 @@ function App() {
     try {
       const response = await fetch('/api/getTourStatus');
       const data = await response.json();
-      
+
       // Show tour only if user has never seen it before
       const shouldShowTour = !data.tour_seen;
       setIsTourOpen(shouldShowTour);
       setTourStatusChecked(true);
-      
+
       // If we're showing the tour for the first time, mark it as seen immediately
       if (shouldShowTour) {
         markTourSeen();
@@ -519,7 +520,7 @@ function App() {
 
   const fetchExistChromos3DData = (isBest, value, cellLineName, componentId = null) => {
     const sampleID = isBest ? 0 : value;
-    
+
     // Check if the componentId represents a 3D chromosome component
     // We need to check both if it exists in the array AND if it's a large timestamp-like number
     // (which indicates it's a newly created 3D component that might not be in the array yet)
@@ -527,7 +528,7 @@ function App() {
       chromosome3DComponents.some(c => c.id === componentId) ||
       (componentId > 1000000000000) // Timestamp-like ID indicates 3D component
     );
-    
+
     // Determine the cache key pattern:
     // - For original heatmap (componentId = null): use cellLineName (traditional pattern)
     // - For comparison heatmaps (componentId = heatmapId): use HEATMAP-{id} pattern
@@ -540,13 +541,13 @@ function App() {
     } else {
       keyPrefix = `${cellLineName}-HEATMAP-${componentId}`; // Comparison heatmap
     }
-    
+
     // Special handling for 3D components in example mode
     // In example mode, we want to use the best sample ID for the API call,
     // but store the data under the cache key that uses the component's current sampleID
     let cacheKeySampleID = sampleID;
     let apiSampleID = sampleID;
-    
+
     if (is3DComponent && isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
       const component = chromosome3DComponents.find(c => c.id === componentId);
       if (component) {
@@ -555,9 +556,9 @@ function App() {
         apiSampleID = sampleID; // This is the best sample ID passed from updateComponentCellLine
       }
     }
-    
+
     const cacheKey = `${keyPrefix}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${cacheKeySampleID}`;
-    
+
     const cachedData = is3DComponent ?
       chromosome3DComponents.find(c => c.id === componentId)?.data[cacheKey] :
       chromosome3DExampleData[cacheKey];
@@ -593,22 +594,22 @@ function App() {
 
     // Determine which API to use based on isExampleMode
     const isExample = isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence);
-    
+
     if (isExample) {
       // For example mode, use the existing getExistChromosome3DData API
       // Start progress polling for example data
       progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, apiSampleID, true);
-      
+
       fetch('/api/getExistChromosome3DData', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          cell_line: cellLineName, 
-          sample_id: apiSampleID, 
+        body: JSON.stringify({
+          cell_line: cellLineName,
+          sample_id: apiSampleID,
           sequences: selectedChromosomeSequence,
-          chromosome_name: chromosomeName 
+          chromosome_name: chromosomeName
         })
       })
         .then(res => res.json())
@@ -662,7 +663,7 @@ function App() {
       // For non-example mode, use the getChromosome3DData API
       // Start progress polling for non-example data
       progressPolling(cellLineName, chromosomeName, selectedChromosomeSequence, apiSampleID, false);
-      
+
       fetch('/api/getChromosome3DData', {
         method: 'POST',
         headers: {
@@ -1104,7 +1105,7 @@ function App() {
         // Store entire response object so we can access metadata (cell_line, chrid, step, etc.)
         setBintuHeatmapData(data);
         setBintuHeatmapLoading(false);
-        
+
         // Fetch gene list for the region
         const sequences = { start: startValue, end: endValue };
         fetch('/api/getGeneList', {
@@ -1113,13 +1114,14 @@ function App() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            chromosome_name: chrid,
+            // Backend expects chromosome without 'chr' prefix
+            chromosome_name: typeof chrid === 'string' ? chrid.replace(/^chr/i, '') : chrid,
             sequences: sequences
           })
         })
           .then(res => res.json())
           .then(geneData => {
-            setGeneList(geneData);
+            setBintuGeneList(geneData);
           })
           .catch(error => {
             console.error('Error fetching gene list:', error);
@@ -1154,7 +1156,7 @@ function App() {
       });
       return;
     }
-    
+
     if (!tempBintuCellId) {
       messageApi.open({
         type: 'warning',
@@ -1163,7 +1165,7 @@ function App() {
       });
       return;
     }
-    
+
     // Parse the selected cluster
     const cluster = bintuCellClusters.find(c => c.value === selectedBintuCluster);
     if (cluster) {
@@ -1705,11 +1707,11 @@ function App() {
     setSampleKeys((prev) => [...prev, tempSampleId]);
     setChromosome3DExampleID(tempSampleId);
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${tempSampleId}`;
-    
+
     if (!chromosome3DExampleData[cacheKey]) {
       // Set loading state before fetching
       setChromosome3DLoading(true);
-      
+
       if (!isExampleMode(cellLineName, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(chromosome3DCellLineName, tempSampleId, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, tempSampleId, false);
@@ -1727,11 +1729,11 @@ function App() {
     setChromosome3DExampleID(key);
     setDistributionData({});
     const cacheKey = `${chromosome3DCellLineName}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}-${key}`;
-    
+
     if (!chromosome3DExampleData[cacheKey]) {
       // Set loading state before fetching
       setChromosome3DLoading(true);
-      
+
       if (!isExampleMode(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence)) {
         fetchExampleChromos3DData(chromosome3DCellLineName, key, "sampleChange", null);
         progressPolling(chromosome3DCellLineName, chromosomeName, selectedChromosomeSequence, key, false);
@@ -1768,7 +1770,7 @@ function App() {
               : comp
           )
         );
-        
+
         if (!isExampleMode(component.cellLine, chromosomeName, selectedChromosomeSequence)) {
           fetchExampleChromos3DData(component.cellLine, key, "sampleChange", componentId);
           progressPolling(component.cellLine, chromosomeName, selectedChromosomeSequence, key, false);
@@ -1834,7 +1836,7 @@ function App() {
       if (isExampleMode(cellLine, chromosomeName, selectedChromosomeSequence)) {
         // In example mode, use the best sample ID for fetching data
         const bestSampleID = exampleDataSet[`${cellLine}-${chromosomeName}-${selectedChromosomeSequence.start}-${selectedChromosomeSequence.end}`];
-        fetchExistChromos3DData(false, bestSampleID, cellLine,componentId);
+        fetchExistChromos3DData(false, bestSampleID, cellLine, componentId);
       } else {
         // In non-example mode, use the component's current sample ID
         progressPolling(cellLine, chromosomeName, selectedChromosomeSequence, component.sampleID, false);
@@ -2114,36 +2116,36 @@ function App() {
                       warning={warning}
                       formatNumber={formatNumber}
                       cellLineList={cellLineList}
-                      geneList={geneList}
+                      geneList={bintuGeneList}
                       cellLineName={bintuHeatmapData?.cell_line || ''}
                       chromosomeName={bintuHeatmapData?.chrid || ''}
                       chromosomeData={bintuHeatmapData?.data || []}
                       currentChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
-                      setCurrentChromosomeSequence={() => {}} // Disabled for Bintu
+                      setCurrentChromosomeSequence={() => { }} // Disabled for Bintu
                       selectedChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
                       totalChromosomeSequences={[{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }]}
-                      setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
-                      setChromosome3DExampleID={() => {}} // Disabled for Bintu
-                      setChromosome3DLoading={() => {}} // Disabled for Bintu
-                      setGeneName={() => {}} // Disabled for Bintu
+                      setSelectedChromosomeSequence={() => { }} // Disabled for Bintu
+                      setChromosome3DExampleID={() => { }} // Disabled for Bintu
+                      setChromosome3DLoading={() => { }} // Disabled for Bintu
+                      setGeneName={() => { }} // Disabled for Bintu
                       geneName={''}
-                      geneSize={{start: 0, end: 0}}
-                      setChromosome3DExampleData={() => {}} // Disabled for Bintu
-                      setGeneSize={() => {}} // Disabled for Bintu
-                      setSelectedSphereLists={() => {}} // Disabled for Bintu
-                      removeComparisonHeatmap={() => {}} // Disabled for Bintu
-                      setChromosome3DCellLineName={() => {}} // Disabled for Bintu
-                      setChromosome3DComponents={() => {}} // Disabled for Bintu
-                      setChromosome3DComponentIndex={() => {}} // Disabled for Bintu
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => { }} // Disabled for Bintu
+                      setGeneSize={() => { }} // Disabled for Bintu
+                      setSelectedSphereLists={() => { }} // Disabled for Bintu
+                      removeComparisonHeatmap={() => { }} // Disabled for Bintu
+                      setChromosome3DCellLineName={() => { }} // Disabled for Bintu
+                      setChromosome3DComponents={() => { }} // Disabled for Bintu
+                      setChromosome3DComponentIndex={() => { }} // Disabled for Bintu
                       comparisonHeatmapList={[]}
                       // Bintu-specific props
                       isBintuMode={true}
                       bintuStep={bintuHeatmapData?.step || 30000}
                       isExampleMode={() => false}
-                      fetchExistChromos3DData={() => {}} // Disabled for Bintu
+                      fetchExistChromos3DData={() => { }} // Disabled for Bintu
                       exampleDataSet={{}}
-                      progressPolling={() => {}} // Disabled for Bintu
-                      updateComparisonHeatmapCellLine={() => {}} // Disabled for Bintu
+                      progressPolling={() => { }} // Disabled for Bintu
+                      updateComparisonHeatmapCellLine={() => { }} // Disabled for Bintu
                       comparisonHeatmapUpdateTrigger={0}
                       selectedBintuCluster={selectedBintuCluster}
                       setSelectedBintuCluster={setSelectedBintuCluster}
@@ -2159,35 +2161,35 @@ function App() {
                       warning={warning}
                       formatNumber={formatNumber}
                       cellLineList={cellLineList}
-                      geneList={geneList}
+                      geneList={bintuGeneList}
                       cellLineName={''}
                       chromosomeName={''}
                       chromosomeData={[]}
                       currentChromosomeSequence={{ start: 0, end: 0 }}
-                      setCurrentChromosomeSequence={() => {}} // Disabled for Bintu
+                      setCurrentChromosomeSequence={() => { }} // Disabled for Bintu
                       selectedChromosomeSequence={{ start: 0, end: 0 }}
                       totalChromosomeSequences={[{ start: 0, end: 0 }]}
-                      setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
-                      setChromosome3DExampleID={() => {}} // Disabled for Bintu
-                      setChromosome3DLoading={() => {}} // Disabled for Bintu
-                      setGeneName={() => {}} // Disabled for Bintu
+                      setSelectedChromosomeSequence={() => { }} // Disabled for Bintu
+                      setChromosome3DExampleID={() => { }} // Disabled for Bintu
+                      setChromosome3DLoading={() => { }} // Disabled for Bintu
+                      setGeneName={() => { }} // Disabled for Bintu
                       geneName={''}
                       geneSize={{ start: 0, end: 0 }}
-                      setChromosome3DExampleData={() => {}} // Disabled for Bintu
-                      setGeneSize={() => {}} // Disabled for Bintu
-                      setSelectedSphereLists={() => {}} // Disabled for Bintu
-                      removeComparisonHeatmap={() => {}} // Disabled for Bintu
-                      setChromosome3DCellLineName={() => {}} // Disabled for Bintu
-                      setChromosome3DComponents={() => {}} // Disabled for Bintu
-                      setChromosome3DComponentIndex={() => {}} // Disabled for Bintu
+                      setChromosome3DExampleData={() => { }} // Disabled for Bintu
+                      setGeneSize={() => { }} // Disabled for Bintu
+                      setSelectedSphereLists={() => { }} // Disabled for Bintu
+                      removeComparisonHeatmap={() => { }} // Disabled for Bintu
+                      setChromosome3DCellLineName={() => { }} // Disabled for Bintu
+                      setChromosome3DComponents={() => { }} // Disabled for Bintu
+                      setChromosome3DComponentIndex={() => { }} // Disabled for Bintu
                       comparisonHeatmapList={[]}
                       isBintuMode={true}
                       bintuStep={30000}
                       isExampleMode={() => false}
-                      fetchExistChromos3DData={() => {}} // Disabled for Bintu
+                      fetchExistChromos3DData={() => { }} // Disabled for Bintu
                       exampleDataSet={{}}
-                      progressPolling={() => {}} // Disabled for Bintu
-                      updateComparisonHeatmapCellLine={() => {}} // Disabled for Bintu
+                      progressPolling={() => { }} // Disabled for Bintu
+                      updateComparisonHeatmapCellLine={() => { }} // Disabled for Bintu
                       comparisonHeatmapUpdateTrigger={0}
                       selectedBintuCluster={selectedBintuCluster}
                       setSelectedBintuCluster={setSelectedBintuCluster}
@@ -2366,18 +2368,18 @@ function App() {
                               title={<span style={{ color: 'black' }}>Add a new sample ID</span>}
                               color='white'
                             >
-                              <InputNumber 
+                              <InputNumber
                                 className="custom-input-number"
-                                style={{ 
-                                  width: 120, 
+                                style={{
+                                  width: 120,
                                   borderRadius: 6
-                                }} 
-                                size='small' 
-                                min={1} 
-                                max={5000} 
-                                addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />} 
-                                value={tempSampleId} 
-                                onChange={setTempSampleId} 
+                                }}
+                                size='small'
+                                min={1}
+                                max={5000}
+                                addonAfter={<PlusOutlined onClick={tempSampleId ? addCustomKey : undefined} style={{ cursor: tempSampleId ? 'pointer' : 'not-allowed', color: tempSampleId ? 'inherit' : '#d9d9d9' }} />}
+                                value={tempSampleId}
+                                onChange={setTempSampleId}
                               />
                             </Tooltip>
                           </div>
@@ -2480,8 +2482,8 @@ function App() {
                             <Tooltip
                               title={
                                 <span style={{ color: 'black' }}>
-                                  {component.cellLine ? 
-                                    `${cellLineList.find(cl => cl.value === component.cellLine)?.label || component.cellLine}` : 
+                                  {component.cellLine ?
+                                    `${cellLineList.find(cl => cl.value === component.cellLine)?.label || component.cellLine}` :
                                     'No cell line selected'
                                   }
                                 </span>
