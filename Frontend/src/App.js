@@ -98,6 +98,14 @@ function App() {
 
   const [ChromosomeDataSpinnerProgress, setChromosomeDataSpinnerProgress] = useState(0);
 
+  // Bintu-related state
+  const [bintuCellClusters, setBintuCellClusters] = useState([]);
+  const [selectedBintuCluster, setSelectedBintuCluster] = useState(null);
+  const [tempBintuCellId, setTempBintuCellId] = useState(null);
+  const [bintuHeatmapData, setBintuHeatmapData] = useState(null);
+  const [bintuHeatmapLoading, setBintuHeatmapLoading] = useState(false);
+  const [showBintuInterface, setShowBintuInterface] = useState(false);
+
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
   const [comparisonHeatmapIndex, setComparisonHeatmapIndex] = useState(1); // Index of comparison heatmap
@@ -193,15 +201,17 @@ function App() {
     {
       key: 'heatmapCollection',
       label: 'Add Heatmap Comparison',
-      disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
+      disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0 || bintuCellClusters.length > 0),
       children: [
         {
           key: 'nonRandomHiCHeatmap',
           label: 'Add non-random HiC Heatmap',
+          disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
         },
         {
           key: 'bintuHeatmap',
           label: 'Add Bintu Heatmap',
+          disabled: bintuCellClusters.length === 0,
         },
       ]
     },
@@ -270,6 +280,7 @@ function App() {
       fetchGeneNameList();
     }
     fetchCellLineList();
+    fetchBintuCellClusters();
   }, []);
 
   // Add scroll event listener
@@ -1051,6 +1062,121 @@ function App() {
     }
   };
 
+  // Bintu-related functions
+  const fetchBintuCellClusters = () => {
+    fetch('/api/getBintuCellClusters')
+      .then(res => res.json())
+      .then(data => {
+        setBintuCellClusters(data);
+      })
+      .catch(error => {
+        console.error('Error fetching Bintu cell clusters:', error);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch Bintu cell clusters',
+          duration: 3,
+        });
+      });
+  };
+
+  const fetchBintuDistanceMatrix = (cellLine, chrid, startValue, endValue, cellId) => {
+    setBintuHeatmapLoading(true);
+    fetch('/api/getBintuDistanceMatrix', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        cell_line: cellLine,
+        chrid: chrid,
+        start_value: startValue,
+        end_value: endValue,
+        cell_id: cellId
+      })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch distance matrix');
+        }
+        return res.json();
+      })
+      .then(data => {
+        // Store entire response object so we can access metadata (cell_line, chrid, step, etc.)
+        setBintuHeatmapData(data);
+        setBintuHeatmapLoading(false);
+        
+        // Fetch gene list for the region
+        const sequences = { start: startValue, end: endValue };
+        fetch('/api/getGeneList', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chromosome_name: chrid,
+            sequences: sequences
+          })
+        })
+          .then(res => res.json())
+          .then(geneData => {
+            setGeneList(geneData);
+          })
+          .catch(error => {
+            console.error('Error fetching gene list:', error);
+          });
+      })
+      .catch(error => {
+        console.error('Error fetching Bintu distance matrix:', error);
+        setBintuHeatmapLoading(false);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch Bintu distance matrix',
+          duration: 3,
+        });
+      });
+  };
+
+  const handleAddBintuHeatmap = () => {
+    // Show the Bintu interface
+    setShowBintuInterface(true);
+    // Clear any existing data to start fresh
+    setBintuHeatmapData(null);
+    setSelectedBintuCluster(null);
+    setTempBintuCellId(null);
+  };
+
+  const handleBintuHeatmapSubmit = () => {
+    if (!selectedBintuCluster) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select a Bintu cluster first',
+        duration: 2,
+      });
+      return;
+    }
+    
+    if (!tempBintuCellId) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please enter a cell ID',
+        duration: 2,
+      });
+      return;
+    }
+    
+    // Parse the selected cluster
+    const cluster = bintuCellClusters.find(c => c.value === selectedBintuCluster);
+    if (cluster) {
+      fetchBintuDistanceMatrix(
+        cluster.cell_line,
+        cluster.chrid,
+        cluster.start_value,
+        cluster.end_value,
+        tempBintuCellId
+      );
+    }
+  };
+
   // Mode change (Cell Line / Gene)
   const modeChange = checked => {
     setIsCellLineMode(checked);
@@ -1389,6 +1515,8 @@ function App() {
       addNewComparisonHeatmap();
     } else if (key === 'chromosome3d') {
       handleAddChromosome3D();
+    } else if (key === 'bintuHeatmap') {
+      handleAddBintuHeatmap();
     }
   }
 
@@ -1951,7 +2079,8 @@ function App() {
         {/* project introduction */}
         {!heatmapLoading &&
           chromosomeData.length === 0 &&
-          Object.keys(chromosome3DExampleData).length === 0 && (
+          Object.keys(chromosome3DExampleData).length === 0 &&
+          !showBintuInterface && (
             <div style={{ width: '100%', height: '100%', overflowY: 'scroll' }}>
               <ProjectIntroduction
                 exampleDataItems={exampleDataItems}
@@ -1964,8 +2093,115 @@ function App() {
             </div>
           )}
 
-        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0)) && (
+        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && !bintuHeatmapData && !showBintuInterface)) && (
           <>
+            {/* Bintu Heatmap Section */}
+            {showBintuInterface && (
+              <div style={{
+                width: '40vw',
+                height: '100%',
+                borderRight: "1px solid #eaeaea",
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                {/* Bintu Heatmap Content (controls rendered inside Heatmap) */}
+                <div style={{ flex: 1, position: 'relative' }}>
+                  {bintuHeatmapLoading ? (
+                    <Spin spinning={true} size="large" style={{ width: '100%', height: '100%' }} />
+                  ) : bintuHeatmapData ? (
+                    <Heatmap
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={geneList}
+                      cellLineName={bintuHeatmapData?.cell_line || ''}
+                      chromosomeName={bintuHeatmapData?.chrid || ''}
+                      chromosomeData={bintuHeatmapData?.data || []}
+                      currentChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
+                      setCurrentChromosomeSequence={() => {}} // Disabled for Bintu
+                      selectedChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
+                      totalChromosomeSequences={[{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }]}
+                      setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
+                      setChromosome3DExampleID={() => {}} // Disabled for Bintu
+                      setChromosome3DLoading={() => {}} // Disabled for Bintu
+                      setGeneName={setGeneName}
+                      geneName={geneName}
+                      geneSize={geneSize}
+                      setChromosome3DExampleData={() => {}} // Disabled for Bintu 3D
+                      setGeneSize={setGeneSize}
+                      setSelectedSphereLists={() => {}} // Disabled for Bintu
+                      removeComparisonHeatmap={() => {}} // Disabled for Bintu
+                      setChromosome3DCellLineName={() => {}} // Disabled for Bintu
+                      setChromosome3DComponents={() => {}} // Disabled for Bintu
+                      setChromosome3DComponentIndex={() => {}} // Disabled for Bintu
+                      comparisonHeatmapList={[]}
+                      // Bintu-specific props
+                      isBintuMode={true}
+                      bintuStep={bintuHeatmapData?.step || 30000}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => {}} // Disabled for Bintu
+                      exampleDataSet={{}}
+                      progressPolling={() => {}} // Disabled for Bintu
+                      updateComparisonHeatmapCellLine={() => {}} // Disabled for Bintu
+                      comparisonHeatmapUpdateTrigger={0}
+                      selectedBintuCluster={selectedBintuCluster}
+                      setSelectedBintuCluster={setSelectedBintuCluster}
+                      tempBintuCellId={tempBintuCellId}
+                      setTempBintuCellId={setTempBintuCellId}
+                      handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
+                      bintuCellClusters={bintuCellClusters}
+                      bintuHeatmapLoading={bintuHeatmapLoading}
+                    />
+                  ) : (
+                    <Heatmap
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={geneList}
+                      cellLineName={''}
+                      chromosomeName={''}
+                      chromosomeData={[]}
+                      currentChromosomeSequence={{ start: 0, end: 0 }}
+                      setCurrentChromosomeSequence={() => {}} // Disabled for Bintu
+                      selectedChromosomeSequence={{ start: 0, end: 0 }}
+                      totalChromosomeSequences={[{ start: 0, end: 0 }]}
+                      setSelectedChromosomeSequence={() => {}} // Disabled for Bintu
+                      setChromosome3DExampleID={() => {}} // Disabled for Bintu
+                      setChromosome3DLoading={() => {}} // Disabled for Bintu
+                      setGeneName={setGeneName}
+                      geneName={geneName}
+                      geneSize={geneSize}
+                      setChromosome3DExampleData={() => {}} // Disabled for Bintu 3D
+                      setGeneSize={setGeneSize}
+                      setSelectedSphereLists={() => {}} // Disabled for Bintu
+                      removeComparisonHeatmap={() => {}} // Disabled for Bintu
+                      setChromosome3DCellLineName={() => {}} // Disabled for Bintu
+                      setChromosome3DComponents={() => {}} // Disabled for Bintu
+                      setChromosome3DComponentIndex={() => {}} // Disabled for Bintu
+                      comparisonHeatmapList={[]}
+                      isBintuMode={true}
+                      bintuStep={30000}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => {}} // Disabled for Bintu
+                      exampleDataSet={{}}
+                      progressPolling={() => {}} // Disabled for Bintu
+                      updateComparisonHeatmapCellLine={() => {}} // Disabled for Bintu
+                      comparisonHeatmapUpdateTrigger={0}
+                      selectedBintuCluster={selectedBintuCluster}
+                      setSelectedBintuCluster={setSelectedBintuCluster}
+                      tempBintuCellId={tempBintuCellId}
+                      setTempBintuCellId={setTempBintuCellId}
+                      handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
+                      bintuCellClusters={bintuCellClusters}
+                      bintuHeatmapLoading={bintuHeatmapLoading}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Original Heatmap */}
             {(heatmapLoading || chromosomeData.length === 0) ? (
               <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />

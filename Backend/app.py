@@ -25,7 +25,9 @@ from process import (
     bead_distribution,
     exist_bead_distribution, 
     exist_chromosome_3D_data,
-    bead_distribution_pvalues
+    bead_distribution_pvalues,
+    get_bintu_cell_clusters,
+    get_bintu_distance_matrix
 )
 
 
@@ -302,6 +304,28 @@ def set_tour_seen():
    response = set_user_cookie(response, user_id)
   
    return response
+
+
+@api.route('/getBintuCellClusters', methods=['GET'])
+def get_bintu_cell_clusters_api():
+    """Get available Bintu cell clusters for the selector"""
+    return jsonify(get_bintu_cell_clusters())
+
+
+@api.route('/getBintuDistanceMatrix', methods=['POST'])
+def get_bintu_distance_matrix_api():
+    """Get Bintu distance matrix for a specific cell ID"""
+    cell_line = request.json['cell_line']
+    chrid = request.json['chrid']
+    start_value = request.json['start_value']
+    end_value = request.json['end_value'] 
+    cell_id = request.json['cell_id']
+    
+    result = get_bintu_distance_matrix(cell_line, chrid, start_value, end_value, cell_id)
+    if result is None:
+        return jsonify({'error': 'No data found for the specified cell ID'}), 404
+    
+    return jsonify(result)
 
 app.register_blueprint(api)
 

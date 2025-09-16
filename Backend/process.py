@@ -14,7 +14,7 @@ from psycopg_pool import ConnectionPool
 from itertools import combinations
 import math
 import json
-from scipy.spatial.distance import squareform
+from scipy.spatial.distance import squareform, pdist
 from dotenv import load_dotenv
 from time import time
 import pyarrow.feather as feather
@@ -1257,7 +1257,75 @@ def get_bintu_cell_clusters():
         
         options.append({
             "value": value,
-            "label": label
+            "label": label,
+            "cell_line": row['cell_line'],
+            "chrid": row['chrid'], 
+            "start_value": row['start_value'],
+            "end_value": row['end_value'],
+            "cell_count": row['cell_count'],
+            "cell_ids": row['cell_ids']
         })
     
     return options
+
+
+"""
+Get Bintu distance matrix for a specific cell ID
+"""
+def get_bintu_distance_matrix(cell_line, chrid, start_value, end_value, cell_id):
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Get the 3D coordinates for the specific cell
+            # Assuming the bintu table has columns: cell_id, segment_index, x, y, z
+            cur.execute(
+                """
+                SELECT segment_index, x, y, z
+                FROM bintu
+                WHERE cell_line = %s AND chrid = %s AND start_value = %s AND end_value = %s AND cell_id = %s
+                ORDER BY segment_index
+                """,
+                (cell_line, chrid, start_value, end_value, cell_id)
+            )
+            rows = cur.fetchall()
+    
+    if not rows:
+        return None
+    
+    # Extract coordinates and segment indices
+    segment_indices = [row['segment_index'] for row in rows]
+    coordinates = np.array([(row['x'], row['y'], row['z']) for row in rows])
+    
+    # Calculate distance matrix using scipy's pdist and squareform
+    distance_vector = pdist(coordinates)
+    distance_matrix = squareform(distance_vector)
+
+    # Sanitize any NaN/inf values to keep JSON valid (JS JSON.parse rejects NaN/Infinity)
+    if np.isnan(distance_matrix).any() or np.isinf(distance_matrix).any():
+        distance_matrix = np.nan_to_num(distance_matrix, nan=0.0, posinf=0.0, neginf=0.0)
+    
+    # Create genomic positions from segment indices
+    # Each segment represents 30kb, so position = start_value + segment_index * 30000
+    positions = [start_value + seg_idx * 30000 for seg_idx in segment_indices]
+    
+    # Create the result structure similar to chromosome_data
+    result = []
+    n_positions = len(positions)
+    
+    for i in range(n_positions):
+        for j in range(n_positions):
+            result.append({
+                'x': int(positions[i]),
+                'y': int(positions[j]),
+                'value': float(distance_matrix[i][j])
+            })
+    
+    return {
+        'data': result,
+        'positions': positions,
+        'cell_line': cell_line,
+        'chrid': chrid,
+        'start_value': start_value,
+        'end_value': end_value,
+        'cell_id': cell_id,
+        'step': 30000  # Bintu uses 30kb step size
+    }

@@ -189,7 +189,7 @@ def create_bintu_table(cur):
             "chrid VARCHAR(50) NOT NULL,"
             "start_value BIGINT NOT NULL DEFAULT 0,"
             "end_value BIGINT NOT NULL DEFAULT 0,"
-            "cell_id VARCHAR(50) NOT NULL,"
+            "cell_id INT NOT NULL,"
             "segment_index INT NOT NULL DEFAULT 0,"
             "Z FLOAT DEFAULT NULL,"
             "Y FLOAT DEFAULT NULL,"

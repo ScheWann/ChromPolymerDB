@@ -7,7 +7,9 @@ import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
-export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList }) => {
+export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList, isBintuMode = false, bintuStep = 30000, 
+    // Bintu control props
+    selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -25,6 +27,22 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
     const [fqRawcMode, setFqRawcMode] = useState(true);
     const [sourceRecords, setSourceRecords] = useState([]);
+    const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu)
+
+    // Sync internal data when Bintu mode chromosomeData changes
+    useEffect(() => {
+        if (isBintuMode) {
+            setIndependentHeatmapData(chromosomeData || []);
+        }
+    }, [chromosomeData, isBintuMode]);
+
+    // Debug first row for Bintu
+    useEffect(() => {
+        if (isBintuMode && independentHeatmapData && independentHeatmapData.length) {
+            // eslint-disable-next-line no-console
+            console.debug('[BintuHeatmap] Received rows:', independentHeatmapData.length, 'Example:', independentHeatmapData[0]);
+        }
+    }, [isBintuMode, independentHeatmapData]);
 
     const modalStyles = {
         body: {
@@ -329,9 +347,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const height = Math.min(parentWidth, parentHeight) - margin.top - margin.bottom;
 
         const zoomedChromosomeData = independentHeatmapData.filter(item => {
-            const { ibp, jbp } = item;
-            return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
-                jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
+            if (isBintuMode) {
+                const { x, y } = item;
+                return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
+                    y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
+            } else {
+                const { ibp, jbp } = item;
+                return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
+                    jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
+            }
         });
 
         setCurrentChromosomeData(zoomedChromosomeData);
@@ -345,7 +369,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         const { start, end } = currentChromosomeSequence;
-        const step = 5000;
+        const step = isBintuMode ? bintuStep : 5000;
         const adjustedStart = Math.floor(start / step) * step;
         const adjustedEnd = Math.ceil(end / step) * step;
 
@@ -364,40 +388,96 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .range([height, 0])
             .padding(0.1);
 
-        const colorScale = d3.scaleSequential(
-            t => d3.interpolateReds(t * 0.8 + 0.2)
-        ).domain(colorScaleRange);
+        // Unified color scale (Reds) for both modes. For Bintu we derive dynamic domain from distances.
+        const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
+        let legendDomain;
+        let colorScale;
+        if (isBintuMode) {
+            const extent = d3.extent(zoomedChromosomeData, d => d.value);
+            if (extent[0] === undefined) {
+                legendDomain = [0, 1];
+            } else if (extent[0] === extent[1]) {
+                legendDomain = [extent[0], extent[0] + 1];
+            } else {
+                legendDomain = extent;
+            }
+            colorScale = d3.scaleSequential(redInterpolator).domain(legendDomain);
+        } else {
+            legendDomain = colorScaleRange;
+            colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
+        }
 
-        const fqMap = new Map();
+        const dataMap = new Map();
 
-        zoomedChromosomeData.forEach(d => {
-            fqMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
-            fqMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
-        });
+        if (isBintuMode) {
+            // For Bintu mode, map distance values directly
+            zoomedChromosomeData.forEach(d => {
+                dataMap.set(`X:${d.x}, Y:${d.y}`, { value: d.value });
+                dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
+            });
+        } else {
+            // For regular mode, use the existing fq/fdr/rawc mapping
+            zoomedChromosomeData.forEach(d => {
+                dataMap.set(`X:${d.ibp}, Y:${d.jbp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
+                dataMap.set(`X:${d.jbp}, Y:${d.ibp}`, { fq: d.fq, fdr: d.fdr, rawc: d.rawc });
+            });
+        }
 
         const hasData = (ibp, jbp) => {
             const inRange = totalChromosomeSequences.some(seq =>
                 ibp >= seq.start && ibp <= seq.end &&
                 jbp >= seq.start && jbp <= seq.end
             );
-
             return inRange;
         };
 
         // Draw heatmap using Canvas
+        drewColorRef.current = false;
         axisValues.forEach(ibp => {
             axisValues.forEach(jbp => {
-                const { fq, fdr, rawc } = fqMap.get(`X:${ibp}, Y:${jbp}`) || fqMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
-
                 const x = margin.left + xScale(jbp);
                 const y = margin.top + yScale(ibp);
-                const width = xScale.bandwidth();
-                const height = yScale.bandwidth();
+                const cellWidth = xScale.bandwidth();
+                const cellHeight = yScale.bandwidth();
 
-                context.fillStyle = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
-                context.fillRect(x, y, width, height);
+                let fillColor;
+                
+                if (isBintuMode) {
+                    const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
+                    if (!hasData(ibp, jbp)) {
+                        fillColor = 'white';
+                    } else if (!data) {
+                        fillColor = 'white';
+                    } else {
+                        // Use distance value for coloring (closer distances = darker colors)
+                        fillColor = colorScale(data.value);
+                    }
+                } else {
+                    const { fq, fdr, rawc } = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
+                    fillColor = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+                }
+
+                context.fillStyle = fillColor;
+                context.fillRect(x, y, cellWidth, cellHeight);
+                if (isBintuMode && fillColor !== 'white') drewColorRef.current = true;
             });
         });
+
+        // Fallback: direct paint using data coordinates if all white
+        if (isBintuMode && !drewColorRef.current && zoomedChromosomeData.length > 0) {
+            // eslint-disable-next-line no-console
+            console.debug('[BintuHeatmap] Fallback paint engaged.');
+            zoomedChromosomeData.forEach(d => {
+                const gx = Math.floor(d.x / bintuStep) * bintuStep;
+                const gy = Math.floor(d.y / bintuStep) * bintuStep;
+                if (!xScale(gx) && xScale(gx) !== 0) return;
+                if (!yScale(gy) && yScale(gy) !== 0) return;
+                const x = margin.left + xScale(gx);
+                const y = margin.top + yScale(gy);
+                context.fillStyle = colorScale(Math.min(d.value, 1000));
+                context.fillRect(x, y, xScale.bandwidth(), yScale.bandwidth());
+            });
+        }
 
         const axisSvg = d3.select(axisSvgRef.current)
             .attr('width', width + margin.left + margin.right)
@@ -474,11 +554,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('y2', '0%');
 
         const numStops = 10;
+    const gradientMin = legendDomain[0];
+    const gradientMax = legendDomain[1];
         for (let i = 0; i <= numStops; i++) {
             const t = i / numStops;
             gradient.append('stop')
                 .attr('offset', `${t * 100}%`)
-                .attr('stop-color', colorScale(colorScaleRange[0] + t * (colorScaleRange[1] - colorScaleRange[0])));
+                .attr('stop-color', colorScale(gradientMin + t * (gradientMax - gradientMin)));
         }
 
         colorScaleSvg.append('rect')
@@ -495,7 +577,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(colorScaleRange[0]);
+            .text(gradientMin);
 
         colorScaleSvg.append('text')
             .attr('x', 10)
@@ -503,7 +585,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(colorScaleRange[1]);
+            .text(gradientMax);
 
         // Brush for selecting range
         const brushSvg = d3.select(brushSvgRef.current)
@@ -616,21 +698,52 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         </div>
                     </Tooltip>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                        <Tooltip
-                            title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
-                            color='white'
-                        >
-                            <Switch
-                                size='small'
-                                checkedChildren="fq"
-                                unCheckedChildren="rawc"
-                                checked={fqRawcMode}
-                                style={{
-                                    backgroundColor: fqRawcMode ? '#74C365' : '#ED9121'
-                                }}
-                                onChange={changeFqRawcMode}
-                            />
-                        </Tooltip>
+                        {isBintuMode && (
+                            <>
+                                <Select
+                                    placeholder="Cluster"
+                                    size='small'
+                                    style={{ minWidth: 130 }}
+                                    value={selectedBintuCluster}
+                                    onChange={setSelectedBintuCluster}
+                                    options={bintuCellClusters}
+                                    showSearch
+                                    optionFilterProp='label'
+                                />
+                                <InputNumber
+                                    size='small'
+                                    style={{ width: 90 }}
+                                    min={1}
+                                    placeholder='Cell ID'
+                                    value={tempBintuCellId}
+                                    onChange={setTempBintuCellId}
+                                />
+                                <Button
+                                    type='primary'
+                                    size='small'
+                                    disabled={!selectedBintuCluster || !tempBintuCellId}
+                                    loading={bintuHeatmapLoading}
+                                    onClick={handleBintuHeatmapSubmit}
+                                >Load</Button>
+                            </>
+                        )}
+                        {!isBintuMode && (
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
+                                color='white'
+                            >
+                                <Switch
+                                    size='small'
+                                    checkedChildren="fq"
+                                    unCheckedChildren="rawc"
+                                    checked={fqRawcMode}
+                                    style={{
+                                        backgroundColor: fqRawcMode ? '#74C365' : '#ED9121'
+                                    }}
+                                    onChange={changeFqRawcMode}
+                                />
+                            </Tooltip>
+                        )}
                         {!comparisonHeatmapId && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>FoldRec interactions pairwise comparison</span>}
@@ -736,18 +849,20 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 </Tooltip>
                             </>
                         )}
-                        <Tooltip
-                            title={
-                                <span style={{ color: 'black' }}>
-                                    Generate 3D chromosome structure for shown locus.<br />
-                                </span>
-                            }
-                            color='white'
-                        >
-                            <Button size='small' color="primary" variant="outlined" onClick={generate3DChromosome} style={{ marginRight: 5, fontSize: 12 }}>
-                                3D Structure
-                            </Button>
-                        </Tooltip>
+                        {!isBintuMode && (
+                            <Tooltip
+                                title={
+                                    <span style={{ color: 'black' }}>
+                                        Generate 3D chromosome structure for shown locus.<br />
+                                    </span>
+                                }
+                                color='white'
+                            >
+                                <Button size='small' color="primary" variant="outlined" onClick={generate3DChromosome} style={{ marginRight: 5, fontSize: 12 }}>
+                                    3D Structure
+                                </Button>
+                            </Tooltip>
+                        )}
                     </div>
                 </div>
                 {independentHeatmapLoading ? (
