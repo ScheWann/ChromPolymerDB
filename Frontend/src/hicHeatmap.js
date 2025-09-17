@@ -782,7 +782,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                                 <InputNumber
                                     size='small'
-                                    style={{ width: 90 }}
+                                    style={{ width: 60 }}
                                     min={1}
                                     placeholder='Cell ID'
                                     value={tempBintuCellId}
