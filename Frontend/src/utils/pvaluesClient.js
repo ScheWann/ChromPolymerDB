@@ -1,9 +1,16 @@
-// Lightweight client for fetching bead distribution p-values with
-// in-flight de-duplication and result caching.
+/**
+ * Lightweight client for fetching bead distribution p-values with
+ * in-flight de-duplication and result caching.
+ */
 
 const cache = new Map();
 const inFlight = new Map();
 
+/**
+ * Create a stable string representation of a value for caching purposes
+ * @param {any} value - The value to stringify
+ * @returns {string} Stable string representation
+ */
 function stableStringify(value) {
     if (value === null || typeof value !== 'object') {
         return JSON.stringify(value);
@@ -15,6 +22,11 @@ function stableStringify(value) {
     return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(value[k])).join(',') + '}';
 }
 
+/**
+ * Fetch bead distribution p-values with caching and de-duplication
+ * @param {Object} payload - Request payload for the API
+ * @returns {Promise<Object>} Promise resolving to the API response data
+ */
 export async function getBeadDistributionPValues(payload) {
     const key = stableStringify(payload);
 
@@ -46,6 +58,9 @@ export async function getBeadDistributionPValues(payload) {
     return requestPromise;
 }
 
+/**
+ * Clear the p-values cache
+ */
 export function invalidatePValuesCache() {
     cache.clear();
 }
