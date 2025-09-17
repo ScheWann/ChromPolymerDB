@@ -389,20 +389,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .range([height, 0])
             .padding(0.1);
 
-        // Unified color scale (Reds) for both modes. For Bintu we derive dynamic domain from distances.
+        // Unified color scale (Reds) for both modes. Use colorScaleRange for consistent slider control.
         const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
         let legendDomain;
         let colorScale;
         if (isBintuMode) {
-            const extent = d3.extent(zoomedChromosomeData, d => d.value);
-            if (extent[0] === undefined) {
-                legendDomain = [0, 1];
-            } else if (extent[0] === extent[1]) {
-                legendDomain = [extent[0], extent[0] + 1];
-            } else {
-                legendDomain = extent;
-            }
-            colorScale = d3.scaleSequential(redInterpolator).domain(legendDomain);
+            // Use colorScaleRange for Bintu mode to respect slider controls
+            legendDomain = colorScaleRange;
+            colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
         } else {
             legendDomain = colorScaleRange;
             colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
@@ -478,7 +472,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 if (!yScale(d.y) && yScale(d.y) !== 0) return;
                 const x = margin.left + xScale(d.x);
                 const y = margin.top + yScale(d.y);
-                context.fillStyle = colorScale(Math.min(d.value, 1000));
+                context.fillStyle = colorScale(d.value);
                 context.fillRect(x, y, xScale.bandwidth(), yScale.bandwidth());
             });
         }
