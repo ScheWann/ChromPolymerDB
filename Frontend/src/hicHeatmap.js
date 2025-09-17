@@ -813,6 +813,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     onChange={setSelectedBintuCluster}
                                     options={bintuCellClusters}
                                     optionFilterProp='label'
+                                    optionRender={(option) => (
+                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                            <div>{option.label}</div>
+                                        </Tooltip>
+                                    )}
                                 />
                                 <InputNumber
                                     size='small'
