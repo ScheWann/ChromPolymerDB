@@ -1533,6 +1533,11 @@ function App() {
     setGeneSize({ start: 0, end: 0 });
     setGeneList([]);
     setDistributionData({});
+    // Clear non-random comparison heatmaps and related state
+    setComparisonHeatmapList([]);
+    setComparisonHeatmapIndex(1);
+    setComparisonHeatmapCellLines({});
+    setComparisonHeatmapUpdateTrigger({});
     // Clear bintu heatmaps
     setBintuHeatmaps([]);
   }
