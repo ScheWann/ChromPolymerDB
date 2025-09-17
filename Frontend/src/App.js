@@ -2090,6 +2090,46 @@ function App() {
 
         {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && !bintuHeatmapData && !showBintuInterface)) && (
           <>
+            {/* Original Hi-C Heatmap: show spinner only when actually loading; otherwise render only if data exists */}
+            {heatmapLoading ? (
+              <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+            ) : (
+              chromosomeData.length > 0 && (
+                <Heatmap
+                  comparisonHeatmapId={null}
+                  warning={warning}
+                  formatNumber={formatNumber}
+                  setChromosome3DExampleData={setChromosome3DExampleData}
+                  cellLineList={cellLineList}
+                  geneList={geneList}
+                  cellLineName={cellLineName}
+                  chromosomeName={chromosomeName}
+                  chromosomeData={chromosomeData}
+                  exampleDataSet={exampleDataSet}
+                  isExampleMode={isExampleMode}
+                  progressPolling={progressPolling}
+                  fetchExistChromos3DData={fetchExistChromos3DData}
+                  currentChromosomeSequence={currentChromosomeSequence}
+                  setCurrentChromosomeSequence={setCurrentChromosomeSequence}
+                  geneSize={geneSize}
+                  totalChromosomeSequences={totalChromosomeSequences}
+                  selectedChromosomeSequence={selectedChromosomeSequence}
+                  setChromosome3DExampleID={setChromosome3DExampleID}
+                  geneName={geneName}
+                  setSelectedChromosomeSequence={setSelectedChromosomeSequence}
+                  setChromosome3DLoading={setChromosome3DLoading}
+                  setGeneName={setGeneName}
+                  setGeneSize={setGeneSize}
+                  setSelectedSphereLists={setSelectedSphereLists}
+                  removeComparisonHeatmap={removeComparisonHeatmap}
+                  setChromosome3DCellLineName={setChromosome3DCellLineName}
+                  setChromosome3DComponents={setChromosome3DComponents}
+                  setChromosome3DComponentIndex={setChromosome3DComponentIndex}
+                  comparisonHeatmapList={comparisonHeatmapList}
+                />
+              )
+            )}
+
             {/* Bintu Heatmap Section */}
             {showBintuInterface && (
               <div style={{
@@ -2195,46 +2235,6 @@ function App() {
                   )}
                 </div>
               </div>
-            )}
-
-            {/* Original Hi-C Heatmap: show spinner only when actually loading; otherwise render only if data exists */}
-            {heatmapLoading ? (
-              <Spin spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
-            ) : (
-              chromosomeData.length > 0 && (
-                <Heatmap
-                  comparisonHeatmapId={null}
-                  warning={warning}
-                  formatNumber={formatNumber}
-                  setChromosome3DExampleData={setChromosome3DExampleData}
-                  cellLineList={cellLineList}
-                  geneList={geneList}
-                  cellLineName={cellLineName}
-                  chromosomeName={chromosomeName}
-                  chromosomeData={chromosomeData}
-                  exampleDataSet={exampleDataSet}
-                  isExampleMode={isExampleMode}
-                  progressPolling={progressPolling}
-                  fetchExistChromos3DData={fetchExistChromos3DData}
-                  currentChromosomeSequence={currentChromosomeSequence}
-                  setCurrentChromosomeSequence={setCurrentChromosomeSequence}
-                  geneSize={geneSize}
-                  totalChromosomeSequences={totalChromosomeSequences}
-                  selectedChromosomeSequence={selectedChromosomeSequence}
-                  setChromosome3DExampleID={setChromosome3DExampleID}
-                  geneName={geneName}
-                  setSelectedChromosomeSequence={setSelectedChromosomeSequence}
-                  setChromosome3DLoading={setChromosome3DLoading}
-                  setGeneName={setGeneName}
-                  setGeneSize={setGeneSize}
-                  setSelectedSphereLists={setSelectedSphereLists}
-                  removeComparisonHeatmap={removeComparisonHeatmap}
-                  setChromosome3DCellLineName={setChromosome3DCellLineName}
-                  setChromosome3DComponents={setChromosome3DComponents}
-                  setChromosome3DComponentIndex={setChromosome3DComponentIndex}
-                  comparisonHeatmapList={comparisonHeatmapList}
-                />
-              )
             )}
 
             {/* Comparison Heatmaps */}
