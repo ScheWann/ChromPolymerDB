@@ -16,6 +16,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const brushSvgRef = useRef(null);
     const axisSvgRef = useRef(null);
     const colorScaleRef = useRef(null);
+    const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu)
+    
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
@@ -28,7 +30,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
     const [fqRawcMode, setFqRawcMode] = useState(true);
     const [sourceRecords, setSourceRecords] = useState([]);
-    const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu)
 
     // Sync internal data when Bintu mode chromosomeData changes
     useEffect(() => {
@@ -772,7 +773,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         {isBintuMode && (
                             <>
                                 <Select
-                                    placeholder="Cluster"
+                                    placeholder="Bintu Datasets"
                                     size='small'
                                     style={{ width: 150 }}
                                     value={selectedBintuCluster}
