@@ -1489,6 +1489,24 @@ function App() {
     setGeneSize({ start: 0, end: 0 });
     setGeneList([]);
     setDistributionData({});
+    // Clear bintu-related state as well
+    setShowBintuInterface(false);
+    setBintuHeatmapData(null);
+    setSelectedBintuCluster(null);
+    setTempBintuCellId(null);
+  }
+
+  // Function to handle closing bintu heatmap
+  const onCloseBintuHeatmap = () => {
+    setShowBintuInterface(false);
+    setBintuHeatmapData(null);
+    setSelectedBintuCluster(null);
+    setTempBintuCellId(null);
+    
+    // Only return to project introduction if Bintu interface was the only content being displayed
+    if (chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0) {
+      returnIntroPage();
+    }
   }
 
   const onClickExampleDataItem = ({ key }) => {
@@ -2187,6 +2205,7 @@ function App() {
                       handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
                       bintuCellClusters={bintuCellClusters}
                       bintuHeatmapLoading={bintuHeatmapLoading}
+                      onCloseBintuHeatmap={onCloseBintuHeatmap}
                     />
                   ) : (
                     <Heatmap
@@ -2231,6 +2250,7 @@ function App() {
                       handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
                       bintuCellClusters={bintuCellClusters}
                       bintuHeatmapLoading={bintuHeatmapLoading}
+                      onCloseBintuHeatmap={onCloseBintuHeatmap}
                     />
                   )}
                 </div>

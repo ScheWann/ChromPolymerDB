@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined, CloseOutlined } from "@ant-design/icons";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
@@ -618,22 +618,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
 
     const closeBintuHeatmap = () => {
-        console.log('Closing Bintu heatmap');
-        // if (!isBintuMode) return;
-        // if (comparisonHeatmapId && removeComparisonHeatmap) {
-        //     removeComparisonHeatmap(comparisonHeatmapId);
-        //     return;
-        // }
-        // if (typeof onCloseBintuHeatmap === 'function') {
-        //     onCloseBintuHeatmap();
-        //     return;
-        // }
-        // try {
-        //     window.location.assign('/projectIntroduction');
-        // } catch (e) {
-        //     // best-effort fallback
-        //     window.location.href = '/projectIntroduction';
-        // }
+        // Call the parent component's onCloseBintuHeatmap function if available
+        if (onCloseBintuHeatmap) {
+            onCloseBintuHeatmap();
+        }
     };
 
     return (
