@@ -684,7 +684,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     <span style={{ marginRight: 3 }}>
                                         {isBintuMode ? 
                                             (selectedBintuCluster ? 
-                                                bintuCellClusters.find(cluster => cluster.value === selectedBintuCluster)?.label || 
                                                 selectedBintuCluster.split('_')[0] || 'Bintu'
                                                 : 'Bintu'
                                             ) : 
