@@ -60,32 +60,59 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     };
 
-    const download = () => {
-        if (independentHeatmapData) {
-            const filteredData = independentHeatmapData.filter(row => row.fdr < 0.05);
+    const download = async () => {
+        if (!independentHeatmapData || independentHeatmapData.length === 0) return;
 
-            if (filteredData.length === 0) {
-                alert("no suitable data (fdr < 0.05)");
-                return;
+        if (isBintuMode) {
+            // For Bintu mode, download the pre-generated CSV from Backend/Bintu folder via API
+            try {
+                if (!selectedBintuCluster) {
+                    alert('Please select a Bintu dataset first.');
+                    return;
+                }
+                const [cell_line, chrid, startStr, endStr] = selectedBintuCluster.split('_');
+                const start_value = parseInt(startStr, 10);
+                const end_value = parseInt(endStr, 10);
+                const params = new URLSearchParams({ cell_line, chrid, start_value, end_value });
+                const res = await fetch(`/api/downloadBintuCSV?${params.toString()}`);
+                if (!res.ok) {
+                    const msg = await res.text();
+                    throw new Error(msg || 'Failed to download Bintu CSV');
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${cell_line}_${chrid}-${Math.floor(start_value/1e6)}-${Math.floor(end_value/1e6)}Mb.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error(e);
+                alert('Download failed: ' + (e?.message || 'Unknown error'));
             }
-
-            const csvData = filteredData.map(row =>
-                `${row.cell_line},${row.chrid},${row.ibp},${row.jbp},${row.fq},${row.fdr},${row.rawc}`
-            ).join('\n');
-
-            const header = 'cell_line,chrid,ibp,jbp,fq,fdr,rawc\n';
-            const csvContent = header + csvData;
-
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
-            link.click();
-
-            URL.revokeObjectURL(url);
+            return;
         }
+
+        // Original non-Bintu download behavior: significant interactions CSV
+        const filteredData = independentHeatmapData.filter(row => row.fdr < 0.05);
+        if (filteredData.length === 0) {
+            alert("no suitable data (fdr < 0.05)");
+            return;
+        }
+        const csvData = filteredData.map(row =>
+            `${row.cell_line},${row.chrid},${row.ibp},${row.jbp},${row.fq},${row.fdr},${row.rawc}`
+        ).join('\n');
+        const header = 'cell_line,chrid,ibp,jbp,fq,fdr,rawc\n';
+        const csvContent = header + csvData;
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${chromosomeName}.${selectedChromosomeSequence.start}.${selectedChromosomeSequence.end}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
     };
 
     const comparisonCellLineChange = (value) => {
@@ -758,14 +785,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Tooltip>
                         )}
                         <Tooltip
-                            title={<span style={{ color: 'black' }}>Download non-random interaction data</span>}
+                            title={<span style={{ color: 'black' }}>{isBintuMode ? 'Download Bintu CSV' : 'Download non-random interaction data'}</span>}
                             color='white'
                         >
                             <Button
                                 size='small'
+                                disabled={independentHeatmapLoading || !independentHeatmapData || independentHeatmapData.length === 0}
                                 style={{
                                     fontSize: 12,
-                                    cursor: "pointer",
+                                    cursor: independentHeatmapLoading || !independentHeatmapData || independentHeatmapData.length === 0 ? 'not-allowed' : 'pointer',
                                 }}
                                 icon={<DownloadOutlined />}
                                 onClick={download}

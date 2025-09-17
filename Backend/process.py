@@ -21,6 +21,7 @@ import pyarrow.feather as feather
 from concurrent.futures import ThreadPoolExecutor
 from cell_line_labels import label_mapping
 from scipy.stats import ttest_ind
+import glob
 
 
 load_dotenv()
@@ -1329,3 +1330,45 @@ def get_bintu_distance_matrix(cell_line, chrid, start_value, end_value, cell_id)
         'cell_id': cell_id,
         'step': 30000  # Bintu uses 30kb step size
     }
+
+
+"""
+Download Bintu CSV for a specific dataset cluster
+File naming convention under ./Bintu: {cell_line}_{chrid}-{start_mb}-{end_mb}Mb.csv
+"""
+def download_bintu_csv(cell_line: str, chrid: str, start_value: int, end_value: int):
+    # Convert to Mb for filename construction
+    try:
+        start_mb = int(start_value) // 1_000_000
+        end_mb = int(end_value) // 1_000_000
+    except Exception:
+        return None
+
+    base_prefix = f"{cell_line}_{chrid}-{start_mb}-{end_mb}Mb"
+    direct_filename = f"{base_prefix}.csv"
+    direct_path = os.path.join("./Bintu", direct_filename)
+
+    # Prefer exact match, else fallback to any file with the prefix (e.g., _untreated)
+    candidate_path = None
+    candidate_name = None
+    if os.path.exists(direct_path):
+        candidate_path = direct_path
+        candidate_name = direct_filename
+    else:
+        pattern = os.path.join("./Bintu", base_prefix + "*.csv")
+        matches = glob.glob(pattern)
+        if matches:
+            # Choose the first match deterministically (sorted)
+            matches.sort()
+            candidate_path = matches[0]
+            candidate_name = os.path.basename(candidate_path)
+
+    if not candidate_path:
+        return None
+
+    return send_file(
+        candidate_path,
+        as_attachment=True,
+        download_name=candidate_name,
+        mimetype='text/csv'
+    )

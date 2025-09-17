@@ -27,7 +27,8 @@ from process import (
     exist_chromosome_3D_data,
     bead_distribution_pvalues,
     get_bintu_cell_clusters,
-    get_bintu_distance_matrix
+    get_bintu_distance_matrix,
+    download_bintu_csv
 )
 
 
@@ -326,6 +327,25 @@ def get_bintu_distance_matrix_api():
         return jsonify({'error': 'No data found for the specified cell ID'}), 404
     
     return jsonify(result)
+
+
+@api.route('/downloadBintuCSV', methods=['GET'])
+def download_bintu_csv_api():
+    """Download the Bintu CSV file for a given cluster.
+    Expects query params: cell_line, chrid, start_value, end_value
+    """
+    cell_line = request.args.get('cell_line')
+    chrid = request.args.get('chrid')
+    start_value = request.args.get('start_value', type=int)
+    end_value = request.args.get('end_value', type=int)
+
+    if not all([cell_line, chrid, isinstance(start_value, int), isinstance(end_value, int)]):
+        return jsonify({"error": "Missing or invalid parameters"}), 400
+
+    resp = download_bintu_csv(cell_line, chrid, start_value, end_value)
+    if resp is None:
+        return jsonify({"error": "CSV not found for requested cluster"}), 404
+    return resp
 
 app.register_blueprint(api)
 
