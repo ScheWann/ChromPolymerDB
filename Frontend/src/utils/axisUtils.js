@@ -47,7 +47,18 @@ export const calculateTickValues = (axisValues, availableWidth, currentChromosom
         // For Bintu mode, use space-based calculation similar to heatmap
         const maxTicks = Math.min(nBins, Math.max(8, Math.floor(availableWidth / 45))); // ~1 label per 45px
         const tickStep = Math.max(1, Math.ceil(nBins / maxTicks));
-        const tickValues = axisValues.filter((_, i) => i % tickStep === 0 || i === nBins - 1);
+        
+        // Filter ticks with step, but avoid having the last tick too close to the previous one
+        const baseTicks = axisValues.filter((_, i) => i % tickStep === 0);
+        const lastIndex = nBins - 1;
+        const lastSteppedIndex = baseTicks.length > 0 ? axisValues.indexOf(baseTicks[baseTicks.length - 1]) : -1;
+        
+        // Only add the last tick if it's not too close to the previous one
+        // "Too close" means less than half of tickStep away
+        const tickValues = (lastIndex - lastSteppedIndex >= Math.max(1, Math.floor(tickStep / 2))) 
+            ? [...baseTicks, axisValues[lastIndex]]
+            : baseTicks;
+            
         return { tickValues, tickStep };
     } else {
         // For regular mode, use range-based calculation similar to gene list

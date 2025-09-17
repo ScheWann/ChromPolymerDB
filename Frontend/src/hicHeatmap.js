@@ -38,6 +38,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     }, [chromosomeData, isBintuMode]);
 
+    // Set appropriate colorScaleRange for Bintu mode
+    useEffect(() => {
+        if (isBintuMode && independentHeatmapData && independentHeatmapData.length > 0) {
+            const maxDistance = d3.max(independentHeatmapData, d => d.value) || 1000;
+            setColorScaleRange([0, Math.ceil(maxDistance)]);
+        } else if (!isBintuMode && colorScaleRange[1] > 200) {
+            // Reset to default non-Bintu range if switching from Bintu mode
+            setColorScaleRange([0, fqRawcMode ? 0.3 : 30]);
+        }
+    }, [isBintuMode, independentHeatmapData, fqRawcMode]);
+
     const modalStyles = {
         body: {
             overflowY: 'auto',
@@ -540,7 +551,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(gradientMin);
+            .text(isBintuMode ? Math.floor(gradientMin) : gradientMin);
 
         colorScaleSvg.append('text')
             .attr('x', 10)
@@ -548,7 +559,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(gradientMax);
+            .text(isBintuMode ? Math.ceil(gradientMax) : gradientMax);
 
         // Brush for selecting range (disabled in Bintu mode)
         if (!isBintuMode) {
@@ -670,7 +681,16 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer" }}>
                             {!comparisonHeatmapId && (
                                 <>
-                                    <span style={{ marginRight: 3 }}>{isBintuMode ? 'Bintu' : cellLineName}</span>
+                                    <span style={{ marginRight: 3 }}>
+                                        {isBintuMode ? 
+                                            (selectedBintuCluster ? 
+                                                bintuCellClusters.find(cluster => cluster.value === selectedBintuCluster)?.label || 
+                                                selectedBintuCluster.split('_')[0] || 'Bintu'
+                                                : 'Bintu'
+                                            ) : 
+                                            cellLineName
+                                        }
+                                    </span>
                                     {/* Show dash only when not in Bintu pre-selection state */}
                                     {(!isBintuMode || (selectedBintuCluster && tempBintuCellId)) && (
                                         <span style={{ marginRight: 3 }}>-</span>
@@ -915,7 +935,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     controls={false}
                                     value={colorScaleRange[1]}
                                     min={0}
-                                    max={fqRawcMode ? 1 : 200}
+                                    max={isBintuMode ? 
+                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        (fqRawcMode ? 1 : 200)
+                                    }
                                     onChange={changeColorByInput("max")}
                                 />
                                 <Slider
@@ -923,12 +946,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     vertical
                                     style={{ height: 200 }}
                                     min={0}
-                                    max={fqRawcMode ? 1 : 200}
-                                    step={fqRawcMode ? 0.1 : 1}
+                                    max={isBintuMode ? 
+                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        (fqRawcMode ? 1 : 200)
+                                    }
+                                    step={isBintuMode ? 1 : (fqRawcMode ? 0.1 : 1)}
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
                                     tooltip={{
-                                        formatter: (value) => value,
+                                        formatter: (value) => isBintuMode ? Math.round(value) : value,
                                         color: 'white',
                                         overlayInnerStyle: {
                                             color: 'black',
@@ -942,7 +968,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     controls={false}
                                     value={colorScaleRange[0]}
                                     min={0}
-                                    max={fqRawcMode ? 1 : 200}
+                                    max={isBintuMode ? 
+                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        (fqRawcMode ? 1 : 200)
+                                    }
                                     onChange={changeColorByInput("min")}
                                 />
                             </div>
