@@ -13,7 +13,6 @@ function App() {
   const [geneNameList, setGeneNameList] = useState([]);
   const [cellLineList, setCellLineList] = useState([]);
   const [geneList, setGeneList] = useState([]);
-  const [bintuGeneList, setBintuGeneList] = useState([]);
   const [chromosList, setChromosList] = useState([]);
   const [cellLineName, setCellLineName] = useState(null);
   const [geneName, setGeneName] = useState(null);
@@ -101,11 +100,8 @@ function App() {
 
   // Bintu-related state
   const [bintuCellClusters, setBintuCellClusters] = useState([]);
-  const [selectedBintuCluster, setSelectedBintuCluster] = useState(null);
-  const [tempBintuCellId, setTempBintuCellId] = useState(null);
-  const [bintuHeatmapData, setBintuHeatmapData] = useState(null);
-  const [bintuHeatmapLoading, setBintuHeatmapLoading] = useState(false);
-  const [showBintuInterface, setShowBintuInterface] = useState(false);
+  const [bintuHeatmaps, setBintuHeatmaps] = useState([]); // Array of Bintu heatmap instances
+  const [bintuHeatmapIndex, setBintuHeatmapIndex] = useState(1); // Index for next Bintu heatmap
 
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
@@ -1073,8 +1069,14 @@ function App() {
       });
   };
 
-  const fetchBintuDistanceMatrix = (cellLine, chrid, startValue, endValue, cellId) => {
-    setBintuHeatmapLoading(true);
+  const fetchBintuDistanceMatrix = (cellLine, chrid, startValue, endValue, cellId, bintuId) => {
+    // Set loading state for this specific bintu instance
+    setBintuHeatmaps(prev => prev.map(bintu => 
+      bintu.id === bintuId 
+        ? { ...bintu, loading: true } 
+        : bintu
+    ));
+
     fetch('/api/getBintuDistanceMatrix', {
       method: 'POST',
       headers: {
@@ -1095,9 +1097,17 @@ function App() {
         return res.json();
       })
       .then(data => {
-        // Store entire response object so we can access metadata (cell_line, chrid, step, etc.)
-        setBintuHeatmapData(data);
-        setBintuHeatmapLoading(false);
+        // Update the specific Bintu heatmap instance
+        setBintuHeatmaps(prev => prev.map(bintu => 
+          bintu.id === bintuId 
+            ? { 
+                ...bintu, 
+                data: data,
+                loading: false,
+                geneList: [] // Will be updated separately
+              } 
+            : bintu
+        ));
 
         // Fetch gene list for the region
         const sequences = { start: startValue, end: endValue };
@@ -1114,7 +1124,12 @@ function App() {
         })
           .then(res => res.json())
           .then(geneData => {
-            setBintuGeneList(geneData);
+            // Update gene list for this specific instance
+            setBintuHeatmaps(prev => prev.map(bintu => 
+              bintu.id === bintuId 
+                ? { ...bintu, geneList: geneData } 
+                : bintu
+            ));
           })
           .catch(error => {
             console.error('Error fetching gene list:', error);
@@ -1122,7 +1137,12 @@ function App() {
       })
       .catch(error => {
         console.error('Error fetching Bintu distance matrix:', error);
-        setBintuHeatmapLoading(false);
+        // Set loading to false and clear data on error
+        setBintuHeatmaps(prev => prev.map(bintu => 
+          bintu.id === bintuId 
+            ? { ...bintu, loading: false, data: null } 
+            : bintu
+        ));
         messageApi.open({
           type: 'error',
           content: 'Failed to fetch Bintu distance matrix',
@@ -1132,16 +1152,25 @@ function App() {
   };
 
   const handleAddBintuHeatmap = () => {
-    // Show the Bintu interface
-    setShowBintuInterface(true);
-    // Clear any existing data to start fresh
-    setBintuHeatmapData(null);
-    setSelectedBintuCluster(null);
-    setTempBintuCellId(null);
+    // Create a new Bintu heatmap instance
+    const newBintuHeatmap = {
+      id: bintuHeatmapIndex,
+      selectedCluster: null,
+      tempCellId: null,
+      data: null,
+      loading: false,
+      geneList: []
+    };
+
+    setBintuHeatmaps(prev => [...prev, newBintuHeatmap]);
+    setBintuHeatmapIndex(prev => prev + 1);
   };
 
-  const handleBintuHeatmapSubmit = () => {
-    if (!selectedBintuCluster) {
+  const handleBintuHeatmapSubmit = (bintuId) => {
+    const bintuHeatmap = bintuHeatmaps.find(b => b.id === bintuId);
+    if (!bintuHeatmap) return;
+
+    if (!bintuHeatmap.selectedCluster) {
       messageApi.open({
         type: 'warning',
         content: 'Please select a Bintu cluster first',
@@ -1150,7 +1179,7 @@ function App() {
       return;
     }
 
-    if (!tempBintuCellId) {
+    if (!bintuHeatmap.tempCellId) {
       messageApi.open({
         type: 'warning',
         content: 'Please enter a cell ID',
@@ -1160,16 +1189,31 @@ function App() {
     }
 
     // Parse the selected cluster
-    const cluster = bintuCellClusters.find(c => c.value === selectedBintuCluster);
+    const cluster = bintuCellClusters.find(c => c.value === bintuHeatmap.selectedCluster);
     if (cluster) {
       fetchBintuDistanceMatrix(
         cluster.cell_line,
         cluster.chrid,
         cluster.start_value,
         cluster.end_value,
-        tempBintuCellId
+        bintuHeatmap.tempCellId,
+        bintuId
       );
     }
+  };
+
+  // Function to update specific Bintu heatmap instance
+  const updateBintuHeatmap = (bintuId, updates) => {
+    setBintuHeatmaps(prev => prev.map(bintu => 
+      bintu.id === bintuId 
+        ? { ...bintu, ...updates } 
+        : bintu
+    ));
+  };
+
+  // Function to remove a specific Bintu heatmap instance
+  const removeBintuHeatmap = (bintuId) => {
+    setBintuHeatmaps(prev => prev.filter(bintu => bintu.id !== bintuId));
   };
 
   // Mode change (Cell Line / Gene)
@@ -1489,22 +1533,18 @@ function App() {
     setGeneSize({ start: 0, end: 0 });
     setGeneList([]);
     setDistributionData({});
-    // Clear bintu-related state as well
-    setShowBintuInterface(false);
-    setBintuHeatmapData(null);
-    setSelectedBintuCluster(null);
-    setTempBintuCellId(null);
+    // Clear bintu heatmaps
+    setBintuHeatmaps([]);
   }
 
   // Function to handle closing bintu heatmap
+  // Legacy function - can be removed if not used elsewhere
   const onCloseBintuHeatmap = () => {
-    setShowBintuInterface(false);
-    setBintuHeatmapData(null);
-    setSelectedBintuCluster(null);
-    setTempBintuCellId(null);
+    // This function is kept for backwards compatibility 
+    // Individual Bintu heatmaps now handle their own removal via removeBintuHeatmap
     
-    // Only return to project introduction if Bintu interface was the only content being displayed
-    if (chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0) {
+    // Only return to project introduction if no content is being displayed
+    if (chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && bintuHeatmaps.length === 0) {
       returnIntroPage();
     }
   }
@@ -2093,7 +2133,7 @@ function App() {
         {!heatmapLoading &&
           chromosomeData.length === 0 &&
           Object.keys(chromosome3DExampleData).length === 0 &&
-          !showBintuInterface && (
+          bintuHeatmaps.length === 0 && (
             <div style={{ width: '100%', height: '100%', overflowY: 'scroll' }}>
               <ProjectIntroduction
                 exampleDataItems={exampleDataItems}
@@ -2106,7 +2146,7 @@ function App() {
             </div>
           )}
 
-        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && !bintuHeatmapData && !showBintuInterface)) && (
+        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && bintuHeatmaps.length === 0)) && (
           <>
             {/* Original Hi-C Heatmap: show spinner only when actually loading; otherwise render only if data exists */}
             {heatmapLoading ? (
@@ -2148,9 +2188,9 @@ function App() {
               )
             )}
 
-            {/* Bintu Heatmap Section */}
-            {showBintuInterface && (
-              <div style={{
+            {/* Bintu Heatmap Section - Multiple instances */}
+            {bintuHeatmaps.map((bintuHeatmap) => (
+              <div key={bintuHeatmap.id} style={{
                 width: '40vw',
                 height: '100%',
                 borderRight: "1px solid #eaeaea",
@@ -2159,22 +2199,22 @@ function App() {
               }}>
                 {/* Bintu Heatmap Content (controls rendered inside Heatmap) */}
                 <div style={{ flex: 1, position: 'relative' }}>
-                  {bintuHeatmapLoading ? (
+                  {bintuHeatmap.loading ? (
                     <Spin spinning={true} size="large" style={{ width: '100%', height: '100%' }} />
-                  ) : bintuHeatmapData ? (
+                  ) : bintuHeatmap.data ? (
                     <Heatmap
                       comparisonHeatmapId={null}
                       warning={warning}
                       formatNumber={formatNumber}
                       cellLineList={cellLineList}
-                      geneList={bintuGeneList}
-                      cellLineName={bintuHeatmapData?.cell_line || ''}
-                      chromosomeName={bintuHeatmapData?.chrid || ''}
-                      chromosomeData={bintuHeatmapData?.data || []}
-                      currentChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
+                      geneList={bintuHeatmap.geneList}
+                      cellLineName={bintuHeatmap.data?.cell_line || ''}
+                      chromosomeName={bintuHeatmap.data?.chrid || ''}
+                      chromosomeData={bintuHeatmap.data?.data || []}
+                      currentChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
                       setCurrentChromosomeSequence={() => { }} // Disabled for Bintu
-                      selectedChromosomeSequence={{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }}
-                      totalChromosomeSequences={[{ start: bintuHeatmapData?.start_value || 0, end: bintuHeatmapData?.end_value || 0 }]}
+                      selectedChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
+                      totalChromosomeSequences={[{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }]}
                       setSelectedChromosomeSequence={() => { }} // Disabled for Bintu
                       setChromosome3DExampleID={() => { }} // Disabled for Bintu
                       setChromosome3DLoading={() => { }} // Disabled for Bintu
@@ -2191,21 +2231,22 @@ function App() {
                       comparisonHeatmapList={[]}
                       // Bintu-specific props
                       isBintuMode={true}
-                      bintuStep={bintuHeatmapData?.step || 30000}
+                      bintuId={bintuHeatmap.id}
+                      bintuStep={bintuHeatmap.data?.step || 30000}
                       isExampleMode={() => false}
                       fetchExistChromos3DData={() => { }} // Disabled for Bintu
                       exampleDataSet={{}}
                       progressPolling={() => { }} // Disabled for Bintu
                       updateComparisonHeatmapCellLine={() => { }} // Disabled for Bintu
                       comparisonHeatmapUpdateTrigger={0}
-                      selectedBintuCluster={selectedBintuCluster}
-                      setSelectedBintuCluster={setSelectedBintuCluster}
-                      tempBintuCellId={tempBintuCellId}
-                      setTempBintuCellId={setTempBintuCellId}
-                      handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
+                      selectedBintuCluster={bintuHeatmap.selectedCluster}
+                      setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
+                      tempBintuCellId={bintuHeatmap.tempCellId}
+                      setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
+                      handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
                       bintuCellClusters={bintuCellClusters}
-                      bintuHeatmapLoading={bintuHeatmapLoading}
-                      onCloseBintuHeatmap={onCloseBintuHeatmap}
+                      bintuHeatmapLoading={bintuHeatmap.loading}
+                      onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
                     />
                   ) : (
                     <Heatmap
@@ -2213,7 +2254,7 @@ function App() {
                       warning={warning}
                       formatNumber={formatNumber}
                       cellLineList={cellLineList}
-                      geneList={bintuGeneList}
+                      geneList={bintuHeatmap.geneList}
                       cellLineName={''}
                       chromosomeName={''}
                       chromosomeData={[]}
@@ -2236,6 +2277,7 @@ function App() {
                       setChromosome3DComponentIndex={() => { }} // Disabled for Bintu
                       comparisonHeatmapList={[]}
                       isBintuMode={true}
+                      bintuId={bintuHeatmap.id}
                       bintuStep={30000}
                       isExampleMode={() => false}
                       fetchExistChromos3DData={() => { }} // Disabled for Bintu
@@ -2243,19 +2285,19 @@ function App() {
                       progressPolling={() => { }} // Disabled for Bintu
                       updateComparisonHeatmapCellLine={() => { }} // Disabled for Bintu
                       comparisonHeatmapUpdateTrigger={0}
-                      selectedBintuCluster={selectedBintuCluster}
-                      setSelectedBintuCluster={setSelectedBintuCluster}
-                      tempBintuCellId={tempBintuCellId}
-                      setTempBintuCellId={setTempBintuCellId}
-                      handleBintuHeatmapSubmit={handleBintuHeatmapSubmit}
+                      selectedBintuCluster={bintuHeatmap.selectedCluster}
+                      setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
+                      tempBintuCellId={bintuHeatmap.tempCellId}
+                      setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
+                      handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
                       bintuCellClusters={bintuCellClusters}
-                      bintuHeatmapLoading={bintuHeatmapLoading}
-                      onCloseBintuHeatmap={onCloseBintuHeatmap}
+                      bintuHeatmapLoading={bintuHeatmap.loading}
+                      onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
                     />
                   )}
                 </div>
               </div>
-            )}
+            ))}
 
             {/* Comparison Heatmaps */}
             {comparisonHeatmapList.map((index) => (
