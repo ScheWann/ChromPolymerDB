@@ -363,7 +363,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         const { start, end } = currentChromosomeSequence;
         const step = isBintuMode ? bintuStep : 5000;
-        
+
         // Use shared axis utilities for consistency with gene list
         const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
 
@@ -770,19 +770,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             />
                         </Tooltip>
                         {isBintuMode && (
-                            <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
-                                <Button
-                                    size='small'
-                                    style={{
-                                        fontSize: 12,
-                                        cursor: 'pointer',
-                                    }}
-                                    icon={<MinusOutlined />}
-                                    onClick={closeBintuHeatmap}
-                                />
-                            </Tooltip>
-                        )}
-                        {isBintuMode && (
                             <>
                                 <Select
                                     placeholder="Cluster"
@@ -801,6 +788,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     value={tempBintuCellId}
                                     onChange={setTempBintuCellId}
                                 />
+                                <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
+                                    <Button
+                                        size='small'
+                                        style={{
+                                            fontSize: 12,
+                                            cursor: 'pointer',
+                                        }}
+                                        icon={<MinusOutlined />}
+                                        onClick={closeBintuHeatmap}
+                                    />
+                                </Tooltip>
                                 <Button
                                     color='primary'
                                     size='small'

@@ -200,21 +200,14 @@ function App() {
 
   const addItems = [
     {
-      key: 'heatmapCollection',
-      label: 'Add Heatmap Comparison',
-      disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0 || bintuCellClusters.length > 0),
-      children: [
-        {
-          key: 'nonRandomHiCHeatmap',
-          label: 'Add non-random HiC Heatmap',
-          disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
-        },
-        {
-          key: 'bintuHeatmap',
-          label: 'Add Bintu Heatmap',
-          disabled: bintuCellClusters.length === 0,
-        },
-      ]
+      key: 'bintuHeatmap',
+      label: 'Add Bintu Heatmap',
+      disabled: bintuCellClusters.length === 0,
+    },
+    {
+      key: 'nonRandomHiCHeatmap',
+      label: 'Add non-random HiC Heatmap',
+      disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
     },
     {
       key: 'chromosome3d',
@@ -1992,7 +1985,7 @@ function App() {
                   value={endInputValue}
                 />
                 <Dropdown menu={{ items: addItems, onClick: onClickAddItems }} placement="bottom" arrow>
-                  <Button id="add-new-heatmap-button" disabled={!chromosomeData.length} size="small" icon={<PlusOutlined />} />
+                  <Button id="add-new-heatmap-button" size="small" icon={<PlusOutlined />} />
                 </Dropdown>
                 <Tooltip
                   title={<span style={{ color: 'black' }}>View non-random chromosomal interactions as heatmap</span>}
