@@ -1537,18 +1537,6 @@ function App() {
     setBintuHeatmaps([]);
   }
 
-  // Function to handle closing bintu heatmap
-  // Legacy function - can be removed if not used elsewhere
-  const onCloseBintuHeatmap = () => {
-    // This function is kept for backwards compatibility 
-    // Individual Bintu heatmaps now handle their own removal via removeBintuHeatmap
-    
-    // Only return to project introduction if no content is being displayed
-    if (chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && bintuHeatmaps.length === 0) {
-      returnIntroPage();
-    }
-  }
-
   const onClickExampleDataItem = ({ key }) => {
     // Find the example data item by key
     const exampleItem = exampleDataItems.find(item => item.key === key);
