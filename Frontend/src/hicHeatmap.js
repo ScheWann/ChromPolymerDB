@@ -558,7 +558,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 .attr('stop-color', colorScale(gradientMin + t * (gradientMax - gradientMin)));
         }
 
-        colorScaleSvg.append('rect')
+        const legendXOffset = 12;
+        const legendGroup = colorScaleSvg.append('g')
+            .attr('transform', `translate(${legendXOffset}, 0)`);
+
+        legendGroup.append('rect')
             .attr('x', 0)
             .attr('y', 0)
             .attr('width', height / 1.2)
@@ -566,7 +570,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .style('fill', 'url(#colorGradient)')
             .attr('transform', `translate(0, ${(parentHeight - height / 1.2) / 2 + height / 1.2}) rotate(-90, 0, 0)`);
 
-        colorScaleSvg.append('text')
+        legendGroup.append('text')
             .attr('x', 10)
             .attr('y', height / 1.2 + (parentHeight - height / 1.2) / 2 + 15)
             .attr('text-anchor', 'middle')
@@ -574,7 +578,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('fill', '#333')
             .text(isBintuMode ? Math.floor(gradientMin) : gradientMin);
 
-        colorScaleSvg.append('text')
+        legendGroup.append('text')
             .attr('x', 10)
             .attr('y', (parentHeight - height / 1.2) / 2 - 5)
             .attr('text-anchor', 'middle')
