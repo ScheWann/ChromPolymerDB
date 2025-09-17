@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000 }) => {
+import { calculateAxisValues, calculateTickValues, formatTickLabel } from './utils/axisUtils';
+
+export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000, isBintuMode = false, zoomedChromosomeData = [] }) => {
     const svgRef = useRef();
     const containerRef = useRef();
     const [scrollEnabled, setScrollEnabled] = useState(false);
@@ -85,16 +87,12 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             const svg = d3.select(svgRef.current);
             svg.selectAll("*").remove();
 
-            const { start, end } = currentChromosomeSequence;
-            const adjustedStart = Math.floor(start / step) * step;
-            const adjustedEnd = Math.ceil(end / step) * step;
-
-            const axisValues = Array.from(
-                { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
-                (_, i) => adjustedStart + i * step
-            );
+            // Use shared axis utilities for consistency with heatmap
+            const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
+            const { tickValues } = calculateTickValues(axisValues, minDimension, currentChromosomeSequence, isBintuMode);
 
             // Map genes to the range of currentChromosomeSequence
+            const { start, end } = currentChromosomeSequence;
             const genesToRender = geneList
                 .filter((gene) =>
                     gene.start_location <= end && gene.end_location >= start
@@ -104,6 +102,9 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     displayStart: Math.max(gene.start_location, start),
                     displayEnd: Math.min(gene.end_location, end),
                 }));
+
+            const adjustedStart = Math.floor(start / step) * step;
+            const adjustedEnd = Math.ceil(end / step) * step;
 
             const xAxisScale = d3.scaleBand()
                 .domain(axisValues)
@@ -209,21 +210,9 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             // Calculate the range of the current chromosome sequence
             const range = currentChromosomeSequence.end - currentChromosomeSequence.start;
 
-            // Dynamically determine the tick count based on the range
-            let tickCount;
-            if (range < 1000000) {
-                tickCount = Math.max(Math.floor(range / 20000), 5);
-            } else if (range >= 1000000 && range <= 10000000) {
-                tickCount = Math.max(Math.floor(range / 50000), 5);
-            } else {
-                tickCount = 50;
-            }
-
-            tickCount = Math.min(tickCount, 30);
-
-            // Add x-axis tick lines
+            // Add x-axis tick lines using shared tick values for consistency with heatmap
             const axis = d3.axisBottom(xAxisScale)
-                .tickValues(axisValues.filter((_, i) => i % tickCount === 0))
+                .tickValues(tickValues)
                 .tickFormat(() => "")
                 .tickSize(-height);
 
@@ -446,7 +435,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
         }
 
         fetchDataAndRender();
-    }, [geneList, currentChromosomeSequence, geneName, containerSize]);
+    }, [geneList, currentChromosomeSequence, geneName, containerSize, step, isBintuMode, zoomedChromosomeData]);
 
     return (
         <div

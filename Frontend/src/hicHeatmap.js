@@ -4,6 +4,7 @@ import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutli
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
+import { calculateAxisValues, calculateTickValues, formatTickLabel } from './utils/axisUtils.js';
 import "./Styles/canvasHeatmap.css";
 import * as d3 from 'd3';
 
@@ -363,24 +364,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const { start, end } = currentChromosomeSequence;
         const step = isBintuMode ? bintuStep : 5000;
         
-        let axisValues;
-        if (isBintuMode) {
-            // For Bintu mode, use actual data positions instead of creating a continuous range
-            const allPositions = new Set();
-            zoomedChromosomeData.forEach(d => {
-                allPositions.add(d.x);
-                allPositions.add(d.y);
-            });
-            axisValues = Array.from(allPositions).sort((a, b) => a - b);
-        } else {
-            // For regular mode, use the continuous range approach
-            const adjustedStart = Math.floor(start / step) * step;
-            const adjustedEnd = Math.ceil(end / step) * step;
-            axisValues = Array.from(
-                { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
-                (_, i) => adjustedStart + i * step
-            );
-        }
+        // Use shared axis utilities for consistency with gene list
+        const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
@@ -492,35 +477,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         axisSvg.selectAll('*').remove();
 
-        // Compute a sensible number of ticks based on available space and bin count
-        const nBins = axisValues.length;
-        const maxXTicks = Math.min(nBins, Math.max(8, Math.floor(width / 45)));   // ~1 label per 45px
-        const maxYTicks = Math.min(nBins, Math.max(8, Math.floor(height / 30)));  // ~1 label per 30px
-
-        const xTickStep = Math.max(1, Math.ceil(nBins / maxXTicks));
-        const yTickStep = Math.max(1, Math.ceil(nBins / maxYTicks));
-
-        const xTicks = axisValues.filter((_, i) => i % xTickStep === 0 || i === nBins - 1);
-        const yTicks = axisValues.filter((_, i) => i % yTickStep === 0 || i === nBins - 1);
+        // Use shared tick calculation for consistency with gene list
+        const { tickValues: xTickValues } = calculateTickValues(axisValues, width, currentChromosomeSequence, isBintuMode);
+        const { tickValues: yTickValues } = calculateTickValues(axisValues, height, currentChromosomeSequence, isBintuMode);
 
         // X-axis
         axisSvg.append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top + height})`)
             .call(d3.axisBottom(xScale)
-                .tickValues(xTicks)
-                .tickFormat(d => {
-                    if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(1)}M`;
-                    }
-                    if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(1)}W`;
-                    }
-                    return d;
-                }))
+                .tickValues(xTickValues)
+                .tickFormat(formatTickLabel))
             .selectAll("text")
-            // .style("text-anchor", "center")
-            // .attr("dx", "0em")
-            // .attr("dy", "1em");
             .style("text-anchor", "end")
             .attr("transform", "rotate(-45)")
             .attr("dx", "-1em")
@@ -530,16 +497,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         axisSvg.append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`)
             .call(d3.axisLeft(yScale)
-                .tickValues(yTicks)
-                .tickFormat(d => {
-                    if (d >= 1000000) {
-                        return `${(d / 1000000).toFixed(1)}M`;
-                    }
-                    if (d > 10000 && d < 1000000) {
-                        return `${(d / 10000).toFixed(1)}W`;
-                    }
-                    return d;
-                }));
+                .tickValues(yTickValues)
+                .tickFormat(formatTickLabel));
 
         // Color Scale
         const colorScaleSvg = d3.select(colorScaleRef.current)
@@ -1078,6 +1037,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     setGeneSize={setGeneSize}
                     // Use Bintu step size if in Bintu mode
                     step={isBintuMode ? bintuStep : 5000}
+                    // Pass Bintu-specific parameters for proper axis alignment
+                    isBintuMode={isBintuMode}
+                    zoomedChromosomeData={currentChromosomeData}
                 />
             )}
         </div>
