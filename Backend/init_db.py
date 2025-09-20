@@ -274,6 +274,24 @@ def initialize_tables():
     else:
         print("calc_distance table already exists, skipping creation.")
 
+    if not table_exists(cur, "gse"):
+        print("Creating gse table...")
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS gse ("
+            "gseid serial PRIMARY KEY,"
+            "sample_id VARCHAR(50) NOT NULL,"
+            "cell_id VARCHAR(50) NOT NULL,"
+            "chrid VARCHAR(50) NOT NULL,"
+            "ibp BIGINT NOT NULL DEFAULT 0,"
+            "jbp BIGINT NOT NULL DEFAULT 0,"
+            "fq FLOAT NOT NULL DEFAULT 0.0"
+            ");"
+        )
+        conn.commit()
+        print("gse table created successfully.")
+    else:
+        print("gse table already exists, skipping creation.")
+
     # Close connection
     cur.close()
     conn.close()
@@ -522,6 +540,77 @@ def process_bintu_data(cur):
                 print(f"Error processing file {filename}: {e}")
 
 
+def process_gse_data(cur):
+    """Process CSV files from GM12878_dipc and K562_limca folders and insert into GSE table"""
+    gse_dir = "GSE"  # GSE folder is in the Backend directory
+    
+    # Define the folders and their corresponding sample_ids
+    folders = {
+        "GM12878_dipc": "GM12878_dipc",
+        "K562_limca": "K562_limca"
+    }
+    
+    total_inserted = 0
+    
+    for folder_name, sample_id in folders.items():
+        folder_path = os.path.join(gse_dir, folder_name)
+        
+        if not os.path.exists(folder_path):
+            print(f"Warning: Folder {folder_path} does not exist.")
+            continue
+            
+        print(f"Processing folder: {folder_path}")
+        
+        # Get all CSV files in the folder
+        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+        
+        for csv_file in csv_files:
+            csv_path = os.path.join(folder_path, csv_file)
+            # Extract cell_id from filename (remove .csv extension)
+            cell_id = csv_file[:-4]
+            
+            print(f"Processing file: {csv_file} (sample_id: {sample_id}, cell_id: {cell_id})")
+            
+            try:
+                # Read CSV file
+                df = pd.read_csv(csv_path)
+                
+                # Check if required columns exist
+                required_columns = ['chr', 'ibp', 'jbp', 'fq']
+                if not all(col in df.columns for col in required_columns):
+                    print(f"Warning: File {csv_file} missing required columns. Expected: {required_columns}")
+                    continue
+                
+                # Prepare data for insertion
+                insert_data = []
+                for _, row in df.iterrows():
+                    insert_data.append((
+                        sample_id,
+                        cell_id, 
+                        row['chr'],
+                        int(row['ibp']),
+                        int(row['jbp']),
+                        float(row['fq'])
+                    ))
+                
+                # Batch insert data
+                if insert_data:
+                    cur.executemany(
+                        "INSERT INTO gse (sample_id, cell_id, chrid, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s)",
+                        insert_data
+                    )
+                    
+                    rows_inserted = len(insert_data)
+                    total_inserted += rows_inserted
+                    print(f"Inserted {rows_inserted} rows from {csv_file}")
+                
+            except Exception as e:
+                print(f"Error processing file {csv_file}: {e}")
+                continue
+    
+    print(f"GSE data processing completed. Total rows inserted: {total_inserted}")
+
+
 def insert_bintu_data_only():
     """Standalone function to insert only Bintu data - useful for testing."""
     conn = get_db_connection(database=DB_NAME)
@@ -539,6 +628,28 @@ def insert_bintu_data_only():
         print("Bintu data inserted successfully.")
     else:
         print("Bintu data already exists, skipping insertion.")
+    
+    cur.close()
+    conn.close()
+
+
+def insert_gse_data_only():
+    """Standalone function to insert only GSE data - useful for testing."""
+    conn = get_db_connection(database=DB_NAME)
+    if conn is None:
+        print("Failed to connect to database")
+        return
+    
+    cur = conn.cursor()
+    
+    # Insert GSE data
+    if not data_exists(cur, "gse"):
+        print("Inserting GSE data...")
+        process_gse_data(cur)
+        conn.commit()
+        print("GSE data inserted successfully.")
+    else:
+        print("GSE data already exists, skipping insertion.")
     
     cur.close()
     conn.close()
@@ -675,6 +786,14 @@ def insert_data():
         print("Bintu data inserted successfully.")
     else:
         print("Bintu data already exists, skipping insertion.")
+
+    # Insert GSE data only if the table is empty
+    if not data_exists(cur, "gse"):
+        print("Inserting GSE data...")
+        process_gse_data(cur)
+        print("GSE data inserted successfully.")
+    else:
+        print("GSE data already exists, skipping insertion.")
 
     # Insert epigenetic track data only if the table is empty
     # if not data_exists(cur, "epigenetic_track"):

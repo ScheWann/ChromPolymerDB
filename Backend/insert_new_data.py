@@ -373,5 +373,124 @@ def insert_bintu_data():
         conn.close()
 
 
+def create_gse_table(cur):
+    """Create the GSE table if it doesn't exist"""
+    if not table_exists(cur, 'gse'):
+        print("Creating GSE table...")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS gse (
+                gseid serial PRIMARY KEY,
+                sample_id VARCHAR(50) NOT NULL,
+                cell_id VARCHAR(50) NOT NULL,
+                chrid VARCHAR(50) NOT NULL,
+                ibp BIGINT NOT NULL DEFAULT 0,
+                jbp BIGINT NOT NULL DEFAULT 0,
+                fq FLOAT NOT NULL DEFAULT 0.0
+            )
+        """)
+        print("GSE table created successfully.")
+    else:
+        print("GSE table already exists.")
+
+
+def process_gse_data(cur):
+    """Process CSV files from GM12878_dipc and K562_limca folders and insert into GSE table"""
+    gse_dir = "GSE"
+    
+    # Define the folders and their corresponding sample_ids
+    folders = {
+        "GM12878_dipc": "GM12878_dipc",
+        "K562_limca": "K562_limca"
+    }
+    
+    # Create GSE table first
+    create_gse_table(cur)
+    
+    total_inserted = 0
+    
+    for folder_name, sample_id in folders.items():
+        folder_path = os.path.join(gse_dir, folder_name)
+        
+        if not os.path.exists(folder_path):
+            print(f"Warning: Folder {folder_path} does not exist.")
+            continue
+            
+        print(f"Processing folder: {folder_path}")
+        
+        # Get all CSV files in the folder
+        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+        
+        for csv_file in csv_files:
+            csv_path = os.path.join(folder_path, csv_file)
+            # Extract cell_id from filename (remove .csv extension)
+            cell_id = csv_file[:-4]
+            
+            print(f"Processing file: {csv_file} (sample_id: {sample_id}, cell_id: {cell_id})")
+            
+            try:
+                # Read CSV file
+                df = pd.read_csv(csv_path)
+                
+                # Check if required columns exist
+                required_columns = ['chr', 'ibp', 'jbp', 'fq']
+                if not all(col in df.columns for col in required_columns):
+                    print(f"Warning: File {csv_file} missing required columns. Expected: {required_columns}")
+                    continue
+                
+                # Prepare data for insertion
+                insert_data = []
+                for _, row in df.iterrows():
+                    insert_data.append((
+                        sample_id,
+                        cell_id, 
+                        row['chr'],
+                        int(row['ibp']),
+                        int(row['jbp']),
+                        float(row['fq'])
+                    ))
+                
+                # Batch insert data
+                if insert_data:
+                    cur.executemany(
+                        "INSERT INTO gse (sample_id, cell_id, chrid, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s)",
+                        insert_data
+                    )
+                    
+                    rows_inserted = len(insert_data)
+                    total_inserted += rows_inserted
+                    print(f"Inserted {rows_inserted} rows from {csv_file}")
+                
+            except Exception as e:
+                print(f"Error processing file {csv_file}: {e}")
+                continue
+    
+    print(f"GSE data processing completed. Total rows inserted: {total_inserted}")
+
+
+def insert_gse_data():
+    """Standalone function to insert GSE data"""
+    conn = get_db_connection(database=DB_NAME)
+    if conn is None:
+        print("Failed to connect to database")
+        return
+    
+    cur = conn.cursor()
+    
+    try:
+        # Process GSE data
+        print("Processing GSE data...")
+        process_gse_data(cur)
+        conn.commit()
+        print("GSE data inserted successfully.")
+        
+    except Exception as e:
+        print(f"Error during GSE data insertion: {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+
 # insert_new_cell_line()
-insert_bintu_data()
+# insert_bintu_data()
+insert_gse_data()
