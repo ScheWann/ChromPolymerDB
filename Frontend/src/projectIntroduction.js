@@ -23,12 +23,27 @@ const antColors = [
 const colors = d3.scaleOrdinal(antColors);
 const { Title, Text } = Typography;
 
-export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChromosomeName, setSelectedChromosomeSequence, setStartInputValue, setEndInputValue }) => {
+export const ProjectIntroduction = ({ 
+    exampleDataItems, 
+    setCellLineName, 
+    setChromosomeName, 
+    setSelectedChromosomeSequence, 
+    setStartInputValue, 
+    setEndInputValue,
+    handleAddBintuHeatmap 
+}) => {
     const chartRef = useRef(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [timelineItems, setTimelineItems] = useState([]);
+    
     // Create dropdown-safe items (avoid passing unknown props like `cellLine` to DOM)
     const dropdownItems = exampleDataItems.map(({ key, label }) => ({ key, label }));
+    
+    // Create Bintu-specific dropdown items based on available Bintu datasets
+    const bintuDropdownItems = [
+        { key: 'bintu', label: 'Bintu' },
+        { key: 'gse', label: 'GSE' },
+    ];
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -118,6 +133,12 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
         }
     }
 
+    const onClickBintuDataItem = ({ key }) => {
+        if (handleAddBintuHeatmap) {
+            handleAddBintuHeatmap();
+        }
+    }
+
     return (
         <div style={{ width: 1200, margin: '0 auto', padding: '24px' }}>
             <Title
@@ -178,6 +199,11 @@ export const ProjectIntroduction = ({ exampleDataItems, setCellLineName, setChro
                     <Dropdown menu={{ items: dropdownItems, onClick: onClickExampleDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='primary' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
                             Example Data
+                        </Button>
+                    </Dropdown>
+                    <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
+                        <Button style={{ width: "30%" }} type='default' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
+                            Bintu/GSE Data
                         </Button>
                     </Dropdown>
                 </div>

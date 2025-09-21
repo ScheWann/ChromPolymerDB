@@ -200,11 +200,6 @@ function App() {
 
   const addItems = [
     {
-      key: 'bintuHeatmap',
-      label: 'Add Bintu Heatmap',
-      disabled: bintuCellClusters.length === 0,
-    },
-    {
       key: 'nonRandomHiCHeatmap',
       label: 'Add non-random HiC Heatmap',
       disabled: !(chromosomeData.length > 0 || comparisonHeatmapList.length > 0),
@@ -2152,6 +2147,7 @@ function App() {
                 setSelectedChromosomeSequence={setSelectedChromosomeSequence}
                 setStartInputValue={setStartInputValue}
                 setEndInputValue={setEndInputValue}
+                handleAddBintuHeatmap={handleAddBintuHeatmap}
               />
             </div>
           )}
