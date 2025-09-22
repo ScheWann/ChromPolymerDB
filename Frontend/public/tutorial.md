@@ -134,4 +134,41 @@ Both bead structure data (position data) and bead distance data of the selected 
 
 - [Position data to PDB files for structure visualization via PyMol](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/scr/position_data_visualizaion.ipynb)
 
+- [Multi-body contacts analysis](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/scr/multibody_contacts.R)
+
+## Incorporating Data from Existing Chromatin Resources
+Users can download data from other publicly available chromatin databases and incorporate them into ChromPolymerDB for further analysis. Here we take HiChIPdb as an example.
+Step-by-step guide:
+- Download the .csv file from HiChIPdb (https://health.tsinghua.edu.cn/hichipdb/download.php). For consistency, we recommend using the 5 kb resolution data.
+- Extract the columns: anchor1, anchor2, and qValue, and Reformat these columns into a .bedpe file, as shown in the figure below.
+<p align="center">
+<img src="./tutorial_images/bedpe.png" alt="HiChIPdb" title="HiChIPdb" width="600" />
+</p>
+
+- Convert .bedpe files from hg19 to hg38.
+
+```
+# Download the liftOver file
+wget https://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/hg19ToHg38.over.chain.gz
+# First round: liftOver the first anchors
+CrossMap bed hg19ToHg38.over.chain.gz hichipdb_GM12878_H3K27ac.bedpe hichipdb_GM12878_H3K27ac_hg38_1.bedp
+# Swap columns for the second anchors
+awk '{OFS="\t"}{print $4,$5,$6,$1,$2,$3,$7}' hichipdb_GM12878_H3K27ac_hg38_1.bedpe > hichipdb_GM12878_H3K27ac_hg38_2.bedpe
+# Second round: liftOver the second anchors
+CrossMap bed hg19ToHg38.over.chain.gz hichipdb_GM12878_H3K27ac_hg38_2.bedpe hichipdb_GM12878_H3K27ac_hg38.bedpe
+```
+
+- Upload the resulting .bedpe file to ChromPolymerDB for visualization and further analysis.
+<p align="center">
+<img src="./tutorial_images/hichidb.png" alt="HiChIPdb" title="HiChIPdb" width="600" />
+</p>
+
+
+<!-- GETTING STARTED -->
+## Contributing Your Data
+We warmly welcome users who wish to contribute their new datasets to be integrated into ChromPolymerDB. We accept a wide range of data types, including deeply sequenced bulk Hi-C (hg38), scHi-C, as well as other chromatin structure data generated from simulations or imaging. 
+- For bulk Hi-C data, we require the .hic file containing 5kb resolution data together with the corresponding nuclear volume.
+- For scHi-C data, we require a .txt file containing 5kb intra-chromatin contacts, with four columns in the following format: chr  loc1  loc2  counts
+- For chromatin structure data, we require a matrix containing all pairwise distances between all loci.
+
 ## [HiC data resource](https://github.com/ldu3/ChromPolymerDB_tutorial/blob/main/Hi-C_info.xlsx)
