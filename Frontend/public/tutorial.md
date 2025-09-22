@@ -141,9 +141,8 @@ Users can download data from other publicly available chromatin databases and in
 Step-by-step guide:
 - Download the .csv file from HiChIPdb (https://health.tsinghua.edu.cn/hichipdb/download.php). For consistency, we recommend using the 5 kb resolution data.
 - Extract the columns: anchor1, anchor2, and qValue, and Reformat these columns into a .bedpe file, as shown in the figure below.
-<p align="center">
-<img src="./tutorial_images/bedpe.png" alt="HiChIPdb" title="HiChIPdb" width="600" />
-</p>
+
+![large-pro](./tutorial_images/bedpe.png)
 
 - Convert .bedpe files from hg19 to hg38.
 
@@ -159,10 +158,8 @@ CrossMap bed hg19ToHg38.over.chain.gz hichipdb_GM12878_H3K27ac_hg38_2.bedpe hich
 ```
 
 - Upload the resulting .bedpe file to ChromPolymerDB for visualization and further analysis.
-<p align="center">
-<img src="./tutorial_images/hichidb.png" alt="HiChIPdb" title="HiChIPdb" width="600" />
-</p>
 
+![large-pro](./tutorial_images/hichidb.png) 
 
 <!-- GETTING STARTED -->
 ## Contributing Your Data
