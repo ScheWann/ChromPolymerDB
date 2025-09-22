@@ -492,5 +492,5 @@ def insert_gse_data():
 
 
 # insert_new_cell_line()
-# insert_bintu_data()
-insert_gse_data()
+insert_bintu_data()
+# insert_gse_data()
