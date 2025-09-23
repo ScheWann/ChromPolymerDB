@@ -380,7 +380,7 @@ def create_gse_table(cur):
         cur.execute("""
             CREATE TABLE IF NOT EXISTS gse (
                 gseid serial PRIMARY KEY,
-                sample_id VARCHAR(50) NOT NULL,
+                cell_line VARCHAR(50) NOT NULL,
                 cell_id VARCHAR(50) NOT NULL,
                 chrid VARCHAR(50) NOT NULL,
                 ibp BIGINT NOT NULL DEFAULT 0,
@@ -408,7 +408,7 @@ def process_gse_data(cur):
     
     total_inserted = 0
     
-    for folder_name, sample_id in folders.items():
+    for folder_name, cell_line in folders.items():
         folder_path = os.path.join(gse_dir, folder_name)
         
         if not os.path.exists(folder_path):
@@ -425,7 +425,7 @@ def process_gse_data(cur):
             # Extract cell_id from filename (remove .csv extension)
             cell_id = csv_file[:-4]
             
-            print(f"Processing file: {csv_file} (sample_id: {sample_id}, cell_id: {cell_id})")
+            print(f"Processing file: {csv_file} (cell_line: {cell_line}, cell_id: {cell_id})")
             
             try:
                 # Read CSV file
@@ -441,7 +441,7 @@ def process_gse_data(cur):
                 insert_data = []
                 for _, row in df.iterrows():
                     insert_data.append((
-                        sample_id,
+                        cell_line,
                         cell_id, 
                         row['chr'],
                         int(row['ibp']),
@@ -492,5 +492,5 @@ def insert_gse_data():
 
 
 # insert_new_cell_line()
-insert_bintu_data()
-# insert_gse_data()
+# insert_bintu_data()
+insert_gse_data()
