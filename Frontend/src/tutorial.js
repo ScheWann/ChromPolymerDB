@@ -3,6 +3,8 @@ import { Drawer } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import "./Styles/TutorialDrawer.css";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 
 export const TutorialDrawer = ({ visible, onClose }) => {
     const [content, setContent] = useState('');
@@ -31,6 +33,7 @@ export const TutorialDrawer = ({ visible, onClose }) => {
             <div className="tutorial-drawer-content">
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight]}
                     skipHtml={false}
                     components={{
                         img: ({ node, src, alt, title, ...props }) => {
