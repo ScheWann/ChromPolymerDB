@@ -32,6 +32,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
     const [fqRawcMode, setFqRawcMode] = useState(true);
     const [sourceRecords, setSourceRecords] = useState([]);
+    const [bintuSourceRecords, setBintuSourceRecords] = useState([]);
+    const [gseSourceRecords, setGseSourceRecords] = useState([]);
     // Local zoom state for GSE mode (since parent setter is a no-op for GSE panels)
     const [localGseSequence, setLocalGseSequence] = useState(currentChromosomeSequence);
 
@@ -408,7 +410,93 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         return () => { cancelled = true; };
     }, []);
 
+    // Load minimal Bintu/GSE metadata on demand
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            try {
+                if (isBintuMode) {
+                    const res = await fetch('/bintu_source.json');
+                    const json = await res.json();
+                    if (!cancelled) setBintuSourceRecords(Array.isArray(json) ? json : []);
+                }
+            } catch (e) {
+                if (!cancelled) setBintuSourceRecords([]);
+            }
+            try {
+                if (isGseMode) {
+                    const res = await fetch('/gse_source.json');
+                    const json = await res.json();
+                    if (!cancelled) setGseSourceRecords(Array.isArray(json) ? json : []);
+                }
+            } catch (e) {
+                if (!cancelled) setGseSourceRecords([]);
+            }
+        };
+        load();
+        return () => { cancelled = true; };
+    }, [isBintuMode, isGseMode]);
+
     const matchedSource = React.useMemo(() => {
+        // Prefer Bintu metadata when in Bintu mode
+        if (isBintuMode && bintuSourceRecords.length) {
+            // Use explicit bintuId if provided; otherwise derive from selectedBintuCluster
+            const deriveBintuId = () => {
+                if (!selectedBintuCluster) return null;
+                // Expect pattern: CELL_chrXX_start_end
+                const parts = String(selectedBintuCluster).split('_');
+                if (parts.length >= 4) {
+                    const cell = parts[0];
+                    const chr = parts[1];
+                    const s = parseInt(parts[2], 10);
+                    const e = parseInt(parts[3], 10);
+                    if (!isNaN(s) && !isNaN(e)) {
+                        const sMb = Math.floor(s / 1e6);
+                        const eMb = Math.floor(e / 1e6);
+                        return `${cell}_${chr}-${sMb}-${eMb}Mb`;
+                    }
+                }
+                return null;
+            };
+            const candidateIds = [bintuId, deriveBintuId()].filter(Boolean);
+            for (const cid of candidateIds) {
+                const rec = bintuSourceRecords.find(r => String(r.id).toLowerCase() === String(cid).toLowerCase());
+                if (rec) return rec;
+            }
+        }
+
+        // Prefer GSE metadata when in GSE mode
+        if (isGseMode && gseSourceRecords.length) {
+            const candidateIds = [gseId].filter(Boolean);
+            console.log('GSE candidate IDs:', candidateIds, 'selectedGseOrg:', selectedGseOrg);
+            // Try exact id match first
+            for (const cid of candidateIds) {
+                const rec = gseSourceRecords.find(r => String(r.id).toLowerCase() === String(cid).toLowerCase());
+                if (rec) return rec;
+            }
+            // Fallback: prefix by selectedGseOrg_
+            if (selectedGseOrg) {
+                console.log('Looking for GSE org:', selectedGseOrg, 'in records:', gseSourceRecords);
+                const targetPrefix = String(selectedGseOrg).trim().toLowerCase() + '_';
+                const rec = gseSourceRecords.find(r => {
+                    const recordId = String(r.id).trim().toLowerCase();
+                    console.log('Comparing:', targetPrefix, 'with:', recordId, 'startsWith result:', recordId.startsWith(targetPrefix));
+                    return recordId.startsWith(targetPrefix);
+                });
+
+                if (rec) return rec;
+                
+                // Additional fallback: try exact match without case sensitivity
+                const exactRec = gseSourceRecords.find(r => 
+                    String(r.id).trim().toLowerCase() === String(selectedGseOrg).trim().toLowerCase()
+                );
+                if (exactRec) {
+                    return exactRec;
+                }
+            }
+        }
+
+        // Fallback to existing non-random Hi-C source matching
         if (!sourceRecords || sourceRecords.length === 0) return null;
         const candidates = [
             chromosomeName,
@@ -422,7 +510,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             if (found) return found;
         }
         return null;
-    }, [sourceRecords, chromosomeName, independentHeatmapCellLine, cellLineName]);
+    }, [isBintuMode, isGseMode, bintuId, gseId, selectedBintuCluster, selectedGseOrg, bintuSourceRecords, gseSourceRecords, sourceRecords, chromosomeName, independentHeatmapCellLine, cellLineName]);
 
     useEffect(() => {
         if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;

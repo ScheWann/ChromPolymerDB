@@ -1,0 +1,23 @@
+[
+    {
+        "id": "A549_chr21-28-30Mb",
+        "name": "A549 chr21: 28–30 Mb (Bintu)",
+        "system": "Immune System",
+        "source": "Bintu",
+        "Accession": "BINTU_A549_chr21_28_30"
+    },
+    {
+        "id": "IMR90_chr21-28-30Mb",
+        "name": "IMR90 chr21: 28–30 Mb (Bintu)",
+        "system": "Respiratory System",
+        "source": "Bintu",
+        "Accession": "BINTU_IMR90_chr21_28_30"
+    },
+    {
+        "id": "K562_chr21-28-30Mb",
+        "name": "K562 chr21: 28–30 Mb (Bintu)",
+        "system": "Immune System",
+        "source": "Bintu",
+        "Accession": "BINTU_K562_chr21_28_30"
+    }
+]
