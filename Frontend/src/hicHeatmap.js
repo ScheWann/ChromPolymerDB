@@ -1471,8 +1471,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     // Pass Bintu-specific parameters for proper axis alignment
                     isBintuMode={isBintuMode || isGseMode}
                     zoomedChromosomeData={currentChromosomeData}
-                    // Pass offset for proper alignment with heatmap - GSE mode needs no offset due to no left legend
-                    leftOffset={isGseMode ? 0 : (!isBintuMode ? 80 : 0)}
+                    // Pass offset for proper alignment with heatmap
+                    // GSE mode: no offset (centered), Bintu and Regular mode: 80px offset (left-aligned)
+                    leftOffset={isGseMode ? 0 : 80}
                     // Pass GSE mode flag for proper coordinate system alignment
                     isGseMode={isGseMode}
                 />

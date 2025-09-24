@@ -122,7 +122,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
 
             // Calculate the positioning offset for proper alignment with the heatmap
             // In GSE mode: center the gene list in the container (no legend offset)
-            // In regular mode: use leftOffset for legend space
+            // In Bintu and regular mode: use leftOffset for legend space (both are left-aligned)
             let positionOffset = 0;
             if (isGseMode) {
                 // In GSE mode, we need to center the gene list within the container
@@ -132,7 +132,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 const contentWidth = effectiveWidth + margin.left + margin.right;
                 positionOffset = (containerWidth - contentWidth) / 2 + margin.left;
             } else {
-                // In regular mode, use the margin + leftOffset approach
+                // In regular and Bintu mode, use the margin + leftOffset approach (both left-aligned)
                 positionOffset = margin.left + leftOffset;
             }
 
