@@ -73,22 +73,27 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         if (!independentHeatmapData || independentHeatmapData.length === 0) return;
 
         if (isGseMode) {
-            // For GSE mode, download CSV with ibp,jbp,fq columns using normalized binary values
+            // For GSE mode, download CSV from Backend/GSE folder via API
             try {
-                if (!selectedGseOrg || !selectedGseCell || !selectedGseCondition) {
-                    alert('Please complete all GSE selections first.');
+                if (!selectedGseOrg || !selectedGseCell) {
+                    alert('Please complete GSE cell line and cell ID selections first.');
                     return;
                 }
-                const csvContent = "ibp,jbp,fq\n" + 
-                    independentHeatmapData.map(row => {
-                        const normalizedFq = row.fq > 1 ? 1 : 0;
-                        return `${row.ibp},${row.jbp},${normalizedFq}`;
-                    }).join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const params = new URLSearchParams({ 
+                    cell_line: selectedGseOrg, 
+                    cell_id: selectedGseCell 
+                });
+                const res = await fetch(`/api/downloadGseCSV?${params.toString()}`);
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    const msg = errorData.error || 'Failed to download GSE CSV';
+                    throw new Error(msg);
+                }
+                const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `GSE_${selectedGseOrg}_${selectedGseCell}_${selectedGseCondition}_data.csv`;
+                a.download = `${selectedGseOrg}_${selectedGseCell}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -870,7 +875,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             </Tooltip>
                         )}
                         <Tooltip
-                            title={<span style={{ color: 'black' }}>{isBintuMode ? 'Download Bintu CSV' : 'Download non-random interaction data'}</span>}
+                            title={<span style={{ color: 'black' }}>
+                                {isBintuMode ? 'Download Bintu CSV' : 
+                                 isGseMode ? 'Download GSE CSV' : 
+                                 'Download non-random interaction data'}
+                            </span>}
                             color='white'
                         >
                             <Button

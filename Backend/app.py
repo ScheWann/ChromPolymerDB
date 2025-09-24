@@ -41,6 +41,7 @@ from process import (
     get_gse_cell_id_options,
     get_gse_chrid_options,
     get_gse_distance_matrix,
+    download_gse_csv,
 )
 
 
@@ -444,6 +445,23 @@ def get_gse_distance_matrix_api():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@api.route("/downloadGseCSV", methods=["GET"])
+def download_gse_csv_api():
+    """Download the GSE CSV file for a given cell line and cell ID.
+    Expects query params: cell_line, cell_id
+    """
+    cell_line = request.args.get("cell_line")
+    cell_id = request.args.get("cell_id")
+
+    if not cell_line or not cell_id:
+        return jsonify({"error": "Missing required parameters: cell_line, cell_id"}), 400
+
+    resp = download_gse_csv(cell_line, cell_id)
+    if resp is None:
+        return jsonify({"error": "CSV not found for requested cell line and cell ID"}), 404
+    return resp
 
 
 app.register_blueprint(api)

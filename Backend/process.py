@@ -1375,6 +1375,27 @@ def download_bintu_csv(cell_line: str, chrid: str, start_value: int, end_value: 
 
 
 """
+Download GSE CSV for a specific cell line and cell ID
+File naming convention under ./GSE: {cell_line}/{cell_id}.csv
+"""
+def download_gse_csv(cell_line: str, cell_id: str):
+    # Construct the file path based on the expected structure
+    file_path = os.path.join("./GSE", cell_line, f"{cell_id}.csv")
+    
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        return None
+    
+    # Return the file for download
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=f"{cell_line}_{cell_id}.csv",
+        mimetype='text/csv'
+    )
+
+
+"""
 Return currently existing GSE cell line options"""
 def get_gse_cell_line_options():
     with db_conn() as conn:
