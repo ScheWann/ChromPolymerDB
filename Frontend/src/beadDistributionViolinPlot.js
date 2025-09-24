@@ -295,10 +295,28 @@ export const BeadDistributionViolinPlot = ({ distributionData, selectedSphereLis
         if (distKeys.length === 0) return;
         const categories = Object.keys(distributionData[distKeys[0]])
             .sort((a, b) => {
-                // Convert to numbers for proper numerical sorting
-                const numA = parseInt(a, 10);
-                const numB = parseInt(b, 10);
-                return numA - numB;
+                // Sort bead pair labels
+                const toPair = (s) => {
+                    const str = String(s).trim();
+                    const m = str.match(/^(\d+)\s*[-:]\s*(\d+)$/);
+                    if (m) {
+                        let x = Number(m[1]);
+                        let y = Number(m[2]);
+                        if (Number.isFinite(x) && Number.isFinite(y)) {
+                            return x <= y ? [x, y] : [y, x];
+                        }
+                    }
+                    const n = Number(str);
+                    if (Number.isFinite(n)) return [n, Number.POSITIVE_INFINITY];
+                    return [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+                };
+
+                const [a1, a2] = toPair(a);
+                const [b1, b2] = toPair(b);
+                if (a1 !== b1) return a1 - b1;
+                if (a2 !== b2) return a2 - b2;
+                // Fallback to localeCompare (numeric) to keep stability for non-matching patterns
+                return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
             });
 
         // Calculate dynamic bottom margin for non-modal based on number of categories
