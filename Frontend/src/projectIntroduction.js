@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Typography, Card, Tag, Button, Dropdown, Timeline } from 'antd';
+import { Typography, Card, Tag, Button, Dropdown, Timeline, Divider } from 'antd';
 import { ProfileOutlined, ExperimentOutlined, FolderViewOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { TutorialDrawer } from './tutorial.js';
 
@@ -208,8 +208,7 @@ export const ProjectIntroduction = ({
 
 
                 {/* Experimental Single-cell Hi-C Data */}
-                <Title level={5}>Experimental Single-cell Hi-C Data</Title>
-
+                <Divider plain style={{ fontWeight: 'bold' }}>Experimental Single-cell Hi-C Data</Divider>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='default' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
@@ -217,6 +216,7 @@ export const ProjectIntroduction = ({
                         </Button>
                     </Dropdown>
                 </div>
+                <Divider />
 
 
                 {/* Key Features */}
