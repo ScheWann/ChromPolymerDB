@@ -32,6 +32,18 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [independentHeatmapLoading, setIndependentHeatmapLoading] = useState(false);
     const [fqRawcMode, setFqRawcMode] = useState(true);
     const [sourceRecords, setSourceRecords] = useState([]);
+    // Local zoom state for GSE mode (since parent setter is a no-op for GSE panels)
+    const [localGseSequence, setLocalGseSequence] = useState(currentChromosomeSequence);
+
+    // Keep local GSE zoom in sync when inputs change (e.g., new dataset loaded)
+    useEffect(() => {
+        if (isGseMode) {
+            setLocalGseSequence(currentChromosomeSequence);
+        }
+    }, [isGseMode, currentChromosomeSequence, chromosomeData]);
+
+    // Use effective sequence depending on mode
+    const effectiveSequence = isGseMode ? localGseSequence : currentChromosomeSequence;
 
     // Sync internal data when Bintu or GSE mode chromosomeData changes
     useEffect(() => {
@@ -423,18 +435,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const zoomedChromosomeData = independentHeatmapData.filter(item => {
             if (isBintuMode) {
                 const { x, y } = item;
-                return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
-                    y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
+                return x >= effectiveSequence.start && x <= effectiveSequence.end &&
+                    y >= effectiveSequence.start && y <= effectiveSequence.end;
             } else if (isGseMode) {
-                // For GSE mode, be more lenient with filtering since the backend 
-                // should already return the correct data range
+                // In GSE mode, honor the brushed zoom region just like non-random HiC
                 const { x, y } = item;
-                return typeof x === 'number' && typeof y === 'number' && 
-                       !Number.isNaN(x) && !Number.isNaN(y);
+                return x >= effectiveSequence.start && x <= effectiveSequence.end &&
+                       y >= effectiveSequence.start && y <= effectiveSequence.end;
             } else {
                 const { ibp, jbp } = item;
-                return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
-                    jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
+                return ibp >= effectiveSequence.start && ibp <= effectiveSequence.end &&
+                    jbp >= effectiveSequence.start && jbp <= effectiveSequence.end;
             }
         });
 
@@ -448,11 +459,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        const { start, end } = currentChromosomeSequence;
+    const { start, end } = effectiveSequence;
         const step = isBintuMode ? bintuStep : (isGseMode ? 5000 : 5000);
 
         // Use shared axis utilities for consistency with gene list
-        const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
+    const axisValues = calculateAxisValues(effectiveSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
@@ -573,8 +584,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         // Use shared tick calculation for consistency with gene list
     const sparseMode = isBintuMode || isGseMode;
-    const { tickValues: xTickValues } = calculateTickValues(axisValues, width, currentChromosomeSequence, sparseMode);
-    const { tickValues: yTickValues } = calculateTickValues(axisValues, height, currentChromosomeSequence, sparseMode);
+    const { tickValues: xTickValues } = calculateTickValues(axisValues, width, effectiveSequence, sparseMode);
+    const { tickValues: yTickValues } = calculateTickValues(axisValues, height, effectiveSequence, sparseMode);
 
         // X-axis
         axisSvg.append('g')
@@ -660,32 +671,51 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('fill', '#333')
             .text(isBintuMode ? Math.floor(gradientMin) : ((isBintuMode || isGseMode) ? Math.ceil(gradientMax) : gradientMax));
 
-        // Brush for selecting range (disabled in Bintu and GSE modes)
-        if (!isBintuMode && !isGseMode) {
+    // Brush for selecting range (enabled for non-random HiC and GSE; disabled in Bintu)
+        if (!isBintuMode) {
             const brushSvg = d3.select(brushSvgRef.current)
                 .attr('width', width + margin.left + margin.right)
                 .attr('height', height + margin.top + margin.bottom);
 
             brushSvg.selectAll('*').remove();
 
+            const brush = d3.brushX()
+                .extent([[margin.left, margin.top], [width + margin.left, height + margin.top]])
+                .on('end', (event) => {
+                    const { selection } = event;
+                    // On clear selection, reset to initial region
+                    if (!selection) {
+                        if (isGseMode) {
+                            setLocalGseSequence(selectedChromosomeSequence);
+                        } else {
+                            setCurrentChromosomeSequence(selectedChromosomeSequence);
+                        }
+                        return;
+                    }
+
+                    // Apply zoom only after the brush ends
+                    const [x0, x1] = selection;
+                    const brushedX = axisValues.filter(val => {
+                        const pos = margin.left + xScale(val) + xScale.bandwidth() / 2;
+                        return pos >= x0 && pos <= x1;
+                    });
+                    if (brushedX && brushedX.length > 0) {
+                        const sorted = [...brushedX].sort((a, b) => a - b);
+                        const nextRange = { start: sorted[0], end: sorted[sorted.length - 1] };
+                        const cur = isGseMode ? localGseSequence : currentChromosomeSequence;
+                        if (nextRange.start !== cur.start || nextRange.end !== cur.end) {
+                            if (isGseMode) {
+                                setLocalGseSequence(nextRange);
+                            } else {
+                                setCurrentChromosomeSequence(nextRange);
+                            }
+                        }
+                    }
+                });
+
             brushSvg.append('g')
                 .attr('class', 'brush')
-                .call(d3.brushX()
-                    .extent([[margin.left, margin.top], [width + margin.left, height + margin.top]])
-                    .on('end', ({ selection }) => {
-                        if (!selection) {
-                            setCurrentChromosomeSequence(selectedChromosomeSequence);
-                            return;
-                        }
-
-                        const [x0, x1] = selection;
-                        const brushedX = axisValues.filter(val => {
-                            const pos = margin.left + xScale(val) + xScale.bandwidth() / 2;
-                            return pos >= x0 && pos <= x1;
-                        });
-                        setCurrentChromosomeSequence({ start: brushedX[0], end: brushedX[brushedX.length - 1] });
-                    })
-                );
+                .call(brush);
         }
 
         let adjustedGeneStart, adjustedGeneEnd;
@@ -720,7 +750,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         } else {
             axisSvg.selectAll('.gene-line').remove();
         }
-    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode, isBintuMode, isGseMode]);
+    }, [minDimension, effectiveSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode, isBintuMode, isGseMode, localGseSequence]);
 
     const closeBintuHeatmap = () => {
         // Call the parent component's onCloseBintuHeatmap function if available
@@ -800,9 +830,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 <>
                                     <span style={{ marginRight: 3 }}>{chromosomeName}</span>
                                     <span style={{ marginRight: 3 }}>:</span>
-                                    <span style={{ marginRight: 5 }}>{formatNumber(currentChromosomeSequence.start)}</span>
+                                    <span style={{ marginRight: 5 }}>{formatNumber((isGseMode ? localGseSequence.start : currentChromosomeSequence.start))}</span>
                                     <span style={{ marginRight: 5 }}>~</span>
-                                    <span>{formatNumber(currentChromosomeSequence.end)}</span>
+                                    <span>{formatNumber((isGseMode ? localGseSequence.end : currentChromosomeSequence.end))}</span>
                                 </>
                             )}
                         </div>
@@ -1074,7 +1104,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <>
                             <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                             <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
-                            {(!isBintuMode && !isGseMode) && (
+                            {(!isBintuMode) && (
                                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                             )}
                             {!isGseMode && (
@@ -1239,7 +1269,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     geneList={geneList}
                     cellLineName={independentHeatmapCellLine}
                     chromosomeName={chromosomeName}
-                    currentChromosomeSequence={currentChromosomeSequence}
+                    currentChromosomeSequence={isGseMode ? localGseSequence : currentChromosomeSequence}
                     minDimension={minDimension}
                     geneName={geneName}
                     setCurrentChromosomeSequence={setCurrentChromosomeSequence}
