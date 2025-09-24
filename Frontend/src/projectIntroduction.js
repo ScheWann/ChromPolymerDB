@@ -42,8 +42,8 @@ export const ProjectIntroduction = ({
     
     // Create Bintu-specific dropdown items based on available Bintu datasets
     const bintuDropdownItems = [
-        { key: 'bintu', label: 'Bintu' },
-        { key: 'gse', label: 'GSE' },
+        { key: 'bintu', label: 'Image Data (Bintu)' },
+        { key: 'gse', label: 'Single-cell HiC Data' },
     ];
 
     useEffect(() => {
@@ -204,12 +204,20 @@ export const ProjectIntroduction = ({
                             Example Data
                         </Button>
                     </Dropdown>
+                </div>
+
+
+                {/* Experimental Single-cell Hi-C Data */}
+                <Title level={5}>Experimental Single-cell Hi-C Data</Title>
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='default' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
-                            Bintu/GSE Data
+                            Experimental Single-cell Hi-C Data
                         </Button>
                     </Dropdown>
                 </div>
+
 
                 {/* Key Features */}
                 <Title level={5}>Key Features</Title>
