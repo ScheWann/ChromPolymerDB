@@ -206,7 +206,6 @@ export const ProjectIntroduction = ({
                     </Dropdown>
                 </div>
 
-
                 {/* Experimental Single-cell Hi-C Data */}
                 <Divider plain style={{ fontWeight: 'bold' }}>Experimental Single-cell Hi-C Data</Divider>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
@@ -217,7 +216,6 @@ export const ProjectIntroduction = ({
                     </Dropdown>
                 </div>
                 <Divider />
-
 
                 {/* Key Features */}
                 <Title level={5}>Key Features</Title>
