@@ -207,7 +207,7 @@ export const ProjectIntroduction = ({
                 </div>
 
                 {/* Experimental Single-cell Hi-C Data */}
-                <Divider plain style={{ fontWeight: 'bold' }}>Experimental Single-cell Hi-C Data</Divider>
+                <Divider plain style={{ fontWeight: 'bold', fontSize: '16px' }}>Experimental Single-cell Hi-C Data</Divider>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='default' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
