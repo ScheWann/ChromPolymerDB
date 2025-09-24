@@ -211,7 +211,7 @@ export const ProjectIntroduction = ({
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
                         <Button style={{ width: "30%" }} type='default' variant="outlined" icon={<FolderViewOutlined />} iconPosition="end">
-                            Experimental Single-cell Hi-C Data
+                            Experimental Single-cell Structure Data
                         </Button>
                     </Dropdown>
                 </div>
