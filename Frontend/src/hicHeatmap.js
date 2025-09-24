@@ -942,7 +942,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         {isGseMode && (
                             <>
                                 <Select
-                                    placeholder="Organism"
+                                    placeholder="Cell line"
                                     size='small'
                                     style={{ width: 120 }}
                                     value={selectedGseOrg}
@@ -956,9 +956,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     )}
                                 />
                                 <Select
-                                    placeholder="Cell Type"
+                                    placeholder="Cell ID"
                                     size='small'
-                                    style={{ width: 120 }}
+                                    style={{ width: 80 }}
                                     value={selectedGseCell}
                                     onChange={setSelectedGseCell}
                                     options={gseCellIds}
@@ -970,9 +970,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     )}
                                 />
                                 <Select
-                                    placeholder="Condition"
+                                    placeholder="Chr ID"
                                     size='small'
-                                    style={{ width: 120 }}
+                                    style={{ width: 80 }}
                                     value={selectedGseCondition}
                                     onChange={setSelectedGseCondition}
                                     options={gseChrIds}
