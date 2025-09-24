@@ -73,14 +73,17 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         if (!independentHeatmapData || independentHeatmapData.length === 0) return;
 
         if (isGseMode) {
-            // For GSE mode, download CSV with ibp,jbp,fq columns
+            // For GSE mode, download CSV with ibp,jbp,fq columns using normalized binary values
             try {
                 if (!selectedGseOrg || !selectedGseCell || !selectedGseCondition) {
                     alert('Please complete all GSE selections first.');
                     return;
                 }
                 const csvContent = "ibp,jbp,fq\n" + 
-                    independentHeatmapData.map(row => `${row.ibp},${row.jbp},${row.fq}`).join('\n');
+                    independentHeatmapData.map(row => {
+                        const normalizedFq = row.fq > 1 ? 1 : 0;
+                        return `${row.ibp},${row.jbp},${normalizedFq}`;
+                    }).join('\n');
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -456,15 +459,23 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .range([height, 0])
             .padding(0.1);
 
-        // Unified color scale (Reds) for all modes. Use colorScaleRange for consistent slider control.
-        const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
+        // Color scale setup
         let legendDomain;
         let colorScale;
-        if (isBintuMode || isGseMode) {
-            // Use colorScaleRange for Bintu and GSE modes to respect slider controls
+        if (isGseMode) {
+            // GSE mode uses binary colors: white for 0, red for 1
+            legendDomain = [0, 1];
+            colorScale = (value) => {
+                return value === 1 ? '#d73027' : '#ffffff'; // Red for 1, white for 0
+            };
+        } else if (isBintuMode) {
+            // Use colorScaleRange for Bintu mode to respect slider controls
+            const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
             legendDomain = colorScaleRange;
             colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
         } else {
+            // Regular mode with sequential red scale
+            const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
             legendDomain = colorScaleRange;
             colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
         }
@@ -478,10 +489,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
             });
         } else if (isGseMode) {
-            // For GSE mode, use x/y from backend and 'value' holds fq
+            // For GSE mode, normalize fq values: >1 becomes 1, <=1 becomes 0, then use x/y from backend and 'value' holds fq
             zoomedChromosomeData.forEach(d => {
-                dataMap.set(`X:${d.x}, Y:${d.y}`, { value: d.value });
-                dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
+                const normalizedValue = d.value > 1 ? 1 : 0;
+                dataMap.set(`X:${d.x}, Y:${d.y}`, { value: normalizedValue });
+                dataMap.set(`X:${d.y}, Y:${d.x}`, { value: normalizedValue }); // Symmetrical
             });
         } else {
             // For regular mode, use the existing fq/fdr/rawc mapping
@@ -514,7 +526,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             for (const d of zoomedChromosomeData) {
                 const xKey = d.x;
                 const yKey = d.y;
-                const value = d.value;
+                // For GSE mode, use normalized binary value; for Bintu, use original value
+                const value = isGseMode ? (d.value > 1 ? 1 : 0) : d.value;
                 const xs = xScale(xKey);
                 const ys = yScale(yKey);
                 if ((xs || xs === 0) && (ys || ys === 0)) {
@@ -595,11 +608,23 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const numStops = 10;
         const gradientMin = legendDomain[0];
         const gradientMax = legendDomain[1];
-        for (let i = 0; i <= numStops; i++) {
-            const t = i / numStops;
+        
+        if (isGseMode) {
+            // For GSE mode, create a simple binary gradient: white to red
             gradient.append('stop')
-                .attr('offset', `${t * 100}%`)
-                .attr('stop-color', colorScale(gradientMin + t * (gradientMax - gradientMin)));
+                .attr('offset', '0%')
+                .attr('stop-color', '#ffffff'); // White for 0
+            gradient.append('stop')
+                .attr('offset', '100%')
+                .attr('stop-color', '#d73027'); // Red for 1
+        } else {
+            // For other modes, use the sequential color scale
+            for (let i = 0; i <= numStops; i++) {
+                const t = i / numStops;
+                gradient.append('stop')
+                    .attr('offset', `${t * 100}%`)
+                    .attr('stop-color', colorScale(gradientMin + t * (gradientMax - gradientMin)));
+            }
         }
 
         const legendXOffset = 12;
