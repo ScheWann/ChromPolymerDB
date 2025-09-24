@@ -2487,111 +2487,103 @@ function App() {
                 const bintuHeatmap = bintuHeatmaps.find(b => b.id === panel.id);
                 if (!bintuHeatmap) return null;
                 return (
-                  <div key={`bintu-${panel.id}`} style={{
-                    width: '40vw',
-                    height: '100%',
-                    borderRight: '1px solid #eaeaea',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                      {bintuHeatmap.loading ? (
-                        <Spin spinning={true} size="large" style={{ width: '100%', height: '100%' }} />
-                      ) : bintuHeatmap.data ? (
-                        <Heatmap
-                          comparisonHeatmapId={null}
-                          warning={warning}
-                          formatNumber={formatNumber}
-                          cellLineList={cellLineList}
-                          geneList={bintuHeatmap.geneList}
-                          cellLineName={bintuHeatmap.data?.cell_line || ''}
-                          chromosomeName={bintuHeatmap.data?.chrid || ''}
-                          chromosomeData={bintuHeatmap.data?.data || []}
-                          currentChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
-                          setCurrentChromosomeSequence={() => { }}
-                          selectedChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
-                          totalChromosomeSequences={[{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }]}
-                          setSelectedChromosomeSequence={() => { }}
-                          setChromosome3DExampleID={() => { }}
-                          setChromosome3DLoading={() => { }}
-                          setGeneName={() => { }}
-                          geneName={''}
-                          geneSize={{ start: 0, end: 0 }}
-                          setChromosome3DExampleData={() => { }}
-                          setGeneSize={() => { }}
-                          setSelectedSphereLists={() => { }}
-                          removeComparisonHeatmap={() => { }}
-                          setChromosome3DCellLineName={() => { }}
-                          setChromosome3DComponents={() => { }}
-                          setChromosome3DComponentIndex={() => { }}
-                          comparisonHeatmapList={[]}
-                          isBintuMode={true}
-                          bintuId={bintuHeatmap.id}
-                          bintuStep={bintuHeatmap.data?.step || 30000}
-                          isExampleMode={() => false}
-                          fetchExistChromos3DData={() => { }}
-                          exampleDataSet={{}}
-                          progressPolling={() => { }}
-                          updateComparisonHeatmapCellLine={() => { }}
-                          comparisonHeatmapUpdateTrigger={0}
-                          selectedBintuCluster={bintuHeatmap.selectedCluster}
-                          setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
-                          tempBintuCellId={bintuHeatmap.tempCellId}
-                          setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
-                          handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
-                          bintuCellClusters={bintuCellClusters}
-                          bintuHeatmapLoading={bintuHeatmap.loading}
-                          onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
-                        />
-                      ) : (
-                        <Heatmap
-                          comparisonHeatmapId={null}
-                          warning={warning}
-                          formatNumber={formatNumber}
-                          cellLineList={cellLineList}
-                          geneList={bintuHeatmap.geneList}
-                          cellLineName={''}
-                          chromosomeName={''}
-                          chromosomeData={[]}
-                          currentChromosomeSequence={{ start: 0, end: 0 }}
-                          setCurrentChromosomeSequence={() => { }}
-                          selectedChromosomeSequence={{ start: 0, end: 0 }}
-                          totalChromosomeSequences={[{ start: 0, end: 0 }]}
-                          setSelectedChromosomeSequence={() => { }}
-                          setChromosome3DExampleID={() => { }}
-                          setChromosome3DLoading={() => { }}
-                          setGeneName={() => { }}
-                          geneName={''}
-                          geneSize={{ start: 0, end: 0 }}
-                          setChromosome3DExampleData={() => { }}
-                          setGeneSize={() => { }}
-                          setSelectedSphereLists={() => { }}
-                          removeComparisonHeatmap={() => { }}
-                          setChromosome3DCellLineName={() => { }}
-                          setChromosome3DComponents={() => { }}
-                          setChromosome3DComponentIndex={() => { }}
-                          comparisonHeatmapList={[]}
-                          isBintuMode={true}
-                          bintuId={bintuHeatmap.id}
-                          bintuStep={30000}
-                          isExampleMode={() => false}
-                          fetchExistChromos3DData={() => { }}
-                          exampleDataSet={{}}
-                          progressPolling={() => { }}
-                          updateComparisonHeatmapCellLine={() => { }}
-                          comparisonHeatmapUpdateTrigger={0}
-                          selectedBintuCluster={bintuHeatmap.selectedCluster}
-                          setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
-                          tempBintuCellId={bintuHeatmap.tempCellId}
-                          setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
-                          handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
-                          bintuCellClusters={bintuCellClusters}
-                          bintuHeatmapLoading={bintuHeatmap.loading}
-                          onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  bintuHeatmap.loading ? (
+                    <Spin key={`bintu-${panel.id}`} spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+                  ) : bintuHeatmap.data ? (
+                    <Heatmap
+                      key={`bintu-${panel.id}`}
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={bintuHeatmap.geneList}
+                      cellLineName={bintuHeatmap.data?.cell_line || ''}
+                      chromosomeName={bintuHeatmap.data?.chrid || ''}
+                      chromosomeData={bintuHeatmap.data?.data || []}
+                      currentChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
+                      setCurrentChromosomeSequence={() => { }}
+                      selectedChromosomeSequence={{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }}
+                      totalChromosomeSequences={[{ start: bintuHeatmap.data?.start_value || 0, end: bintuHeatmap.data?.end_value || 0 }]}
+                      setSelectedChromosomeSequence={() => { }}
+                      setChromosome3DExampleID={() => { }}
+                      setChromosome3DLoading={() => { }}
+                      setGeneName={() => { }}
+                      geneName={''}
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => { }}
+                      setGeneSize={() => { }}
+                      setSelectedSphereLists={() => { }}
+                      removeComparisonHeatmap={() => { }}
+                      setChromosome3DCellLineName={() => { }}
+                      setChromosome3DComponents={() => { }}
+                      setChromosome3DComponentIndex={() => { }}
+                      comparisonHeatmapList={[]}
+                      isBintuMode={true}
+                      bintuId={bintuHeatmap.id}
+                      bintuStep={bintuHeatmap.data?.step || 30000}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => { }}
+                      exampleDataSet={{}}
+                      progressPolling={() => { }}
+                      updateComparisonHeatmapCellLine={() => { }}
+                      comparisonHeatmapUpdateTrigger={0}
+                      selectedBintuCluster={bintuHeatmap.selectedCluster}
+                      setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
+                      tempBintuCellId={bintuHeatmap.tempCellId}
+                      setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
+                      handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
+                      bintuCellClusters={bintuCellClusters}
+                      bintuHeatmapLoading={bintuHeatmap.loading}
+                      onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
+                    />
+                  ) : (
+                    <Heatmap
+                      key={`bintu-${panel.id}`}
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={bintuHeatmap.geneList}
+                      cellLineName={''}
+                      chromosomeName={''}
+                      chromosomeData={[]}
+                      currentChromosomeSequence={{ start: 0, end: 0 }}
+                      setCurrentChromosomeSequence={() => { }}
+                      selectedChromosomeSequence={{ start: 0, end: 0 }}
+                      totalChromosomeSequences={[{ start: 0, end: 0 }]}
+                      setSelectedChromosomeSequence={() => { }}
+                      setChromosome3DExampleID={() => { }}
+                      setChromosome3DLoading={() => { }}
+                      setGeneName={() => { }}
+                      geneName={''}
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => { }}
+                      setGeneSize={() => { }}
+                      setSelectedSphereLists={() => { }}
+                      removeComparisonHeatmap={() => { }}
+                      setChromosome3DCellLineName={() => { }}
+                      setChromosome3DComponents={() => { }}
+                      setChromosome3DComponentIndex={() => { }}
+                      comparisonHeatmapList={[]}
+                      isBintuMode={true}
+                      bintuId={bintuHeatmap.id}
+                      bintuStep={30000}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => { }}
+                      exampleDataSet={{}}
+                      progressPolling={() => { }}
+                      updateComparisonHeatmapCellLine={() => { }}
+                      comparisonHeatmapUpdateTrigger={0}
+                      selectedBintuCluster={bintuHeatmap.selectedCluster}
+                      setSelectedBintuCluster={(value) => updateBintuHeatmap(bintuHeatmap.id, { selectedCluster: value })}
+                      tempBintuCellId={bintuHeatmap.tempCellId}
+                      setTempBintuCellId={(value) => updateBintuHeatmap(bintuHeatmap.id, { tempCellId: value })}
+                      handleBintuHeatmapSubmit={() => handleBintuHeatmapSubmit(bintuHeatmap.id)}
+                      bintuCellClusters={bintuCellClusters}
+                      bintuHeatmapLoading={bintuHeatmap.loading}
+                      onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
+                    />
+                  )
                 );
               }
 
@@ -2599,129 +2591,121 @@ function App() {
                 const gseHeatmap = gseHeatmaps.find(g => g.id === panel.id);
                 if (!gseHeatmap) return null;
                 return (
-                  <div key={`gse-${panel.id}`} style={{
-                    width: '40vw',
-                    height: '100%',
-                    borderRight: '1px solid #eaeaea',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}>
-                    <div style={{ flex: 1, position: 'relative' }}>
-                      {gseHeatmap.loading ? (
-                        <Spin spinning={true} size="large" style={{ width: '100%', height: '100%' }} />
-                      ) : gseHeatmap.data ? (
-                        <Heatmap
-                          comparisonHeatmapId={null}
-                          warning={warning}
-                          formatNumber={formatNumber}
-                          cellLineList={cellLineList}
-                          geneList={gseHeatmap.geneList}
-                          cellLineName={gseHeatmap.data?.cell_line || ''}
-                          chromosomeName={gseHeatmap.data?.chrid || ''}
-                          chromosomeData={gseHeatmap.data?.data || []}
-                          currentChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
-                          setCurrentChromosomeSequence={() => { }}
-                          selectedChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
-                          totalChromosomeSequences={[{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }]}
-                          setSelectedChromosomeSequence={() => { }}
-                          setChromosome3DExampleID={() => { }}
-                          setChromosome3DLoading={() => { }}
-                          setGeneName={() => { }}
-                          geneName={''}
-                          geneSize={{ start: 0, end: 0 }}
-                          setChromosome3DExampleData={() => { }}
-                          setGeneSize={() => { }}
-                          setSelectedSphereLists={() => { }}
-                          removeComparisonHeatmap={() => { }}
-                          setChromosome3DCellLineName={() => { }}
-                          setChromosome3DComponents={() => { }}
-                          setChromosome3DComponentIndex={() => { }}
-                          comparisonHeatmapList={[]}
-                          isGseMode={true}
-                          gseId={gseHeatmap.id}
-                          selectedGseOrg={gseHeatmap.selectedOrg}
-                          setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
-                          selectedGseCell={gseHeatmap.selectedCell}
-                          setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
-                          selectedGseCondition={gseHeatmap.selectedCondition}
-                          setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
-                          gseCellLines={gseCellLines}
-                          gseCellIds={gseCellIds}
-                          gseChrIds={gseChrIds}
-                          tempGseOrgId={gseHeatmap.tempOrgId}
-                          setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
-                          tempGseCellId={gseHeatmap.tempCellId}
-                          setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
-                          tempGseConditionId={gseHeatmap.tempConditionId}
-                          setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
-                          handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
-                          gseHeatmapLoading={gseHeatmap.loading}
-                          onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
-                          isExampleMode={() => false}
-                          fetchExistChromos3DData={() => { }}
-                          exampleDataSet={{}}
-                          progressPolling={() => { }}
-                          updateComparisonHeatmapCellLine={() => { }}
-                          comparisonHeatmapUpdateTrigger={0}
-                        />
-                      ) : (
-                        <Heatmap
-                          comparisonHeatmapId={null}
-                          warning={warning}
-                          formatNumber={formatNumber}
-                          cellLineList={cellLineList}
-                          geneList={gseHeatmap.geneList}
-                          cellLineName={''}
-                          chromosomeName={''}
-                          chromosomeData={[]}
-                          currentChromosomeSequence={{ start: 0, end: 0 }}
-                          setCurrentChromosomeSequence={() => { }}
-                          selectedChromosomeSequence={{ start: 0, end: 0 }}
-                          totalChromosomeSequences={[{ start: 0, end: 0 }]}
-                          setSelectedChromosomeSequence={() => { }}
-                          setChromosome3DExampleID={() => { }}
-                          setChromosome3DLoading={() => { }}
-                          setGeneName={() => { }}
-                          geneName={''}
-                          geneSize={{ start: 0, end: 0 }}
-                          setChromosome3DExampleData={() => { }}
-                          setGeneSize={() => { }}
-                          setSelectedSphereLists={() => { }}
-                          removeComparisonHeatmap={() => { }}
-                          setChromosome3DCellLineName={() => { }}
-                          setChromosome3DComponents={() => { }}
-                          setChromosome3DComponentIndex={() => { }}
-                          comparisonHeatmapList={[]}
-                          isGseMode={true}
-                          gseId={gseHeatmap.id}
-                          selectedGseOrg={gseHeatmap.selectedOrg}
-                          setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
-                          selectedGseCell={gseHeatmap.selectedCell}
-                          setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
-                          selectedGseCondition={gseHeatmap.selectedCondition}
-                          setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
-                          gseCellLines={gseCellLines}
-                          gseCellIds={gseCellIds}
-                          gseChrIds={gseChrIds}
-                          tempGseOrgId={gseHeatmap.tempOrgId}
-                          setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
-                          tempGseCellId={gseHeatmap.tempCellId}
-                          setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
-                          tempGseConditionId={gseHeatmap.tempConditionId}
-                          setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
-                          handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
-                          gseHeatmapLoading={gseHeatmap.loading}
-                          onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
-                          isExampleMode={() => false}
-                          fetchExistChromos3DData={() => { }}
-                          exampleDataSet={{}}
-                          progressPolling={() => { }}
-                          updateComparisonHeatmapCellLine={() => { }}
-                          comparisonHeatmapUpdateTrigger={0}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  gseHeatmap.loading ? (
+                    <Spin key={`gse-${panel.id}`} spinning={true} size="large" style={{ width: '40vw', height: '100%', borderRight: "1px solid #eaeaea", margin: 0 }} />
+                  ) : gseHeatmap.data ? (
+                    <Heatmap
+                      key={`gse-${panel.id}`}
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={gseHeatmap.geneList}
+                      cellLineName={gseHeatmap.data?.cell_line || ''}
+                      chromosomeName={gseHeatmap.data?.chrid || ''}
+                      chromosomeData={gseHeatmap.data?.data || []}
+                      currentChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
+                      setCurrentChromosomeSequence={() => { }}
+                      selectedChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
+                      totalChromosomeSequences={[{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }]}
+                      setSelectedChromosomeSequence={() => { }}
+                      setChromosome3DExampleID={() => { }}
+                      setChromosome3DLoading={() => { }}
+                      setGeneName={() => { }}
+                      geneName={''}
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => { }}
+                      setGeneSize={() => { }}
+                      setSelectedSphereLists={() => { }}
+                      removeComparisonHeatmap={() => { }}
+                      setChromosome3DCellLineName={() => { }}
+                      setChromosome3DComponents={() => { }}
+                      setChromosome3DComponentIndex={() => { }}
+                      comparisonHeatmapList={[]}
+                      isGseMode={true}
+                      gseId={gseHeatmap.id}
+                      selectedGseOrg={gseHeatmap.selectedOrg}
+                      setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                      selectedGseCell={gseHeatmap.selectedCell}
+                      setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
+                      selectedGseCondition={gseHeatmap.selectedCondition}
+                      setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                      gseCellLines={gseCellLines}
+                      gseCellIds={gseCellIds}
+                      gseChrIds={gseChrIds}
+                      tempGseOrgId={gseHeatmap.tempOrgId}
+                      setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
+                      tempGseCellId={gseHeatmap.tempCellId}
+                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
+                      tempGseConditionId={gseHeatmap.tempConditionId}
+                      setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                      handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
+                      gseHeatmapLoading={gseHeatmap.loading}
+                      onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => { }}
+                      exampleDataSet={{}}
+                      progressPolling={() => { }}
+                      updateComparisonHeatmapCellLine={() => { }}
+                      comparisonHeatmapUpdateTrigger={0}
+                    />
+                  ) : (
+                    <Heatmap
+                      key={`gse-${panel.id}`}
+                      comparisonHeatmapId={null}
+                      warning={warning}
+                      formatNumber={formatNumber}
+                      cellLineList={cellLineList}
+                      geneList={gseHeatmap.geneList}
+                      cellLineName={''}
+                      chromosomeName={''}
+                      chromosomeData={[]}
+                      currentChromosomeSequence={{ start: 0, end: 0 }}
+                      setCurrentChromosomeSequence={() => { }}
+                      selectedChromosomeSequence={{ start: 0, end: 0 }}
+                      totalChromosomeSequences={[{ start: 0, end: 0 }]}
+                      setSelectedChromosomeSequence={() => { }}
+                      setChromosome3DExampleID={() => { }}
+                      setChromosome3DLoading={() => { }}
+                      setGeneName={() => { }}
+                      geneName={''}
+                      geneSize={{ start: 0, end: 0 }}
+                      setChromosome3DExampleData={() => { }}
+                      setGeneSize={() => { }}
+                      setSelectedSphereLists={() => { }}
+                      removeComparisonHeatmap={() => { }}
+                      setChromosome3DCellLineName={() => { }}
+                      setChromosome3DComponents={() => { }}
+                      setChromosome3DComponentIndex={() => { }}
+                      comparisonHeatmapList={[]}
+                      isGseMode={true}
+                      gseId={gseHeatmap.id}
+                      selectedGseOrg={gseHeatmap.selectedOrg}
+                      setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                      selectedGseCell={gseHeatmap.selectedCell}
+                      setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
+                      selectedGseCondition={gseHeatmap.selectedCondition}
+                      setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                      gseCellLines={gseCellLines}
+                      gseCellIds={gseCellIds}
+                      gseChrIds={gseChrIds}
+                      tempGseOrgId={gseHeatmap.tempOrgId}
+                      setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
+                      tempGseCellId={gseHeatmap.tempCellId}
+                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
+                      tempGseConditionId={gseHeatmap.tempConditionId}
+                      setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                      handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
+                      gseHeatmapLoading={gseHeatmap.loading}
+                      onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      isExampleMode={() => false}
+                      fetchExistChromos3DData={() => { }}
+                      exampleDataSet={{}}
+                      progressPolling={() => { }}
+                      updateComparisonHeatmapCellLine={() => { }}
+                      comparisonHeatmapUpdateTrigger={0}
+                    />
+                  )
                 );
               }
 

@@ -40,6 +40,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     }, [chromosomeData, isBintuMode, isGseMode]);
 
+    // Sync cell line name for GSE and Bintu modes
+    useEffect(() => {
+        if ((isBintuMode || isGseMode) && cellLineName && !comparisonHeatmapId) {
+            setIndependentHeatmapCellLine(cellLineName);
+        }
+    }, [cellLineName, isBintuMode, isGseMode, comparisonHeatmapId]);
+
     // Set appropriate colorScaleRange for Bintu and GSE modes
     useEffect(() => {
         if ((isBintuMode || isGseMode) && independentHeatmapData && independentHeatmapData.length > 0) {
@@ -411,9 +418,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
                     y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
             } else if (isGseMode) {
+                // For GSE mode, be more lenient with filtering since the backend 
+                // should already return the correct data range
                 const { x, y } = item;
-                return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
-                    y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
+                return typeof x === 'number' && typeof y === 'number' && 
+                       !Number.isNaN(x) && !Number.isNaN(y);
             } else {
                 const { ibp, jbp } = item;
                 return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
@@ -1198,10 +1207,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     setCurrentChromosomeSequence={setCurrentChromosomeSequence}
                     setGeneName={setGeneName}
                     setGeneSize={setGeneSize}
-                    // Use Bintu step size if in Bintu mode
+                    // Use Bintu step size if in Bintu mode, GSE uses 5000 step
                     step={isBintuMode ? bintuStep : 5000}
                     // Pass Bintu-specific parameters for proper axis alignment
-                    isBintuMode={isBintuMode}
+                    isBintuMode={isBintuMode || isGseMode}
                     zoomedChromosomeData={currentChromosomeData}
                 />
             )}
