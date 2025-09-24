@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch } from "antd";
+import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch, notification } from "antd";
 import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
@@ -51,6 +51,21 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     useEffect(() => {
         if (isBintuMode || isGseMode) {
             setIndependentHeatmapData(chromosomeData || []);
+
+            // Show notification for GSE mode when data is loaded
+            if (isGseMode && chromosomeData && chromosomeData.length > 0) {
+                notification.info({
+                    message: 'GSE Heatmap Loaded',
+                    description: 'Zoom in by dragging over the area you\'d like to explore.',
+                    duration: 6,
+                    style: {
+                        zIndex: 9999
+                    },
+                    placement: 'topRight',
+                    pauseOnHover: true,
+                    showProgress: true
+                });
+            }
         }
     }, [chromosomeData, isBintuMode, isGseMode]);
 
@@ -477,7 +492,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
             // Fallback: prefix by selectedGseOrg_
             if (selectedGseOrg) {
-                console.log('Looking for GSE org:', selectedGseOrg, 'in records:', gseSourceRecords);
                 const targetPrefix = String(selectedGseOrg).trim().toLowerCase() + '_';
                 const rec = gseSourceRecords.find(r => {
                     const recordId = String(r.id).trim().toLowerCase();
@@ -918,8 +932,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                             )
                                             : isGseMode ?
                                                 (selectedGseOrg ?
-                                                    `GSE-${selectedGseOrg}`
-                                                    : 'GSE'
+                                                    `Single-cell Hi-C-${selectedGseOrg}`
+                                                    : 'Single-cell Hi-C'
                                                 )
                                                 : independentHeatmapCellLine || cellLineName
                                         }

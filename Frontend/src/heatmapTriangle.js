@@ -847,13 +847,15 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
             notification.info({
                 message: 'Example Data',
                 description: 'Selected IGV tracks are preloaded to illustrate this example.',
-                    placement: 'topRight',
-                    duration: 6,
-                    style: {
-                        zIndex: 9999
-                    }
-                });
-            }
+                placement: 'topRight',
+                duration: 6,
+                style: {
+                    zIndex: 9999
+                },
+                pauseOnHover: true,
+                showProgress: true
+            });
+        }
     }, [isExampleMode, igvMountStatus, cellLineName, chromosomeName, currentChromosomeSequence]);
 
     useEffect(() => {
@@ -1163,7 +1165,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
                                 color: 'white',
                                 fontWeight: '500'
                             }
-                        }} 
+                        }}
                     />
                     <InputNumber size='small' style={{ width: 50 }} controls={false} value={colorScaleRange[1]} min={0} max={200} onChange={changeColorByInput("max")} />
                 </div>
