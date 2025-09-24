@@ -61,15 +61,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
     // Set appropriate colorScaleRange for Bintu and GSE modes
     useEffect(() => {
-        if ((isBintuMode || isGseMode) && independentHeatmapData && independentHeatmapData.length > 0) {
-            // Ignore negative values (used as missing markers) when computing range
-            const nonNegValues = independentHeatmapData
-                .map(d => d?.value)
-                .filter(v => typeof v === 'number' && isFinite(v) && v >= 0);
-            const fallbackMax = isBintuMode ? 1000 : 1;
-            const maxDistance = (nonNegValues.length > 0 ? d3.max(nonNegValues) : fallbackMax) || fallbackMax;
-            const maxRounded = Math.max(1, Math.ceil(maxDistance));
-            setColorScaleRange([0, maxRounded]);
+        if (isBintuMode && independentHeatmapData && independentHeatmapData.length > 0) {
+            // Default Bintu color scale upper bound to 800
+            setColorScaleRange([0, 800]);
+        } else if (isGseMode && independentHeatmapData && independentHeatmapData.length > 0) {
+            // GSE is binary; keep [0,1]
+            setColorScaleRange([0, 1]);
         } else if (!isBintuMode && !isGseMode && colorScaleRange[1] > 200) {
             // Reset to default non-Bintu/GSE range if switching modes
             setColorScaleRange([0, fqRawcMode ? 0.3 : 30]);
