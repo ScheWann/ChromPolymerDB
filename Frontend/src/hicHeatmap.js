@@ -1055,66 +1055,68 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 }}
                             />
 
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '5px',
-                                    width: `calc((100% - ${minDimension}px) / 2)`,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    position: 'absolute',
-                                    right: `calc((100% - ${minDimension}px) / 4)`,
-                                    top: '50%',
-                                    transform: 'translate(50%, -50%)',
-                                }}
-                            >
-                                <InputNumber
-                                    size='small'
-                                    style={{ width: 60 }}
-                                    controls={false}
-                                    value={colorScaleRange[1]}
-                                    min={0}
-                                    max={isBintuMode ? 
-                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
-                                        (fqRawcMode ? 1 : 200)
-                                    }
-                                    onChange={changeColorByInput("max")}
-                                />
-                                <Slider
-                                    range={{ draggableTrack: true }}
-                                    vertical
-                                    style={{ height: 200 }}
-                                    min={0}
-                                    max={isBintuMode ? 
-                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
-                                        (fqRawcMode ? 1 : 200)
-                                    }
-                                    step={isBintuMode ? 1 : (fqRawcMode ? 0.1 : 1)}
-                                    onChange={changeColorScale}
-                                    value={colorScaleRange}
-                                    tooltip={{
-                                        formatter: (value) => (isBintuMode || isGseMode) ? Math.round(value) : value,
-                                        color: 'white',
-                                        overlayInnerStyle: {
-                                            color: 'black',
-                                            fontWeight: '500'
-                                        }
+                            {!isGseMode && (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '5px',
+                                        width: `calc((100% - ${minDimension}px) / 2)`,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'absolute',
+                                        right: `calc((100% - ${minDimension}px) / 4)`,
+                                        top: '50%',
+                                        transform: 'translate(50%, -50%)',
                                     }}
-                                />
-                                <InputNumber
-                                    size='small'
-                                    style={{ width: 60 }}
-                                    controls={false}
-                                    value={colorScaleRange[0]}
-                                    min={0}
-                                    max={(isBintuMode || isGseMode) ? 
-                                        Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
-                                        (fqRawcMode ? 1 : 200)
-                                    }
-                                    onChange={changeColorByInput("min")}
-                                />
-                            </div>
+                                >
+                                    <InputNumber
+                                        size='small'
+                                        style={{ width: 60 }}
+                                        controls={false}
+                                        value={colorScaleRange[1]}
+                                        min={0}
+                                        max={isBintuMode ? 
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                            (fqRawcMode ? 1 : 200)
+                                        }
+                                        onChange={changeColorByInput("max")}
+                                    />
+                                    <Slider
+                                        range={{ draggableTrack: true }}
+                                        vertical
+                                        style={{ height: 200 }}
+                                        min={0}
+                                        max={isBintuMode ? 
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                            (fqRawcMode ? 1 : 200)
+                                        }
+                                        step={isBintuMode ? 1 : (fqRawcMode ? 0.1 : 1)}
+                                        onChange={changeColorScale}
+                                        value={colorScaleRange}
+                                        tooltip={{
+                                            formatter: (value) => (isBintuMode || isGseMode) ? Math.round(value) : value,
+                                            color: 'white',
+                                            overlayInnerStyle: {
+                                                color: 'black',
+                                                fontWeight: '500'
+                                            }
+                                        }}
+                                    />
+                                    <InputNumber
+                                        size='small'
+                                        style={{ width: 60 }}
+                                        controls={false}
+                                        value={colorScaleRange[0]}
+                                        min={0}
+                                        max={(isBintuMode || isGseMode) ? 
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                            (fqRawcMode ? 1 : 200)
+                                        }
+                                        onChange={changeColorByInput("min")}
+                                    />
+                                </div>
+                            )}
                             {!isBintuMode && !isGseMode && (
                                 <>
                                     <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
