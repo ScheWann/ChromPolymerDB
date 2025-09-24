@@ -3,7 +3,7 @@ import * as d3 from "d3";
 
 import { calculateAxisValues, calculateTickValues, formatTickLabel } from './utils/axisUtils';
 
-export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000, isBintuMode = false, zoomedChromosomeData = [], leftOffset = 0 }) => {
+export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000, isBintuMode = false, zoomedChromosomeData = [], leftOffset = 0, isGseMode = false }) => {
     const svgRef = useRef();
     const containerRef = useRef();
     const [scrollEnabled, setScrollEnabled] = useState(false);
@@ -89,8 +89,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
 
             // Use shared axis utilities for consistency with heatmap
             const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
-            const effectiveWidth = minDimension - margin.left - margin.right;
-            const { tickValues } = calculateTickValues(axisValues, effectiveWidth, currentChromosomeSequence, isBintuMode);
+            const { tickValues } = calculateTickValues(axisValues, minDimension - 120, currentChromosomeSequence, isBintuMode);
 
             // Map genes to the range of currentChromosomeSequence
             const { start, end } = currentChromosomeSequence;
@@ -107,14 +106,35 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             const adjustedStart = Math.floor(start / step) * step;
             const adjustedEnd = Math.ceil(end / step) * step;
 
+            // For GSE mode, we need to match the exact coordinate system used by the heatmap
+            // In GSE mode, the heatmap is centered using CSS transforms, so we need to center the gene list too
+            // In regular mode, the heatmap is left-aligned with an offset for the legend
+            const effectiveWidth = minDimension - margin.left - margin.right;
+
             const xAxisScale = d3.scaleBand()
                 .domain(axisValues)
-                .range([margin.left + leftOffset, minDimension - margin.right + leftOffset])
+                .range([0, effectiveWidth])
                 .padding(0.1);
 
             const xScaleLinear = d3.scaleLinear()
                 .domain([adjustedStart, adjustedEnd])
-                .range([margin.left + leftOffset, minDimension - margin.right + leftOffset]);
+                .range([0, effectiveWidth]);
+
+            // Calculate the positioning offset for proper alignment with the heatmap
+            // In GSE mode: center the gene list in the container (no legend offset)
+            // In regular mode: use leftOffset for legend space
+            let positionOffset = 0;
+            if (isGseMode) {
+                // In GSE mode, we need to center the gene list within the container
+                // The heatmap uses transform: translate(-50%, -50%) with left: 50%
+                // So we need to center our content too
+                const containerWidth = containerSize.width;
+                const contentWidth = effectiveWidth + margin.left + margin.right;
+                positionOffset = (containerWidth - contentWidth) / 2 + margin.left;
+            } else {
+                // In regular mode, use the margin + leftOffset approach
+                positionOffset = margin.left + leftOffset;
+            }
 
             // Calculate height based on the number of layers
             const layerHeight = 35; // Increased to accommodate text below rectangles
@@ -141,8 +161,9 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 const geneText = gene.symbol || gene.gene_name || '';
                 const textWidth = estimateTextWidth(geneText);
                 const geneCenterPixels = xScaleLinear((gene.displayStart + gene.displayEnd) / 2);
-                const textStart = geneCenterPixels - textWidth / 2;
-                const textEnd = geneCenterPixels + textWidth / 2;
+                const adjustedGeneCenterPixels = positionOffset + geneCenterPixels;
+                const textStart = adjustedGeneCenterPixels - textWidth / 2;
+                const textEnd = adjustedGeneCenterPixels + textWidth / 2;
                 
                 return {
                     ...gene,
@@ -162,10 +183,10 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 for (const layer of layers) {
                     const hasOverlap = layer.some((g) => {
                         // Check rectangle overlap in pixel space
-                        const geneRectStart = xScaleLinear(gene.displayStart);
-                        const geneRectEnd = xScaleLinear(gene.displayEnd);
-                        const gRectStart = xScaleLinear(g.displayStart);
-                        const gRectEnd = xScaleLinear(g.displayEnd);
+                        const geneRectStart = positionOffset + xScaleLinear(gene.displayStart);
+                        const geneRectEnd = positionOffset + xScaleLinear(gene.displayEnd);
+                        const gRectStart = positionOffset + xScaleLinear(g.displayStart);
+                        const gRectEnd = positionOffset + xScaleLinear(g.displayEnd);
                         const rectOverlap = geneRectStart < gRectEnd && geneRectEnd > gRectStart;
                         
                         // Check text overlap with minimum spacing buffer
@@ -220,7 +241,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             svg.attr("width", width).attr("height", height);
 
             svg.append('g')
-                .attr('transform', `translate(0, ${height})`)
+                .attr('transform', `translate(${positionOffset}, ${height})`)
                 .call(axis)
                 .selectAll("line")
                 .attr("stroke", "#DCDCDC");
@@ -237,7 +258,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     .data(layer)
                     .enter()
                     .append("rect")
-                    .attr("x", (d) => xScaleLinear(d.displayStart))
+                    .attr("x", (d) => positionOffset + xScaleLinear(d.displayStart))
                     .attr("y", margin.top + layerIndex * layerHeight)
                     .attr("width", (d) => xScaleLinear(d.displayEnd) - xScaleLinear(d.displayStart))
                     .attr("height", 16) // Fixed height for rectangles
@@ -290,7 +311,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     .data(layer)
                     .enter()
                     .append("text")
-                    .attr("x", (d) => xScaleLinear((d.displayStart + d.displayEnd) / 2))
+                    .attr("x", (d) => positionOffset + xScaleLinear((d.displayStart + d.displayEnd) / 2))
                     .attr("y", margin.top + layerIndex * layerHeight + 16 + 12) // Below rectangle + some spacing
                     .attr("text-anchor", "middle")
                     .style("font-size", "10px")
@@ -434,7 +455,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
         }
 
         fetchDataAndRender();
-    }, [geneList, currentChromosomeSequence, geneName, containerSize, step, isBintuMode, zoomedChromosomeData, leftOffset]);
+    }, [geneList, currentChromosomeSequence, geneName, containerSize, step, isBintuMode, zoomedChromosomeData, leftOffset, isGseMode]);
 
     return (
         <div
