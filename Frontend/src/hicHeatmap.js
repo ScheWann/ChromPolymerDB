@@ -536,9 +536,18 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const parentHeight = containerSize.height;
         const margin = { top: 45, right: 20, bottom: 40, left: 60 };
 
-        setMinDimension(Math.min(parentWidth, parentHeight));
-        const width = Math.min(parentWidth, parentHeight) - margin.left - margin.right;
-        const height = Math.min(parentWidth, parentHeight) - margin.top - margin.bottom;
+        // Account for space needed by left legend and right controls
+        const leftLegendWidth = !isGseMode ? 80 : 0; // Space for left legend (only for non-GSE modes)
+        const rightControlsWidth = !isGseMode ? 120 : 0; // Space for right slider and input controls (only for non-GSE modes)
+        
+        // Calculate available space for heatmap after accounting for legends and controls
+        const availableWidth = parentWidth - leftLegendWidth - rightControlsWidth;
+        const availableHeight = parentHeight;
+        
+        const adjustedMinDimension = Math.min(availableWidth, availableHeight);
+        setMinDimension(adjustedMinDimension);
+        const width = adjustedMinDimension - margin.left - margin.right;
+        const height = adjustedMinDimension - margin.top - margin.bottom;
 
         const zoomedChromosomeData = independentHeatmapData.filter(item => {
             if (isBintuMode) {
@@ -729,7 +738,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         // Color Scale
         const colorScaleSvg = d3.select(colorScaleRef.current)
-            .attr('width', (parentWidth - minDimension) / 2)
+            .attr('width', leftLegendWidth)
             .attr('height', parentHeight);
 
         colorScaleSvg.selectAll('*').remove();
@@ -1264,17 +1273,37 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 ) : (
                     independentHeatmapData.length > 0 ? (
                         <>
-                            <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
-                            <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
+                            <canvas ref={canvasRef} style={{ 
+                                position: 'absolute', 
+                                zIndex: 0,
+                                left: !isGseMode ? '80px' : '50%',
+                                top: '50%',
+                                transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)'
+                            }} />
+                            <svg ref={axisSvgRef} style={{ 
+                                position: 'absolute', 
+                                zIndex: 1, 
+                                pointerEvents: 'none',
+                                left: !isGseMode ? '80px' : '50%',
+                                top: '50%',
+                                transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)'
+                            }} />
                             {(!isBintuMode) && (
-                                <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
+                                <svg ref={brushSvgRef} style={{ 
+                                    position: 'absolute', 
+                                    zIndex: 2, 
+                                    pointerEvents: 'all',
+                                    left: !isGseMode ? '80px' : '50%',
+                                    top: '50%',
+                                    transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)'
+                                }} />
                             )}
                             {!isGseMode && (
                                 <svg
                                     ref={colorScaleRef}
                                     style={{
                                         position: 'absolute',
-                                        left: `calc((100% - ${minDimension}px) / 4)`,
+                                        left: '10px',
                                         top: '50%',
                                         transform: 'translate(0%, -50%)',
                                         zIndex: 0,
@@ -1289,13 +1318,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         display: 'flex',
                                         flexDirection: 'column',
                                         gap: '5px',
-                                        width: `calc((100% - ${minDimension}px) / 2)`,
+                                        width: '100px',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         position: 'absolute',
-                                        right: `calc((100% - ${minDimension}px) / 4)`,
+                                        right: '10px',
                                         top: '50%',
-                                        transform: 'translate(50%, -50%)',
+                                        transform: 'translate(0%, -50%)',
                                     }}
                                 >
                                     <InputNumber
@@ -1347,8 +1376,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             )}
                             {!isBintuMode && !isGseMode && (
                                 <>
-                                    <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
-                                    <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
+                                    <LaptopOutlined style={{ position: 'absolute', top: '50%', left: `calc(80px + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, transform: 'translate(0%, calc(-50% - 120px))' }} />
+                                    <ExperimentOutlined style={{ position: 'absolute', top: '50%', right: `calc(120px + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, transform: 'translate(0%, calc(-50% + 120px))' }} />
                                 </>
                             )}
 
@@ -1442,6 +1471,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     // Pass Bintu-specific parameters for proper axis alignment
                     isBintuMode={isBintuMode || isGseMode}
                     zoomedChromosomeData={currentChromosomeData}
+                    // Pass offset for proper alignment with heatmap
+                    leftOffset={!isGseMode ? 80 : 0}
                 />
             )}
         </div>

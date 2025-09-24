@@ -3,7 +3,7 @@ import * as d3 from "d3";
 
 import { calculateAxisValues, calculateTickValues, formatTickLabel } from './utils/axisUtils';
 
-export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000, isBintuMode = false, zoomedChromosomeData = [] }) => {
+export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, geneName, setGeneName, setGeneSize, step = 5000, isBintuMode = false, zoomedChromosomeData = [], leftOffset = 0 }) => {
     const svgRef = useRef();
     const containerRef = useRef();
     const [scrollEnabled, setScrollEnabled] = useState(false);
@@ -89,7 +89,8 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
 
             // Use shared axis utilities for consistency with heatmap
             const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
-            const { tickValues } = calculateTickValues(axisValues, minDimension, currentChromosomeSequence, isBintuMode);
+            const effectiveWidth = minDimension - margin.left - margin.right;
+            const { tickValues } = calculateTickValues(axisValues, effectiveWidth, currentChromosomeSequence, isBintuMode);
 
             // Map genes to the range of currentChromosomeSequence
             const { start, end } = currentChromosomeSequence;
@@ -108,12 +109,12 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
 
             const xAxisScale = d3.scaleBand()
                 .domain(axisValues)
-                .range([margin.left, minDimension - margin.right])
+                .range([margin.left + leftOffset, minDimension - margin.right + leftOffset])
                 .padding(0.1);
 
             const xScaleLinear = d3.scaleLinear()
                 .domain([adjustedStart, adjustedEnd])
-                .range([margin.left, minDimension - margin.right]);
+                .range([margin.left + leftOffset, minDimension - margin.right + leftOffset]);
 
             // Calculate height based on the number of layers
             const layerHeight = 35; // Increased to accommodate text below rectangles
@@ -219,7 +220,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             svg.attr("width", width).attr("height", height);
 
             svg.append('g')
-                .attr('transform', `translate(${(width - minDimension) / 2}, ${height})`)
+                .attr('transform', `translate(0, ${height})`)
                 .call(axis)
                 .selectAll("line")
                 .attr("stroke", "#DCDCDC");
@@ -236,7 +237,6 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     .data(layer)
                     .enter()
                     .append("rect")
-                    .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
                     .attr("x", (d) => xScaleLinear(d.displayStart))
                     .attr("y", margin.top + layerIndex * layerHeight)
                     .attr("width", (d) => xScaleLinear(d.displayEnd) - xScaleLinear(d.displayStart))
@@ -290,7 +290,6 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                     .data(layer)
                     .enter()
                     .append("text")
-                    .attr('transform', `translate(${(width - minDimension) / 2}, 0)`)
                     .attr("x", (d) => xScaleLinear((d.displayStart + d.displayEnd) / 2))
                     .attr("y", margin.top + layerIndex * layerHeight + 16 + 12) // Below rectangle + some spacing
                     .attr("text-anchor", "middle")
@@ -435,7 +434,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
         }
 
         fetchDataAndRender();
-    }, [geneList, currentChromosomeSequence, geneName, containerSize, step, isBintuMode, zoomedChromosomeData]);
+    }, [geneList, currentChromosomeSequence, geneName, containerSize, step, isBintuMode, zoomedChromosomeData, leftOffset]);
 
     return (
         <div

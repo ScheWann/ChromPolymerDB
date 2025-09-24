@@ -6,14 +6,14 @@
  * Calculate axis values for a given chromosome sequence and step size
  * @param {Object} currentChromosomeSequence - { start, end }
  * @param {number} step - Step size for axis values (e.g., 5000 for regular, 30000 for Bintu)
- * @param {boolean} isBintuMode - Whether in Bintu mode
- * @param {Array} zoomedChromosomeData - Data for Bintu mode (optional)
+ * @param {boolean} isSparseMode - Whether in sparse mode (Bintu or GSE)
+ * @param {Array} zoomedChromosomeData - Data for sparse mode (optional)
  * @returns {Array} Array of axis values
  */
-export const calculateAxisValues = (currentChromosomeSequence, step = 5000, isBintuMode = false, zoomedChromosomeData = []) => {
+export const calculateAxisValues = (currentChromosomeSequence, step = 5000, isSparseMode = false, zoomedChromosomeData = []) => {
     const { start, end } = currentChromosomeSequence;
     
-    if (isBintuMode && zoomedChromosomeData.length > 0) {
+    if (isSparseMode && zoomedChromosomeData.length > 0) {
         // For sparse modes (Bintu/GSE), use actual data positions instead of a continuous range.
         // Support both Bintu keys (x,y) and GSE keys (ibp,jbp).
         const allPositions = new Set();
@@ -49,13 +49,13 @@ export const calculateAxisValues = (currentChromosomeSequence, step = 5000, isBi
  * @param {Array} axisValues - Array of all axis values
  * @param {number} availableWidth - Available width for the axis
  * @param {Object} currentChromosomeSequence - { start, end }
- * @param {boolean} isBintuMode - Whether in Bintu mode
+ * @param {boolean} isSparseMode - Whether in sparse mode (Bintu or GSE)
  * @returns {Object} { tickValues, tickStep }
  */
-export const calculateTickValues = (axisValues, availableWidth, currentChromosomeSequence, isBintuMode = false) => {
+export const calculateTickValues = (axisValues, availableWidth, currentChromosomeSequence, isSparseMode = false) => {
     const nBins = axisValues.length;
     
-    if (isBintuMode) {
+    if (isSparseMode) {
         // For Bintu mode, use space-based calculation similar to heatmap
         const maxTicks = Math.min(nBins, Math.max(8, Math.floor(availableWidth / 45))); // ~1 label per 45px
         const tickStep = Math.max(1, Math.ceil(nBins / maxTicks));
