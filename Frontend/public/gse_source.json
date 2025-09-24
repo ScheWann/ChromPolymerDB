@@ -3,14 +3,14 @@
         "id": "GM12878_dipc",
         "name": "GM12878 (DIPC)",
         "system": "Immune System",
-        "source": "GSE",
-        "Accession": "GSEXXXXXX"
+        "source": "GEO",
+        "Accession": "GSE117874"
     },
     {
         "id": "K562_limca",
         "name": "K562 (LiMCA)",
         "system": "Immune System",
-        "source": "GSE",
-        "Accession": "GSEYYYYYY"
+        "source": "GEO",
+        "Accession": "GSE240114"
     }
 ]
