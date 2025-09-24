@@ -411,9 +411,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
                     y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
             } else if (isGseMode) {
-                const { ibp, jbp } = item;
-                return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
-                    jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
+                const { x, y } = item;
+                return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
+                    y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
             } else {
                 const { ibp, jbp } = item;
                 return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
@@ -469,10 +469,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
             });
         } else if (isGseMode) {
-            // For GSE mode, map FQ values with IBP/JBP coordinates
+            // For GSE mode, use x/y from backend and 'value' holds fq
             zoomedChromosomeData.forEach(d => {
-                dataMap.set(`X:${d.ibp}, Y:${d.jbp}`, { value: d.fq });
-                dataMap.set(`X:${d.jbp}, Y:${d.ibp}`, { value: d.fq }); // Symmetrical
+                dataMap.set(`X:${d.x}, Y:${d.y}`, { value: d.value });
+                dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
             });
         } else {
             // For regular mode, use the existing fq/fdr/rawc mapping
@@ -497,60 +497,44 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         };
 
         // Draw heatmap using Canvas
+        // Optimize sparse modes (Bintu/GSE): only draw existing data points, not N^2 grid.
         drewColorRef.current = false;
-        axisValues.forEach(ibp => {
-            axisValues.forEach(jbp => {
-                const x = margin.left + xScale(jbp);
-                const y = margin.top + yScale(ibp);
-                const cellWidth = xScale.bandwidth();
-                const cellHeight = yScale.bandwidth();
-
-                let fillColor;
-
-                if (isBintuMode) {
-                    const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
-                    if (!data) {
-                        fillColor = 'white';
-                    } else {
-                        // Use distance value for coloring
-                        fillColor = colorScale(data.value);
-                        drewColorRef.current = true;
-                    }
-                } else if (isGseMode) {
-                    const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
-                    if (!data) {
-                        fillColor = 'white';
-                    } else {
-                        // Use FQ value for coloring
-                        fillColor = colorScale(data.value);
-                        drewColorRef.current = true;
-                    }
-                } else {
-                    const { fq, fdr, rawc } = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
-                    fillColor = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+        if (isBintuMode || isGseMode) {
+            const bwX = xScale.bandwidth();
+            const bwY = yScale.bandwidth();
+            for (const d of zoomedChromosomeData) {
+                const xKey = d.x;
+                const yKey = d.y;
+                const value = d.value;
+                const xs = xScale(xKey);
+                const ys = yScale(yKey);
+                if ((xs || xs === 0) && (ys || ys === 0)) {
+                    context.fillStyle = colorScale(value);
+                    context.fillRect(margin.left + xs, margin.top + ys, bwX, bwY);
+                    drewColorRef.current = true;
                 }
-
-                context.fillStyle = fillColor;
-                context.fillRect(x, y, cellWidth, cellHeight);
-            });
-        });
-
-        // Fallback: direct paint using data coordinates if all white
-        if ((isBintuMode || isGseMode) && !drewColorRef.current && zoomedChromosomeData.length > 0) {
-            // eslint-disable-next-line no-console
-            console.debug(`[${isBintuMode ? 'Bintu' : 'GSE'}Heatmap] Fallback paint engaged.`);
-            zoomedChromosomeData.forEach(d => {
-                // Use the exact data positions since our axis now uses actual positions
-                const xKey = isBintuMode ? d.x : d.ibp;
-                const yKey = isBintuMode ? d.y : d.jbp;
-                const value = isBintuMode ? d.value : d.fq;
-                
-                if (!xScale(xKey) && xScale(xKey) !== 0) return;
-                if (!yScale(yKey) && yScale(yKey) !== 0) return;
-                const x = margin.left + xScale(xKey);
-                const y = margin.top + yScale(yKey);
-                context.fillStyle = colorScale(value);
-                context.fillRect(x, y, xScale.bandwidth(), yScale.bandwidth());
+                // Ensure symmetry without double lookup
+                const xs2 = xScale(yKey);
+                const ys2 = yScale(xKey);
+                if ((xs2 || xs2 === 0) && (ys2 || ys2 === 0)) {
+                    context.fillStyle = colorScale(value);
+                    context.fillRect(margin.left + xs2, margin.top + ys2, bwX, bwY);
+                }
+            }
+            // Optionally, fill empty background lightly to visualize grid (skip for performance)
+        } else {
+            // Dense regular mode: keep banded grid fill with validity checks
+            axisValues.forEach(ibp => {
+                axisValues.forEach(jbp => {
+                    const x = margin.left + xScale(jbp);
+                    const y = margin.top + yScale(ibp);
+                    const cellWidth = xScale.bandwidth();
+                    const cellHeight = yScale.bandwidth();
+                    const { fq, fdr, rawc } = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
+                    const fillColor = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
+                    context.fillStyle = fillColor;
+                    context.fillRect(x, y, cellWidth, cellHeight);
+                });
             });
         }
 
@@ -561,8 +545,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         axisSvg.selectAll('*').remove();
 
         // Use shared tick calculation for consistency with gene list
-        const { tickValues: xTickValues } = calculateTickValues(axisValues, width, currentChromosomeSequence, isBintuMode);
-        const { tickValues: yTickValues } = calculateTickValues(axisValues, height, currentChromosomeSequence, isBintuMode);
+    const sparseMode = isBintuMode || isGseMode;
+    const { tickValues: xTickValues } = calculateTickValues(axisValues, width, currentChromosomeSequence, sparseMode);
+    const { tickValues: yTickValues } = calculateTickValues(axisValues, height, currentChromosomeSequence, sparseMode);
 
         // X-axis
         axisSvg.append('g')

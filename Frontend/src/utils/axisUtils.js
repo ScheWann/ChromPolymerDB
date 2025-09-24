@@ -14,13 +14,18 @@ export const calculateAxisValues = (currentChromosomeSequence, step = 5000, isBi
     const { start, end } = currentChromosomeSequence;
     
     if (isBintuMode && zoomedChromosomeData.length > 0) {
-        // For Bintu mode, use actual data positions instead of creating a continuous range
+        // For sparse modes (Bintu/GSE), use actual data positions instead of a continuous range.
+        // Support both Bintu keys (x,y) and GSE keys (ibp,jbp).
         const allPositions = new Set();
-        zoomedChromosomeData.forEach(d => {
-            allPositions.add(d.x);
-            allPositions.add(d.y);
-        });
-        return Array.from(allPositions).sort((a, b) => a - b);
+        for (const d of zoomedChromosomeData) {
+            const x = d.x ?? d.ibp;
+            const y = d.y ?? d.jbp;
+            if (typeof x === 'number' && !Number.isNaN(x)) allPositions.add(x);
+            if (typeof y === 'number' && !Number.isNaN(y)) allPositions.add(y);
+        }
+        const sorted = Array.from(allPositions).sort((a, b) => a - b);
+        // If we somehow failed to extract positions, fall back to continuous range
+        if (sorted.length > 0) return sorted;
     } else {
         // For regular mode, use the continuous range approach
         const adjustedStart = Math.floor(start / step) * step;
@@ -30,6 +35,13 @@ export const calculateAxisValues = (currentChromosomeSequence, step = 5000, isBi
             (_, i) => adjustedStart + i * step
         );
     }
+    // Fallback continuous range if no positions collected (edge case)
+    const adjustedStart = Math.floor(start / step) * step;
+    const adjustedEnd = Math.ceil(end / step) * step;
+    return Array.from(
+        { length: Math.floor((adjustedEnd - adjustedStart) / step) + 1 },
+        (_, i) => adjustedStart + i * step
+    );
 };
 
 /**
