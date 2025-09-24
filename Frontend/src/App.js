@@ -1835,6 +1835,8 @@ function App() {
     setComparisonHeatmapUpdateTrigger({});
     // Clear bintu heatmaps
     setBintuHeatmaps([]);
+    // Clear GSE heatmaps
+    setGseHeatmaps([]);
     // Clear unified left panels
     setLeftPanels([]);
   }
