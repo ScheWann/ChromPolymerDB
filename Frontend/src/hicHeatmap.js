@@ -468,26 +468,27 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         // Prefer GSE metadata when in GSE mode
         if (isGseMode && gseSourceRecords.length) {
             const candidateIds = [gseId].filter(Boolean);
-            console.log('GSE candidate IDs:', candidateIds, 'selectedGseOrg:', selectedGseOrg);
+
             // Try exact id match first
             for (const cid of candidateIds) {
                 const rec = gseSourceRecords.find(r => String(r.id).toLowerCase() === String(cid).toLowerCase());
                 if (rec) return rec;
             }
+
             // Fallback: prefix by selectedGseOrg_
             if (selectedGseOrg) {
                 console.log('Looking for GSE org:', selectedGseOrg, 'in records:', gseSourceRecords);
                 const targetPrefix = String(selectedGseOrg).trim().toLowerCase() + '_';
                 const rec = gseSourceRecords.find(r => {
                     const recordId = String(r.id).trim().toLowerCase();
-                    console.log('Comparing:', targetPrefix, 'with:', recordId, 'startsWith result:', recordId.startsWith(targetPrefix));
+
                     return recordId.startsWith(targetPrefix);
                 });
 
                 if (rec) return rec;
-                
+
                 // Additional fallback: try exact match without case sensitivity
-                const exactRec = gseSourceRecords.find(r => 
+                const exactRec = gseSourceRecords.find(r =>
                     String(r.id).trim().toLowerCase() === String(selectedGseOrg).trim().toLowerCase()
                 );
                 if (exactRec) {
