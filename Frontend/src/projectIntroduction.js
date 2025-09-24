@@ -43,7 +43,7 @@ export const ProjectIntroduction = ({
     // Create Bintu-specific dropdown items based on available Bintu datasets
     const bintuDropdownItems = [
         { key: 'bintu', label: 'Image Data (Bintu)' },
-        { key: 'gse', label: 'Single-cell HiC Data' },
+        { key: 'gse', label: 'Single-cell Hi-C Data' },
     ];
 
     useEffect(() => {
