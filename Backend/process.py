@@ -1223,7 +1223,7 @@ def bead_distribution_pvalues(distribution_groups: dict) -> dict:
 
 
 """
-Cluster cells from the bintu table and return options suitable for Antd selector
+Cluster cells from the bintu table and return options
 """
 def get_bintu_cell_clusters():
     with db_conn() as conn:
@@ -1372,3 +1372,84 @@ def download_bintu_csv(cell_line: str, chrid: str, start_value: int, end_value: 
         download_name=candidate_name,
         mimetype='text/csv'
     )
+
+
+"""
+Return currently existing GSE cell line options"""
+def get_gse_cell_line_options():
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT cell_line
+                FROM gse
+                """
+            )
+            rows = cur.fetchall()
+    
+    options = [
+        {
+            "value": row["cell_line"],
+            "label": label_mapping.get(row["cell_line"], "Unknown"),
+        }
+        for row in rows
+    ]
+
+    return options
+
+
+"""
+Return currently existing GSE cell ID options in the given cell line
+"""
+def get_gse_cell_id_options(cell_line: str):
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT cell_id
+                FROM gse
+                WHERE cell_line = %s
+                """,
+                (cell_line,)
+            )
+            rows = cur.fetchall()
+    
+    options = [
+        {
+            "value": row["cell_id"],
+            "label": row["cell_id"],
+        }
+        for row in rows
+    ]
+
+    return options
+
+
+
+"""
+Return the GSE chrid options in the given cell line and cell ID
+"""
+def get_gse_chrid_options(cell_line: str, cell_id: str):
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT chrid
+                FROM gse
+                WHERE cell_line = %s
+                    AND cell_id = %s
+                ORDER BY chrid
+                """,
+                (cell_line, cell_id)
+            )
+            rows = cur.fetchall()
+    
+    options = [
+        {
+            "value": row["chrid"],
+            "label": row["chrid"],
+        }
+        for row in rows
+    ]
+
+    return options

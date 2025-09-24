@@ -86,12 +86,10 @@ function App() {
   // Create dropdown-safe items (without extra properties that cause React warnings)
   const dropdownExampleDataItems = exampleDataItems.map(({ key, label }) => ({ key, label }));
   const [sampleKeys, setSampleKeys] = useState([0, 1000, 2000]);
-  // const [exampleDataBestSampleID, setExampleDataBestSampleID] = useState({ "GM12878": 4229, "IMR90": 1201, "NHEK": 4225 }); // Example data best sample ID
   const [exampleDataSet, setExampleDataSet] = useState({
     "GM12878-chr8-127300000-128300000": 4229,
     "GM12878-chr8-127200000-127750000": 4193,
     "IMR90-chr8-127300000-128300000": 1201,
-    // "NHEK-chr8-127300000-128300000": 4225,
     "Calu3-chr8-127200000-127750000": 1422,
     "monocytes-chr8-127200000-127750000": 2805
   });
