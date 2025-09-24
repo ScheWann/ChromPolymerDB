@@ -424,14 +424,14 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             //     }
             // });
 
-            svg.append("text")
-                .attr("x", (width - minDimension) / 2 + 5)
-                .attr("y", geneListHeight / 2)
-                .attr("text-anchor", "middle")
-                .style("font-size", "12px")
-                .style("font-weight", "bold")
-                .text("Gene List")
-                .style("fill", "black");
+            // svg.append("text")
+            //     .attr("x", (width - minDimension) / 2 + 5)
+            //     .attr("y", geneListHeight / 2)
+            //     .attr("text-anchor", "middle")
+            //     .style("font-size", "12px")
+            //     .style("font-weight", "bold")
+            //     .text("Gene List")
+            //     .style("fill", "black");
         }
 
         fetchDataAndRender();
