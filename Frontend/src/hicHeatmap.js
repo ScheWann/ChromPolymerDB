@@ -782,21 +782,21 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                 : 'Bintu'
                                             )
                                             : isGseMode ?
-                                                (selectedGseOrg && selectedGseCell ? 
-                                                    `GSE-${selectedGseOrg}-${selectedGseCell}`
+                                                (selectedGseOrg ? 
+                                                    `GSE-${selectedGseOrg}`
                                                     : 'GSE'
                                                 )
                                                 : independentHeatmapCellLine || cellLineName
                                         }
                                     </span>
                                     {/* Show dash only when not in Bintu/GSE pre-selection state */}
-                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition)) && (
+                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
                                         <span style={{ marginRight: 3 }}>-</span>
                                     )}
                                 </>
                             )}
                             {/* Hide chromosome and range when Bintu/GSE selection not made yet */}
-                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition)) && (
+                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
                                 <>
                                     <span style={{ marginRight: 3 }}>{chromosomeName}</span>
                                     <span style={{ marginRight: 3 }}>:</span>
