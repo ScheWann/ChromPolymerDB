@@ -12,7 +12,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     // Bintu control props
     selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap,
     // GSE control props
-    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap }) => {
+    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap, 
+    // GSE range control props
+    gseStartValue = null, setGseStartValue, gseEndValue = null, setGseEndValue }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
@@ -61,7 +63,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     style: {
                         zIndex: 9999
                     },
-                    placement: 'topRight',
+                    placement: 'topLeft',
                     pauseOnHover: true,
                     showProgress: true
                 });
@@ -1135,6 +1137,30 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         </Tooltip>
                                     )}
                                 />
+                                <Tooltip title={<span style={{ color: 'black' }}>Start position</span>} color='white' placement="top">
+                                    <InputNumber
+                                        placeholder="Start"
+                                        size='small'
+                                        style={{ width: 80 }}
+                                        value={gseStartValue}
+                                        onChange={setGseStartValue}
+                                        min={0}
+                                        max={300000000}
+                                        step={5000}
+                                    />
+                                </Tooltip>
+                                <Tooltip title={<span style={{ color: 'black' }}>End position</span>} color='white' placement="top">
+                                    <InputNumber
+                                        placeholder="End"
+                                        size='small'
+                                        style={{ width: 80 }}
+                                        value={gseEndValue}
+                                        onChange={setGseEndValue}
+                                        min={0}
+                                        max={300000000}
+                                        step={5000}
+                                    />
+                                </Tooltip>
                                 <Select
                                     placeholder="Chr ID"
                                     size='small'
@@ -1165,7 +1191,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     size='small'
                                     variant="outlined"
                                     style={{ marginRight: 5 }}
-                                    disabled={!selectedGseOrg || !selectedGseCell || !selectedGseCondition}
+                                    disabled={!selectedGseOrg || !selectedGseCell || !selectedGseCondition || (gseStartValue && gseEndValue && gseStartValue >= gseEndValue)}
                                     loading={gseHeatmapLoading}
                                     onClick={handleGseHeatmapSubmit}
                                 >Load</Button>

@@ -436,7 +436,17 @@ def get_gse_distance_matrix_api():
         cell_id = data['cell_id']
         chrid = data['chrid']
         
-        result = get_gse_distance_matrix(cell_line, cell_id, chrid)
+        # Optional range parameters
+        start_value = data.get('start_value')
+        end_value = data.get('end_value')
+        
+        # Convert to int if provided
+        if start_value is not None:
+            start_value = int(start_value)
+        if end_value is not None:
+            end_value = int(end_value)
+        
+        result = get_gse_distance_matrix(cell_line, cell_id, chrid, start_value, end_value)
         
         if result is None:
             return jsonify({"error": "No GSE data found for the specified parameters"}), 404

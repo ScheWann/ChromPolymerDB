@@ -1333,7 +1333,7 @@ function App() {
       });
   };
 
-  const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId) => {
+  const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId, startValue = null, endValue = null) => {
     // Set loading state for this specific GSE instance
     setGseHeatmaps(prev => prev.map(gse => 
       gse.id === gseId 
@@ -1341,16 +1341,24 @@ function App() {
         : gse
     ));
 
+    const requestBody = {
+      cell_line: cell_line,
+      cell_id: cellId,
+      chrid: chrid
+    };
+
+    // Add range parameters if provided
+    if (startValue !== null && endValue !== null) {
+      requestBody.start_value = startValue;
+      requestBody.end_value = endValue;
+    }
+
     fetch('/api/getGseDistanceMatrix', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        cell_line: cell_line,
-        cell_id: cellId,
-        chrid: chrid
-      })
+      body: JSON.stringify(requestBody)
     })
       .then(res => {
         if (!res.ok) {
@@ -1426,6 +1434,8 @@ function App() {
       tempOrgId: null,
       tempCellId: null,
       tempConditionId: null,
+      startValue: null,
+      endValue: null,
       data: null,
       loading: false,
       geneList: []
@@ -1469,6 +1479,15 @@ function App() {
       return;
     }
 
+    if (gseHeatmap.startValue >= gseHeatmap.endValue && gseHeatmap.startValue !== null && gseHeatmap.endValue !== null) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Start position must be less than end position',
+        duration: 2,
+      });
+      return;
+    }
+
     // Parse the selections to get the actual objects
     const organism = gseCellLines.find(o => o.value === gseHeatmap.selectedOrg);
     const cellType = gseCellIds.find(c => c.value === gseHeatmap.selectedCell);
@@ -1495,7 +1514,9 @@ function App() {
       orgId,
       cellId,
       chrid,
-      gseId
+      gseId,
+      gseHeatmap.startValue,
+      gseHeatmap.endValue
     );
   };
 
@@ -2644,6 +2665,10 @@ function App() {
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      gseStartValue={gseHeatmap.startValue}
+                      setGseStartValue={(value) => updateGseHeatmap(gseHeatmap.id, { startValue: value })}
+                      gseEndValue={gseHeatmap.endValue}
+                      setGseEndValue={(value) => updateGseHeatmap(gseHeatmap.id, { endValue: value })}
                       isExampleMode={() => false}
                       fetchExistChromos3DData={() => { }}
                       exampleDataSet={{}}
@@ -2700,6 +2725,10 @@ function App() {
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      gseStartValue={gseHeatmap.startValue}
+                      setGseStartValue={(value) => updateGseHeatmap(gseHeatmap.id, { startValue: value })}
+                      gseEndValue={gseHeatmap.endValue}
+                      setGseEndValue={(value) => updateGseHeatmap(gseHeatmap.id, { endValue: value })}
                       isExampleMode={() => false}
                       fetchExistChromos3DData={() => { }}
                       exampleDataSet={{}}

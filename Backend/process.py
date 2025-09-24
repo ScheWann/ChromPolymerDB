@@ -1490,7 +1490,7 @@ def get_gse_chrid_options(cell_line: str, cell_id: str):
 """
 Get GSE distance matrix for given parameters
 """
-def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str):
+def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_value: int = None, end_value: int = None):
     """
     Get Hi-C interaction data from GSE table for the specified parameters.
     GSE table contains Hi-C data with ibp, jbp, fq columns (not coordinates).
@@ -1498,17 +1498,24 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str):
     """
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                """
+            # Base query
+            base_query = """
                 SELECT ibp, jbp, fq
                 FROM gse
                 WHERE cell_line = %s
                     AND cell_id = %s
                     AND chrid = %s
-                ORDER BY ibp, jbp
-                """,
-                (cell_line, cell_id, chrid)
-            )
+            """
+            params = [cell_line, cell_id, chrid]
+            
+            # Add range filtering if start_value and end_value are provided
+            if start_value is not None and end_value is not None:
+                base_query += " AND ibp >= %s AND ibp <= %s AND jbp >= %s AND jbp <= %s"
+                params.extend([start_value, end_value, start_value, end_value])
+            
+            base_query += " ORDER BY ibp, jbp"
+            
+            cur.execute(base_query, params)
             rows = cur.fetchall()
     
     if not rows:
@@ -1526,8 +1533,8 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str):
     
     # Get unique positions for metadata and calculate start/end values from data
     positions = sorted(set([row['ibp'] for row in rows] + [row['jbp'] for row in rows]))
-    start_value = min(positions) if positions else 0
-    end_value = max(positions) if positions else 0
+    data_start_value = min(positions) if positions else 0
+    data_end_value = max(positions) if positions else 0
     
     return {
         'data': result,
@@ -1535,7 +1542,7 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str):
         'cell_line': cell_line,
         'cell_id': cell_id,
         'chrid': chrid,
-        'start_value': start_value,
-        'end_value': end_value,
+        'start_value': start_value if start_value is not None else data_start_value,
+        'end_value': end_value if end_value is not None else data_end_value,
         'step': 5000  # GSE data step size
     }
