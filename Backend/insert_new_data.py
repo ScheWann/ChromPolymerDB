@@ -452,7 +452,7 @@ def process_gse_data(cur):
                 # Batch insert data
                 if insert_data:
                     cur.executemany(
-                        "INSERT INTO gse (sample_id, cell_id, chrid, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s)",
+                        "INSERT INTO gse (cell_line, cell_id, chrid, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s)",
                         insert_data
                     )
                     
