@@ -206,7 +206,7 @@ export const ProjectIntroduction = ({
                     </Dropdown>
                 </div>
 
-                {/* Experimental Single-cell Hi-C Data */}
+                {/* Experimental Single-cell Structure Data */}
                 <Divider plain style={{ fontWeight: 'bold', fontSize: '16px' }}>Experimental Single-cell Hi-C Data</Divider>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                     <Dropdown menu={{ items: bintuDropdownItems, onClick: onClickBintuDataItem }} placement="bottom" arrow>
