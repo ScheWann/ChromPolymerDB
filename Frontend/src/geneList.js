@@ -88,8 +88,10 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             svg.selectAll("*").remove();
 
             // Use shared axis utilities for consistency with heatmap
-            const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
-            const { tickValues } = calculateTickValues(axisValues, minDimension - 120, currentChromosomeSequence, isBintuMode);
+            const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
+            // Use the same effective width calculation as the heatmap for consistent tick spacing
+            const effectiveWidth = minDimension - margin.left - margin.right;
+            const { tickValues } = calculateTickValues(axisValues, effectiveWidth, currentChromosomeSequence, isBintuMode || isGseMode);
 
             // Map genes to the range of currentChromosomeSequence
             const { start, end } = currentChromosomeSequence;
@@ -109,7 +111,6 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
             // For GSE mode, we need to match the exact coordinate system used by the heatmap
             // In GSE mode, the heatmap is centered using CSS transforms, so we need to center the gene list too
             // In regular mode, the heatmap is left-aligned with an offset for the legend
-            const effectiveWidth = minDimension - margin.left - margin.right;
 
             const xAxisScale = d3.scaleBand()
                 .domain(axisValues)
