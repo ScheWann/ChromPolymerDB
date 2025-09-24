@@ -1043,17 +1043,19 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             {(!isBintuMode && !isGseMode) && (
                                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                             )}
-                            <svg
-                                ref={colorScaleRef}
-                                style={{
-                                    position: 'absolute',
-                                    left: `calc((100% - ${minDimension}px) / 4)`,
-                                    top: '50%',
-                                    transform: 'translate(0%, -50%)',
-                                    zIndex: 0,
-                                    pointerEvents: 'none'
-                                }}
-                            />
+                            {!isGseMode && (
+                                <svg
+                                    ref={colorScaleRef}
+                                    style={{
+                                        position: 'absolute',
+                                        left: `calc((100% - ${minDimension}px) / 4)`,
+                                        top: '50%',
+                                        transform: 'translate(0%, -50%)',
+                                        zIndex: 0,
+                                        pointerEvents: 'none'
+                                    }}
+                                />
+                            )}
 
                             {!isGseMode && (
                                 <div
