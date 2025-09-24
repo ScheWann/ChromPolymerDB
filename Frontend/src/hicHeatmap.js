@@ -19,7 +19,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const axisSvgRef = useRef(null);
     const colorScaleRef = useRef(null);
     const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu/GSE)
-    
+
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
@@ -91,9 +91,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     alert('Please complete GSE cell line and cell ID selections first.');
                     return;
                 }
-                const params = new URLSearchParams({ 
-                    cell_line: selectedGseOrg, 
-                    cell_id: selectedGseCell 
+                const params = new URLSearchParams({
+                    cell_line: selectedGseOrg,
+                    cell_id: selectedGseCell
                 });
                 const res = await fetch(`/api/downloadGseCSV?${params.toString()}`);
                 if (!res.ok) {
@@ -137,7 +137,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${cell_line}_${chrid}-${Math.floor(start_value/1e6)}-${Math.floor(end_value/1e6)}Mb.csv`;
+                a.download = `${cell_line}_${chrid}-${Math.floor(start_value / 1e6)}-${Math.floor(end_value / 1e6)}Mb.csv`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -441,7 +441,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 // In GSE mode, honor the brushed zoom region just like non-random HiC
                 const { x, y } = item;
                 return x >= effectiveSequence.start && x <= effectiveSequence.end &&
-                       y >= effectiveSequence.start && y <= effectiveSequence.end;
+                    y >= effectiveSequence.start && y <= effectiveSequence.end;
             } else {
                 const { ibp, jbp } = item;
                 return ibp >= effectiveSequence.start && ibp <= effectiveSequence.end &&
@@ -459,11 +459,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-    const { start, end } = effectiveSequence;
+        const { start, end } = effectiveSequence;
         const step = isBintuMode ? bintuStep : (isGseMode ? 5000 : 5000);
 
         // Use shared axis utilities for consistency with gene list
-    const axisValues = calculateAxisValues(effectiveSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
+        const axisValues = calculateAxisValues(effectiveSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
@@ -583,9 +583,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         axisSvg.selectAll('*').remove();
 
         // Use shared tick calculation for consistency with gene list
-    const sparseMode = isBintuMode || isGseMode;
-    const { tickValues: xTickValues } = calculateTickValues(axisValues, width, effectiveSequence, sparseMode);
-    const { tickValues: yTickValues } = calculateTickValues(axisValues, height, effectiveSequence, sparseMode);
+        const sparseMode = isBintuMode || isGseMode;
+        const { tickValues: xTickValues } = calculateTickValues(axisValues, width, effectiveSequence, sparseMode);
+        const { tickValues: yTickValues } = calculateTickValues(axisValues, height, effectiveSequence, sparseMode);
 
         // X-axis
         axisSvg.append('g')
@@ -624,7 +624,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         const numStops = 10;
         const gradientMin = legendDomain[0];
         const gradientMax = legendDomain[1];
-        
+
         if (isGseMode) {
             // For GSE mode, create a simple binary gradient: white to red
             gradient.append('stop')
@@ -671,7 +671,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('fill', '#333')
             .text(isBintuMode ? Math.floor(gradientMin) : ((isBintuMode || isGseMode) ? Math.ceil(gradientMax) : gradientMax));
 
-    // Brush for selecting range (enabled for non-random HiC and GSE; disabled in Bintu)
+        // Brush for selecting range (enabled for non-random HiC and GSE; disabled in Bintu)
         if (!isBintuMode) {
             const brushSvg = d3.select(brushSvgRef.current)
                 .attr('width', width + margin.left + margin.right)
@@ -806,13 +806,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             {!comparisonHeatmapId && (
                                 <>
                                     <span style={{ marginRight: 3 }}>
-                                        {isBintuMode ? 
-                                            (selectedBintuCluster ? 
+                                        {isBintuMode ?
+                                            (selectedBintuCluster ?
                                                 selectedBintuCluster.split('_')[0] || 'Bintu'
                                                 : 'Bintu'
                                             )
                                             : isGseMode ?
-                                                (selectedGseOrg ? 
+                                                (selectedGseOrg ?
                                                     `GSE-${selectedGseOrg}`
                                                     : 'GSE'
                                                 )
@@ -904,11 +904,28 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
+                        {isGseMode && (
+                            <Tooltip
+                                title={<span style={{ color: 'black' }}>Restore full sequence range</span>}
+                                color='white'
+                            >
+                                <Button
+                                    size='small'
+                                    style={{
+                                        fontSize: 12,
+                                        cursor: (gseHeatmapLoading || independentHeatmapLoading || !independentHeatmapData || independentHeatmapData.length === 0) ? 'not-allowed' : 'pointer',
+                                    }}
+                                    disabled={gseHeatmapLoading || independentHeatmapLoading || !independentHeatmapData || independentHeatmapData.length === 0}
+                                    icon={<RollbackOutlined />}
+                                    onClick={() => setLocalGseSequence(selectedChromosomeSequence)}
+                                />
+                            </Tooltip>
+                        )}
                         <Tooltip
                             title={<span style={{ color: 'black' }}>
-                                {isBintuMode ? 'Download Bintu CSV' : 
-                                 isGseMode ? 'Download GSE CSV' : 
-                                 'Download non-random interaction data'}
+                                {isBintuMode ? 'Download Bintu CSV' :
+                                    isGseMode ? 'Download GSE CSV' :
+                                        'Download non-random interaction data'}
                             </span>}
                             color='white'
                         >
@@ -1142,8 +1159,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         controls={false}
                                         value={colorScaleRange[1]}
                                         min={0}
-                                        max={isBintuMode ? 
-                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        max={isBintuMode ?
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) :
                                             (fqRawcMode ? 1 : 200)
                                         }
                                         onChange={changeColorByInput("max")}
@@ -1153,15 +1170,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         vertical
                                         style={{ height: 200 }}
                                         min={0}
-                                        max={isBintuMode ? 
-                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        max={isBintuMode ?
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) :
                                             (fqRawcMode ? 1 : 200)
                                         }
                                         step={isBintuMode ? 1 : (fqRawcMode ? 0.1 : 1)}
                                         onChange={changeColorScale}
                                         value={colorScaleRange}
                                         tooltip={{
-                                            formatter: (value) => (isBintuMode || isGseMode) ? Math.round(value) : value,
+                                            formatter: (value) => isBintuMode ? Math.round(value) : value,
                                             color: 'white',
                                             overlayInnerStyle: {
                                                 color: 'black',
@@ -1175,8 +1192,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                         controls={false}
                                         value={colorScaleRange[0]}
                                         min={0}
-                                        max={(isBintuMode || isGseMode) ? 
-                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
+                                        max={isBintuMode ?
+                                            Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) :
                                             (fqRawcMode ? 1 : 200)
                                         }
                                         onChange={changeColorByInput("min")}
