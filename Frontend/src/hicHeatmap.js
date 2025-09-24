@@ -10,13 +10,15 @@ import * as d3 from 'd3';
 
 export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chromosomeData, currentChromosomeSequence, setCurrentChromosomeSequence, selectedChromosomeSequence, totalChromosomeSequences, geneList, setSelectedChromosomeSequence, setChromosome3DExampleID, setChromosome3DLoading, setGeneName, geneName, geneSize, setChromosome3DExampleData, setGeneSize, formatNumber, cellLineList, setChromosome3DCellLineName, removeComparisonHeatmap, setSelectedSphereLists, isExampleMode, fetchExistChromos3DData, exampleDataSet, progressPolling, updateComparisonHeatmapCellLine, comparisonHeatmapUpdateTrigger, setChromosome3DComponents, setChromosome3DComponentIndex, comparisonHeatmapList, isBintuMode = false, bintuId = null, bintuStep = 30000,
     // Bintu control props
-    selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap }) => {
+    selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap,
+    // GSE control props
+    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const brushSvgRef = useRef(null);
     const axisSvgRef = useRef(null);
     const colorScaleRef = useRef(null);
-    const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu)
+    const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu/GSE)
     
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -31,23 +33,23 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [fqRawcMode, setFqRawcMode] = useState(true);
     const [sourceRecords, setSourceRecords] = useState([]);
 
-    // Sync internal data when Bintu mode chromosomeData changes
+    // Sync internal data when Bintu or GSE mode chromosomeData changes
     useEffect(() => {
-        if (isBintuMode) {
+        if (isBintuMode || isGseMode) {
             setIndependentHeatmapData(chromosomeData || []);
         }
-    }, [chromosomeData, isBintuMode]);
+    }, [chromosomeData, isBintuMode, isGseMode]);
 
-    // Set appropriate colorScaleRange for Bintu mode
+    // Set appropriate colorScaleRange for Bintu and GSE modes
     useEffect(() => {
-        if (isBintuMode && independentHeatmapData && independentHeatmapData.length > 0) {
+        if ((isBintuMode || isGseMode) && independentHeatmapData && independentHeatmapData.length > 0) {
             const maxDistance = d3.max(independentHeatmapData, d => d.value) || 1000;
             setColorScaleRange([0, Math.ceil(maxDistance)]);
-        } else if (!isBintuMode && colorScaleRange[1] > 200) {
-            // Reset to default non-Bintu range if switching from Bintu mode
+        } else if (!isBintuMode && !isGseMode && colorScaleRange[1] > 200) {
+            // Reset to default non-Bintu/GSE range if switching modes
             setColorScaleRange([0, fqRawcMode ? 0.3 : 30]);
         }
-    }, [isBintuMode, independentHeatmapData, fqRawcMode]);
+    }, [isBintuMode, isGseMode, independentHeatmapData, fqRawcMode]);
 
     const modalStyles = {
         body: {
@@ -62,6 +64,31 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
     const download = async () => {
         if (!independentHeatmapData || independentHeatmapData.length === 0) return;
+
+        if (isGseMode) {
+            // For GSE mode, download CSV with ibp,jbp,fq columns
+            try {
+                if (!selectedGseOrg || !selectedGseCell || !selectedGseCondition) {
+                    alert('Please complete all GSE selections first.');
+                    return;
+                }
+                const csvContent = "ibp,jbp,fq\n" + 
+                    independentHeatmapData.map(row => `${row.ibp},${row.jbp},${row.fq}`).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `GSE_${selectedGseOrg}_${selectedGseCell}_${selectedGseCondition}_data.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error(e);
+                alert('Download failed: ' + (e?.message || 'Unknown error'));
+            }
+            return;
+        }
 
         if (isBintuMode) {
             // For Bintu mode, download the pre-generated CSV from Backend/Bintu folder via API
@@ -95,7 +122,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             return;
         }
 
-        // Original non-Bintu download behavior: significant interactions CSV
+        // Original non-Bintu/GSE download behavior: significant interactions CSV
         const filteredData = independentHeatmapData.filter(row => row.fdr < 0.05);
         if (filteredData.length === 0) {
             alert("no suitable data (fdr < 0.05)");
@@ -383,6 +410,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const { x, y } = item;
                 return x >= currentChromosomeSequence.start && x <= currentChromosomeSequence.end &&
                     y >= currentChromosomeSequence.start && y <= currentChromosomeSequence.end;
+            } else if (isGseMode) {
+                const { ibp, jbp } = item;
+                return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
+                    jbp >= currentChromosomeSequence.start && jbp <= currentChromosomeSequence.end;
             } else {
                 const { ibp, jbp } = item;
                 return ibp >= currentChromosomeSequence.start && ibp <= currentChromosomeSequence.end &&
@@ -401,10 +432,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         const { start, end } = currentChromosomeSequence;
-        const step = isBintuMode ? bintuStep : 5000;
+        const step = isBintuMode ? bintuStep : (isGseMode ? 5000 : 5000);
 
         // Use shared axis utilities for consistency with gene list
-        const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode, zoomedChromosomeData);
+        const axisValues = calculateAxisValues(currentChromosomeSequence, step, isBintuMode || isGseMode, zoomedChromosomeData);
 
         const xScale = d3.scaleBand()
             .domain(axisValues)
@@ -416,12 +447,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .range([height, 0])
             .padding(0.1);
 
-        // Unified color scale (Reds) for both modes. Use colorScaleRange for consistent slider control.
+        // Unified color scale (Reds) for all modes. Use colorScaleRange for consistent slider control.
         const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
         let legendDomain;
         let colorScale;
-        if (isBintuMode) {
-            // Use colorScaleRange for Bintu mode to respect slider controls
+        if (isBintuMode || isGseMode) {
+            // Use colorScaleRange for Bintu and GSE modes to respect slider controls
             legendDomain = colorScaleRange;
             colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
         } else {
@@ -437,6 +468,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 dataMap.set(`X:${d.x}, Y:${d.y}`, { value: d.value });
                 dataMap.set(`X:${d.y}, Y:${d.x}`, { value: d.value }); // Symmetrical
             });
+        } else if (isGseMode) {
+            // For GSE mode, map FQ values with IBP/JBP coordinates
+            zoomedChromosomeData.forEach(d => {
+                dataMap.set(`X:${d.ibp}, Y:${d.jbp}`, { value: d.fq });
+                dataMap.set(`X:${d.jbp}, Y:${d.ibp}`, { value: d.fq }); // Symmetrical
+            });
         } else {
             // For regular mode, use the existing fq/fdr/rawc mapping
             zoomedChromosomeData.forEach(d => {
@@ -446,8 +483,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
 
         const hasData = (ibp, jbp) => {
-            if (isBintuMode) {
-                // For Bintu mode, check if we have actual data at these positions
+            if (isBintuMode || isGseMode) {
+                // For Bintu and GSE modes, check if we have actual data at these positions
                 return dataMap.has(`X:${ibp}, Y:${jbp}`) || dataMap.has(`X:${jbp}, Y:${ibp}`);
             } else {
                 // For regular mode, check if positions are in valid ranges
@@ -479,6 +516,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         fillColor = colorScale(data.value);
                         drewColorRef.current = true;
                     }
+                } else if (isGseMode) {
+                    const data = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`);
+                    if (!data) {
+                        fillColor = 'white';
+                    } else {
+                        // Use FQ value for coloring
+                        fillColor = colorScale(data.value);
+                        drewColorRef.current = true;
+                    }
                 } else {
                     const { fq, fdr, rawc } = dataMap.get(`X:${ibp}, Y:${jbp}`) || dataMap.get(`X:${jbp}, Y:${ibp}`) || { fq: -1, fdr: -1, rawc: -1 };
                     fillColor = !hasData(ibp, jbp) ? 'white' : (jbp <= ibp && (fdr > 0.05 || (fdr === -1 && rawc === -1))) ? 'white' : colorScale(fqRawcMode ? fq : rawc);
@@ -490,16 +536,20 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         });
 
         // Fallback: direct paint using data coordinates if all white
-        if (isBintuMode && !drewColorRef.current && zoomedChromosomeData.length > 0) {
+        if ((isBintuMode || isGseMode) && !drewColorRef.current && zoomedChromosomeData.length > 0) {
             // eslint-disable-next-line no-console
-            console.debug('[BintuHeatmap] Fallback paint engaged.');
+            console.debug(`[${isBintuMode ? 'Bintu' : 'GSE'}Heatmap] Fallback paint engaged.`);
             zoomedChromosomeData.forEach(d => {
                 // Use the exact data positions since our axis now uses actual positions
-                if (!xScale(d.x) && xScale(d.x) !== 0) return;
-                if (!yScale(d.y) && yScale(d.y) !== 0) return;
-                const x = margin.left + xScale(d.x);
-                const y = margin.top + yScale(d.y);
-                context.fillStyle = colorScale(d.value);
+                const xKey = isBintuMode ? d.x : d.ibp;
+                const yKey = isBintuMode ? d.y : d.jbp;
+                const value = isBintuMode ? d.value : d.fq;
+                
+                if (!xScale(xKey) && xScale(xKey) !== 0) return;
+                if (!yScale(yKey) && yScale(yKey) !== 0) return;
+                const x = margin.left + xScale(xKey);
+                const y = margin.top + yScale(yKey);
+                context.fillStyle = colorScale(value);
                 context.fillRect(x, y, xScale.bandwidth(), yScale.bandwidth());
             });
         }
@@ -576,7 +626,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(isBintuMode ? Math.floor(gradientMin) : gradientMin);
+            .text((isBintuMode || isGseMode) ? Math.floor(gradientMin) : gradientMin);
 
         legendGroup.append('text')
             .attr('x', 10)
@@ -584,10 +634,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text(isBintuMode ? Math.ceil(gradientMax) : gradientMax);
+            .text((isBintuMode || isGseMode) ? Math.ceil(gradientMax) : gradientMax);
 
-        // Brush for selecting range (disabled in Bintu mode)
-        if (!isBintuMode) {
+        // Brush for selecting range (disabled in Bintu and GSE modes)
+        if (!isBintuMode && !isGseMode) {
             const brushSvg = d3.select(brushSvgRef.current)
                 .attr('width', width + margin.left + margin.right)
                 .attr('height', height + margin.top + margin.bottom);
@@ -646,12 +696,19 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         } else {
             axisSvg.selectAll('.gene-line').remove();
         }
-    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode]);
+    }, [minDimension, currentChromosomeSequence, geneSize, colorScaleRange, containerSize, independentHeatmapData, fqRawcMode, isBintuMode, isGseMode]);
 
     const closeBintuHeatmap = () => {
         // Call the parent component's onCloseBintuHeatmap function if available
         if (onCloseBintuHeatmap) {
             onCloseBintuHeatmap();
+        }
+    };
+
+    const closeGseHeatmap = () => {
+        // Call the parent component's onCloseGseHeatmap function if available
+        if (onCloseGseHeatmap) {
+            onCloseGseHeatmap();
         }
     };
 
@@ -699,18 +756,23 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                             (selectedBintuCluster ? 
                                                 selectedBintuCluster.split('_')[0] || 'Bintu'
                                                 : 'Bintu'
-                                            ) : 
-                                            cellLineName
+                                            )
+                                            : isGseMode ?
+                                                (selectedGseOrg && selectedGseCell ? 
+                                                    `GSE-${selectedGseOrg}-${selectedGseCell}`
+                                                    : 'GSE'
+                                                )
+                                                : independentHeatmapCellLine || cellLineName
                                         }
                                     </span>
-                                    {/* Show dash only when not in Bintu pre-selection state */}
-                                    {(!isBintuMode || (selectedBintuCluster && tempBintuCellId)) && (
+                                    {/* Show dash only when not in Bintu/GSE pre-selection state */}
+                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition)) && (
                                         <span style={{ marginRight: 3 }}>-</span>
                                     )}
                                 </>
                             )}
-                            {/* Hide chromosome and range when Bintu selection not made yet */}
-                            {(!isBintuMode || (selectedBintuCluster && tempBintuCellId)) && (
+                            {/* Hide chromosome and range when Bintu/GSE selection not made yet */}
+                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition)) && (
                                 <>
                                     <span style={{ marginRight: 3 }}>{chromosomeName}</span>
                                     <span style={{ marginRight: 3 }}>:</span>
@@ -722,7 +784,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         </div>
                     </Tooltip>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                        {!isBintuMode && (
+                        {!isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
                                 color='white'
@@ -739,7 +801,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
-                        {!comparisonHeatmapId && !isBintuMode && (
+                        {!comparisonHeatmapId && !isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>FoldRec interactions pairwise comparison</span>}
                                 color='white'
@@ -755,7 +817,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
-                        {!isBintuMode && (
+                        {!isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>Restore the original heatmap</span>}
                                 color='white'
@@ -771,7 +833,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 />
                             </Tooltip>
                         )}
-                        {!isBintuMode && (
+                        {!isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>Expand the heatmap view</span>}
                                 color='white'
@@ -849,6 +911,72 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 >Load</Button>
                             </>
                         )}
+                        {isGseMode && (
+                            <>
+                                <Select
+                                    placeholder="Organism"
+                                    size='small'
+                                    style={{ width: 120 }}
+                                    value={selectedGseOrg}
+                                    onChange={setSelectedGseOrg}
+                                    options={gseCellLines}
+                                    optionFilterProp='label'
+                                    optionRender={(option) => (
+                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                            <div>{option.label}</div>
+                                        </Tooltip>
+                                    )}
+                                />
+                                <Select
+                                    placeholder="Cell Type"
+                                    size='small'
+                                    style={{ width: 120 }}
+                                    value={selectedGseCell}
+                                    onChange={setSelectedGseCell}
+                                    options={gseCellIds}
+                                    optionFilterProp='label'
+                                    optionRender={(option) => (
+                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                            <div>{option.label}</div>
+                                        </Tooltip>
+                                    )}
+                                />
+                                <Select
+                                    placeholder="Condition"
+                                    size='small'
+                                    style={{ width: 120 }}
+                                    value={selectedGseCondition}
+                                    onChange={setSelectedGseCondition}
+                                    options={gseChrIds}
+                                    optionFilterProp='label'
+                                    optionRender={(option) => (
+                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                            <div>{option.label}</div>
+                                        </Tooltip>
+                                    )}
+                                />
+                                <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
+                                    <Button
+                                        size='small'
+                                        style={{
+                                            fontSize: 12,
+                                            cursor: 'pointer',
+                                        }}
+                                        icon={<MinusOutlined />}
+                                        onClick={closeGseHeatmap}
+                                    />
+                                </Tooltip>
+                                <Button
+                                    color='primary'
+                                    size='small'
+                                    variant="outlined"
+                                    style={{ marginRight: 5 }}
+                                    disabled={!selectedGseOrg || !selectedGseCell || !selectedGseCondition}
+                                    loading={gseHeatmapLoading}
+                                    onClick={handleGseHeatmapSubmit}
+                                >Load</Button>
+                            </>
+                        )}
                         {comparisonHeatmapId && !isBintuMode && (
                             <>
                                 <Tooltip
@@ -895,7 +1023,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 </Tooltip>
                             </>
                         )}
-                        {!isBintuMode && (
+                        {!isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={
                                     <span style={{ color: 'black' }}>
@@ -918,7 +1046,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         <>
                             <canvas ref={canvasRef} style={{ position: 'absolute', zIndex: 0 }} />
                             <svg ref={axisSvgRef} style={{ position: 'absolute', zIndex: 1, pointerEvents: 'none' }} />
-                            {!isBintuMode && (
+                            {(!isBintuMode && !isGseMode) && (
                                 <svg ref={brushSvgRef} style={{ position: 'absolute', zIndex: 2, pointerEvents: 'all' }} />
                             )}
                             <svg
@@ -972,7 +1100,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     onChange={changeColorScale}
                                     value={colorScaleRange}
                                     tooltip={{
-                                        formatter: (value) => isBintuMode ? Math.round(value) : value,
+                                        formatter: (value) => (isBintuMode || isGseMode) ? Math.round(value) : value,
                                         color: 'white',
                                         overlayInnerStyle: {
                                             color: 'black',
@@ -986,14 +1114,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     controls={false}
                                     value={colorScaleRange[0]}
                                     min={0}
-                                    max={isBintuMode ? 
+                                    max={(isBintuMode || isGseMode) ? 
                                         Math.ceil(d3.max(currentChromosomeData, d => d.value) || 1000) : 
                                         (fqRawcMode ? 1 : 200)
                                     }
                                     onChange={changeColorByInput("min")}
                                 />
                             </div>
-                            {!isBintuMode && (
+                            {!isBintuMode && !isGseMode && (
                                 <>
                                     <LaptopOutlined style={{ position: 'absolute', top: 45, left: `calc((100% - ${minDimension}px) / 2 + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />
                                     <ExperimentOutlined style={{ position: 'absolute', bottom: 50, right: `calc((100% - ${minDimension}px) / 2 + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5 }} />

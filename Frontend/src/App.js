@@ -101,14 +101,21 @@ function App() {
   const [bintuHeatmaps, setBintuHeatmaps] = useState([]); // Array of Bintu heatmap instances
   const [bintuHeatmapIndex, setBintuHeatmapIndex] = useState(1); // Index for next Bintu heatmap
 
+  // GSE-related state
+  const [gseCellLines, getGseCellLines] = useState([]);
+  const [gseCellIds, getGseCellIds] = useState([]);
+  const [gseChrIds, setGseChrIds] = useState([]);
+  const [gseHeatmaps, setGseHeatmaps] = useState([]); // Array of GSE heatmap instances
+  const [gseHeatmapIndex, setGseHeatmapIndex] = useState(1); // Index for next GSE heatmap
+
   // Heatmap Comparison settings
   const [comparisonHeatmapList, setComparisonHeatmapList] = useState([]); // List of comparison heatmaps
   const [comparisonHeatmapIndex, setComparisonHeatmapIndex] = useState(1); // Index of comparison heatmap
   const [comparisonHeatmapCellLines, setComparisonHeatmapCellLines] = useState({}); // Track selected cell lines for each comparison heatmap
   const [comparisonHeatmapUpdateTrigger, setComparisonHeatmapUpdateTrigger] = useState({}); // Trigger updates for comparison heatmaps
 
-  // Unified left panel ordering (Bintu + Comparison heatmaps)
-  // Each item: { type: 'bintu' | 'comparison', id: number, createdAt: number }
+  // Unified left panel ordering (Bintu + GSE + Comparison heatmaps)
+  // Each item: { type: 'bintu' | 'gse' | 'comparison', id: number, createdAt: number }
   const [leftPanels, setLeftPanels] = useState([]);
 
   // 3D Chromosome Multiple Components settings
@@ -268,6 +275,8 @@ function App() {
     }
     fetchCellLineList();
     fetchBintuCellClusters();
+    fetchGseCellLineOptions();
+    // fetchGseCellIdOptions and fetchGseConditions will be called when needed with parameters
   }, []);
 
   // Add scroll event listener
@@ -408,6 +417,26 @@ function App() {
     setIsTourOpen(false);
     // No need to call markTourSeen() here since it's already called when tour is first shown
   };
+
+  // useEffect to handle GSE cell line selection changes
+  useEffect(() => {
+    // When any GSE heatmap's selectedOrg changes, fetch cell ID options
+    gseHeatmaps.forEach(gseHeatmap => {
+      if (gseHeatmap.selectedOrg) {
+        fetchGseCellIdOptions(gseHeatmap.selectedOrg);
+      }
+    });
+  }, [gseHeatmaps.map(h => h.selectedOrg).join(',')]);
+
+  // useEffect to handle GSE cell selection changes  
+  useEffect(() => {
+    // When any GSE heatmap's selectedCell changes, fetch condition options
+    gseHeatmaps.forEach(gseHeatmap => {
+      if (gseHeatmap.selectedOrg && gseHeatmap.selectedCell) {
+        fetchGseChrIdOptions(gseHeatmap.selectedOrg, gseHeatmap.selectedCell);
+      }
+    });
+  }, [gseHeatmaps.map(h => `${h.selectedOrg}-${h.selectedCell}`).join(',')]);
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
@@ -1212,11 +1241,269 @@ function App() {
     ));
   };
 
+  // Function to update specific GSE heatmap instance
+  const updateGseHeatmap = (gseId, updates) => {
+    setGseHeatmaps(prev => prev.map(gse => 
+      gse.id === gseId 
+        ? { ...gse, ...updates } 
+        : gse
+    ));
+  };
+
   // Function to remove a specific Bintu heatmap instance
   const removeBintuHeatmap = (bintuId) => {
     setBintuHeatmaps(prev => prev.filter(bintu => bintu.id !== bintuId));
     // Remove corresponding left panel entry
     setLeftPanels(prev => prev.filter(p => !(p.type === 'bintu' && p.id === bintuId)));
+  };
+
+  // GSE-related functions
+  const fetchGseCellLineOptions = () => {
+    fetch('/api/getGseCellLineOptions')
+      .then(res => res.json())
+      .then(data => {
+        getGseCellLines(data);
+      })
+      .catch(error => {
+        console.error('Error fetching GSE organisms:', error);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch GSE organisms',
+          duration: 3,
+        });
+      });
+  };
+
+  const fetchGseCellIdOptions = (cellLine) => {
+    if (!cellLine) {
+      getGseCellIds([]);
+      return;
+    }
+    
+    fetch('/api/getGseCellIdOptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        cell_line: cellLine
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        getGseCellIds(data);
+      })
+      .catch(error => {
+        console.error('Error fetching GSE cell types:', error);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch GSE cell types',
+          duration: 3,
+        });
+      });
+  };
+
+  const fetchGseChrIdOptions = (cellLine, cellId) => {
+    if (!cellLine || !cellId) {
+      setGseChrIds([]);
+      return;
+    }
+    
+    fetch('/api/getGseChrIdOptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        cell_line: cellLine,
+        cell_id: cellId
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setGseChrIds(data);
+      })
+      .catch(error => {
+        console.error('Error fetching GSE conditions:', error);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch GSE conditions',
+          duration: 3,
+        });
+      });
+  };
+
+  const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId) => {
+    // Set loading state for this specific GSE instance
+    setGseHeatmaps(prev => prev.map(gse => 
+      gse.id === gseId 
+        ? { ...gse, loading: true } 
+        : gse
+    ));
+
+    fetch('/api/getGseDistanceMatrix', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        cell_line: cell_line,
+        cell_id: cellId,
+        chrid: chrid
+      })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch GSE distance matrix');
+        }
+        return res.json();
+      })
+      .then(data => {
+        // Update the specific GSE heatmap instance
+        setGseHeatmaps(prev => prev.map(gse => 
+          gse.id === gseId 
+            ? { 
+                ...gse, 
+                data: data,
+                loading: false,
+                geneList: [] // Will be updated separately
+              } 
+            : gse
+        ));
+
+        // Fetch gene list for the region using data from GSE response
+        if (data && data.start_value && data.end_value) {
+          const sequences = { start: data.start_value, end: data.end_value };
+          fetch('/api/getGeneList', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              // Backend expects chromosome without 'chr' prefix
+              chromosome_name: typeof chrid === 'string' ? chrid.replace(/^chr/i, '') : chrid,
+              sequences: sequences
+            })
+          })
+            .then(res => res.json())
+            .then(geneData => {
+              // Update gene list for this specific instance
+              setGseHeatmaps(prev => prev.map(gse => 
+                gse.id === gseId 
+                  ? { ...gse, geneList: geneData } 
+                  : gse
+              ));
+            })
+            .catch(error => {
+              console.error('Error fetching gene list:', error);
+            });
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching GSE distance matrix:', error);
+        // Set loading to false and clear data on error
+        setGseHeatmaps(prev => prev.map(gse => 
+          gse.id === gseId 
+            ? { ...gse, loading: false, data: null } 
+            : gse
+        ));
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch GSE distance matrix',
+          duration: 3,
+        });
+      });
+  };
+
+  const handleAddGseHeatmap = () => {
+    // Create a new GSE heatmap instance
+    const newId = gseHeatmapIndex;
+    const newGseHeatmap = {
+      id: newId,
+      selectedOrg: null,
+      selectedCell: null,
+      selectedCondition: null,
+      tempOrgId: null,
+      tempCellId: null,
+      tempConditionId: null,
+      data: null,
+      loading: false,
+      geneList: []
+    };
+
+    setGseHeatmaps(prev => [...prev, newGseHeatmap]);
+    setGseHeatmapIndex(prev => prev + 1);
+
+    // Track creation order so newest appears on the far right
+    setLeftPanels(prev => [...prev, { type: 'gse', id: newId, createdAt: Date.now() }]);
+  };
+
+  const handleGseHeatmapSubmit = (gseId) => {
+    const gseHeatmap = gseHeatmaps.find(g => g.id === gseId);
+    if (!gseHeatmap) return;
+
+    if (!gseHeatmap.selectedOrg) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select a GSE organism first',
+        duration: 2,
+      });
+      return;
+    }
+
+    if (!gseHeatmap.selectedCell) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select a GSE cell type first',
+        duration: 2,
+      });
+      return;
+    }
+
+    if (!gseHeatmap.selectedCondition) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select a GSE condition first',
+        duration: 2,
+      });
+      return;
+    }
+
+    // Parse the selections to get the actual objects
+    const organism = gseCellLines.find(o => o.value === gseHeatmap.selectedOrg);
+    const cellType = gseCellIds.find(c => c.value === gseHeatmap.selectedCell);
+    const condition = gseChrIds.find(c => c.value === gseHeatmap.selectedCondition);
+
+    if (!organism || !cellType || !condition) {
+      messageApi.open({
+        type: 'error',
+        content: 'Invalid GSE selections',
+        duration: 2,
+      });
+      return;
+    }
+
+    // Extract IDs from the selected objects
+    // Use the tempIds if they exist, otherwise use the actual IDs from the objects
+    const orgId = gseHeatmap.tempOrgId || organism.id || organism.value;
+    const cellId = gseHeatmap.tempCellId || cellType.id || cellType.value;
+
+    // Get chromosome data from user selection
+    const chrid = gseHeatmap.selectedCondition; // chrid comes from the selected condition
+
+    fetchGseDistanceMatrix(
+      orgId,
+      cellId,
+      chrid,
+      gseId
+    );
+  };
+
+  // Function to remove a specific GSE heatmap instance
+  const removeGseHeatmap = (gseId) => {
+    setGseHeatmaps(prev => prev.filter(gse => gse.id !== gseId));
+    // Remove corresponding left panel entry
+    setLeftPanels(prev => prev.filter(p => !(p.type === 'gse' && p.id === gseId)));
   };
 
   // Mode change (Cell Line / Gene)
@@ -2136,7 +2423,8 @@ function App() {
         {!heatmapLoading &&
           chromosomeData.length === 0 &&
           Object.keys(chromosome3DExampleData).length === 0 &&
-          bintuHeatmaps.length === 0 && (
+          bintuHeatmaps.length === 0 &&
+          gseHeatmaps.length === 0 && (
             <div style={{ width: '100%', height: '100%', overflowY: 'scroll' }}>
               <ProjectIntroduction
                 exampleDataItems={exampleDataItems}
@@ -2146,11 +2434,12 @@ function App() {
                 setStartInputValue={setStartInputValue}
                 setEndInputValue={setEndInputValue}
                 handleAddBintuHeatmap={handleAddBintuHeatmap}
+                handleAddGseHeatmap={handleAddGseHeatmap}
               />
             </div>
           )}
 
-        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && bintuHeatmaps.length === 0)) && (
+        {(heatmapLoading || !(chromosomeData.length === 0 && Object.keys(chromosome3DExampleData).length === 0 && bintuHeatmaps.length === 0 && gseHeatmaps.length === 0)) && (
           <>
             {/* Original Hi-C Heatmap: show spinner only when actually loading; otherwise render only if data exists */}
             {heatmapLoading ? (
@@ -2299,6 +2588,136 @@ function App() {
                           bintuCellClusters={bintuCellClusters}
                           bintuHeatmapLoading={bintuHeatmap.loading}
                           onCloseBintuHeatmap={() => removeBintuHeatmap(bintuHeatmap.id)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (panel.type === 'gse') {
+                const gseHeatmap = gseHeatmaps.find(g => g.id === panel.id);
+                if (!gseHeatmap) return null;
+                return (
+                  <div key={`gse-${panel.id}`} style={{
+                    width: '40vw',
+                    height: '100%',
+                    borderRight: '1px solid #eaeaea',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      {gseHeatmap.loading ? (
+                        <Spin spinning={true} size="large" style={{ width: '100%', height: '100%' }} />
+                      ) : gseHeatmap.data ? (
+                        <Heatmap
+                          comparisonHeatmapId={null}
+                          warning={warning}
+                          formatNumber={formatNumber}
+                          cellLineList={cellLineList}
+                          geneList={gseHeatmap.geneList}
+                          cellLineName={gseHeatmap.data?.cell_line || ''}
+                          chromosomeName={gseHeatmap.data?.chrid || ''}
+                          chromosomeData={gseHeatmap.data?.data || []}
+                          currentChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
+                          setCurrentChromosomeSequence={() => { }}
+                          selectedChromosomeSequence={{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }}
+                          totalChromosomeSequences={[{ start: gseHeatmap.data?.start_value || 0, end: gseHeatmap.data?.end_value || 0 }]}
+                          setSelectedChromosomeSequence={() => { }}
+                          setChromosome3DExampleID={() => { }}
+                          setChromosome3DLoading={() => { }}
+                          setGeneName={() => { }}
+                          geneName={''}
+                          geneSize={{ start: 0, end: 0 }}
+                          setChromosome3DExampleData={() => { }}
+                          setGeneSize={() => { }}
+                          setSelectedSphereLists={() => { }}
+                          removeComparisonHeatmap={() => { }}
+                          setChromosome3DCellLineName={() => { }}
+                          setChromosome3DComponents={() => { }}
+                          setChromosome3DComponentIndex={() => { }}
+                          comparisonHeatmapList={[]}
+                          isGseMode={true}
+                          gseId={gseHeatmap.id}
+                          selectedGseOrg={gseHeatmap.selectedOrg}
+                          setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                          selectedGseCell={gseHeatmap.selectedCell}
+                          setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
+                          selectedGseCondition={gseHeatmap.selectedCondition}
+                          setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                          gseCellLines={gseCellLines}
+                          gseCellIds={gseCellIds}
+                          gseChrIds={gseChrIds}
+                          tempGseOrgId={gseHeatmap.tempOrgId}
+                          setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
+                          tempGseCellId={gseHeatmap.tempCellId}
+                          setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
+                          tempGseConditionId={gseHeatmap.tempConditionId}
+                          setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                          handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
+                          gseHeatmapLoading={gseHeatmap.loading}
+                          onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                          isExampleMode={() => false}
+                          fetchExistChromos3DData={() => { }}
+                          exampleDataSet={{}}
+                          progressPolling={() => { }}
+                          updateComparisonHeatmapCellLine={() => { }}
+                          comparisonHeatmapUpdateTrigger={0}
+                        />
+                      ) : (
+                        <Heatmap
+                          comparisonHeatmapId={null}
+                          warning={warning}
+                          formatNumber={formatNumber}
+                          cellLineList={cellLineList}
+                          geneList={gseHeatmap.geneList}
+                          cellLineName={''}
+                          chromosomeName={''}
+                          chromosomeData={[]}
+                          currentChromosomeSequence={{ start: 0, end: 0 }}
+                          setCurrentChromosomeSequence={() => { }}
+                          selectedChromosomeSequence={{ start: 0, end: 0 }}
+                          totalChromosomeSequences={[{ start: 0, end: 0 }]}
+                          setSelectedChromosomeSequence={() => { }}
+                          setChromosome3DExampleID={() => { }}
+                          setChromosome3DLoading={() => { }}
+                          setGeneName={() => { }}
+                          geneName={''}
+                          geneSize={{ start: 0, end: 0 }}
+                          setChromosome3DExampleData={() => { }}
+                          setGeneSize={() => { }}
+                          setSelectedSphereLists={() => { }}
+                          removeComparisonHeatmap={() => { }}
+                          setChromosome3DCellLineName={() => { }}
+                          setChromosome3DComponents={() => { }}
+                          setChromosome3DComponentIndex={() => { }}
+                          comparisonHeatmapList={[]}
+                          isGseMode={true}
+                          gseId={gseHeatmap.id}
+                          selectedGseOrg={gseHeatmap.selectedOrg}
+                          setSelectedGseOrg={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                          selectedGseCell={gseHeatmap.selectedCell}
+                          setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
+                          selectedGseCondition={gseHeatmap.selectedCondition}
+                          setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                          gseCellLines={gseCellLines}
+                          gseCellIds={gseCellIds}
+                          gseChrIds={gseChrIds}
+                          tempGseOrgId={gseHeatmap.tempOrgId}
+                          setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
+                          tempGseCellId={gseHeatmap.tempCellId}
+                          setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
+                          tempGseConditionId={gseHeatmap.tempConditionId}
+                          setTempGseConditionId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                          handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
+                          gseHeatmapLoading={gseHeatmap.loading}
+                          onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                          isExampleMode={() => false}
+                          fetchExistChromos3DData={() => { }}
+                          exampleDataSet={{}}
+                          progressPolling={() => { }}
+                          updateComparisonHeatmapCellLine={() => { }}
+                          comparisonHeatmapUpdateTrigger={0}
                         />
                       )}
                     </div>

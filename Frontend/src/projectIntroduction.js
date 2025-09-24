@@ -30,7 +30,8 @@ export const ProjectIntroduction = ({
     setSelectedChromosomeSequence, 
     setStartInputValue, 
     setEndInputValue,
-    handleAddBintuHeatmap 
+    handleAddBintuHeatmap,
+    handleAddGseHeatmap
 }) => {
     const chartRef = useRef(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
@@ -134,8 +135,10 @@ export const ProjectIntroduction = ({
     }
 
     const onClickBintuDataItem = ({ key }) => {
-        if (handleAddBintuHeatmap) {
+        if (key === 'bintu' && handleAddBintuHeatmap) {
             handleAddBintuHeatmap();
+        } else if (key === 'gse' && handleAddGseHeatmap) {
+            handleAddGseHeatmap();
         }
     }
 

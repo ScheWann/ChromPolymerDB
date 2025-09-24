@@ -1390,7 +1390,7 @@ def get_gse_cell_line_options():
     options = [
         {
             "value": row["cell_line"],
-            "label": label_mapping.get(row["cell_line"], "Unknown"),
+            "label": row["cell_line"],
         }
         for row in rows
     ]
@@ -1453,3 +1453,57 @@ def get_gse_chrid_options(cell_line: str, cell_id: str):
     ]
 
     return options
+
+
+"""
+Get GSE distance matrix for given parameters
+"""
+def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str):
+    """
+    Get Hi-C interaction data from GSE table for the specified parameters.
+    GSE table contains Hi-C data with ibp, jbp, fq columns (not coordinates).
+    Uses fq values for heatmap rendering instead of calculating distances.
+    """
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT ibp, jbp, fq
+                FROM gse
+                WHERE cell_line = %s
+                    AND cell_id = %s
+                    AND chrid = %s
+                ORDER BY ibp, jbp
+                """,
+                (cell_line, cell_id, chrid)
+            )
+            rows = cur.fetchall()
+    
+    if not rows:
+        return None
+    
+    # Create the result structure similar to chromosome_data for heatmap rendering
+    result = []
+    
+    for row in rows:
+        result.append({
+            'x': int(row['ibp']),
+            'y': int(row['jbp']),
+            'value': float(row['fq']) if row['fq'] is not None else 0.0
+        })
+    
+    # Get unique positions for metadata and calculate start/end values from data
+    positions = sorted(set([row['ibp'] for row in rows] + [row['jbp'] for row in rows]))
+    start_value = min(positions) if positions else 0
+    end_value = max(positions) if positions else 0
+    
+    return {
+        'data': result,
+        'positions': positions,
+        'cell_line': cell_line,
+        'cell_id': cell_id,
+        'chrid': chrid,
+        'start_value': start_value,
+        'end_value': end_value,
+        'step': 5000  # GSE data step size
+    }

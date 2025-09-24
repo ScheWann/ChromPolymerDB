@@ -37,6 +37,10 @@ from process import (
     get_bintu_cell_clusters,
     get_bintu_distance_matrix,
     download_bintu_csv,
+    get_gse_cell_line_options,
+    get_gse_cell_id_options,
+    get_gse_chrid_options,
+    get_gse_distance_matrix,
 )
 
 
@@ -375,6 +379,71 @@ def download_bintu_csv_api():
     if resp is None:
         return jsonify({"error": "CSV not found for requested cluster"}), 404
     return resp
+
+
+# GSE-related endpoints
+@api.route("/getGseCellLineOptions", methods=["GET"])
+def get_gse_organisms():
+    """Get list of available GSE organisms (cell lines)"""
+    try:
+        return jsonify(get_gse_cell_line_options())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/getGseCellIdOptions", methods=["POST"])
+def get_gse_cell_types():
+    """Get list of available GSE cell types for a given organism"""
+    try:
+        data = request.get_json()
+        if not data or 'cell_line' not in data:
+            return jsonify({"error": "cell_line parameter is required"}), 400
+        
+        cell_line = data['cell_line']
+        return jsonify(get_gse_cell_id_options(cell_line))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/getGseChrIdOptions", methods=["POST"])
+def get_gse_conditions():
+    """Get list of available GSE conditions for a given organism and cell type"""
+    try:
+        data = request.get_json()
+        if not data or 'cell_line' not in data or 'cell_id' not in data:
+            return jsonify({"error": "cell_line and cell_id parameters are required"}), 400
+        
+        cell_line = data['cell_line']
+        cell_id = data['cell_id']
+        return jsonify(get_gse_chrid_options(cell_line, cell_id))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/getGseDistanceMatrix", methods=["POST"])
+def get_gse_distance_matrix_api():
+    """Get GSE distance matrix for given parameters"""
+    try:
+        data = request.get_json()
+        required_params = ['cell_line', 'cell_id', 'chrid']
+        
+        if not data or not all(param in data for param in required_params):
+            return jsonify({"error": f"Missing required parameters: {required_params}"}), 400
+        
+        # Map the parameters to what our function expects
+        cell_line = data['cell_line']
+        cell_id = data['cell_id']
+        chrid = data['chrid']
+        
+        result = get_gse_distance_matrix(cell_line, cell_id, chrid)
+        
+        if result is None:
+            return jsonify({"error": "No GSE data found for the specified parameters"}), 404
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 app.register_blueprint(api)
