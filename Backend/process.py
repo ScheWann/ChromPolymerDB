@@ -1294,15 +1294,26 @@ def get_bintu_distance_matrix(cell_line, chrid, start_value, end_value, cell_id)
     
     # Extract coordinates and segment indices
     segment_indices = [row['segment_index'] for row in rows]
-    coordinates = np.array([(row['x'], row['y'], row['z']) for row in rows])
-    
-    # Calculate distance matrix using scipy's pdist and squareform
-    distance_vector = pdist(coordinates)
-    distance_matrix = squareform(distance_vector)
+    coordinates = np.array([(row['x'], row['y'], row['z']) for row in rows], dtype=float)
 
-    # Sanitize any NaN/inf values to keep JSON valid (JS JSON.parse rejects NaN/Infinity)
-    if np.isnan(distance_matrix).any() or np.isinf(distance_matrix).any():
-        distance_matrix = np.nan_to_num(distance_matrix, nan=0.0, posinf=0.0, neginf=0.0)
+    # Mark invalid coordinates (any NaN/Inf in x,y,z)
+    valid_mask = np.isfinite(coordinates).all(axis=1)
+    n = coordinates.shape[0]
+
+    # Initialize distance matrix with -1 (white in frontend) for any pair involving invalid coords
+    distance_matrix = np.full((n, n), -1.0, dtype=float)
+
+    # Compute distances only for valid coordinates subset
+    if n > 0 and valid_mask.any():
+        valid_idx = np.where(valid_mask)[0]
+        coords_valid = coordinates[valid_mask]
+        # squareform handles size 1 as [[0.]] which is fine
+        dm_valid = squareform(pdist(coords_valid))
+        # Place computed distances back into the full matrix at valid indices
+        distance_matrix[np.ix_(valid_idx, valid_idx)] = dm_valid
+
+    # As a safety, convert any remaining non-finite to -1
+    distance_matrix[~np.isfinite(distance_matrix)] = -1.0
     
     # Create genomic positions from segment indices
     # Each segment represents 30kb, so position = start_value + segment_index * 30000

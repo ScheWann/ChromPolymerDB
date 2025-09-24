@@ -62,8 +62,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     // Set appropriate colorScaleRange for Bintu and GSE modes
     useEffect(() => {
         if ((isBintuMode || isGseMode) && independentHeatmapData && independentHeatmapData.length > 0) {
-            const maxDistance = d3.max(independentHeatmapData, d => d.value) || 1000;
-            setColorScaleRange([0, Math.ceil(maxDistance)]);
+            // Ignore negative values (used as missing markers) when computing range
+            const nonNegValues = independentHeatmapData
+                .map(d => d?.value)
+                .filter(v => typeof v === 'number' && isFinite(v) && v >= 0);
+            const fallbackMax = isBintuMode ? 1000 : 1;
+            const maxDistance = (nonNegValues.length > 0 ? d3.max(nonNegValues) : fallbackMax) || fallbackMax;
+            const maxRounded = Math.max(1, Math.ceil(maxDistance));
+            setColorScaleRange([0, maxRounded]);
         } else if (!isBintuMode && !isGseMode && colorScaleRange[1] > 200) {
             // Reset to default non-Bintu/GSE range if switching modes
             setColorScaleRange([0, fqRawcMode ? 0.3 : 30]);
@@ -547,7 +553,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const xs = xScale(xKey);
                 const ys = yScale(yKey);
                 if ((xs || xs === 0) && (ys || ys === 0)) {
-                    context.fillStyle = colorScale(value);
+                    // Negative values should render white in Bintu; GSE 0 renders white
+                    let fillColor;
+                    if (isGseMode) {
+                        fillColor = value === 1 ? colorScale(1) : '#ffffff';
+                    } else { // Bintu mode
+                        fillColor = (typeof value === 'number' && value >= 0) ? colorScale(value) : '#ffffff';
+                    }
+                    context.fillStyle = fillColor;
                     context.fillRect(margin.left + xs, margin.top + ys, bwX, bwY);
                     drewColorRef.current = true;
                 }
@@ -555,7 +568,13 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const xs2 = xScale(yKey);
                 const ys2 = yScale(xKey);
                 if ((xs2 || xs2 === 0) && (ys2 || ys2 === 0)) {
-                    context.fillStyle = colorScale(value);
+                    let fillColor2;
+                    if (isGseMode) {
+                        fillColor2 = value === 1 ? colorScale(1) : '#ffffff';
+                    } else {
+                        fillColor2 = (typeof value === 'number' && value >= 0) ? colorScale(value) : '#ffffff';
+                    }
+                    context.fillStyle = fillColor2;
                     context.fillRect(margin.left + xs2, margin.top + ys2, bwX, bwY);
                 }
             }
