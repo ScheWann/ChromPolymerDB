@@ -474,8 +474,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 return value === 1 ? '#d73027' : '#ffffff'; // Red for 1, white for 0
             };
         } else if (isBintuMode) {
-            // Use colorScaleRange for Bintu mode to respect slider controls
-            const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
+            // Bintu mode: reverse color scale - larger distances = lighter colors
+            const redInterpolator = t => d3.interpolateReds((1 - t) * 0.8 + 0.2);
             legendDomain = colorScaleRange;
             colorScale = d3.scaleSequential(redInterpolator).domain(colorScaleRange);
         } else {
@@ -650,7 +650,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text((isBintuMode || isGseMode) ? Math.floor(gradientMin) : gradientMin);
+            .text(isBintuMode ? Math.ceil(gradientMax) : ((isBintuMode || isGseMode) ? Math.floor(gradientMin) : gradientMin));
 
         legendGroup.append('text')
             .attr('x', 10)
@@ -658,7 +658,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             .attr('text-anchor', 'middle')
             .attr('font-size', '12px')
             .attr('fill', '#333')
-            .text((isBintuMode || isGseMode) ? Math.ceil(gradientMax) : gradientMax);
+            .text(isBintuMode ? Math.floor(gradientMin) : ((isBintuMode || isGseMode) ? Math.ceil(gradientMax) : gradientMax));
 
         // Brush for selecting range (disabled in Bintu and GSE modes)
         if (!isBintuMode && !isGseMode) {
