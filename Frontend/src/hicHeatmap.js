@@ -107,6 +107,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     };
 
+    // Keep UI overlay (icons) aligned with the heatmap drawing area
+    // Must match the margins used in the drawing effect below
+    const HEATMAP_MARGINS = { top: 45, right: 20, bottom: 40, left: 60 };
+
     const download = async () => {
         if (!independentHeatmapData || independentHeatmapData.length === 0) return;
 
@@ -536,9 +540,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     useEffect(() => {
         if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;
 
-        const parentWidth = containerSize.width;
-        const parentHeight = containerSize.height;
-        const margin = { top: 45, right: 20, bottom: 40, left: 60 };
+    const parentWidth = containerSize.width;
+    const parentHeight = containerSize.height;
+    const margin = HEATMAP_MARGINS;
 
         // Account for space needed by left legend and right controls
         const leftLegendWidth = !isGseMode ? 80 : 0; // Space for left legend (only for non-GSE modes)
@@ -1261,7 +1265,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 <Select
                                     placeholder="Chr ID"
                                     size='small'
-                                    style={{ width: 60 }}
+                                    style={{ width: 80 }}
                                     value={selectedGseCondition}
                                     onChange={setSelectedGseCondition}
                                     options={gseChrIds}
@@ -1463,10 +1467,46 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 </div>
                             )}
                             {!isBintuMode && !isGseMode && (
-                                <>
-                                    <LaptopOutlined style={{ position: 'absolute', top: '50%', left: `calc(80px + 60px + 10px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, transform: 'translate(0%, calc(-50% - 120px))' }} />
-                                    <ExperimentOutlined style={{ position: 'absolute', top: '50%', right: `calc(120px + 20px)`, fontSize: 15, border: '1px solid #999', borderRadius: 5, padding: 5, transform: 'translate(0%, calc(-50% + 120px))' }} />
-                                </>
+                                // Overlay sized and positioned exactly like the heatmap canvas
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        zIndex: 3,
+                                        pointerEvents: 'none',
+                                        left: !isGseMode ? '80px' : '50%',
+                                        top: '50%',
+                                        transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)',
+                                        width: `${minDimension}px`,
+                                        height: `${minDimension}px`,
+                                    }}
+                                >
+                                    {/* Top-left corner inside the plot area (accounting for margins) */}
+                                    <LaptopOutlined
+                                        style={{
+                                            position: 'absolute',
+                                            top: `${HEATMAP_MARGINS.top + 5}px`,
+                                            left: `${HEATMAP_MARGINS.left + 5}px`,
+                                            fontSize: 15,
+                                            border: '1px solid #999',
+                                            borderRadius: 5,
+                                            padding: 5,
+                                            background: 'white',
+                                        }}
+                                    />
+                                    {/* Bottom-right corner inside the plot area (accounting for margins) */}
+                                    <ExperimentOutlined
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: `${HEATMAP_MARGINS.bottom + 5}px`,
+                                            right: `${HEATMAP_MARGINS.right + 5}px`,
+                                            fontSize: 15,
+                                            border: '1px solid #999',
+                                            borderRadius: 5,
+                                            padding: 5,
+                                            background: 'white',
+                                        }}
+                                    />
+                                </div>
                             )}
 
                             {/* half triangle heatmap Modal */}
