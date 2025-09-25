@@ -218,7 +218,7 @@ function App() {
 
   // Add "," to the number by every 3 digits
   const formatNumber = (value) => {
-    if (!value) return '';
+    if (value === null || value === undefined) return '';
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
