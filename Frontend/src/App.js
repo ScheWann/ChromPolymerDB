@@ -1472,9 +1472,9 @@ function App() {
       selectedOrg: null,
       selectedCell: null,
       selectedCondition: null,
-      tempOrgId: null,
-      tempCellId: null,
-      tempConditionId: null,
+      tempGseCellLineId: null,
+      tempGseCellId: null,
+      tempGseChrId: null,
       startValue: null,
       endValue: null,
       resolution: '5000',
@@ -1548,8 +1548,8 @@ function App() {
 
     // Extract IDs from the selected objects
     // Use the tempIds if they exist, otherwise use the actual IDs from the objects
-    const orgId = gseHeatmap.tempOrgId || organism.id || organism.value;
-    const cellId = gseHeatmap.tempCellId || cellType.id || cellType.value;
+    const orgId = gseHeatmap.tempGseCellLineId || organism.id || organism.value;
+    const cellId = gseHeatmap.tempGseCellId || cellType.id || cellType.value;
 
     // Get chromosome data from user selection
     const chrid = gseHeatmap.selectedCondition; // chrid comes from the selected condition
@@ -2710,12 +2710,12 @@ function App() {
                       gseCellLines={gseCellLines}
                       gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
-                      tempGseCellLineId={gseHeatmap.tempOrgId}
-                      setTempGseCellLineId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
-                      tempGseCellId={gseHeatmap.tempCellId}
-                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
-                      tempGseChrId={gseHeatmap.tempConditionId}
-                      setTempGseChrId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                      tempGseCellLineId={gseHeatmap.tempGseCellLineId}
+                      setTempGseCellLineId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseCellLineId: value })}
+                      tempGseCellId={gseHeatmap.tempGseCellId}
+                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseCellId: value })}
+                      tempGseChrId={gseHeatmap.tempGseChrId}
+                      setTempGseChrId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseChrId: value })}
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
@@ -2772,12 +2772,12 @@ function App() {
                       gseCellLines={gseCellLines}
                       gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
-                      tempGseCellLineId={gseHeatmap.tempOrgId}
-                      setTempGseCellLineId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
-                      tempGseCellId={gseHeatmap.tempCellId}
-                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempCellId: value })}
-                      tempGseChrId={gseHeatmap.tempConditionId}
-                      setTempGseChrId={(value) => updateGseHeatmap(gseHeatmap.id, { tempConditionId: value })}
+                      tempGseCellLineId={gseHeatmap.tempGseCellLineId}
+                      setTempGseCellLineId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseCellLineId: value })}
+                      tempGseCellId={gseHeatmap.tempGseCellId}
+                      setTempGseCellId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseCellId: value })}
+                      tempGseChrId={gseHeatmap.tempGseChrId}
+                      setTempGseChrId={(value) => updateGseHeatmap(gseHeatmap.id, { tempGseChrId: value })}
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
