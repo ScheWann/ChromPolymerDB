@@ -469,7 +469,7 @@ export const GeneList = ({ geneList, currentChromosomeSequence, minDimension, ge
                 overflowY: scrollEnabled ? "auto" : "hidden",
                 msOverflowStyle: "none", // for Internet Explorer and Edge
                 scrollbarWidth: "none", // for Firefox
-                webkitScrollBar: "none", // for Chrome, Safari, and Opera
+                WebkitScrollBar: "none", // for Chrome, Safari, and Opera
                 overflowX: "hidden",
             }}
         >
