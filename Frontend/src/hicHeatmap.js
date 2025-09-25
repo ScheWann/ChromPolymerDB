@@ -907,7 +907,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             if (isBintuMode) {
                 leftLabel = (selectedBintuCluster ? (selectedBintuCluster.split('_')[0] || 'Bintu') : 'Bintu');
             } else if (isGseMode) {
-                leftLabel = selectedGseOrg ? `Single-cell Hi-C-${selectedGseOrg}` : 'Single-cell Hi-C';
+                leftLabel = selectedGseOrg ? `${selectedGseOrg}` : 'Single-cell Hi-C';
             } else {
                 leftLabel = independentHeatmapCellLine || cellLineName || '';
             }
@@ -1030,20 +1030,20 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                             )
                                             : isGseMode ?
                                                 (selectedGseOrg ?
-                                                    `Single-cell Hi-C-${selectedGseOrg}`
+                                                    `${selectedGseOrg}`
                                                     : 'Single-cell Hi-C'
                                                 )
                                                 : independentHeatmapCellLine || cellLineName
                                         }
                                     </span>
-                                    {/* Show dash only when not in Bintu/GSE pre-selection state */}
-                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                                    {/* Show dash only when data is available (avoid Bintu pre-load placeholder) */}
+                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
                                         <span style={{ marginRight: 3 }}>-</span>
                                     )}
                                 </>
                             )}
-                            {/* Hide chromosome and range when Bintu/GSE selection not made yet */}
-                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                            {/* Show chromosome and range only when data is available (avoid Bintu pre-load placeholder) */}
+                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
                                 <>
                                     <span style={{ marginRight: 3 }}>{chromosomeName}</span>
                                     <span style={{ marginRight: 3 }}>:</span>
