@@ -59,9 +59,14 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     useEffect(() => {
         if (isBintuMode || isGseMode) {
             setIndependentHeatmapData(chromosomeData || []);
+        }
+    }, [chromosomeData, isBintuMode, isGseMode]);
 
-            // Show notification for GSE mode when data is loaded
-            if (isGseMode && chromosomeData && chromosomeData.length > 0) {
+    // Show notification for GSE mode when data is loaded
+    useEffect(() => {
+        if (isGseMode && chromosomeData && chromosomeData.length > 0) {
+            // Use setTimeout to ensure the notification appears immediately after data is set
+            const timeoutId = setTimeout(() => {
                 notification.info({
                     message: 'GSE Heatmap Loaded',
                     description: 'Zoom in by dragging over the area you\'d like to explore.',
@@ -73,9 +78,11 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     pauseOnHover: true,
                     showProgress: true
                 });
-            }
+            }, 0);
+
+            return () => clearTimeout(timeoutId);
         }
-    }, [chromosomeData, isBintuMode, isGseMode]);
+    }, [isGseMode, chromosomeData]);
 
     // Sync cell line name for GSE and Bintu modes
     useEffect(() => {
