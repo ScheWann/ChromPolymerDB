@@ -418,15 +418,15 @@ function App() {
     // No need to call markTourSeen() here since it's already called when tour is first shown
   };
 
-  // useEffect to handle GSE cell line selection changes
+  // useEffect to handle GSE cell line selection changes with resolution
   useEffect(() => {
-    // When any GSE heatmap's selectedOrg changes, fetch cell ID options
+    // When any GSE heatmap's selectedOrg or resolution changes, fetch cell ID options for each heatmap
     gseHeatmaps.forEach(gseHeatmap => {
       if (gseHeatmap.selectedOrg) {
-        fetchGseCellIdOptions(gseHeatmap.selectedOrg);
+        fetchGseCellIdOptionsForHeatmap(gseHeatmap.id, gseHeatmap.selectedOrg, gseHeatmap.resolution);
       }
     });
-  }, [gseHeatmaps.map(h => h.selectedOrg).join(',')]);
+  }, [gseHeatmaps.map(h => `${h.selectedOrg}-${h.resolution}`).join(',')]);
 
   // useEffect to handle GSE cell selection changes  
   useEffect(() => {
@@ -1274,10 +1274,15 @@ function App() {
       });
   };
 
-  const fetchGseCellIdOptions = (cellLine) => {
+  const fetchGseCellIdOptions = (cellLine, resolution = null) => {
     if (!cellLine) {
       getGseCellIds([]);
       return;
+    }
+    
+    const requestBody = { cell_line: cellLine };
+    if (resolution) {
+      requestBody.resolution = resolution;
     }
     
     fetch('/api/getGseCellIdOptions', {
@@ -1285,9 +1290,7 @@ function App() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        cell_line: cellLine
-      })
+      body: JSON.stringify(requestBody)
     })
       .then(res => res.json())
       .then(data => {
@@ -1295,6 +1298,39 @@ function App() {
       })
       .catch(error => {
         console.error('Error fetching GSE cell types:', error);
+        messageApi.open({
+          type: 'error',
+          content: 'Failed to fetch GSE cell types',
+          duration: 3,
+        });
+      });
+  };
+
+  // Fetch cell IDs for a specific GSE heatmap
+  const fetchGseCellIdOptionsForHeatmap = (gseId, cellLine, resolution = null) => {
+    if (!cellLine) {
+      updateGseHeatmap(gseId, { cellIds: [] });
+      return;
+    }
+    
+    const requestBody = { cell_line: cellLine };
+    if (resolution) {
+      requestBody.resolution = resolution;
+    }
+    
+    fetch('/api/getGseCellIdOptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    })
+      .then(res => res.json())
+      .then(data => {
+        updateGseHeatmap(gseId, { cellIds: data });
+      })
+      .catch(error => {
+        console.error('Error fetching GSE cell types for heatmap:', error);
         messageApi.open({
           type: 'error',
           content: 'Failed to fetch GSE cell types',
@@ -1444,7 +1480,8 @@ function App() {
       resolution: '5000',
       data: null,
       loading: false,
-      geneList: []
+      geneList: [],
+      cellIds: []  // Individual cell ID options per heatmap
     };
 
     setGseHeatmaps(prev => [...prev, newGseHeatmap]);
@@ -1461,7 +1498,7 @@ function App() {
     if (!gseHeatmap.selectedOrg) {
       messageApi.open({
         type: 'warning',
-        content: 'Please select a GSE organism first',
+        content: 'Please select a GSE cell line first',
         duration: 2,
       });
       return;
@@ -1479,7 +1516,7 @@ function App() {
     if (!gseHeatmap.selectedCondition) {
       messageApi.open({
         type: 'warning',
-        content: 'Please select a GSE condition first',
+        content: 'Please select a GSE chr id first',
         duration: 2,
       });
       return;
@@ -1496,9 +1533,10 @@ function App() {
 
     // Parse the selections to get the actual objects
     const organism = gseCellLines.find(o => o.value === gseHeatmap.selectedOrg);
-    const cellType = gseCellIds.find(c => c.value === gseHeatmap.selectedCell);
+    const cellType = gseHeatmap.cellIds.find(c => c.value === gseHeatmap.selectedCell);
     const condition = gseChrIds.find(c => c.value === gseHeatmap.selectedCondition);
 
+    console.log(organism, cellType, condition);
     if (!organism || !cellType || !condition) {
       messageApi.open({
         type: 'error',
@@ -2670,7 +2708,7 @@ function App() {
                       selectedGseCondition={gseHeatmap.selectedCondition}
                       setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
                       gseCellLines={gseCellLines}
-                      gseCellIds={gseCellIds}
+                      gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
                       tempGseOrgId={gseHeatmap.tempOrgId}
                       setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}
@@ -2732,7 +2770,7 @@ function App() {
                       selectedGseCondition={gseHeatmap.selectedCondition}
                       setSelectedGseCondition={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
                       gseCellLines={gseCellLines}
-                      gseCellIds={gseCellIds}
+                      gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
                       tempGseOrgId={gseHeatmap.tempOrgId}
                       setTempGseOrgId={(value) => updateGseHeatmap(gseHeatmap.id, { tempOrgId: value })}

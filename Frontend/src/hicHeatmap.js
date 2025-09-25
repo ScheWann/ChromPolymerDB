@@ -1272,6 +1272,21 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                 />
                                             </div>
                                             <div>
+                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Resolution:</label>
+                                                <Select
+                                                    placeholder="Resolution"
+                                                    size='small'
+                                                    style={{ width: '100%' }}
+                                                    value={gseResolution}
+                                                    onChange={handleGseResolutionChange}
+                                                    options={[
+                                                        { label: '5000', value: '5000' },
+                                                        { label: '50000', value: '50000' },
+                                                        { label: '100000', value: '100000' }
+                                                    ]}
+                                                />
+                                            </div>
+                                            <div>
                                                 <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Cell ID:</label>
                                                 <Select
                                                     placeholder="Cell ID"
@@ -1287,34 +1302,6 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                         </Tooltip>
                                                     )}
                                                 />
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'end' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Start:</label>
-                                                    <InputNumber
-                                                        placeholder="Start"
-                                                        size='small'
-                                                        style={{ width: '100%' }}
-                                                        value={gseStartValue}
-                                                        onChange={setGseStartValue}
-                                                        min={0}
-                                                        max={300000000}
-                                                        step={5000}
-                                                    />
-                                                </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>End:</label>
-                                                    <InputNumber
-                                                        placeholder="End"
-                                                        size='small'
-                                                        style={{ width: '100%' }}
-                                                        value={gseEndValue}
-                                                        onChange={setGseEndValue}
-                                                        min={0}
-                                                        max={300000000}
-                                                        step={5000}
-                                                    />
-                                                </div>
                                             </div>
                                             <div>
                                                 <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Chr ID:</label>
@@ -1333,26 +1320,38 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                     )}
                                                 />
                                             </div>
-                                            <div>
-                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Resolution:</label>
-                                                <Select
-                                                    placeholder="Resolution"
-                                                    size='small'
-                                                    style={{ width: '100%' }}
-                                                    value={gseResolution}
-                                                    onChange={handleGseResolutionChange}
-                                                    options={[
-                                                        { label: '5000', value: '5000' },
-                                                        { label: '50000', value: '50000' },
-                                                        { label: '100000', value: '100000' }
-                                                    ]}
-                                                />
+                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'end' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Start:</label>
+                                                    <InputNumber
+                                                        placeholder="Start(Optional)"
+                                                        size='small'
+                                                        style={{ width: '100%' }}
+                                                        value={gseStartValue}
+                                                        onChange={setGseStartValue}
+                                                        min={0}
+                                                        max={300000000}
+                                                        step={5000}
+                                                    />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>End:</label>
+                                                    <InputNumber
+                                                        placeholder="End(Optional)"
+                                                        size='small'
+                                                        style={{ width: '100%' }}
+                                                        value={gseEndValue}
+                                                        onChange={setGseEndValue}
+                                                        min={0}
+                                                        max={300000000}
+                                                        step={5000}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     }
                                     trigger="click"
                                     placement="bottomRight"
-                                    title="GSE Parameters"
                                 >
                                     <Button
                                         size='small'
