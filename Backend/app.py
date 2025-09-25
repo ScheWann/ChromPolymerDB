@@ -384,8 +384,8 @@ def download_bintu_csv_api():
 
 # GSE-related endpoints
 @api.route("/getGseCellLineOptions", methods=["GET"])
-def get_gse_organisms():
-    """Get list of available GSE organisms (cell lines)"""
+def get_gse_cell_line_options_api():
+    """Get list of available GSE cell lines"""
     try:
         return jsonify(get_gse_cell_line_options())
     except Exception as e:
@@ -393,8 +393,8 @@ def get_gse_organisms():
 
 
 @api.route("/getGseCellIdOptions", methods=["POST"])
-def get_gse_cell_types():
-    """Get list of available GSE cell types for a given organism and resolution"""
+def get_gse_cell_id_options_api():
+    """Get list of available GSE cell ID options for a given cell line and resolution"""
     try:
         data = request.get_json()
         if not data or 'cell_line' not in data:
@@ -408,8 +408,8 @@ def get_gse_cell_types():
 
 
 @api.route("/getGseChrIdOptions", methods=["POST"])
-def get_gse_conditions():
-    """Get list of available GSE conditions for a given organism and cell type"""
+def get_gse_chrid_options_api():
+    """Get list of available GSE chromosome ID options for a given cell line and cell ID"""
     try:
         data = request.get_json()
         if not data or 'cell_line' not in data or 'cell_id' not in data:

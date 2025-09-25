@@ -12,7 +12,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     // Bintu control props
     selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap,
     // GSE control props
-    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap, updateGseHeatmapResolution, gseResolutionValue = '5k',
+    isGseMode = false, gseId = null, selectedGseCellLine, setSelectedGseCellLine, selectedGseCell, setSelectedGseCell, selectedGseChrid, setSelectedGseChrid, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseCellLineId, setTempGseCellLineId, tempGseCellId, setTempGseCellId, tempGseChrId, setTempGseChrId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap, updateGseHeatmapResolution, gseResolutionValue = '5k',
     // GSE range control props
     gseStartValue = null, setGseStartValue, gseEndValue = null, setGseEndValue }) => {
     const canvasRef = useRef(null);
@@ -119,12 +119,12 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         if (isGseMode) {
             // For GSE mode, download CSV from Backend/GSE folder via API
             try {
-                if (!selectedGseOrg || !selectedGseCell) {
+                if (!selectedGseCellLine || !selectedGseCell) {
                     alert('Please complete GSE cell line and cell ID selections first.');
                     return;
                 }
                 const params = new URLSearchParams({
-                    cell_line: selectedGseOrg,
+                    cell_line: selectedGseCellLine,
                     cell_id: selectedGseCell
                 });
                 const res = await fetch(`/api/downloadGseCSV?${params.toString()}`);
@@ -137,7 +137,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${selectedGseOrg}_${selectedGseCell}.csv`;
+                a.download = `${selectedGseCellLine}_${selectedGseCell}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -511,9 +511,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 if (rec) return rec;
             }
 
-            // Fallback: prefix by selectedGseOrg_
-            if (selectedGseOrg) {
-                const targetPrefix = String(selectedGseOrg).trim().toLowerCase() + '_';
+            // Fallback: prefix by selectedGseCellLine_
+            if (selectedGseCellLine) {
+                const targetPrefix = String(selectedGseCellLine).trim().toLowerCase() + '_';
                 const rec = gseSourceRecords.find(r => {
                     const recordId = String(r.id).trim().toLowerCase();
 
@@ -524,7 +524,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
 
                 // Additional fallback: try exact match without case sensitivity
                 const exactRec = gseSourceRecords.find(r =>
-                    String(r.id).trim().toLowerCase() === String(selectedGseOrg).trim().toLowerCase()
+                    String(r.id).trim().toLowerCase() === String(selectedGseCellLine).trim().toLowerCase()
                 );
                 if (exactRec) {
                     return exactRec;
@@ -546,7 +546,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             if (found) return found;
         }
         return null;
-    }, [isBintuMode, isGseMode, bintuId, gseId, selectedBintuCluster, selectedGseOrg, bintuSourceRecords, gseSourceRecords, sourceRecords, chromosomeName, independentHeatmapCellLine, cellLineName]);
+    }, [isBintuMode, isGseMode, bintuId, gseId, selectedBintuCluster, selectedGseCellLine, bintuSourceRecords, gseSourceRecords, sourceRecords, chromosomeName, independentHeatmapCellLine, cellLineName]);
 
     useEffect(() => {
         if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;
@@ -952,7 +952,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             if (isBintuMode) {
                 leftLabel = (selectedBintuCluster ? (selectedBintuCluster.split('_')[0] || 'Bintu') : 'Bintu');
             } else if (isGseMode) {
-                leftLabel = selectedGseOrg ? `${selectedGseOrg}` : 'Single-cell Hi-C';
+                leftLabel = selectedGseCellLine ? `${selectedGseCellLine}` : 'Single-cell Hi-C';
             } else {
                 leftLabel = independentHeatmapCellLine || cellLineName || '';
             }
@@ -961,7 +961,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         // Whether to show dash and the range
         const showRange = ((!isBintuMode && !isGseMode) ||
             (isBintuMode && selectedBintuCluster && tempBintuCellId) ||
-            (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0));
+            (isGseMode && selectedGseCellLine && selectedGseCell && selectedGseChrid && chromosomeData && chromosomeData.length > 0));
 
         let title = '';
         if (!comparisonHeatmapId && leftLabel) {
@@ -997,9 +997,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         isGseMode,
         selectedBintuCluster,
         tempBintuCellId,
-        selectedGseOrg,
+        selectedGseCellLine,
         selectedGseCell,
-        selectedGseCondition,
+        selectedGseChrid,
         chromosomeData,
         chromosomeName,
         currentChromosomeSequence,
@@ -1074,21 +1074,21 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                     : 'Bintu'
                                                 )
                                                 : isGseMode ?
-                                                    (selectedGseOrg ?
-                                                        `${selectedGseOrg}`
+                                                    (selectedGseCellLine ?
+                                                        `${selectedGseCellLine}`
                                                         : 'Single-cell Hi-C'
                                                     )
                                                     : independentHeatmapCellLine || cellLineName
                                             }
                                         </span>
                                         {/* Show dash only when data is available (avoid Bintu pre-load placeholder) */}
-                                        {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                                        {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseCellLine && selectedGseCell && selectedGseChrid && chromosomeData && chromosomeData.length > 0)) && (
                                             <span style={{ marginRight: 3 }}>-</span>
                                         )}
                                     </>
                                 )}
                                 {/* Show chromosome and range only when data is available (avoid Bintu pre-load placeholder) */}
-                                {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                                {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseCellLine && selectedGseCell && selectedGseChrid && chromosomeData && chromosomeData.length > 0)) && (
                                     <>
                                         <span style={{ marginRight: 3 }}>{chromosomeName}</span>
                                         <span style={{ marginRight: 3 }}>:</span>
@@ -1260,8 +1260,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                     placeholder="Cell line"
                                                     size='small'
                                                     style={{ width: '100%' }}
-                                                    value={selectedGseOrg}
-                                                    onChange={setSelectedGseOrg}
+                                                    value={selectedGseCellLine}
+                                                    onChange={setSelectedGseCellLine}
                                                     options={gseCellLines}
                                                     optionFilterProp='label'
                                                     optionRender={(option) => (
@@ -1309,8 +1309,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                     placeholder="Chr ID"
                                                     size='small'
                                                     style={{ width: '100%' }}
-                                                    value={selectedGseCondition}
-                                                    onChange={setSelectedGseCondition}
+                                                    value={selectedGseChrid}
+                                                    onChange={setSelectedGseChrid}
                                                     options={sortedGseChrIds}
                                                     optionFilterProp='label'
                                                     optionRender={(option) => (
@@ -1378,7 +1378,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     size='small'
                                     variant="outlined"
                                     style={{ marginRight: 5 }}
-                                    disabled={!selectedGseOrg || !selectedGseCell || !selectedGseCondition || (gseStartValue && gseEndValue && gseStartValue >= gseEndValue)}
+                                    disabled={!selectedGseCellLine || !selectedGseCell || !selectedGseChrid || (gseStartValue && gseEndValue && gseStartValue >= gseEndValue)}
                                     loading={gseHeatmapLoading}
                                     onClick={handleGseHeatmapSubmit}
                                 >Load</Button>
