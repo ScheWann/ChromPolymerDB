@@ -446,7 +446,7 @@ def get_gse_distance_matrix_api():
     """Get GSE distance matrix for given parameters"""
     try:
         data = request.get_json()
-        required_params = ['cell_line', 'cell_id', 'chrid']
+        required_params = ['cell_line', 'cell_id', 'chrid', 'resolution']
         
         if not data or not all(param in data for param in required_params):
             return jsonify({"error": f"Missing required parameters: {required_params}"}), 400
@@ -455,11 +455,11 @@ def get_gse_distance_matrix_api():
         cell_line = data['cell_line']
         cell_id = data['cell_id']
         chrid = data['chrid']
+        resolution = data['resolution']
         
         # Optional range parameters
         start_value = data.get('start_value')
         end_value = data.get('end_value')
-        resolution = data.get('resolution')
         
         # Convert to int if provided
         if start_value is not None:
@@ -467,7 +467,7 @@ def get_gse_distance_matrix_api():
         if end_value is not None:
             end_value = int(end_value)
         
-        result = get_gse_distance_matrix(cell_line, cell_id, chrid, start_value, end_value, resolution)
+        result = get_gse_distance_matrix(cell_line, cell_id, chrid, resolution, start_value, end_value)
         
         if result is None:
             return jsonify({"error": "No GSE data found for the specified parameters"}), 404

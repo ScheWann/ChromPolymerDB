@@ -1520,7 +1520,7 @@ def get_gse_resolution_options(cell_line: str, cell_id: str, chrid: str):
 """
 Get GSE distance matrix for given parameters
 """
-def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_value: int = None, end_value: int = None, resolution: str = None):
+def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, resolution: str, start_value: int = None, end_value: int = None):
     """
     Get Hi-C interaction data from GSE table for the specified parameters.
     GSE table contains Hi-C data with ibp, jbp, fq columns (not coordinates).
@@ -1528,20 +1528,16 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_valu
     """
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            # Base query
+            # Base query with required resolution parameter
             base_query = """
                 SELECT ibp, jbp, fq
                 FROM gse
                 WHERE cell_line = %s
                     AND cell_id = %s
                     AND chrid = %s
+                    AND resolution = %s
             """
-            params = [cell_line, cell_id, chrid]
-            
-            # Add resolution filtering if provided
-            if resolution is not None:
-                base_query += " AND resolution = %s"
-                params.append(resolution)
+            params = [cell_line, cell_id, chrid, resolution]
             
             # Add range filtering if start_value and end_value are provided
             if start_value is not None and end_value is not None:
