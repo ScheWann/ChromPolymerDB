@@ -418,12 +418,10 @@ def create_gse_table(cur):
         print("GSE table already exists.")
 
 
-def process_gse_index():
+def process_gse_index(cur):
     """Create indexes on gse table for faster search (if they don't exist)."""
     print("Creating index idx_gse_search...")
 
-    conn = get_db_connection(database=DB_NAME)
-    cur = conn.cursor()
     cur.execute(
         """
         SELECT 1 
@@ -440,10 +438,6 @@ def process_gse_index():
         )
         print("Index idx_gse_search created successfully.")
 
-    conn.commit()
-    cur.close()
-    conn.close()
-
 
 def process_gse_data(cur):
     """Process CSV files from GM12878_dipc and K562_limca folders and insert into GSE table"""
@@ -456,7 +450,7 @@ def process_gse_data(cur):
     resolution_mapping = {"5k": 5000, "50k": 50000, "100k": 100000}
 
     create_gse_table(cur)
-    process_gse_index()
+    process_gse_index(cur)
 
     total_inserted = 0
 
