@@ -40,6 +40,7 @@ from process import (
     get_gse_cell_line_options,
     get_gse_cell_id_options,
     get_gse_chrid_options,
+    get_gse_resolution_options,
     get_gse_distance_matrix,
     download_gse_csv,
 )
@@ -421,6 +422,25 @@ def get_gse_conditions():
         return jsonify({"error": str(e)}), 500
 
 
+@api.route("/getGseResolutionOptions", methods=["POST"])
+def get_gse_resolution_options():
+    """Get list of available GSE resolutions for a given organism, cell type, and chromosome"""
+    try:
+        data = request.get_json()
+        required_params = ['cell_line', 'cell_id', 'chrid']
+        
+        if not data or not all(param in data for param in required_params):
+            return jsonify({"error": f"Missing required parameters: {required_params}"}), 400
+        
+        cell_line = data['cell_line']
+        cell_id = data['cell_id']
+        chrid = data['chrid']
+        
+        return jsonify(get_gse_resolution_options(cell_line, cell_id, chrid))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @api.route("/getGseDistanceMatrix", methods=["POST"])
 def get_gse_distance_matrix_api():
     """Get GSE distance matrix for given parameters"""
@@ -439,6 +459,7 @@ def get_gse_distance_matrix_api():
         # Optional range parameters
         start_value = data.get('start_value')
         end_value = data.get('end_value')
+        resolution = data.get('resolution')
         
         # Convert to int if provided
         if start_value is not None:
@@ -446,7 +467,7 @@ def get_gse_distance_matrix_api():
         if end_value is not None:
             end_value = int(end_value)
         
-        result = get_gse_distance_matrix(cell_line, cell_id, chrid, start_value, end_value)
+        result = get_gse_distance_matrix(cell_line, cell_id, chrid, start_value, end_value, resolution)
         
         if result is None:
             return jsonify({"error": "No GSE data found for the specified parameters"}), 404

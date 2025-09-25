@@ -1488,9 +1488,39 @@ def get_gse_chrid_options(cell_line: str, cell_id: str):
 
 
 """
+Return the GSE resolution options in the given cell line, cell ID, and chromosome
+"""
+def get_gse_resolution_options(cell_line: str, cell_id: str, chrid: str):
+    with db_conn() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT DISTINCT resolution
+                FROM gse
+                WHERE cell_line = %s
+                    AND cell_id = %s
+                    AND chrid = %s
+                ORDER BY resolution
+                """,
+                (cell_line, cell_id, chrid)
+            )
+            rows = cur.fetchall()
+    
+    options = [
+        {
+            "value": row["resolution"],
+            "label": row["resolution"],
+        }
+        for row in rows
+    ]
+
+    return options
+
+
+"""
 Get GSE distance matrix for given parameters
 """
-def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_value: int = None, end_value: int = None):
+def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_value: int = None, end_value: int = None, resolution: str = None):
     """
     Get Hi-C interaction data from GSE table for the specified parameters.
     GSE table contains Hi-C data with ibp, jbp, fq columns (not coordinates).
@@ -1507,6 +1537,11 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_valu
                     AND chrid = %s
             """
             params = [cell_line, cell_id, chrid]
+            
+            # Add resolution filtering if provided
+            if resolution is not None:
+                base_query += " AND resolution = %s"
+                params.append(resolution)
             
             # Add range filtering if start_value and end_value are provided
             if start_value is not None and end_value is not None:
@@ -1542,6 +1577,7 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, start_valu
         'cell_line': cell_line,
         'cell_id': cell_id,
         'chrid': chrid,
+        'resolution': resolution,
         'start_value': start_value if start_value is not None else data_start_value,
         'end_value': end_value if end_value is not None else data_end_value,
         'step': 5000  # GSE data step size

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch, notification } from "antd";
-import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined } from "@ant-design/icons";
+import { Button, InputNumber, Modal, Tooltip, Slider, Select, Spin, Empty, Switch, notification, Popover } from "antd";
+import { DownloadOutlined, RollbackOutlined, FullscreenOutlined, ExperimentOutlined, LaptopOutlined, MinusOutlined, MergeOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { GeneList } from './geneList.js';
 import { HeatmapTriangle } from './heatmapTriangle.js';
 import { MergedCellLinesHeatmap } from './mergedCellLinesHeatmap.js';
@@ -12,7 +12,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     // Bintu control props
     selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap,
     // GSE control props
-    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap,
+    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap, updateGseHeatmapResolution, gseResolutionValue = '5k',
     // GSE range control props
     gseStartValue = null, setGseStartValue, gseEndValue = null, setGseEndValue }) => {
     const canvasRef = useRef(null);
@@ -42,6 +42,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const [gseSourceRecords, setGseSourceRecords] = useState([]);
     // Local zoom state for GSE mode (since parent setter is a no-op for GSE panels)
     const [localGseSequence, setLocalGseSequence] = useState(currentChromosomeSequence);
+    // GSE resolution selector state
+    const [gseResolution, setGseResolution] = useState(gseResolutionValue);
 
     // Keep local GSE zoom in sync when inputs change (e.g., new dataset loaded)
     useEffect(() => {
@@ -387,6 +389,15 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
             setColorScaleRange([0, 0.8]);
         }
     }
+
+    // Handle GSE resolution change
+    const handleGseResolutionChange = (value) => {
+        setGseResolution(value);
+        // Update the parent state if the function is provided
+        if (updateGseHeatmapResolution && gseId) {
+            updateGseHeatmapResolution(gseId, value);
+        }
+    };
 
     // Handle updates triggered by parent component
     useEffect(() => {
@@ -1240,72 +1251,118 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                         )}
                         {isGseMode && (
                             <>
-                                <Select
-                                    placeholder="Cell line"
-                                    size='small'
-                                    style={{ width: 120 }}
-                                    value={selectedGseOrg}
-                                    onChange={setSelectedGseOrg}
-                                    options={gseCellLines}
-                                    optionFilterProp='label'
-                                    optionRender={(option) => (
-                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
-                                            <div>{option.label}</div>
-                                        </Tooltip>
-                                    )}
-                                />
-                                <Select
-                                    placeholder="Cell ID"
-                                    size='small'
-                                    style={{ width: 80 }}
-                                    value={selectedGseCell}
-                                    onChange={setSelectedGseCell}
-                                    options={gseCellIds}
-                                    optionFilterProp='label'
-                                    optionRender={(option) => (
-                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
-                                            <div>{option.label}</div>
-                                        </Tooltip>
-                                    )}
-                                />
-                                <Tooltip title={<span style={{ color: 'black' }}>Start position</span>} color='white' placement="top">
-                                    <InputNumber
-                                        placeholder="Start"
+                                <Popover
+                                    content={
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '200px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Cell line:</label>
+                                                <Select
+                                                    placeholder="Cell line"
+                                                    size='small'
+                                                    style={{ width: '100%' }}
+                                                    value={selectedGseOrg}
+                                                    onChange={setSelectedGseOrg}
+                                                    options={gseCellLines}
+                                                    optionFilterProp='label'
+                                                    optionRender={(option) => (
+                                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                                            <div>{option.label}</div>
+                                                        </Tooltip>
+                                                    )}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Cell ID:</label>
+                                                <Select
+                                                    placeholder="Cell ID"
+                                                    size='small'
+                                                    style={{ width: '100%' }}
+                                                    value={selectedGseCell}
+                                                    onChange={setSelectedGseCell}
+                                                    options={gseCellIds}
+                                                    optionFilterProp='label'
+                                                    optionRender={(option) => (
+                                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                                            <div>{option.label}</div>
+                                                        </Tooltip>
+                                                    )}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'end' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Start:</label>
+                                                    <InputNumber
+                                                        placeholder="Start"
+                                                        size='small'
+                                                        style={{ width: '100%' }}
+                                                        value={gseStartValue}
+                                                        onChange={setGseStartValue}
+                                                        min={0}
+                                                        max={300000000}
+                                                        step={5000}
+                                                    />
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>End:</label>
+                                                    <InputNumber
+                                                        placeholder="End"
+                                                        size='small'
+                                                        style={{ width: '100%' }}
+                                                        value={gseEndValue}
+                                                        onChange={setGseEndValue}
+                                                        min={0}
+                                                        max={300000000}
+                                                        step={5000}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Chr ID:</label>
+                                                <Select
+                                                    placeholder="Chr ID"
+                                                    size='small'
+                                                    style={{ width: '100%' }}
+                                                    value={selectedGseCondition}
+                                                    onChange={setSelectedGseCondition}
+                                                    options={sortedGseChrIds}
+                                                    optionFilterProp='label'
+                                                    optionRender={(option) => (
+                                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
+                                                            <div>{option.label}</div>
+                                                        </Tooltip>
+                                                    )}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', display: 'block' }}>Resolution:</label>
+                                                <Select
+                                                    placeholder="Resolution"
+                                                    size='small'
+                                                    style={{ width: '100%' }}
+                                                    value={gseResolution}
+                                                    onChange={handleGseResolutionChange}
+                                                    options={[
+                                                        { label: '5k', value: '5k' },
+                                                        { label: '50k', value: '50k' },
+                                                        { label: '100k', value: '100k' }
+                                                    ]}
+                                                />
+                                            </div>
+                                        </div>
+                                    }
+                                    trigger="click"
+                                    placement="bottomRight"
+                                    title="GSE Parameters"
+                                >
+                                    <Button
                                         size='small'
-                                        style={{ width: 50 }}
-                                        value={gseStartValue}
-                                        onChange={setGseStartValue}
-                                        min={0}
-                                        max={300000000}
-                                        step={5000}
+                                        style={{
+                                            fontSize: 12,
+                                            cursor: 'pointer',
+                                        }}
+                                        icon={<UnorderedListOutlined />}
                                     />
-                                </Tooltip>
-                                <Tooltip title={<span style={{ color: 'black' }}>End position</span>} color='white' placement="top">
-                                    <InputNumber
-                                        placeholder="End"
-                                        size='small'
-                                        style={{ width: 50 }}
-                                        value={gseEndValue}
-                                        onChange={setGseEndValue}
-                                        min={0}
-                                        max={300000000}
-                                        step={5000}
-                                    />
-                                </Tooltip>
-                                <Select
-                                    placeholder="Chr ID"
-                                    size='small'
-                                    style={{ width: 80 }}
-                                    value={selectedGseCondition}
-                                    onChange={setSelectedGseCondition}
-                                    options={sortedGseChrIds}
-                                    optionFilterProp='label'
-                                    optionRender={(option) => (
-                                        <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
-                                            <div>{option.label}</div>
-                                        </Tooltip>
-                                    )}
-                                />
+                                </Popover>
                                 <Tooltip title={<span style={{ color: 'black' }}>Close this heatmap</span>} color='white'>
                                     <Button
                                         size='small'

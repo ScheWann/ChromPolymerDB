@@ -1333,7 +1333,7 @@ function App() {
       });
   };
 
-  const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId, startValue = null, endValue = null) => {
+  const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId, startValue = null, endValue = null, resolution = null) => {
     // Set loading state for this specific GSE instance
     setGseHeatmaps(prev => prev.map(gse => 
       gse.id === gseId 
@@ -1351,6 +1351,11 @@ function App() {
     if (startValue !== null && endValue !== null) {
       requestBody.start_value = startValue;
       requestBody.end_value = endValue;
+    }
+
+    // Add resolution parameter if provided
+    if (resolution !== null) {
+      requestBody.resolution = resolution;
     }
 
     fetch('/api/getGseDistanceMatrix', {
@@ -1436,6 +1441,7 @@ function App() {
       tempConditionId: null,
       startValue: null,
       endValue: null,
+      resolution: '5k', // Default resolution
       data: null,
       loading: false,
       geneList: []
@@ -1516,7 +1522,8 @@ function App() {
       chrid,
       gseId,
       gseHeatmap.startValue,
-      gseHeatmap.endValue
+      gseHeatmap.endValue,
+      gseHeatmap.resolution
     );
   };
 
@@ -1525,6 +1532,15 @@ function App() {
     setGseHeatmaps(prev => prev.filter(gse => gse.id !== gseId));
     // Remove corresponding left panel entry
     setLeftPanels(prev => prev.filter(p => !(p.type === 'gse' && p.id === gseId)));
+  };
+
+  // Function to update GSE heatmap resolution
+  const updateGseHeatmapResolution = (gseId, resolution) => {
+    setGseHeatmaps(prev => prev.map(gse => 
+      gse.id === gseId 
+        ? { ...gse, resolution: resolution } 
+        : gse
+    ));
   };
 
   // Mode change (Cell Line / Gene)
@@ -2665,6 +2681,8 @@ function App() {
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      updateGseHeatmapResolution={updateGseHeatmapResolution}
+                      gseResolutionValue={gseHeatmap.resolution}
                       gseStartValue={gseHeatmap.startValue}
                       setGseStartValue={(value) => updateGseHeatmap(gseHeatmap.id, { startValue: value })}
                       gseEndValue={gseHeatmap.endValue}
@@ -2725,6 +2743,8 @@ function App() {
                       handleGseHeatmapSubmit={() => handleGseHeatmapSubmit(gseHeatmap.id)}
                       gseHeatmapLoading={gseHeatmap.loading}
                       onCloseGseHeatmap={() => removeGseHeatmap(gseHeatmap.id)}
+                      updateGseHeatmapResolution={updateGseHeatmapResolution}
+                      gseResolutionValue={gseHeatmap.resolution}
                       gseStartValue={gseHeatmap.startValue}
                       setGseStartValue={(value) => updateGseHeatmap(gseHeatmap.id, { startValue: value })}
                       gseEndValue={gseHeatmap.endValue}
