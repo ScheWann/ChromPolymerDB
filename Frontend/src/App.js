@@ -276,7 +276,6 @@ function App() {
     fetchCellLineList();
     fetchBintuCellClusters();
     fetchGseCellLineOptions();
-    // fetchGseCellIdOptions and fetchGseConditions will be called when needed with parameters
   }, []);
 
   // Add scroll event listener
@@ -415,28 +414,26 @@ function App() {
   // Handle tour close (no need to call API since it's already marked as seen)
   const handleTourClose = () => {
     setIsTourOpen(false);
-    // No need to call markTourSeen() here since it's already called when tour is first shown
   };
 
   // useEffect to handle GSE cell line selection changes with resolution
   useEffect(() => {
-    // When any GSE heatmap's selectedOrg or resolution changes, fetch cell ID options for each heatmap
+    // When any GSE heatmap's selectedCellLine or resolution changes, fetch cell ID options for each heatmap
     gseHeatmaps.forEach(gseHeatmap => {
-      if (gseHeatmap.selectedOrg) {
-        fetchGseCellIdOptionsForHeatmap(gseHeatmap.id, gseHeatmap.selectedOrg, gseHeatmap.resolution);
+      if (gseHeatmap.selectedCellLine) {
+        fetchGseCellIdOptionsForHeatmap(gseHeatmap.id, gseHeatmap.selectedCellLine, gseHeatmap.resolution);
       }
     });
-  }, [gseHeatmaps.map(h => `${h.selectedOrg}-${h.resolution}`).join(',')]);
+  }, [gseHeatmaps.map(h => `${h.selectedCellLine}-${h.resolution}`).join(',')]);
 
   // useEffect to handle GSE cell selection changes  
   useEffect(() => {
-    // When any GSE heatmap's selectedCell changes, fetch condition options
     gseHeatmaps.forEach(gseHeatmap => {
-      if (gseHeatmap.selectedOrg && gseHeatmap.selectedCell) {
-        fetchGseChrIdOptions(gseHeatmap.selectedOrg, gseHeatmap.selectedCell);
+      if (gseHeatmap.selectedCellLine && gseHeatmap.selectedCell) {
+        fetchGseChrIdOptions(gseHeatmap.selectedCellLine, gseHeatmap.selectedCell);
       }
     });
-  }, [gseHeatmaps.map(h => `${h.selectedOrg}-${h.selectedCell}`).join(',')]);
+  }, [gseHeatmaps.map(h => `${h.selectedCellLine}-${h.selectedCell}`).join(',')]);
 
   // varify if in example mode
   const isExampleMode = (cellLineName, chromosomeName, selectedChromosomeSequence) => {
@@ -1265,10 +1262,10 @@ function App() {
         getGseCellLines(data);
       })
       .catch(error => {
-        console.error('Error fetching GSE organisms:', error);
+        console.error('Error fetching GSE cell lines:', error);
         messageApi.open({
           type: 'error',
-          content: 'Failed to fetch GSE organisms',
+          content: 'Failed to fetch GSE cell lines',
           duration: 3,
         });
       });
@@ -1360,10 +1357,10 @@ function App() {
         setGseChrIds(data);
       })
       .catch(error => {
-        console.error('Error fetching GSE conditions:', error);
+        console.error('Error fetching GSE chromosome IDs:', error);
         messageApi.open({
           type: 'error',
-          content: 'Failed to fetch GSE conditions',
+          content: 'Failed to fetch GSE chromosome IDs',
           duration: 3,
         });
       });
@@ -1469,9 +1466,9 @@ function App() {
     const newId = gseHeatmapIndex;
     const newGseHeatmap = {
       id: newId,
-      selectedOrg: null,
+      selectedCellLine: null,
       selectedCell: null,
-      selectedCondition: null,
+      selectedChrId: null,
       tempGseCellLineId: null,
       tempGseCellId: null,
       tempGseChrId: null,
@@ -1495,7 +1492,7 @@ function App() {
     const gseHeatmap = gseHeatmaps.find(g => g.id === gseId);
     if (!gseHeatmap) return;
 
-    if (!gseHeatmap.selectedOrg) {
+    if (!gseHeatmap.selectedCellLine) {
       messageApi.open({
         type: 'warning',
         content: 'Please select a GSE cell line first',
@@ -1513,7 +1510,7 @@ function App() {
       return;
     }
 
-    if (!gseHeatmap.selectedCondition) {
+    if (!gseHeatmap.selectedChrId) {
       messageApi.open({
         type: 'warning',
         content: 'Please select a GSE chr id first',
@@ -1532,12 +1529,11 @@ function App() {
     }
 
     // Parse the selections to get the actual objects
-    const organism = gseCellLines.find(o => o.value === gseHeatmap.selectedOrg);
+    const cellLine = gseCellLines.find(o => o.value === gseHeatmap.selectedCellLine);
     const cellType = gseHeatmap.cellIds.find(c => c.value === gseHeatmap.selectedCell);
-    const condition = gseChrIds.find(c => c.value === gseHeatmap.selectedCondition);
+    const condition = gseChrIds.find(c => c.value === gseHeatmap.selectedChrId);
 
-    console.log(organism, cellType, condition);
-    if (!organism || !cellType || !condition) {
+    if (!cellLine || !cellType || !condition) {
       messageApi.open({
         type: 'error',
         content: 'Invalid GSE selections',
@@ -1548,14 +1544,14 @@ function App() {
 
     // Extract IDs from the selected objects
     // Use the tempIds if they exist, otherwise use the actual IDs from the objects
-    const orgId = gseHeatmap.tempGseCellLineId || organism.id || organism.value;
+    const cellLineId = gseHeatmap.tempGseCellLineId || cellLine.id || cellLine.value;
     const cellId = gseHeatmap.tempGseCellId || cellType.id || cellType.value;
 
     // Get chromosome data from user selection
-    const chrid = gseHeatmap.selectedCondition; // chrid comes from the selected condition
+    const chrid = gseHeatmap.selectedChrId;
 
     fetchGseDistanceMatrix(
-      orgId,
+      cellLineId,
       cellId,
       chrid,
       gseId,
@@ -2701,12 +2697,12 @@ function App() {
                       comparisonHeatmapList={[]}
                       isGseMode={true}
                       gseId={gseHeatmap.id}
-                      selectedGseCellLine={gseHeatmap.selectedOrg}
-                      setSelectedGseCellLine={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                      selectedGseCellLine={gseHeatmap.selectedCellLine}
+                      setSelectedGseCellLine={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCellLine: value })}
                       selectedGseCell={gseHeatmap.selectedCell}
                       setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
-                      selectedGseChrid={gseHeatmap.selectedCondition}
-                      setSelectedGseChrid={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                      selectedGseChrid={gseHeatmap.selectedChrId}
+                      setSelectedGseChrid={(value) => updateGseHeatmap(gseHeatmap.id, { selectedChrId: value })}
                       gseCellLines={gseCellLines}
                       gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
@@ -2763,12 +2759,12 @@ function App() {
                       comparisonHeatmapList={[]}
                       isGseMode={true}
                       gseId={gseHeatmap.id}
-                      selectedGseCellLine={gseHeatmap.selectedOrg}
-                      setSelectedGseCellLine={(value) => updateGseHeatmap(gseHeatmap.id, { selectedOrg: value })}
+                      selectedGseCellLine={gseHeatmap.selectedCellLine}
+                      setSelectedGseCellLine={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCellLine: value })}
                       selectedGseCell={gseHeatmap.selectedCell}
                       setSelectedGseCell={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCell: value })}
-                      selectedGseChrid={gseHeatmap.selectedCondition}
-                      setSelectedGseChrid={(value) => updateGseHeatmap(gseHeatmap.id, { selectedCondition: value })}
+                      selectedGseChrid={gseHeatmap.selectedChrId}
+                      setSelectedGseChrid={(value) => updateGseHeatmap(gseHeatmap.id, { selectedChrId: value })}
                       gseCellLines={gseCellLines}
                       gseCellIds={gseHeatmap.cellIds}
                       gseChrIds={gseChrIds}
