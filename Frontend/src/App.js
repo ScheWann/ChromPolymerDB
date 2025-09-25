@@ -429,7 +429,9 @@ function App() {
   // useEffect to handle GSE cell selection changes  
   useEffect(() => {
     gseHeatmaps.forEach(gseHeatmap => {
-      fetchGseChrIdOptions(gseHeatmap.selectedCellLine, gseHeatmap.selectedCell);
+      if (gseHeatmap.selectedCellLine && gseHeatmap.selectedCell) {
+        fetchGseChrIdOptions(gseHeatmap.selectedCellLine, gseHeatmap.selectedCell);
+      }
     });
   }, [gseHeatmaps.map(h => `${h.selectedCellLine}-${h.selectedCell}`).join(',')]);
 
@@ -1092,9 +1094,9 @@ function App() {
 
   const fetchBintuDistanceMatrix = (cellLine, chrid, startValue, endValue, cellId, bintuId) => {
     // Set loading state for this specific bintu instance
-    setBintuHeatmaps(prev => prev.map(bintu => 
-      bintu.id === bintuId 
-        ? { ...bintu, loading: true } 
+    setBintuHeatmaps(prev => prev.map(bintu =>
+      bintu.id === bintuId
+        ? { ...bintu, loading: true }
         : bintu
     ));
 
@@ -1119,14 +1121,14 @@ function App() {
       })
       .then(data => {
         // Update the specific Bintu heatmap instance
-        setBintuHeatmaps(prev => prev.map(bintu => 
-          bintu.id === bintuId 
-            ? { 
-                ...bintu, 
-                data: data,
-                loading: false,
-                geneList: [] // Will be updated separately
-              } 
+        setBintuHeatmaps(prev => prev.map(bintu =>
+          bintu.id === bintuId
+            ? {
+              ...bintu,
+              data: data,
+              loading: false,
+              geneList: [] // Will be updated separately
+            }
             : bintu
         ));
 
@@ -1146,9 +1148,9 @@ function App() {
           .then(res => res.json())
           .then(geneData => {
             // Update gene list for this specific instance
-            setBintuHeatmaps(prev => prev.map(bintu => 
-              bintu.id === bintuId 
-                ? { ...bintu, geneList: geneData } 
+            setBintuHeatmaps(prev => prev.map(bintu =>
+              bintu.id === bintuId
+                ? { ...bintu, geneList: geneData }
                 : bintu
             ));
           })
@@ -1159,9 +1161,9 @@ function App() {
       .catch(error => {
         console.error('Error fetching Bintu distance matrix:', error);
         // Set loading to false and clear data on error
-        setBintuHeatmaps(prev => prev.map(bintu => 
-          bintu.id === bintuId 
-            ? { ...bintu, loading: false, data: null } 
+        setBintuHeatmaps(prev => prev.map(bintu =>
+          bintu.id === bintuId
+            ? { ...bintu, loading: false, data: null }
             : bintu
         ));
         messageApi.open({
@@ -1229,18 +1231,18 @@ function App() {
 
   // Function to update specific Bintu heatmap instance
   const updateBintuHeatmap = (bintuId, updates) => {
-    setBintuHeatmaps(prev => prev.map(bintu => 
-      bintu.id === bintuId 
-        ? { ...bintu, ...updates } 
+    setBintuHeatmaps(prev => prev.map(bintu =>
+      bintu.id === bintuId
+        ? { ...bintu, ...updates }
         : bintu
     ));
   };
 
   // Function to update specific GSE heatmap instance
   const updateGseHeatmap = (gseId, updates) => {
-    setGseHeatmaps(prev => prev.map(gse => 
-      gse.id === gseId 
-        ? { ...gse, ...updates } 
+    setGseHeatmaps(prev => prev.map(gse =>
+      gse.id === gseId
+        ? { ...gse, ...updates }
         : gse
     ));
   };
@@ -1275,12 +1277,12 @@ function App() {
       updateGseHeatmap(gseId, { cellIds: [] });
       return;
     }
-    
+
     const requestBody = { cell_line: cellLine };
     if (resolution) {
       requestBody.resolution = resolution;
     }
-    
+
     fetch('/api/getGseCellIdOptions', {
       method: 'POST',
       headers: {
@@ -1302,8 +1304,22 @@ function App() {
       });
   };
 
-  const fetchGseChrIdOptions = () => {
-    fetch('/api/getGseChrIdOptions')
+  const fetchGseChrIdOptions = (cellLine, cellId) => {
+    if (!cellLine || !cellId) {
+      setGseChrIds([]);
+      return;
+    }
+
+    fetch('/api/getGseChrIdOptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        cell_line: cellLine,
+        cell_id: cellId
+      })
+    })
       .then(res => res.json())
       .then(data => {
         setGseChrIds(data);
@@ -1320,9 +1336,9 @@ function App() {
 
   const fetchGseDistanceMatrix = (cell_line, cellId, chrid, gseId, startValue = null, endValue = null, resolution = null) => {
     // Set loading state for this specific GSE instance
-    setGseHeatmaps(prev => prev.map(gse => 
-      gse.id === gseId 
-        ? { ...gse, loading: true } 
+    setGseHeatmaps(prev => prev.map(gse =>
+      gse.id === gseId
+        ? { ...gse, loading: true }
         : gse
     ));
 
@@ -1358,14 +1374,14 @@ function App() {
       })
       .then(data => {
         // Update the specific GSE heatmap instance
-        setGseHeatmaps(prev => prev.map(gse => 
-          gse.id === gseId 
-            ? { 
-                ...gse, 
-                data: data,
-                loading: false,
-                geneList: [] // Will be updated separately
-              } 
+        setGseHeatmaps(prev => prev.map(gse =>
+          gse.id === gseId
+            ? {
+              ...gse,
+              data: data,
+              loading: false,
+              geneList: [] // Will be updated separately
+            }
             : gse
         ));
 
@@ -1386,9 +1402,9 @@ function App() {
             .then(res => res.json())
             .then(geneData => {
               // Update gene list for this specific instance
-              setGseHeatmaps(prev => prev.map(gse => 
-                gse.id === gseId 
-                  ? { ...gse, geneList: geneData } 
+              setGseHeatmaps(prev => prev.map(gse =>
+                gse.id === gseId
+                  ? { ...gse, geneList: geneData }
                   : gse
               ));
             })
@@ -1400,9 +1416,9 @@ function App() {
       .catch(error => {
         console.error('Error fetching GSE distance matrix:', error);
         // Set loading to false and clear data on error
-        setGseHeatmaps(prev => prev.map(gse => 
-          gse.id === gseId 
-            ? { ...gse, loading: false, data: null } 
+        setGseHeatmaps(prev => prev.map(gse =>
+          gse.id === gseId
+            ? { ...gse, loading: false, data: null }
             : gse
         ));
         messageApi.open({
@@ -1522,9 +1538,9 @@ function App() {
 
   // Function to update GSE heatmap resolution
   const updateGseHeatmapResolution = (gseId, resolution) => {
-    setGseHeatmaps(prev => prev.map(gse => 
-      gse.id === gseId 
-        ? { ...gse, resolution: resolution } 
+    setGseHeatmaps(prev => prev.map(gse =>
+      gse.id === gseId
+        ? { ...gse, resolution: resolution }
         : gse
     ));
   };

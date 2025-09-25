@@ -409,22 +409,17 @@ def get_gse_cell_id_options_api():
 
 @api.route("/getGseChrIdOptions", methods=["POST"])
 def get_gse_chrid_options_api():
-    """Get list of available GSE chromosome ID options"""
-    return jsonify(get_gse_chrid_options())
-
-# @api.route("/getGseChrIdOptions", methods=["POST"])
-# def get_gse_chrid_options_api():
-#     """Get list of available GSE chromosome ID options for a given cell line and cell ID"""
-#     try:
-#         data = request.get_json()
-#         if not data or 'cell_line' not in data or 'cell_id' not in data:
-#             return jsonify({"error": "cell_line and cell_id parameters are required"}), 400
+    """Get list of available GSE chromosome ID options for a given cell line and cell ID"""
+    try:
+        data = request.get_json()
+        if not data or 'cell_line' not in data or 'cell_id' not in data:
+            return jsonify({"error": "cell_line and cell_id parameters are required"}), 400
         
-#         cell_line = data['cell_line']
-#         cell_id = data['cell_id']
-#         return jsonify(get_gse_chrid_options(cell_line, cell_id))
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+        cell_line = data['cell_line']
+        cell_id = data['cell_id']
+        return jsonify(get_gse_chrid_options(cell_line, cell_id))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @api.route("/getGseDistanceMatrix", methods=["POST"])

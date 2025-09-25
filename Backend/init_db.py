@@ -799,6 +799,33 @@ def process_distance_index():
     conn.close()
 
 
+def process_gse_index():
+    """Create indexes on gse table for faster search (if they don't exist)."""
+    print("Creating index idx_gse_search...")
+
+    conn = get_db_connection(database=DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT 1 
+        FROM pg_indexes 
+        WHERE indexname = 'idx_gse_search' 
+        AND tablename = 'gse';
+    """
+    )
+    if cur.fetchone():
+        print("Index idx_gse_search already exists. Skipping creation.")
+    else:
+        cur.execute(
+            "CREATE INDEX idx_gse_search ON gse (cell_line, resolution, cell_id, chrid);"
+        )
+        print("Index idx_gse_search created successfully.")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 def insert_data():
     """Insert data(Except for the data of non random HiC) into the database if not already present."""
     conn = get_db_connection(database=DB_NAME)
@@ -903,5 +930,6 @@ def insert_non_random_HiC_data():
 initialize_tables()
 process_position_index()
 process_distance_index()
+process_gse_index()
 insert_data()
 insert_non_random_HiC_data()
