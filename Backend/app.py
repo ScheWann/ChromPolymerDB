@@ -40,7 +40,6 @@ from process import (
     get_gse_cell_line_options,
     get_gse_cell_id_options,
     get_gse_chrid_options,
-    get_gse_resolution_options,
     get_gse_distance_matrix,
     download_gse_csv,
 )
@@ -418,25 +417,6 @@ def get_gse_conditions():
         cell_line = data['cell_line']
         cell_id = data['cell_id']
         return jsonify(get_gse_chrid_options(cell_line, cell_id))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@api.route("/getGseResolutionOptions", methods=["POST"])
-def get_gse_resolution_options():
-    """Get list of available GSE resolutions for a given organism, cell type, and chromosome"""
-    try:
-        data = request.get_json()
-        required_params = ['cell_line', 'cell_id', 'chrid']
-        
-        if not data or not all(param in data for param in required_params):
-            return jsonify({"error": f"Missing required parameters: {required_params}"}), 400
-        
-        cell_line = data['cell_line']
-        cell_id = data['cell_id']
-        chrid = data['chrid']
-        
-        return jsonify(get_gse_resolution_options(cell_line, cell_id, chrid))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

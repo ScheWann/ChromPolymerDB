@@ -1441,7 +1441,7 @@ function App() {
       tempConditionId: null,
       startValue: null,
       endValue: null,
-      resolution: '5k', // Default resolution
+      resolution: '5000',
       data: null,
       loading: false,
       geneList: []

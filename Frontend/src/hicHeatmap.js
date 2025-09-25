@@ -1342,9 +1342,9 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                                     value={gseResolution}
                                                     onChange={handleGseResolutionChange}
                                                     options={[
-                                                        { label: '5k', value: '5k' },
-                                                        { label: '50k', value: '50k' },
-                                                        { label: '100k', value: '100k' }
+                                                        { label: '5000', value: '5000' },
+                                                        { label: '50000', value: '50000' },
+                                                        { label: '100000', value: '100000' }
                                                     ]}
                                                 />
                                             </div>

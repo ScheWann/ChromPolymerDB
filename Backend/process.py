@@ -1488,36 +1488,6 @@ def get_gse_chrid_options(cell_line: str, cell_id: str):
 
 
 """
-Return the GSE resolution options in the given cell line, cell ID, and chromosome
-"""
-def get_gse_resolution_options(cell_line: str, cell_id: str, chrid: str):
-    with db_conn() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                """
-                SELECT DISTINCT resolution
-                FROM gse
-                WHERE cell_line = %s
-                    AND cell_id = %s
-                    AND chrid = %s
-                ORDER BY resolution
-                """,
-                (cell_line, cell_id, chrid)
-            )
-            rows = cur.fetchall()
-    
-    options = [
-        {
-            "value": row["resolution"],
-            "label": row["resolution"],
-        }
-        for row in rows
-    ]
-
-    return options
-
-
-"""
 Get GSE distance matrix for given parameters
 """
 def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, resolution: str, start_value: int = None, end_value: int = None):
@@ -1576,5 +1546,5 @@ def get_gse_distance_matrix(cell_line: str, cell_id: str, chrid: str, resolution
         'resolution': resolution,
         'start_value': start_value if start_value is not None else data_start_value,
         'end_value': end_value if end_value is not None else data_end_value,
-        'step': 5000  # GSE data step size
+        'step': resolution  # GSE data step size
     }
