@@ -429,9 +429,7 @@ function App() {
   // useEffect to handle GSE cell selection changes  
   useEffect(() => {
     gseHeatmaps.forEach(gseHeatmap => {
-      if (gseHeatmap.selectedCellLine && gseHeatmap.selectedCell) {
-        fetchGseChrIdOptions(gseHeatmap.selectedCellLine, gseHeatmap.selectedCell);
-      }
+      fetchGseChrIdOptions(gseHeatmap.selectedCellLine, gseHeatmap.selectedCell);
     });
   }, [gseHeatmaps.map(h => `${h.selectedCellLine}-${h.selectedCell}`).join(',')]);
 
@@ -1271,38 +1269,6 @@ function App() {
       });
   };
 
-  const fetchGseCellIdOptions = (cellLine, resolution = null) => {
-    if (!cellLine) {
-      getGseCellIds([]);
-      return;
-    }
-    
-    const requestBody = { cell_line: cellLine };
-    if (resolution) {
-      requestBody.resolution = resolution;
-    }
-    
-    fetch('/api/getGseCellIdOptions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    })
-      .then(res => res.json())
-      .then(data => {
-        getGseCellIds(data);
-      })
-      .catch(error => {
-        console.error('Error fetching GSE cell types:', error);
-        messageApi.open({
-          type: 'error',
-          content: 'Failed to fetch GSE cell types',
-          duration: 3,
-        });
-      });
-  };
-
   // Fetch cell IDs for a specific GSE heatmap
   const fetchGseCellIdOptionsForHeatmap = (gseId, cellLine, resolution = null) => {
     if (!cellLine) {
@@ -1336,22 +1302,8 @@ function App() {
       });
   };
 
-  const fetchGseChrIdOptions = (cellLine, cellId) => {
-    if (!cellLine || !cellId) {
-      setGseChrIds([]);
-      return;
-    }
-    
-    fetch('/api/getGseChrIdOptions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cell_line: cellLine,
-        cell_id: cellId
-      })
-    })
+  const fetchGseChrIdOptions = () => {
+    fetch('/api/getGseChrIdOptions')
       .then(res => res.json())
       .then(data => {
         setGseChrIds(data);

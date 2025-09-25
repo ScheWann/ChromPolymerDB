@@ -1468,7 +1468,7 @@ def get_gse_cell_id_options(cell_line: str, resolution: str):
 """
 Return the GSE chrid options in the given cell line and cell ID
 """
-def get_gse_chrid_options(cell_line: str, cell_id: str):
+# def get_gse_chrid_options(cell_line: str, cell_id: str):
     # with db_conn() as conn:
     #     with conn.cursor(row_factory=dict_row) as cur:
     #         cur.execute(
@@ -1492,6 +1492,7 @@ def get_gse_chrid_options(cell_line: str, cell_id: str):
     # ]
 
     # return options
+def get_gse_chrid_options():
     options = [
         {"value": "chr1", "label": "chr1"},
         {"value": "chr2", "label": "chr2"},
