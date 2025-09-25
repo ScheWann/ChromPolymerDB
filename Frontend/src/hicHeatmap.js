@@ -904,6 +904,36 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     };
 
+    // Natural sort for chromosome IDs (chr1..chr22, chrX, chrY, chrM/MT)
+    const sortedGseChrIds = React.useMemo(() => {
+        if (!Array.isArray(gseChrIds)) return gseChrIds;
+
+        const chrLabelToRank = (label) => {
+            const raw = (label ?? '').toString().trim();
+            // normalize: remove leading 'chr' and spaces, lower-case
+            const norm = raw.toLowerCase().replace(/^chr\s*/i, '').replace(/\s+/g, '');
+            if (norm === 'x') return 23;
+            if (norm === 'y') return 24;
+            if (norm === 'm' || norm === 'mt') return 25;
+            const n = parseInt(norm, 10);
+            if (!Number.isNaN(n)) return n;
+            // Unknown labels go to the end; keep stable order with secondary compare
+            return Number.MAX_SAFE_INTEGER;
+        };
+
+        const arr = [...gseChrIds];
+        arr.sort((a, b) => {
+            const aLabel = (a?.label ?? a?.value ?? '').toString();
+            const bLabel = (b?.label ?? b?.value ?? '').toString();
+            const ra = chrLabelToRank(aLabel);
+            const rb = chrLabelToRank(bLabel);
+            if (ra !== rb) return ra - rb;
+            // Secondary: localeCompare numeric to handle ties consistently
+            return aLabel.localeCompare(bLabel, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        return arr;
+    }, [gseChrIds]);
+
     const getHeaderTitleString = () => {
         // Left label (cellline/source)
         let leftLabel = '';
@@ -1268,7 +1298,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     style={{ width: 80 }}
                                     value={selectedGseCondition}
                                     onChange={setSelectedGseCondition}
-                                    options={gseChrIds}
+                                    options={sortedGseChrIds}
                                     optionFilterProp='label'
                                     optionRender={(option) => (
                                         <Tooltip title={<span style={{ color: 'black' }}>{option.label}</span>} color='white' placement="right">
