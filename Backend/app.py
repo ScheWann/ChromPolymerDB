@@ -394,14 +394,15 @@ def get_gse_organisms():
 
 @api.route("/getGseCellIdOptions", methods=["POST"])
 def get_gse_cell_types():
-    """Get list of available GSE cell types for a given organism"""
+    """Get list of available GSE cell types for a given organism and resolution"""
     try:
         data = request.get_json()
         if not data or 'cell_line' not in data:
             return jsonify({"error": "cell_line parameter is required"}), 400
         
         cell_line = data['cell_line']
-        return jsonify(get_gse_cell_id_options(cell_line))
+        resolution = data.get('resolution')
+        return jsonify(get_gse_cell_id_options(cell_line, resolution))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

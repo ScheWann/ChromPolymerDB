@@ -1409,41 +1409,48 @@ def download_gse_csv(cell_line: str, cell_id: str):
 """
 Return currently existing GSE cell line options"""
 def get_gse_cell_line_options():
-    with db_conn() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                """
-                SELECT DISTINCT cell_line
-                FROM gse
-                """
-            )
-            rows = cur.fetchall()
+    # with db_conn() as conn:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute(
+    #             """
+    #             SELECT DISTINCT cell_line
+    #             FROM gse
+    #             """
+    #         )
+    #         rows = cur.fetchall()
     
+    # options = [
+    #     {
+    #         "value": row["cell_line"],
+    #         "label": row["cell_line"],
+    #     }
+    #     for row in rows
+    # ]
+
+    # return options
     options = [
-        {
-            "value": row["cell_line"],
-            "label": row["cell_line"],
-        }
-        for row in rows
+        {"value": "K562_limca", "label": "K562_limca"},
+        {"value": "GM12878_dipc", "label": "GM12878_dipc"},
     ]
 
     return options
 
 
 """
-Return currently existing GSE cell ID options in the given cell line
+Return currently existing GSE cell ID options in the given cell line and resolution
 """
-def get_gse_cell_id_options(cell_line: str):
+def get_gse_cell_id_options(cell_line: str, resolution: str):
     with db_conn() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
                 """
                 SELECT DISTINCT cell_id
                 FROM gse
-                WHERE cell_line = %s
+                WHERE cell_line = %s AND resolution = %s
                 """,
-                (cell_line,)
+                (cell_line, resolution)
             )
+
             rows = cur.fetchall()
     
     options = [
@@ -1462,26 +1469,53 @@ def get_gse_cell_id_options(cell_line: str):
 Return the GSE chrid options in the given cell line and cell ID
 """
 def get_gse_chrid_options(cell_line: str, cell_id: str):
-    with db_conn() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                """
-                SELECT DISTINCT chrid
-                FROM gse
-                WHERE cell_line = %s
-                    AND cell_id = %s
-                ORDER BY chrid
-                """,
-                (cell_line, cell_id)
-            )
-            rows = cur.fetchall()
+    # with db_conn() as conn:
+    #     with conn.cursor(row_factory=dict_row) as cur:
+    #         cur.execute(
+    #             """
+    #             SELECT DISTINCT chrid
+    #             FROM gse
+    #             WHERE cell_line = %s
+    #                 AND cell_id = %s
+    #             ORDER BY chrid
+    #             """,
+    #             (cell_line, cell_id)
+    #         )
+    #         rows = cur.fetchall()
     
+    # options = [
+    #     {
+    #         "value": row["chrid"],
+    #         "label": row["chrid"],
+    #     }
+    #     for row in rows
+    # ]
+
+    # return options
     options = [
-        {
-            "value": row["chrid"],
-            "label": row["chrid"],
-        }
-        for row in rows
+        {"value": "chr1", "label": "chr1"},
+        {"value": "chr2", "label": "chr2"},
+        {"value": "chr3", "label": "chr3"},
+        {"value": "chr4", "label": "chr4"},
+        {"value": "chr5", "label": "chr5"},
+        {"value": "chr6", "label": "chr6"},
+        {"value": "chr7", "label": "chr7"},
+        {"value": "chr8", "label": "chr8"},
+        {"value": "chr9", "label": "chr9"},
+        {"value": "chr10", "label": "chr10"},
+        {"value": "chr11", "label": "chr11"},
+        {"value": "chr12", "label": "chr12"},
+        {"value": "chr13", "label": "chr13"},
+        {"value": "chr14", "label": "chr14"},
+        {"value": "chr15", "label": "chr15"},
+        {"value": "chr16", "label": "chr16"},
+        {"value": "chr17", "label": "chr17"},
+        {"value": "chr18", "label": "chr18"},
+        {"value": "chr19", "label": "chr19"},
+        {"value": "chr20", "label": "chr20"},
+        {"value": "chr21", "label": "chr21"},
+        {"value": "chr22", "label": "chr22"},
+        {"value": "chrX", "label": "chrX"},
     ]
 
     return options
