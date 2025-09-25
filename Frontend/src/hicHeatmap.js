@@ -125,6 +125,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 }
                 const params = new URLSearchParams({
                     cell_line: selectedGseCellLine,
+                    resolution: gseResolution,
                     cell_id: selectedGseCell
                 });
                 const res = await fetch(`/api/downloadGseCSV?${params.toString()}`);
@@ -137,7 +138,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${selectedGseCellLine}_${selectedGseCell}.csv`;
+                a.download = `${selectedGseCellLine}_${gseResolution}_${selectedGseCell}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();

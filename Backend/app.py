@@ -461,18 +461,25 @@ def get_gse_distance_matrix_api():
 
 @api.route("/downloadGseCSV", methods=["GET"])
 def download_gse_csv_api():
-    """Download the GSE CSV file for a given cell line and cell ID.
-    Expects query params: cell_line, cell_id
+    """Download the GSE CSV file for a given cell line, resolution, and cell ID.
+    Expects query params: cell_line, resolution, cell_id
     """
     cell_line = request.args.get("cell_line")
+    resolution = request.args.get("resolution")
     cell_id = request.args.get("cell_id")
 
-    if not cell_line or not cell_id:
-        return jsonify({"error": "Missing required parameters: cell_line, cell_id"}), 400
+    resolution_mapping = {5000: "5k" , 50000: "50k", 100000: "100k"}
 
-    resp = download_gse_csv(cell_line, cell_id)
+    if resolution and resolution.isdigit():
+        resolution = resolution_mapping.get(int(resolution), resolution)
+    
+    if not cell_line or not resolution or not cell_id:
+        return jsonify({"error": "Missing required parameters: cell_line, resolution, cell_id"}), 400
+
+    resp = download_gse_csv(cell_line, resolution, cell_id)
+
     if resp is None:
-        return jsonify({"error": "CSV not found for requested cell line and cell ID"}), 404
+        return jsonify({"error": "CSV not found for requested cell line, resolution, and cell ID"}), 404
     return resp
 
 
