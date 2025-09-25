@@ -1386,7 +1386,7 @@ function App() {
         ));
 
         // Fetch gene list for the region using data from GSE response
-        if (data && data.start_value && data.end_value) {
+        if (data && data.start_value !== undefined && data.end_value !== undefined) {
           const sequences = { start: data.start_value, end: data.end_value };
           fetch('/api/getGeneList', {
             method: 'POST',
