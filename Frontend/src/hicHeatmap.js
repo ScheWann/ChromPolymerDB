@@ -22,6 +22,10 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     const colorScaleRef = useRef(null);
     const drewColorRef = useRef(false); // Track if any colored cell drawn (Bintu/GSE)
 
+    // Title overflow handling: ellipsize when space is insufficient and show full title in tooltip
+    const titleRef = useRef(null);
+
+    const [isTitleTruncated, setIsTitleTruncated] = useState(false);
     const [minDimension, setMinDimension] = useState(0);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
     const [halfHeatMapModalVisible, setHalfHeatMapModalVisible] = useState(false);
@@ -896,6 +900,69 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
         }
     };
 
+    const getHeaderTitleString = () => {
+        // Left label (cellline/source)
+        let leftLabel = '';
+        if (!comparisonHeatmapId) {
+            if (isBintuMode) {
+                leftLabel = (selectedBintuCluster ? (selectedBintuCluster.split('_')[0] || 'Bintu') : 'Bintu');
+            } else if (isGseMode) {
+                leftLabel = selectedGseOrg ? `Single-cell Hi-C-${selectedGseOrg}` : 'Single-cell Hi-C';
+            } else {
+                leftLabel = independentHeatmapCellLine || cellLineName || '';
+            }
+        }
+
+        // Whether to show dash and the range
+        const showRange = ((!isBintuMode && !isGseMode) ||
+            (isBintuMode && selectedBintuCluster && tempBintuCellId) ||
+            (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0));
+
+        let title = '';
+        if (!comparisonHeatmapId && leftLabel) {
+            title += leftLabel;
+            if (showRange) title += ' - ';
+        }
+
+        if (showRange) {
+            const seq = isGseMode ? localGseSequence : currentChromosomeSequence;
+            const startStr = formatNumber(seq?.start ?? 0);
+            const endStr = formatNumber(seq?.end ?? 0);
+            title += `${chromosomeName} : ${startStr} ~ ${endStr}`;
+        }
+
+        return title.trim();
+    };
+
+    useEffect(() => {
+        const el = titleRef.current;
+        if (!el) return;
+        const check = () => {
+            // Measure overflow to determine truncation state
+            const truncated = el.scrollWidth > el.clientWidth;
+            setIsTitleTruncated(truncated);
+        };
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+        // Re-check when layout-driving deps change
+    }, [
+        comparisonHeatmapId,
+        isBintuMode,
+        isGseMode,
+        selectedBintuCluster,
+        tempBintuCellId,
+        selectedGseOrg,
+        selectedGseCell,
+        selectedGseCondition,
+        chromosomeData,
+        chromosomeName,
+        currentChromosomeSequence,
+        localGseSequence,
+        independentHeatmapCellLine,
+        cellLineName,
+    ]);
+
     return (
         <div className='heatmapContainer' style={{ display: 'flex', flexDirection: 'column', width: '40vw', minWidth: '40vw', height: '100%', position: 'relative' }}>
             <div ref={containerRef} style={{
@@ -906,33 +973,53 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 <div style={{
                     position: 'absolute', top: 0, right: 0, zIndex: 10, display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between', padding: "5px 0 5px 0", borderBottom: "1px solid #eaeaea", alignItems: 'center'
                 }}>
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                     <Tooltip
                         title={
-                            matchedSource ? (
-                                <div style={{ color: 'black' }}>
-                                    <div>
-                                        <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
+                            <div style={{ color: 'black' }}>
+                                {isTitleTruncated && getHeaderTitleString() && (
+                                    <div style={{ marginBottom: 6 }}>
+                                        <span style={{ fontWeight: 600 }}>{getHeaderTitleString()}</span>
                                     </div>
-                                    {/* {matchedSource.system && (
-                                        <div>System: {matchedSource.system}</div>
-                                    )} */}
-                                    {(matchedSource.source || matchedSource.Accession) && (
+                                )}
+                                {matchedSource ? (
+                                    <div>
                                         <div>
-                                            {matchedSource.source}
-                                            {matchedSource.source && matchedSource.Accession ? ': ' : ''}
-                                            {matchedSource.Accession}
+                                            <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
                                         </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <span style={{ color: 'black' }}>No metadata found</span>
-                            )
+                                        {(matchedSource.source || matchedSource.Accession) && (
+                                            <div>
+                                                {matchedSource.source}
+                                                {matchedSource.source && matchedSource.Accession ? ': ' : ''}
+                                                {matchedSource.Accession}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span>No metadata found</span>
+                                )}
+                            </div>
                         }
                         color='white'
                         placement="bottomLeft"
                         overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
                     >
-                        <div style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 10, cursor: "pointer" }}>
+                        <div
+                            ref={titleRef}
+                            style={{
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                marginLeft: 10,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                // Ellipsis styles
+                                width: '100%',
+                                minWidth: 0,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             {!comparisonHeatmapId && (
                                 <>
                                     <span style={{ marginRight: 3 }}>
@@ -967,7 +1054,8 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                             )}
                         </div>
                     </Tooltip>
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    </div>
+                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexShrink: 0 }}>
                         {!isBintuMode && !isGseMode && (
                             <Tooltip
                                 title={<span style={{ color: 'black' }}>fq/rawc value of the heatmap</span>}
@@ -1150,7 +1238,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     <InputNumber
                                         placeholder="Start"
                                         size='small'
-                                        style={{ width: 80 }}
+                                        style={{ width: 50 }}
                                         value={gseStartValue}
                                         onChange={setGseStartValue}
                                         min={0}
@@ -1162,7 +1250,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                     <InputNumber
                                         placeholder="End"
                                         size='small'
-                                        style={{ width: 80 }}
+                                        style={{ width: 50 }}
                                         value={gseEndValue}
                                         onChange={setGseEndValue}
                                         min={0}
@@ -1173,7 +1261,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                                 <Select
                                     placeholder="Chr ID"
                                     size='small'
-                                    style={{ width: 80 }}
+                                    style={{ width: 60 }}
                                     value={selectedGseCondition}
                                     onChange={setSelectedGseCondition}
                                     options={gseChrIds}
