@@ -5,7 +5,7 @@ import pandas as pd
 from io import StringIO
 from cell_line_labels import label_mapping
 
-NEW_DATA_DIR = './new_cell_line'
+NEW_DATA_DIR = "./new_cell_line"
 
 DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
@@ -32,7 +32,7 @@ def table_exists(cur, table_name):
 def create_cell_line_table(cur, cell_line):
     """Create a table for a specific cell line"""
     table_name = get_cell_line_table_name(cell_line)
-    
+
     if not table_exists(cur, table_name):
         print(f"Creating {table_name} table...")
         # Create safe constraint name
@@ -59,10 +59,7 @@ def create_cell_line_table(cur, cell_line):
 def get_db_connection(database=None):
     try:
         conn = psycopg.connect(
-            host=DB_HOST,
-            user=DB_USERNAME,
-            password=DB_PASSWORD,
-            dbname=database
+            host=DB_HOST, user=DB_USERNAME, password=DB_PASSWORD, dbname=database
         )
         return conn
     except Exception as e:
@@ -74,7 +71,7 @@ def process_non_random_hic_data(chromosome_dir):
     """Process and insert data into separate cell line tables"""
     # Get all unique cell lines from all files to create tables once
     created_tables = set()
-    
+
     for file_name in os.listdir(chromosome_dir):
         if not file_name.endswith(".csv.gz"):
             continue
@@ -86,18 +83,20 @@ def process_non_random_hic_data(chromosome_dir):
             file_path,
             usecols=["chr", "ibp", "jbp", "fq", "fdr", "rawc", "cell_line"],
             chunksize=100000,
-            compression="gzip"
+            compression="gzip",
         ):
             chunk.rename(columns={"chr": "chrid"}, inplace=True)
-            
+
             # Group by cell line and insert into separate tables
-            for cell_line, group in chunk.groupby('cell_line'):
+            for cell_line, group in chunk.groupby("cell_line"):
                 if cell_line not in label_mapping:
-                    print(f"Warning: Cell line '{cell_line}' not found in label_mapping. Skipping.")
+                    print(
+                        f"Warning: Cell line '{cell_line}' not found in label_mapping. Skipping."
+                    )
                     continue
-                
+
                 table_name = get_cell_line_table_name(cell_line)
-                
+
                 # Check if table exists and create if necessary
                 if cell_line not in created_tables:
                     conn = get_db_connection(database=DB_NAME)
@@ -116,11 +115,11 @@ def process_non_random_hic_data(chromosome_dir):
                     finally:
                         cur.close()
                         conn.close()
-                
+
                 # Insert data into the table
                 conn = get_db_connection(database=DB_NAME)
                 cur = conn.cursor()
-                
+
                 try:
                     # Remove cell_line column since it's redundant in separate tables
                     group_data = group[["chrid", "ibp", "jbp", "fq", "fdr", "rawc"]]
@@ -133,10 +132,12 @@ def process_non_random_hic_data(chromosome_dir):
                         "COPY {} ({}) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t')"
                     ).format(
                         sql.Identifier(table_name),
-                        sql.SQL(", ").join([
-                            sql.Identifier(col)
-                            for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
-                        ])
+                        sql.SQL(", ").join(
+                            [
+                                sql.Identifier(col)
+                                for col in ("chrid", "ibp", "jbp", "fq", "fdr", "rawc")
+                            ]
+                        ),
                     )
 
                     with cur.copy(copy_sql) as copy:
@@ -144,8 +145,10 @@ def process_non_random_hic_data(chromosome_dir):
                         copy.write(data_str.encode("utf-8"))
 
                     conn.commit()
-                    print(f"Inserted {len(group_data)} records into {table_name} from {file_name}.")
-                    
+                    print(
+                        f"Inserted {len(group_data)} records into {table_name} from {file_name}."
+                    )
+
                 except Exception as e:
                     print(f"Error processing data for {table_name}: {e}")
                     conn.rollback()
@@ -213,7 +216,8 @@ def process_valid_regions_data(cur):
             file_path = os.path.join(folder_path, filename)
             try:
                 df = pd.read_csv(
-                    file_path, usecols=["chrID", "cell_line", "start_value", "end_value"]
+                    file_path,
+                    usecols=["chrID", "cell_line", "start_value", "end_value"],
                 )
 
                 df = df[["chrID", "cell_line", "start_value", "end_value"]]
@@ -238,75 +242,93 @@ def process_bintu_data(cur):
     if not os.path.exists(folder_path):
         print(f"Bintu folder not found at {folder_path}")
         return
-    
+
     # Ensure the bintu table exists before processing data
     create_bintu_table(cur)
-    
+
     for filename in os.listdir(folder_path):
         if filename.endswith(".csv"):
             file_path = os.path.join(folder_path, filename)
-            
+
             try:
                 # Parse filename to extract metadata
                 # Format: {cell_line}_chr{chrid}-{start}-{end}Mb.csv or similar
-                base_name = filename.replace('.csv', '')
+                base_name = filename.replace(".csv", "")
                 print(f"Processing file: {filename}")
-                
-                # Handle special cases like HCT116_chr21-28-30Mb_untreated.csv
-                if '_untreated' in base_name:
-                    base_name = base_name.replace('_untreated', '')
 
-                parts = base_name.split('_')
+                # Handle special cases like HCT116_chr21-28-30Mb_untreated.csv
+                if "_untreated" in base_name:
+                    base_name = base_name.replace("_untreated", "")
+
+                parts = base_name.split("_")
                 cell_line = parts[0]
 
                 chr_pos_part = parts[1]
 
-                chr_parts = chr_pos_part.split('-')
+                chr_parts = chr_pos_part.split("-")
                 chrid = chr_parts[0]
-                
+
                 # Extract start and end values (in Mb, need to convert to bp)
                 # Handle decimal values like 18.6Mb
                 # e.g., 28 or 18.6
                 start_mb = float(chr_parts[1])
-                end_mb = float(chr_parts[2].replace('Mb', ''))
+                end_mb = float(chr_parts[2].replace("Mb", ""))
 
                 start_value = int(start_mb * 1000000)
                 end_value = int(end_mb * 1000000)
-                
-                print(f"Parsed: cell_line={cell_line}, chrid={chrid}, start={start_value}, end={end_value}")
+
+                print(
+                    f"Parsed: cell_line={cell_line}, chrid={chrid}, start={start_value}, end={end_value}"
+                )
 
                 df = pd.read_csv(file_path, skiprows=1)
 
-                df = df.rename(columns={
-                    'Chromosome index': 'cell_id', 
-                    'Segment index': 'segment_index',
-                    'Z': 'Z',
-                    'X': 'Y',
-                    'Y': 'X'
-                })
-                
-                df['cell_line'] = cell_line
-                df['chrid'] = chrid
-                df['start_value'] = start_value
-                df['end_value'] = end_value
-                
-                for col in ['Z', 'Y', 'X']:
+                df = df.rename(
+                    columns={
+                        "Chromosome index": "cell_id",
+                        "Segment index": "segment_index",
+                        "Z": "Z",
+                        "X": "Y",
+                        "Y": "X",
+                    }
+                )
+
+                df["cell_line"] = cell_line
+                df["chrid"] = chrid
+                df["start_value"] = start_value
+                df["end_value"] = end_value
+
+                for col in ["Z", "Y", "X"]:
                     df[col] = df[col].where(pd.notna(df[col]), None)
-                
+
                 # Prepare data for insertion
-                df = df[['cell_line', 'chrid', 'start_value', 'end_value', 'cell_id', 'segment_index', 'Z', 'Y', 'X']]
-                
+                df = df[
+                    [
+                        "cell_line",
+                        "chrid",
+                        "start_value",
+                        "end_value",
+                        "cell_id",
+                        "segment_index",
+                        "Z",
+                        "Y",
+                        "X",
+                    ]
+                ]
+
                 query = """
                     INSERT INTO bintu (cell_line, chrid, start_value, end_value, cell_id, segment_index, Z, Y, X)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (cell_line, chrid, start_value, end_value, cell_id, segment_index) DO NOTHING;
                 """
-                
+
                 data_to_insert = df.to_records(index=False).tolist()
                 cur.executemany(query, data_to_insert)
-                
-                print(f"{filename}: inserted {len(df)} records for {cell_line} {chrid} ({start_mb}-{end_mb}Mb)")
-                
+
+                print(
+                    f"{filename}: inserted {len(df)} records for {cell_line} {chrid} ({start_mb}-{end_mb}Mb)"
+                )
+
             except Exception as e:
                 print(f"Error processing file {filename}: {e}")
 
@@ -324,12 +346,12 @@ def insert_new_cell_line():
         print("New cell line Non-random Hi-C data inserted successfully.")
     else:
         print(f"Refined processed HiC directory not found at {chromosome_dir}")
-    
+
     # Process sequence data
     # process_sequence_data(cur)
     # conn.commit()
     # print("New cell line sequence data inserted successfully.")
-    
+
     # Process valid regions data
     valid_regions_dir = os.path.join(NEW_DATA_DIR, "valid_regions")
     if os.path.exists(valid_regions_dir):
@@ -338,13 +360,13 @@ def insert_new_cell_line():
         print("New cell line valid regions data inserted successfully.")
     else:
         print(f"Valid regions directory not found at {valid_regions_dir}")
-    
+
     # Process Bintu data
     print("Processing Bintu data...")
     process_bintu_data(cur)
     conn.commit()
     print("New cell line Bintu data inserted successfully.")
-    
+
     cur.close()
     conn.close()
 
@@ -355,16 +377,16 @@ def insert_bintu_data():
     if conn is None:
         print("Failed to connect to database")
         return
-    
+
     cur = conn.cursor()
-    
+
     try:
         # Process Bintu data
         print("Processing Bintu data...")
         process_bintu_data(cur)
         conn.commit()
         print("Bintu data inserted successfully.")
-        
+
     except Exception as e:
         print(f"Error during Bintu data insertion: {e}")
         conn.rollback()
@@ -375,19 +397,22 @@ def insert_bintu_data():
 
 def create_gse_table(cur):
     """Create the GSE table if it doesn't exist"""
-    if not table_exists(cur, 'gse'):
+    if not table_exists(cur, "gse"):
         print("Creating GSE table...")
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS gse (
                 gseid serial PRIMARY KEY,
                 cell_line VARCHAR(50) NOT NULL,
                 cell_id VARCHAR(50) NOT NULL,
                 chrid VARCHAR(50) NOT NULL,
+                resolution INT NOT NULL,
                 ibp BIGINT NOT NULL DEFAULT 0,
                 jbp BIGINT NOT NULL DEFAULT 0,
                 fq FLOAT NOT NULL DEFAULT 0.0
             )
-        """)
+        """
+        )
         print("GSE table created successfully.")
     else:
         print("GSE table already exists.")
@@ -396,74 +421,100 @@ def create_gse_table(cur):
 def process_gse_data(cur):
     """Process CSV files from GM12878_dipc and K562_limca folders and insert into GSE table"""
     gse_dir = "GSE"
-    
-    # Define the folders and their corresponding sample_ids
-    folders = {
-        "GM12878_dipc": "GM12878_dipc",
-        "K562_limca": "K562_limca"
-    }
-    
-    # Create GSE table first
+
+    # Define the folders and their corresponding cell_lines
+    folders = {"GM12878_dipc": "GM12878_dipc", "K562_limca": "K562_limca"}
+
+    # Define resolution mapping from folder name to integer value
+    resolution_mapping = {"5k": 5000, "50k": 50000, "100k": 100000}
+
     create_gse_table(cur)
-    
+
     total_inserted = 0
-    
+
     for folder_name, cell_line in folders.items():
         folder_path = os.path.join(gse_dir, folder_name)
-        
+
         if not os.path.exists(folder_path):
             print(f"Warning: Folder {folder_path} does not exist.")
             continue
-            
+
         print(f"Processing folder: {folder_path}")
-        
-        # Get all CSV files in the folder
-        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
-        
-        for csv_file in csv_files:
-            csv_path = os.path.join(folder_path, csv_file)
-            # Extract cell_id from filename (remove .csv extension)
-            cell_id = csv_file[:-4]
-            
-            print(f"Processing file: {csv_file} (cell_line: {cell_line}, cell_id: {cell_id})")
-            
-            try:
-                # Read CSV file
-                df = pd.read_csv(csv_path)
-                
-                # Check if required columns exist
-                required_columns = ['chr', 'ibp', 'jbp', 'fq']
-                if not all(col in df.columns for col in required_columns):
-                    print(f"Warning: File {csv_file} missing required columns. Expected: {required_columns}")
-                    continue
-                
-                # Prepare data for insertion
-                insert_data = []
-                for _, row in df.iterrows():
-                    insert_data.append((
-                        cell_line,
-                        cell_id, 
-                        row['chr'],
-                        int(row['ibp']),
-                        int(row['jbp']),
-                        float(row['fq'])
-                    ))
-                
-                # Batch insert data
-                if insert_data:
-                    cur.executemany(
-                        "INSERT INTO gse (cell_line, cell_id, chrid, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s)",
-                        insert_data
-                    )
-                    
-                    rows_inserted = len(insert_data)
-                    total_inserted += rows_inserted
-                    print(f"Inserted {rows_inserted} rows from {csv_file}")
-                
-            except Exception as e:
-                print(f"Error processing file {csv_file}: {e}")
+
+        # Check if this folder has resolution subdirectories
+        subdirs = [
+            d
+            for d in os.listdir(folder_path)
+            if os.path.isdir(os.path.join(folder_path, d))
+        ]
+
+        for resolution_dir in subdirs:
+            if resolution_dir not in resolution_mapping:
+                print(
+                    f"Warning: Unknown resolution directory {resolution_dir}. Skipping."
+                )
                 continue
-    
+
+            resolution_value = resolution_mapping[resolution_dir]
+            resolution_path = os.path.join(folder_path, resolution_dir)
+
+            print(
+                f"Processing resolution directory: {resolution_dir} (value: {resolution_value})"
+            )
+
+            # Get all CSV files in the resolution directory
+            csv_files = [f for f in os.listdir(resolution_path) if f.endswith(".csv")]
+
+            for csv_file in csv_files:
+                csv_path = os.path.join(resolution_path, csv_file)
+                # Extract cell_id from filename (remove .csv extension)
+                cell_id = csv_file[:-4]
+
+                print(
+                    f"Processing file: {csv_file} (cell_line: {cell_line}, cell_id: {cell_id}, resolution: {resolution_value})"
+                )
+
+                try:
+                    df = pd.read_csv(csv_path)
+
+                    # Check if required columns exist
+                    required_columns = ["chr", "ibp", "jbp", "fq"]
+                    if not all(col in df.columns for col in required_columns):
+                        print(
+                            f"Warning: File {csv_file} missing required columns. Expected: {required_columns}"
+                        )
+                        continue
+
+                    # Prepare data for insertion
+                    insert_data = []
+                    for _, row in df.iterrows():
+                        insert_data.append(
+                            (
+                                cell_line,
+                                cell_id,
+                                row["chr"],
+                                resolution_value,
+                                int(row["ibp"]),
+                                int(row["jbp"]),
+                                float(row["fq"]),
+                            )
+                        )
+
+                    # Batch insert data
+                    if insert_data:
+                        cur.executemany(
+                            "INSERT INTO gse (cell_line, cell_id, chrid, resolution, ibp, jbp, fq) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                            insert_data,
+                        )
+
+                        rows_inserted = len(insert_data)
+                        total_inserted += rows_inserted
+                        print(f"Inserted {rows_inserted} rows from {csv_file}")
+
+                except Exception as e:
+                    print(f"Error processing file {csv_file}: {e}")
+                    continue
+
     print(f"GSE data processing completed. Total rows inserted: {total_inserted}")
 
 
@@ -473,16 +524,16 @@ def insert_gse_data():
     if conn is None:
         print("Failed to connect to database")
         return
-    
+
     cur = conn.cursor()
-    
+
     try:
         # Process GSE data
         print("Processing GSE data...")
         process_gse_data(cur)
         conn.commit()
         print("GSE data inserted successfully.")
-        
+
     except Exception as e:
         print(f"Error during GSE data insertion: {e}")
         conn.rollback()
