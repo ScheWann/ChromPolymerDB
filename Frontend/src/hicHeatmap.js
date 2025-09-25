@@ -12,7 +12,7 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     // Bintu control props
     selectedBintuCluster, setSelectedBintuCluster, tempBintuCellId, setTempBintuCellId, handleBintuHeatmapSubmit, bintuCellClusters = [], bintuHeatmapLoading = false, onCloseBintuHeatmap,
     // GSE control props
-    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap, 
+    isGseMode = false, gseId = null, selectedGseOrg, setSelectedGseOrg, selectedGseCell, setSelectedGseCell, selectedGseCondition, setSelectedGseCondition, gseCellLines = [], gseCellIds = [], gseChrIds = [], tempGseOrgId, setTempGseOrgId, tempGseCellId, setTempGseCellId, tempGseConditionId, setTempGseConditionId, handleGseHeatmapSubmit, gseHeatmapLoading = false, onCloseGseHeatmap,
     // GSE range control props
     gseStartValue = null, setGseStartValue, gseEndValue = null, setGseEndValue }) => {
     const canvasRef = useRef(null);
@@ -540,18 +540,18 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
     useEffect(() => {
         if ((!containerSize.width && !containerSize.height) || independentHeatmapData.length === 0) return;
 
-    const parentWidth = containerSize.width;
-    const parentHeight = containerSize.height;
-    const margin = HEATMAP_MARGINS;
+        const parentWidth = containerSize.width;
+        const parentHeight = containerSize.height;
+        const margin = HEATMAP_MARGINS;
 
         // Account for space needed by left legend and right controls
         const leftLegendWidth = !isGseMode ? 80 : 0; // Space for left legend (only for non-GSE modes)
         const rightControlsWidth = !isGseMode ? 120 : 0; // Space for right slider and input controls (only for non-GSE modes)
-        
+
         // Calculate available space for heatmap after accounting for legends and controls
         const availableWidth = parentWidth - leftLegendWidth - rightControlsWidth;
         const availableHeight = parentHeight;
-        
+
         const adjustedMinDimension = Math.min(availableWidth, availableHeight);
         setMinDimension(adjustedMinDimension);
         const width = adjustedMinDimension - margin.left - margin.right;
@@ -978,86 +978,86 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                     position: 'absolute', top: 0, right: 0, zIndex: 10, display: 'flex', gap: '10px', width: '100%', justifyContent: 'space-between', padding: "5px 0 5px 0", borderBottom: "1px solid #eaeaea", alignItems: 'center'
                 }}>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                    <Tooltip
-                        title={
-                            <div style={{ color: 'black' }}>
-                                {isTitleTruncated && getHeaderTitleString() && (
-                                    <div style={{ marginBottom: 6 }}>
-                                        <span style={{ fontWeight: 600 }}>{getHeaderTitleString()}</span>
-                                    </div>
-                                )}
-                                {matchedSource ? (
-                                    <div>
-                                        <div>
-                                            <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
+                        <Tooltip
+                            title={
+                                <div style={{ color: 'black' }}>
+                                    {isTitleTruncated && getHeaderTitleString() && (
+                                        <div style={{ marginBottom: 6 }}>
+                                            <span style={{ fontWeight: 600 }}>{getHeaderTitleString()}</span>
                                         </div>
-                                        {(matchedSource.source || matchedSource.Accession) && (
+                                    )}
+                                    {matchedSource ? (
+                                        <div>
                                             <div>
-                                                {matchedSource.source}
-                                                {matchedSource.source && matchedSource.Accession ? ': ' : ''}
-                                                {matchedSource.Accession}
+                                                <span style={{ fontWeight: 600 }}>{matchedSource.id}</span> — {matchedSource.name}
                                             </div>
+                                            {(matchedSource.source || matchedSource.Accession) && (
+                                                <div>
+                                                    {matchedSource.source}
+                                                    {matchedSource.source && matchedSource.Accession ? ': ' : ''}
+                                                    {matchedSource.Accession}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span>No metadata found</span>
+                                    )}
+                                </div>
+                            }
+                            color='white'
+                            placement="bottomLeft"
+                            overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
+                        >
+                            <div
+                                ref={titleRef}
+                                style={{
+                                    fontSize: 12,
+                                    fontWeight: 'bold',
+                                    marginLeft: 10,
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    // Ellipsis styles
+                                    width: '100%',
+                                    minWidth: 0,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {!comparisonHeatmapId && (
+                                    <>
+                                        <span style={{ marginRight: 3 }}>
+                                            {isBintuMode ?
+                                                (selectedBintuCluster ?
+                                                    selectedBintuCluster.split('_')[0] || 'Bintu'
+                                                    : 'Bintu'
+                                                )
+                                                : isGseMode ?
+                                                    (selectedGseOrg ?
+                                                        `${selectedGseOrg}`
+                                                        : 'Single-cell Hi-C'
+                                                    )
+                                                    : independentHeatmapCellLine || cellLineName
+                                            }
+                                        </span>
+                                        {/* Show dash only when data is available (avoid Bintu pre-load placeholder) */}
+                                        {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                                            <span style={{ marginRight: 3 }}>-</span>
                                         )}
-                                    </div>
-                                ) : (
-                                    <span>No metadata found</span>
+                                    </>
+                                )}
+                                {/* Show chromosome and range only when data is available (avoid Bintu pre-load placeholder) */}
+                                {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
+                                    <>
+                                        <span style={{ marginRight: 3 }}>{chromosomeName}</span>
+                                        <span style={{ marginRight: 3 }}>:</span>
+                                        <span style={{ marginRight: 5 }}>{formatNumber((isGseMode ? localGseSequence.start : currentChromosomeSequence.start))}</span>
+                                        <span style={{ marginRight: 5 }}>~</span>
+                                        <span>{formatNumber((isGseMode ? localGseSequence.end : currentChromosomeSequence.end))}</span>
+                                    </>
                                 )}
                             </div>
-                        }
-                        color='white'
-                        placement="bottomLeft"
-                        overlayInnerStyle={{ width: 'max-content', whiteSpace: 'nowrap', maxWidth: 'none' }}
-                    >
-                        <div
-                            ref={titleRef}
-                            style={{
-                                fontSize: 12,
-                                fontWeight: 'bold',
-                                marginLeft: 10,
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                                // Ellipsis styles
-                                width: '100%',
-                                minWidth: 0,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
-                            {!comparisonHeatmapId && (
-                                <>
-                                    <span style={{ marginRight: 3 }}>
-                                        {isBintuMode ?
-                                            (selectedBintuCluster ?
-                                                selectedBintuCluster.split('_')[0] || 'Bintu'
-                                                : 'Bintu'
-                                            )
-                                            : isGseMode ?
-                                                (selectedGseOrg ?
-                                                    `${selectedGseOrg}`
-                                                    : 'Single-cell Hi-C'
-                                                )
-                                                : independentHeatmapCellLine || cellLineName
-                                        }
-                                    </span>
-                                    {/* Show dash only when data is available (avoid Bintu pre-load placeholder) */}
-                                    {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
-                                        <span style={{ marginRight: 3 }}>-</span>
-                                    )}
-                                </>
-                            )}
-                            {/* Show chromosome and range only when data is available (avoid Bintu pre-load placeholder) */}
-                            {((!isBintuMode && !isGseMode) || (isBintuMode && selectedBintuCluster && tempBintuCellId && independentHeatmapData && independentHeatmapData.length > 0) || (isGseMode && selectedGseOrg && selectedGseCell && selectedGseCondition && chromosomeData && chromosomeData.length > 0)) && (
-                                <>
-                                    <span style={{ marginRight: 3 }}>{chromosomeName}</span>
-                                    <span style={{ marginRight: 3 }}>:</span>
-                                    <span style={{ marginRight: 5 }}>{formatNumber((isGseMode ? localGseSequence.start : currentChromosomeSequence.start))}</span>
-                                    <span style={{ marginRight: 5 }}>~</span>
-                                    <span>{formatNumber((isGseMode ? localGseSequence.end : currentChromosomeSequence.end))}</span>
-                                </>
-                            )}
-                        </div>
-                    </Tooltip>
+                        </Tooltip>
                     </div>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexShrink: 0 }}>
                         {!isBintuMode && !isGseMode && (
@@ -1365,25 +1365,25 @@ export const Heatmap = ({ comparisonHeatmapId, cellLineName, chromosomeName, chr
                 ) : (
                     independentHeatmapData.length > 0 ? (
                         <>
-                            <canvas ref={canvasRef} style={{ 
-                                position: 'absolute', 
+                            <canvas ref={canvasRef} style={{
+                                position: 'absolute',
                                 zIndex: 0,
                                 left: !isGseMode ? '80px' : '50%',
                                 top: '50%',
                                 transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)'
                             }} />
-                            <svg ref={axisSvgRef} style={{ 
-                                position: 'absolute', 
-                                zIndex: 1, 
+                            <svg ref={axisSvgRef} style={{
+                                position: 'absolute',
+                                zIndex: 1,
                                 pointerEvents: 'none',
                                 left: !isGseMode ? '80px' : '50%',
                                 top: '50%',
                                 transform: !isGseMode ? 'translate(0%, -50%)' : 'translate(-50%, -50%)'
                             }} />
                             {(!isBintuMode) && (
-                                <svg ref={brushSvgRef} style={{ 
-                                    position: 'absolute', 
-                                    zIndex: 2, 
+                                <svg ref={brushSvgRef} style={{
+                                    position: 'absolute',
+                                    zIndex: 2,
                                     pointerEvents: 'all',
                                     left: !isGseMode ? '80px' : '50%',
                                     top: '50%',
