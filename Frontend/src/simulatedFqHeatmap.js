@@ -140,7 +140,8 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
             adjustedStart,
         } = layout;
 
-        const colorScale = d3.scaleSequential(d3.interpolateReds)
+        const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
+        const colorScale = d3.scaleSequential(redInterpolator)
             .domain(simulatedColorScaleRange);
 
         let tickCount;
@@ -244,6 +245,10 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
 
         const { legendWidth, heatmapSize, margin } = layout;
 
+        const redInterpolator = t => d3.interpolateReds(t * 0.8 + 0.2);
+        const colorScale = d3.scaleSequential(redInterpolator)
+            .domain(simulatedColorScaleRange);
+
         const gradient = svg.append("defs")
             .append("linearGradient")
             .attr("id", "legend-gradient-simulated-fq")
@@ -252,13 +257,18 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
             .attr("y1", "0%")
             .attr("y2", "100%");
 
-        gradient.append("stop")
-            .attr("offset", "0%")
-            .attr("stop-color", d3.interpolateReds(simulatedColorScaleRange[0]));
-
-        gradient.append("stop")
-            .attr("offset", "100%")
-            .attr("stop-color", d3.interpolateReds(1));
+        // Create gradient with multiple stops using the actual color scale values
+        const numStops = 10;
+        const gradientMin = simulatedColorScaleRange[0];
+        const gradientMax = simulatedColorScaleRange[1];
+        
+        for (let i = 0; i <= numStops; i++) {
+            const t = i / numStops;
+            // Reverse the offset so max is at top (0%) and min is at bottom (100%)
+            gradient.append('stop')
+                .attr('offset', `${t * 100}%`)
+                .attr('stop-color', colorScale(gradientMax - t * (gradientMax - gradientMin)));
+        }
 
         svg.append("rect")
             .attr("x", legendWidth + 20)
@@ -267,17 +277,23 @@ export const SimulatedFqHeatmap = ({ celllineName, chromosomeName, chromosomefqD
             .attr("height", heatmapSize)
             .attr("fill", "url(#legend-gradient-simulated-fq)");
 
-        const yScale = d3.scaleLinear()
-            .domain([simulatedColorScaleRange[1], simulatedColorScaleRange[0]])
-            .range([heatmapSize, 0]);
+        // Add max value label at top
+        svg.append('text')
+            .attr('x', legendWidth + 30)
+            .attr('y', margin.top - 5)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px')
+            .attr('fill', '#333')
+            .text(gradientMax);
 
-        const yAxis = d3.axisLeft(yScale)
-            .ticks(5)
-            .tickSizeOuter(0);
-
-        svg.append("g")
-            .attr("transform", `translate(${legendWidth + 20}, ${margin.top})`)
-            .call(yAxis);
+        // Add min value label at bottom
+        svg.append('text')
+            .attr('x', legendWidth + 30)
+            .attr('y', margin.top + heatmapSize + 15)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px')
+            .attr('fill', '#333')
+            .text(gradientMin);
 
     }, [layout, simulatedColorScaleRange]);
 
