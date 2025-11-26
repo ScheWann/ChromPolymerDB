@@ -140,7 +140,7 @@ def initialize_tables():
             "Z FLOAT DEFAULT NULL,"
             "Y FLOAT DEFAULT NULL,"
             "X FLOAT DEFAULT NULL,"
-            "UNIQUE(cell_id, segment_index)"
+            "UNIQUE(cell_line, chrid, start_value, end_value, cell_id, segment_index)"
             ");"
         )
         conn.commit()
