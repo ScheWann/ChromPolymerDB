@@ -190,7 +190,7 @@ export const ProjectIntroduction = ({
                     </Text>
                 </div>    
                 <div style={{ width: "100%", textAlign: 'left', marginBottom: '10px' }}>
-                    <Text style={{ fontSize: '1rem', lineHeight: 1.5 }}>
+                    <Text style={{ fontSize: '1rem', lineHeight: 1.5, fontWeight: 'bold' }}>
                         
                         Your citation is greatly appreciated. If you publish or present any results generated using this database, please reference the following paper: Chen, Min, Lin Du, Siyuan Zhao, Bowei Ye, Pourya Delafrouz, Hammad Farooq, Debaleena Chattopadhyay et al. "ChromPolymerDB: a high-resolution database of single-cell 3D chromatin structures for functional genomics." Nucleic Acids Research (2025): gkaf1233.
                     </Text>
