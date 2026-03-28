@@ -40,6 +40,61 @@
 
 # Troubleshooting
 
+### PROJECT STRUCTURE (Level 1-2)
+```text
+ChromPolymerDB/
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── LICENSE
+├── README.md
+├── Backend/
+│   ├── app.py
+│   ├── cell_line_labels.py
+│   ├── chromosome_sizes.txt
+│   ├── Dockerfile
+│   ├── init_db.py
+│   ├── insert_new_data.py
+│   ├── process.py
+│   ├── requirements.txt
+│   ├── sBIF.sh
+│   ├── Bintu/
+│   ├── Example_data/
+│   ├── Folding_input/
+│   ├── GSE/
+│   ├── New_cell_line/
+├── Cron/
+│   ├── crontab
+│   └── Dockerfile
+├── Data/
+│   ├── chromosome_sizes.txt
+│   ├── gene_list.csv
+│   ├── human_gene_locations_with_names.csv
+│   ├── Bintu/
+│   ├── epigenetic_tracks/
+│   ├── GSE/
+│   ├── refined_processed_HiC/
+│   └── valid_regions/
+├── DB/
+│   ├── Dockerfile
+│   └── init-cron.sh
+├── Frontend/
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── build/
+│   ├── node_modules/
+│   ├── public/
+│   └── src/
+└── Scripts/
+    ├── bintu_process.ipynb
+    ├── hic_process.ipynb
+    ├── preprocess.ipynb
+    ├── test_corr.ipynb
+    └── verification.ipynb
+```
+
 ### View Logs
 ```bash
 # All services
