@@ -38,7 +38,7 @@
     docker compose -f docker-compose.prod.yml up -d --build
     ```
 
-# TROUBLESHOTTING
+# TROUBLESHOOTING
 
 ### Project Structure
 ```text
