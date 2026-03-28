@@ -38,9 +38,9 @@
     docker compose -f docker-compose.prod.yml up -d --build
     ```
 
-# Troubleshooting
+# TROUBLESHOTTING
 
-### PROJECT STRUCTURE (Level 1-2)
+### Project Structure
 ```text
 ChromPolymerDB/
 ├── .env
