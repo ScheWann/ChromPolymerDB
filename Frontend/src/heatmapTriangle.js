@@ -745,7 +745,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
 
         // ENCODE Signals - ChIP
         if (key === '1') {
-            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.chip.txt')
+            fetch('https://raw.githubusercontent.com/igvteam/igv-data/refs/heads/main/data/encode/GRCh38.signals.chip.txt')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -763,7 +763,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
 
         // ENCODE Signals - Other
         if (key === '2') {
-            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.signals.other.txt')
+            fetch('https://raw.githubusercontent.com/igvteam/igv-data/refs/heads/main/data/encode/GRCh38.signals.other.txt')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -781,7 +781,7 @@ export const HeatmapTriangle = ({ cellLineName, chromosomeName, currentChromosom
 
         // ENCODE Other
         if (key === '3') {
-            fetch('https://s3.amazonaws.com/igv.org.app/encode/GRCh38.other.txt')
+            fetch('https://raw.githubusercontent.com/igvteam/igv-data/refs/heads/main/data/encode/GRCh38.other.txt')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
